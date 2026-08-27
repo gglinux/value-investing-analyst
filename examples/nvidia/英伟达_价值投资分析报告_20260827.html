@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>英伟达（NVDA）价值投资分析报告</title>
+<script src="https://cdn.jsdelivr.net/npm/echarts@5/dist/echarts.min.js"></script>
+<style>
+  :root { --primary:#1a3a5c; --accent:#d97706; --bg:#f7f8fa; --card:#fff; --text:#24292f; --muted:#6b7280; --green:#15803d; --red:#b91c1c; --border:#e5e7eb; }
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{font-family:-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;background:var(--bg);color:var(--text);line-height:1.75;font-size:15px}
+  .container{max-width:1080px;margin:0 auto;padding:24px 20px 80px}
+  header.report-header{background:var(--primary);color:#fff;border-radius:12px;padding:40px 36px;margin-bottom:28px}
+  header.report-header h1{font-size:26px;font-weight:700}
+  header.report-header .meta{margin-top:8px;opacity:.75;font-size:13px}
+  .verdict-banner{display:flex;align-items:center;gap:24px;margin-top:24px;background:rgba(255,255,255,.08);border-radius:10px;padding:20px 24px}
+  .verdict-label{font-size:34px;font-weight:800;letter-spacing:2px}
+  .verdict-watch{color:#fbbf24}
+  .verdict-score{font-size:15px;opacity:.9}
+  .snapshot-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px;margin-top:16px}
+  .snapshot-item{background:rgba(255,255,255,.08);border-radius:8px;padding:10px 14px}
+  .snapshot-item .k{font-size:12px;opacity:.65}
+  .snapshot-item .v{font-size:17px;font-weight:700;margin-top:2px}
+  .snapshot-time{font-size:11px;opacity:.55;margin-top:8px}
+  section{background:var(--card);border-radius:12px;padding:32px 36px;margin-bottom:24px;border:1px solid var(--border)}
+  h2{font-size:20px;color:var(--primary);padding-bottom:10px;margin-bottom:18px;border-bottom:3px solid var(--accent);display:inline-block}
+  h3{font-size:16px;color:var(--primary);margin:22px 0 10px}
+  p{margin-bottom:12px}
+  .chart{width:100%;height:400px;margin:12px 0 4px}
+  .chart-note{font-size:12px;color:var(--muted);margin-bottom:16px}
+  .insight-title{font-size:15px;font-weight:700;color:var(--text);margin:20px 0 4px}
+  table{width:100%;border-collapse:collapse;margin:14px 0;font-size:14px}
+  th{background:var(--primary);color:#fff;padding:10px 12px;text-align:left;font-weight:600}
+  td{padding:9px 12px;border-bottom:1px solid var(--border)}
+  tr:nth-child(even) td{background:#fafbfc}
+  .tag{display:inline-block;padding:2px 10px;border-radius:20px;font-size:12px;font-weight:600}
+  .tag-green{background:#dcfce7;color:var(--green)}
+  .tag-amber{background:#fef3c7;color:#b45309}
+  .tag-red{background:#fee2e2;color:var(--red)}
+  .points-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:16px 0}
+  .point-card{border-radius:10px;padding:16px 18px;border:1px solid var(--border)}
+  .point-card.bull{border-left:4px solid var(--green)}
+  .point-card.bear{border-left:4px solid var(--red)}
+  .point-card h4{font-size:14px;margin-bottom:8px}
+  .point-card ul{padding-left:18px;font-size:14px}
+  .point-card li{margin-bottom:6px}
+  blockquote.persona{border-left:4px solid var(--accent);background:#fffbf5;padding:16px 20px;margin:14px 0;border-radius:0 8px 8px 0;font-size:14px}
+  blockquote.persona .persona-name{font-weight:700;color:var(--primary);display:block;margin-bottom:6px}
+  .redteam{background:#1f2937;color:#e5e7eb;border-radius:10px;padding:24px 28px;margin:16px 0}
+  .redteam h3{color:#fbbf24;margin-top:0}
+  .redteam ul,.redteam ol{padding-left:20px}
+  .redteam li{margin-bottom:8px}
+  .checklist li{margin-bottom:8px}
+  footer.disclaimer{font-size:12px;color:var(--muted);text-align:center;margin-top:40px;padding-top:20px;border-top:1px solid var(--border)}
+  .source-note{font-size:12px;color:var(--muted)}
+  @media print{section{break-inside:avoid}.chart{height:360px}}
+</style>
+</head>
+<body>
+<div class="container">
+
+  <header class="report-header">
+    <h1>英伟达 NVIDIA（NASDAQ: NVDA）价值投资分析报告</h1>
+    <div class="meta">报告日期：2026-08-27 ｜ 财务数据截止：FY2026 年报（2026-01-25）+ FY2027 Q2 季报（2026-07-26）｜ 行情截止：2026-08-27</div>
+    <div class="verdict-banner">
+      <div class="verdict-label verdict-watch">观察等价格</div>
+      <div class="verdict-score">
+        综合评分：<b>76</b> / 100（巴菲特 71 ｜ 段永平 84 ｜ 李录 74）<br>
+        内在价值区间：<span class="vnum" data-src="valuation.json" data-path="scenarios.pessimistic.per_share" data-fmt="num0">63</span> ~ <span class="vnum" data-src="valuation.json" data-path="scenarios.optimistic.per_share" data-fmt="num0">238</span> 美元（基准 <span class="vnum" data-src="valuation.json" data-path="scenarios.base.per_share" data-fmt="num2">127.14</span>）｜ 现价较基准内在价值<b>高估约 65%</b>，安全边际为负
+      </div>
+    </div>
+    <div class="snapshot-grid">
+      <div class="snapshot-item"><div class="k">现价（美元）</div><div class="v"><span class="vnum" data-src="market_snapshot.json" data-path="price_usd" data-fmt="num2">209.66</span></div></div>
+      <div class="snapshot-item"><div class="k">总市值</div><div class="v"><span class="vnum" data-src="market_snapshot.json" data-path="market_cap_usd_tn" data-fmt="num2">5.08</span> 万亿$</div></div>
+      <div class="snapshot-item"><div class="k">PE-TTM（快照）</div><div class="v"><span class="vnum" data-src="market_snapshot.json" data-path="pe_ttm" data-fmt="num2">32.11</span></div></div>
+      <div class="snapshot-item"><div class="k">PE-TTM（含新财报）</div><div class="v">≈<span class="vnum" data-src="ttm_snapshot.json" data-path="pe_ttm_post_earnings" data-fmt="num1">26.3</span></div></div>
+      <div class="snapshot-item"><div class="k">PB</div><div class="v"><span class="vnum" data-src="market_snapshot.json" data-path="pb" data-fmt="num2">25.98</span></div></div>
+      <div class="snapshot-item"><div class="k">股息率TTM</div><div class="v"><span class="vnum" data-src="market_snapshot.json" data-path="dividend_yield_ttm_pct" data-fmt="num2">0.13</span>%</div></div>
+      <div class="snapshot-item"><div class="k">52周位置</div><div class="v"><span class="vnum" data-src="market_snapshot.json" data-path="pos_in_52w_range" data-fmt="pct1">63.3%</span></div></div>
+      <div class="snapshot-item"><div class="k">日成交额</div><div class="v"><span class="vnum" data-src="market_snapshot.json" data-path="avg_daily_turnover_usd_bn" data-fmt="num1">37.9</span> 亿$×10</div></div>
+    </div>
+    <div class="snapshot-time">行情快照：2026-08-27，westock-data（来源等级 A）。注：快照 PE 未含昨夜新财报；含 FY2027Q2 的 TTM PE 为底稿推算（B 级，Q1 净利为反推近似值）。</div>
+  </header>
+
+  <section id="summary">
+    <h2>一、投资摘要</h2>
+    <p><b>一句话生意：</b>英伟达把 GPU 芯片、网络设备和 CUDA 软件栈打包成"AI 工厂"整机方案，卖给微软、亚马逊、谷歌、Meta 等囤算力的巨头——它是这轮 AI 军备竞赛中"卖铲子"的人，且目前是唯一能整套供货的人。</p>
+    <div class="points-grid">
+      <div class="point-card bull">
+        <h4>三大投资论点</h4>
+        <ul>
+          <li><b>盈利机器史无前例</b>：FY2026 净利率 <span class="vnum" data-src="metrics_NVDA.json" data-path="series.10.net_margin" data-fmt="pct1">55.6%</span>，ROIC（投入资本回报率，衡量每一块钱本金一年赚回多少）<span class="vnum" data-src="metrics_NVDA.json" data-path="series.10.roic" data-fmt="pct1">140.8%</span>，近5年均值 <span class="vnum" data-src="metrics_NVDA.json" data-path="summary.roic_avg_5y" data-fmt="pct1">108.4%</span>——竞对 AMD 最新 6.4%、博通 17.1%、英特尔为负。</li>
+          <li><b>增长仍在加速且可见度提升</b>：FY2027Q2 收入 <span class="vnum" data-src="consensus.json" data-path="fy2027_q2_actual.revenue_bn" data-fmt="num1">96.2</span>0 亿美元（同比 +106%），客户承诺订单 <span class="vnum" data-src="consensus.json" data-path="backlog.customer_committed_orders_yi_usd" data-fmt="num0">2,790</span> 亿美元（环比翻倍以上）；管理层首次给出下一财年指引：+<span class="vnum" data-src="consensus.json" data-path="fy2028_guidance.mgmt_revenue_growth_pct" data-fmt="num0">70</span>%。</li>
+          <li><b>股东友好</b>：10 年累计经营现金流 <span class="vnum" data-src="metrics_NVDA.json" data-path="capital_allocation.cum_ocf" data-fmt="num0">230,321</span> 百万美元，其中回购 <span class="vnum" data-src="metrics_NVDA.json" data-path="capital_allocation.cum_buyback" data-fmt="num0">97,178</span> 百万美元；股本 10 年仅增 8%，增长几乎没被摊薄。</li>
+        </ul>
+      </div>
+      <div class="point-card bear">
+        <h4>三大核心风险</h4>
+        <ul>
+          <li><b>客户集中且客户在自研</b>：数据中心占收入 92.5%，前几大云厂商贡献近半（Q2 超大规模客户收入 487 亿美元）；同一批客户正加速自研 ASIC（谷歌 TPU、亚马逊 Trainium，博通承接），是"金主即对手"的结构性矛盾。</li>
+          <li><b>周期性被规模掩盖</b>：2018 加密崩盘、2022 去库存两次收入失速、净利腰斩的前科都在本报告数据里；当前需求本质是客户资本开支，资本开支从不永续。</li>
+          <li><b>现价不给容错</b>：以正常化基期测算，反向 DCF 显示现价已隐含未来 10 年股东盈余年增 <span class="vnum" data-src="valuation.json" data-path="implied_growth_fade_r10_tg3_normalized_basis" data-fmt="pct1">43.8%</span>（期初，线性衰减）——这要求公司做到连本轮 AI 超级周期都尚未证明的持续性，买入即押注这一路径全程兑现。</li>
+        </ul>
+      </div>
+    </div>
+    <p><b>本笔投资取决于：</b>① AI 算力资本开支的持续性（客户能否形成"AI 收入→再投资"闭环）；② CUDA 生态锁定力 vs 定制芯片侵蚀（毛利率是最诚实的代理指标）。中国业务与地缘是重要但<b>不可知</b>变量，我们不把它算作可下注的判断。</p>
+    <p class="source-note"><b>信息局限声明：</b>① 中国出口管制走向、SAMR 反垄断调查结果无法预判，相关结论置信度低；② 客户真实 AI 投资回报率（决定资本开支持续性）目前只有间接证据，机构与个人在该问题上同样处于信息劣势；③ FY2027Q1 GAAP 净利为环比反推近似值，仅影响 TTM PE 展示，不影响估值主线；④ 2027 年 9 月开庭的加密披露集体诉讼赔偿金额不可估。</p>
+    <div class="insight-title">三人评分雷达（各维度 1~5 分）</div>
+    <div id="chart-radar-summary" class="chart" style="height:340px"></div>
+    <div class="insight-title">估值区间 vs 现价：现价高于乐观情景，安全边际为负</div>
+    <div id="chart-valuation-band" class="chart" style="height:220px"></div>
+    <div class="chart-note">三情景 DCF（scripts/reverse_dcf.py，fade 模式）。<b>本股处周期高位</b>（最新净利率为十一年均值 1.66 倍），基期禁用当期 Owner Earnings，采用正常化混合口径基期 <span class="vnum" data-src="valuation.json" data-path="normalization.base_oe_recommended_mm" data-fmt="num0">72,756</span> 百万美元。悲观：期初增速15%/折现10.5%；基准：30%/10%；乐观：45%/9.5%。</div>
+  </section>
+
+  <section id="business">
+    <h2>二、公司与生意</h2>
+    <p>英伟达 1993 年靠游戏显卡起家，2006 年推出 CUDA（让程序员能用 GPU 做通用计算的软件平台），赌对了"并行计算取代串行计算"的大方向。2023 年起生成式 AI 爆发，训练和推理大模型只能用大规模并行芯片，英伟达吃下了这波需求的绝大部分。今天它的产品已经不是"一颗芯片"，而是 GPU + Grace/Vera CPU + NVLink 互联 + InfiniBand/Spectrum-X 网络 + CUDA 软件栈组成的整机柜系统（Blackwell、Vera Rubin 平台），按"AI 工厂"整体出售。</p>
+    <p>钱从哪来：FY2026 收入 2,159 亿美元中，Compute & Networking 分部占约 89.6%；最新 FY2027Q2 数据中心收入 890 亿美元、占比 92.5%。客户为什么买：性能领先一至两代 + CUDA 生态迁移成本极高 + 供应链（HBM 内存、CoWoS 封装）被它锁定了最大份额。钱最终从谁口袋来：云厂商和大企业的资本开支预算——这是理解这门生意周期性的钥匙。</p>
+    <div class="insight-title">收入结构：一门生意 = 数据中心，其余都是零头</div>
+    <div id="chart-revenue-structure" class="chart" style="height:360px"></div>
+    <div class="chart-note">数据来源：FY2026 10-K 分部披露 + FY2027Q2 财报（A 级）。区域披露口径注：新加坡等地为开票地，最终用途地占比更集中于美国。</div>
+  </section>
+
+  <section id="quant">
+    <h2>三、定量画像</h2>
+    <p>统一口径说明：四家公司均为 US-GAAP、美元。财年错位——NVDA 为 1 月末财年（图中 2025 = FY2026，覆盖 2025 自然年为主），AVGO 为 10 月末财年，AMD/INTC 为自然年。所有指标由 compute_metrics.py 统一计算。</p>
+
+    <div class="insight-title">图1 ｜ 十年收入 43 倍、净利 196 倍：2023 年后是另一家公司</div>
+    <div id="chart-q1" class="chart"></div>
+    <div class="chart-note">来源：SEC EDGAR XBRL（A 级）。收入 10 年 CAGR <span class="vnum" data-src="metrics_NVDA.json" data-path="summary.cagr_total.revenue" data-fmt="pct1">45.7%</span>，净利 CAGR <span class="vnum" data-src="metrics_NVDA.json" data-path="summary.cagr_total.net_income" data-fmt="pct1">69.5%</span>。</div>
+    <p>这张图说明两件事：一是 2023 年前的英伟达是一家优秀但有明显周期的芯片公司（2019、2022 两次下滑清晰可见）；二是 2023 年后收入斜率完全改变——这不是"增长"，是需求结构的相变。评估它的关键不是外推这条曲线，而是判断相变能否持续。</p>
+
+    <div class="insight-title">图2 ｜ 毛利率 56%→75%→71%：定价权的完整周期正在显形</div>
+    <div id="chart-q2" class="chart"></div>
+    <div class="chart-note">来源：EDGAR XBRL（A 级）+ FY2027 季报（B 级）。FY2026 毛利率 71.1%（Blackwell 爬坡拉低），Q2 回到 75%，管理层指引 FY2027Q4 降到 71-72%（内存涨价）。</div>
+    <p>毛利率是这门生意里最诚实的指标：2023-2024 年冲到 75% 是稀缺定价权的体现；管理层已明示内存成本将把毛利率压回 71-73% 区间。毛利率能否稳住 70% 以上，直接验证"定价权 vs 成本转嫁能力"，是季度跟踪清单第一项。</p>
+
+    <div class="insight-title">图3 ｜ ROIC 对比：英伟达在三位数，对手在个位数——护城河的定量底片</div>
+    <div id="chart-q3" class="chart"></div>
+    <div class="chart-note">来源：四家底稿统一计算（A 级）。NVDA 财年错位约 1 个月，AVGO 约 2 个月，对趋势判断无实质影响。ROIC = 税后经营利润 ÷（净资产+有息负债-现金）。</div>
+    <p>近 5 年 ROIC 均值：NVDA <span class="vnum" data-src="metrics_NVDA.json" data-path="summary.roic_avg_5y" data-fmt="pct1">108.4%</span> vs AMD <span class="vnum" data-src="metrics_AMD.json" data-path="summary.roic_avg_5y" data-fmt="pct1">20.8%</span> vs AVGO <span class="vnum" data-src="metrics_AVGO.json" data-path="summary.roic_avg_5y" data-fmt="pct1">19.1%</span> vs INTC <span class="vnum" data-src="metrics_INTC.json" data-path="summary.roic_avg_5y" data-fmt="pct2">1.94%</span>。英伟达用极少的自有资本（晶圆厂是台积电的、内存是三家供应商的）撬动巨额利润，这是轻资产设计模式 + 定价权的复合结果。警示：ROIC 高到这种程度本身就是引来竞争的最强信号。</p>
+
+    <div class="insight-title">图4 ｜ 利润是真金白银：FCF 与净利同步放大，无应计水分</div>
+    <div id="chart-q4" class="chart"></div>
+    <div class="chart-note">来源：EDGAR XBRL（A 级）。FY2026 FCF/净利 = 80.5%（差额主要是应收与库存随收入扩张，属正常经营占用，非造假信号）。</div>
+    <p>10 年累计经营现金流 2,303 亿美元 vs 累计净利约 2,534 亿美元，比值健康。FY2027Q2 单季自由现金流 213 亿美元。利润含金量测试通过——这一点与 2018 年加密泡沫期不同，当时的争议是收入分类，而非现金真实性。</p>
+
+    <div class="insight-title">图5 ｜ 资本配置：钱主要花在回购上，且没有稀释</div>
+    <div id="chart-q5" class="chart" style="height:360px"></div>
+    <div class="chart-note">来源：EDGAR XBRL（A 级）。10 年累计：capex <span class="vnum" data-src="metrics_NVDA.json" data-path="capital_allocation.cum_capex" data-fmt="num0">16,228</span>、分红 <span class="vnum" data-src="metrics_NVDA.json" data-path="capital_allocation.cum_dividends" data-fmt="num0">4,971</span>、回购 <span class="vnum" data-src="metrics_NVDA.json" data-path="capital_allocation.cum_buyback" data-fmt="num0">97,178</span> 百万美元。</div>
+    <p><b>每股口径复核</b>（防"增长被增发吃掉"）：收入总量 CAGR <span class="vnum" data-src="metrics_NVDA.json" data-path="summary.cagr_total.revenue" data-fmt="pct1">45.7%</span> vs 每股收入 CAGR <span class="vnum" data-src="metrics_NVDA.json" data-path="summary.cagr_per_share.rev_ps" data-fmt="pct1">44.6%</span>；EPS CAGR <span class="vnum" data-src="metrics_NVDA.json" data-path="summary.cagr_per_share.eps" data-fmt="pct1">68.2%</span>。10 年股本变化倍数 <span class="vnum" data-src="metrics_NVDA.json" data-path="summary.share_count_change" data-fmt="num2">1.08</span>——总量增长几乎完整传导到每股。对照组：AMD 股本翻了 2.09 倍，每股收入增速比总量低 8.8 个百分点。脚本对 NVDA 的稀释/含金量/增长质量警报为 0 条。Burry 对回购的批评（回购只是对冲 SBC 稀释）在数据上部分成立——回购确实主要用于对冲股权激励——但"股本没涨"这个结果本身对股东是成立的。</p>
+    <p><b>定量画像小结：</b>数字讲的故事是"一台印钞机接上了火箭"。与竞对最大的三个差异：① 盈利能力差一个数量级（ROIC 三位数 vs 个位数）；② 增长没有以稀释为代价（AMD、AVGO 都靠增发并购换增长）；③ 现金转化干净（INTC 的利润质量警报 3 条，NVDA 为 0）。</p>
+  </section>
+  <section id="moat">
+    <h2>四、护城河分析</h2>
+    <p><b>结论：宽护城河，趋势短期变宽、长期承压。</b>不和稀泥的版本：CUDA 生态 + 整机系统能力构成真实且深的护城河，但护城河的"客户侧"正在被系统性地挖掘——挖它墙角的正是付钱最多的那几家。</p>
+    <table>
+      <tr><th>Morningstar 五源</th><th>是否成立</th><th>证据</th></tr>
+      <tr><td>无形资产（技术/生态）</td><td><span class="tag tag-green">强</span></td><td>CUDA 近 20 年积累，数百万开发者；AI 框架默认适配 CUDA；Vera Rubin 已全面投产，架构年更节奏对手跟不上</td></tr>
+      <tr><td>转换成本</td><td><span class="tag tag-green">强</span></td><td>迁移到 ROCm/TPU 需重写与调优底层代码，对追求上线速度的客户，时间成本远大于芯片差价</td></tr>
+      <tr><td>网络效应</td><td><span class="tag tag-green">中强</span></td><td>开发者越多→软件优化越好→买卡越值→开发者更多；生态飞轮真实存在</td></tr>
+      <tr><td>成本优势（规模）</td><td><span class="tag tag-amber">中</span></td><td>对台积电 CoWoS、HBM 产能的优先锁定是规模带来的现实优势，但属于"可被产能扩张稀释"的优势</td></tr>
+      <tr><td>有效规模</td><td><span class="tag tag-red">弱</span></td><td>市场太大太肥，不存在"容不下第二家"的结构，反而吸引所有人进场</td></tr>
+    </table>
+    <h3>定价权三项硬测试</h3>
+    <p>① 提价不丢客户：FY2024-2025 毛利率 72.7%→75.0%，供不应求下客户加价排队——<b>通过</b>。② 成本上涨可转嫁：管理层称内存涨价将在 FY2028Q1 通过产品提价传导，毛利率企稳 72-73%——<b>待验证（列入跟踪清单）</b>。③ 客户离不开：Q2 客户承诺订单 2,790 亿美元环比翻倍、亚马逊追加 200 万块 GPU——短期<b>通过</b>；但谷歌 TPU 已大规模自用+外供，说明"离不开"只对追赶者成立，对最强的那几家不成立。</p>
+    <p><b>宽窄趋势判断：</b>训练侧护城河仍在加宽（系统复杂度越来越高，单点芯片追不上整机迭代）；推理侧在变窄（推理负载对 CUDA 依赖低，是 ASIC 的主攻场景，而推理占比会随 AI 应用普及持续上升）。这是本报告关键变量 ② 的结构基础。</p>
+  </section>
+
+  <section id="growth">
+    <h2>五、增长空间与质量</h2>
+    <p><b>TAM 与 S 曲线：</b>2026 自然年全行业 AI 基础设施资本开支已超 1 万亿美元（C 级，媒体综述）；管理层引述客户需求预测称下一财年潜在需求接近翻倍，供给约束下可交付约 +70%。行业处于 S 曲线陡峭段中后期的争论没有意义——真正的问题是这条 S 曲线的顶在哪，而顶取决于客户的 AI 收入能否覆盖资本开支，目前没有人有可靠答案（包括英伟达自己）。</p>
+    <p><b>增长质量（ROIIC 判读）：</b>ROIIC（增量投入资本回报率——新增的每一块钱本金赚回多少）滚动 3 年为 <span class="vnum" data-src="metrics_NVDA.json" data-path="series.10.roiic_3y" data-fmt="pct1">113.8%</span>：过去三年新投入的资本几乎当年翻倍回收，增长质量是教科书级的。对照：INTC 最新 ROIIC 为负（增长质量警报），AMD 53.6%（回升中），AVGO 12.0%。</p>
+    <p><b>增长的资金结构隐忧：</b>本轮增长有一部分由"生态自我供血"支撑——英伟达投资 CoreWeave/OpenAI 等客户、客户拿钱买卡、公司再计划撬动 5,000 亿美元第三方资本投 AI 基建。年内战略投资约 47 亿美元、占收入约 1.5%，规模上远够不成"循环融资造假"（公司已书面反驳 Burry 质疑，且无 SEC 调查），但它确实让终端需求的真实性多了一层折射，红队环节会正面处理。</p>
+  </section>
+
+  <section id="management">
+    <h2>六、管理层与企业文化</h2>
+    <p><b>结论：能力顶级，诚信记录有一处历史污点，整体可信但不满分。</b></p>
+    <table>
+      <tr><th>维度</th><th>评价</th><th>证据</th></tr>
+      <tr><td>战略远见</td><td><span class="tag tag-green">顶级</span></td><td>CUDA 提前 15 年布局；Mellanox 收购（69亿美元）拿下网络关键环节，是十年内半导体业最划算的并购之一</td></tr>
+      <tr><td>资本配置</td><td><span class="tag tag-green">优</span></td><td>轻资产模式下 capex 仅占 OCF 的 7%；不乱并购（Arm 失败后未再强行大并购）；回购 97 亿美元级别且股本零膨胀</td></tr>
+      <tr><td>言行一致</td><td><span class="tag tag-green">良</span></td><td>供给约束、毛利率下行压力、中国收入清零假设均主动预警而非回避；FY2028 指引首次给出并列明供给假设</td></tr>
+      <tr><td>诚信记录</td><td><span class="tag tag-amber">有瑕疵</span></td><td>2022 年 SEC 就 FY2018 两季度未披露加密挖矿对游戏收入的影响处罚 550 万美元（过失性披露缺陷，非造假）；衍生集体诉讼 2026-03 获认证、拟 2027-09 开庭</td></tr>
+      <tr><td>治理稳定</td><td><span class="tag tag-green">良</span></td><td>创始人掌舵 33 年；CFO Kress 任职 12 年+；审计师普华永道长期无更换、意见全部标准无保留</td></tr>
+    </table>
+    <p>黄仁勋近年持续按 10b5-1 计划减持，规模相对持股比例不构成警报，但方向值得注意：内部人过去两年是净卖出方。企业文化侧：极高强度的执行文化 + "光速交付"传统，无重大文化负面事件；对供应链伙伴的绑定（预付款+长约）体现"共赢式霸权"风格。</p>
+  </section>
+
+  <section id="risk">
+    <h2>七、财务质量与风险</h2>
+    <p><b>排雷摘要（Phase 0）：</b>一票否决项 0 中；红旗 2~3 条边缘（SEC 2022 处罚史、对客户战略投资、SAMR 调查未结案），均有公开反证，未触发默认排除。</p>
+    <p><b>财务质量深查：</b>应计质量干净（FCF/NI 长期 &gt;0.8）；资产负债表极强——现金及短投 501 亿美元（FY2026 年末）vs 有息负债 85 亿美元，净现金约 416 亿美元；商誉 208 亿美元（FY2026，主要来自年内收购），占净资产 13%，可控。存货 FY2027Q2 达 150 亿美元、供应承诺义务大幅上升——供给约束下的主动备货，但若需求急刹车，这就是减值的第一现场（2022 年发生过一次）。</p>
+    <table>
+      <tr><th>风险</th><th>性质</th><th>当前状态</th></tr>
+      <tr><td>客户集中 + 客户自研</td><td>结构性</td><td>数据中心占 92.5%；谷歌/亚马逊/Meta/OpenAI 全部有自研芯片路线，博通是主要承接方</td></tr>
+      <tr><td>中国与地缘</td><td>不可知</td><td>Q3 指引已按中国数据中心收入=0 编制；SAMR 对 Mellanox 条件合规调查未结案；台海是无法定价的尾部风险（台积电依赖）</td></tr>
+      <tr><td>加密披露集体诉讼</td><td>历史遗留</td><td>2026-03 集体认证，2027-09 拟开庭；公司未计提（"合理可能但非很可能"），金额不可估但相对 5 万亿市值属可吸收级</td></tr>
+      <tr><td>供应链单点</td><td>结构性</td><td>先进制程和封装高度依赖台积电；HBM 依赖三家内存厂且正在涨价</td></tr>
+      <tr><td>需求周期</td><td>周期性</td><td>2,790 亿美元承诺订单提供约 2-3 个季度缓冲，但订单可延期/重谈，缓冲≠免疫</td></tr>
+    </table>
+    <p><b>可及性与摩擦：</b>美股，境内投资者需境外券商或 QDII 渠道；美元汇率敞口自担；红利税 10%（股息率仅 0.13%，影响可忽略）；日成交额数百亿美元，流动性对任何个人规模无约束；交易时段为北京时间夜间。</p>
+  </section>
+
+  <section id="valuation">
+    <h2>八、估值与安全边际</h2>
+    <p><b>方法选择：</b>商业模式为"轻资产+超高 ROIC+强周期成长"，选 ① Owner Earnings 反向 DCF（主）、② 三情景正向 DCF（同一引擎，保证口径一致）、③ 市盈率历史带交叉验证。不用 PB（轻资产无意义）、不用股息贴现（分红占比过低）。</p>
+    <h3>基期正常化（本 Phase 的生死关卡）</h3>
+    <p>本股处<b>周期高位</b>：FY2026 净利率 <span class="vnum" data-src="metrics_NVDA.json" data-path="series.10.net_margin" data-fmt="pct1">55.6%</span>，是十一年均值 <span class="vnum" data-src="metrics_NVDA.json" data-path="normalization.net_margin_avg" data-fmt="pct1">33.4%</span> 的 <span class="vnum" data-src="valuation.json" data-path="normalization.margin_ratio_latest_vs_avg" data-fmt="num2">1.66</span> 倍。按估值纪律，<b>禁止用当期 Owner Earnings 作 DCF 基期</b>，改用正常化混合口径基期 <span class="vnum" data-src="valuation.json" data-path="normalization.base_oe_recommended_mm" data-fmt="num0">72,756</span> 百万美元（为当期 <span class="vnum" data-src="valuation.json" data-path="normalization.oe_current_mm" data-fmt="num0">121,123</span> 的 60%；基期区间下界——历史 OE 利润率均值口径——为 <span class="vnum" data-src="valuation.json" data-path="normalization.base_oe_range_mm.0" data-fmt="num0">51,643</span> 百万美元）。<b>强制披露</b>：若改用当期峰值基期，基准价值会从 127 美元升到 212 美元，差距 40%，远超 30% 披露阈值——这正是"周期顶部利润外推"最经典、也最自信的翻车方式。</p>
+    <h3>反向 DCF（先问市场信什么，再问我们信什么）</h3>
+    <p>以正常化基期 <span class="vnum" data-src="valuation.json" data-path="normalization.base_oe_recommended_mm" data-fmt="num0">72,756</span> 百万美元、现市值 <span class="vnum" data-src="valuation.json" data-path="market_cap_mm" data-fmt="num0">5,078,175</span> 百万美元反推：折现率 10% 下，未来 10 年 OE 期初增速需 <span class="vnum" data-src="valuation.json" data-path="implied_growth_fade_r10_tg3_normalized_basis" data-fmt="pct1">43.8%</span>（线性衰减至 3% 永续）。<b>苛刻吗？</b>参照系：FY2028 管理层指引 +70%，其后逐年衰减到 3%、十年平均约 25-30% 已是"AI 建设期再持续 4-5 年然后平稳"的乐观路径。市场隐含要求比这更陡——它定价的是"正常化盈利也要十年年增四成以上"。这不是苛刻，是透支：它要求英伟达把本轮尚未证明可持续的盈利水平当作地板而非天花板。</p>
+    <h3>三情景估值（正常化基期）</h3>
+    <table>
+      <tr><th>情景</th><th>核心假设（期初增速→永续）</th><th>每股价值</th><th>vs 现价 209.66</th></tr>
+      <tr><td>悲观：AI 资本开支 2027 年见顶回落，推理被 ASIC 大量分流</td><td>15% 衰减至 2.5%，r=10.5%</td><td><span class="vnum" data-src="valuation.json" data-path="scenarios.pessimistic.per_share" data-fmt="num2">63.14</span></td><td>-70%</td></tr>
+      <tr><td>基准：建设期延续至 2029-2030，份额缓慢下移、毛利率 70%+</td><td>30% 衰减至 3%，r=10%</td><td><span class="vnum" data-src="valuation.json" data-path="scenarios.base.per_share" data-fmt="num2">127.14</span></td><td>-39%</td></tr>
+      <tr><td>乐观：物理 AI/机器人接力，闭环成立，规则改变者地位十年不破</td><td>45% 衰减至 3%，r=9.5%</td><td><span class="vnum" data-src="valuation.json" data-path="scenarios.optimistic.per_share" data-fmt="num2">238.19</span></td><td>+14%</td></tr>
+    </table>
+    <p>三情景概率 30/50/20，<b>概率加权中枢 <span class="vnum" data-src="valuation.json" data-path="probability_weighted_central" data-fmt="num2">130.15</span> 美元</b>；安全边际判定以基准情景 127.14 美元为基准（不用含乐观抬升的加权中枢）。现价 209.66 美元高于乐观情景，<b>安全边际为负</b>。</p>
+    <h3>期望回报率（决定"划不划算"）</h3>
+    <table>
+      <tr><th>指标</th><th>数值</th><th>判读</th></tr>
+      <tr><td>期望年化回报（5 年 IRR）</td><td><span class="vnum" data-src="valuation.json" data-path="expected_return.expected_annualized_irr" data-fmt="pct1">-10.6%</span></td><td>为负，跑输指数门槛 9% 约 19.6 个百分点</td></tr>
+      <tr><td>亏损概率</td><td><span class="vnum" data-src="valuation.json" data-path="expected_return.loss_probability" data-fmt="pct0">80%</span></td><td>八成情景五年后低于现价</td></tr>
+      <tr><td>亏损情景平均跌幅</td><td><span class="vnum" data-src="valuation.json" data-path="expected_return.expected_downside_given_loss" data-fmt="pct1">-50.8%</span></td><td>一旦亏钱，平均腰斩</td></tr>
+      <tr><td>机会成本门槛（标普500长期年化）</td><td><span class="vnum" data-src="valuation.json" data-path="expected_return.index_hurdle" data-fmt="pct0">9%</span></td><td>期望年化跑输，机会成本不划算</td></tr>
+    </table>
+    <p>交叉验证：含新财报的 TTM PE ≈ <span class="vnum" data-src="ttm_snapshot.json" data-path="pe_ttm_post_earnings" data-fmt="num1">26.3</span> 倍，处于其十年 PE 带的低分位——但这是"周期利润顶部的低 PE"，半导体史上最危险的估值错觉之一，故只作参考不作依据。</p>
+    <p><b>安全边际结论：现价较基准内在价值高估约 65%，安全边际为负。</b>周期高位公司按估值纪律要求 ≥40% 安全边际，具备买点的价格约 <span class="vnum" data-src="valuation.json" data-path="buy_trigger_price" data-fmt="num0">76</span> 美元（基准值 × 0.6）。</p>
+  </section>
+
+  <section id="key-judgment">
+    <h2>九、关键判断</h2>
+    <h3>关键变量（李录式收敛：既重要又可知才配下注）</h3>
+    <table>
+      <tr><th>关键变量</th><th>当前判断</th><th>依据</th><th>为什么（部分）可知</th></tr>
+      <tr><td>① AI 资本开支持续性：客户能否在 2027-2028 形成"AI 收入覆盖资本开支"的闭环</td><td>未来 6-8 个季度大概率持续（订单锁定），2028 之后不可知</td><td>2,790 亿美元承诺订单、AWS 追加 200 万 GPU、管理层 FY2028 +70% 指引且称供给仍是瓶颈</td><td>近端可知：订单与云厂商 capex 指引是公开硬数据，每季可验证；远端不可知，我们诚实承认</td></tr>
+      <tr><td>② CUDA 锁定力 vs ASIC 侵蚀速度</td><td>训练侧 3-5 年内难破；推理侧份额将持续被分走，但市场增速暂时掩盖份额下移</td><td>毛利率 75% 未见侵蚀；博通 AI ASIC 高增但 ROIC 17% vs NVDA 141%，说明客户自研仍付出更高隐性成本</td><td>毛利率与数据中心份额是季度可观测的代理指标，侵蚀一定先反映在价格上</td></tr>
+    </table>
+    <p>中国业务、诉讼结果、台海属"重要但不可知"，不列为关键变量，只做情景压力测试与跟踪。</p>
+    <h3>变异认知测试（我们凭什么比市场懂？）</h3>
+    <p><b>市场为什么给这个价：</b>财报前卖方一致预期 Q2 收入 <span class="vnum" data-src="consensus.json" data-path="fy2027_q2_pre_consensus.revenue_bn" data-fmt="num2">92.07</span>0 亿美元、FY2028 增速约 <span class="vnum" data-src="consensus.json" data-path="fy2028_guidance.street_pre_growth_pct" data-fmt="num1">44.5</span>%；实际 Q2 96.2 亿×10 美元、管理层指引 +70% 全面超出。主流叙事是"AI 是新工业革命，NVDA 是唯一的军火商，26 倍 TTM PE 对这种增速不贵"。</p>
+    <p><b>我们与市场的分歧：</b>逐参数对照后——近端增长（订单、FY2028）我们与市场无分歧，数据都在明面上；分歧只在终局：市场按"建设期后平滑过渡到高原"定价，我们认为资本开支周期从不平滑着陆，顶部的形状（缓坡 vs 悬崖）无人可知。</p>
+    <p><b>认知优势来源：坦白说，没有。</b>这是全球被研究最充分的公司，我们不掌握任何市场不掌握的信息，也没有更深的产业认知。反向 DCF 只是告诉我们市场信了什么，并不能证明市场错了。<b>变异认知测试：未通过</b>——按本框架规则，现价买入=接受市场定价，结论最高只能给"观察等价格"。</p>
+    <h3>双重机会成本对照</h3>
+    <table>
+      <tr><th>对照项</th><th>预期年化回报</th><th>本标的预期年化回报（现价买入，计算值）</th><th>结论</th></tr>
+      <tr><td>标普500 指数基金（长期年化，机会成本门槛）</td><td>约 9~10%</td><td rowspan="2">期望年化 IRR = <span class="vnum" data-src="valuation.json" data-path="expected_return.expected_annualized_irr" data-fmt="pct1">-10.6%</span>（5 年期，概率加权，引擎计算值，已含情景落空风险）</td><td><b>跑输约 19.6 个百分点，机会成本不划算</b>；且亏损概率 80%、亏损情景平均跌幅 -50.8%</td></tr>
+      <tr><td>用户最好持仓</td><td>未提供</td><td>无法对照（下次分析请提供持仓）</td></tr>
+    </table>
+    <p><b>机会成本判定：现价买入的期望年化回报为负，大幅跑输指数，风险却高得多——这不是"不便宜"，是"不划算"。</b></p>
+  </section>
+
+  <section id="committee">
+    <h2>十、投委会评审</h2>
+    <blockquote class="persona"><span class="persona-name">巴菲特视角（71/100）——能力圈 3 ｜ 护城河持久性 4 ｜ Owner Earnings 5 ｜ 管理层 4 ｜ 价格 2</span>
+    这是我见过的资本回报率最高的生意之一：不到 165 亿美元的十年累计厂房设备投入，换来 2,300 亿美元经营现金流——See's Candies 的经济特征放大了一千倍。股东盈余是真的，股本纪律也是真的。但我有两个过不去的坎：第一，我不能确信十年后这门生意的经济形态——我的客户同时是我最危险的竞争者，这种结构我在 IBM 上吃过亏；第二，价格。以 5 万亿市值买入，我需要它十年内把股东盈余做到现在的六七倍才算得上好交易，这不是"以合理价格买伟大公司"，这是以完美价格买伟大公司。十年持有测试：如果明天股市关十年？我愿意持有这家公司，但不愿意以今天的价格<b>买入</b>——这两句话的区别，就是我的全部答案。</blockquote>
+    <blockquote class="persona"><span class="persona-name">段永平视角（84/100）——商业模式 5 ｜ 企业文化 4 ｜ 十年后还在吗 4 ｜ 懂不懂 3</span>
+    生意模式没什么好挑的：55% 的净利率是"坐着赚的钱"，差异化是真的——客户排着队加价买，这就是最硬的证据。文化也基本本分：黄仁勋说"中国收入按零算"，不粉饰、不画饼，这是本分；供给做不到的增长不许诺，也是本分。扣分在 2018 年那次——挖矿收入混在游戏里没说清楚，SEC 罚了，这种事有一次就得记一辈子。十年后还在吗？在，而且大概率还是最强的那家。但"懂不懂"这一项我只能给 3 分：我懂它现在怎么赚钱，我不懂它的客户为什么能一直亏着现金流买卡——这个问题想不清楚，就是没懂。不懂不做，懂多少做多少；价格再给点折扣，这生意值得重仓。</blockquote>
+    <blockquote class="persona"><span class="persona-name">李录视角（74/100）——认知准确完整 4 ｜ 长期复利机器 4 ｜ 知识诚实 4 ｜ 安全边际 1</span>
+    这份分析做对了一件重要的事：把"重要但不可知"（中国、诉讼、台海、资本开支的终局）与"重要且可知"（订单、毛利率、份额）分开了——投资的本质是在可知的少数变量上下重注。复利机器测试：ROIIC 113.8% × 再投资跑道，前半段成立；但跑道长度取决于客户的投资回报，这一环我们的推断链条超过了两环，置信度必须打折。知识诚实：报告承认了没有变异认知，这是最有价值的一句话——知道自己不知道什么，比知道什么更重要。安全边际只能给 1 分：现代价值投资对伟大企业可以放宽估值容忍度，但"零安全边际+认知有 30% 可能出错"的组合，数学上不成立。等价格，或者等认知——两者有其一，这就是很好的投资。</blockquote>
+    <div class="redteam">
+      <h3>芒格式红队质询（不打分，有权强制降档）</h3>
+      <p><b>反演：怎样确保在 NVDA 上亏大钱？</b></p>
+      <ol>
+        <li>在周期利润顶部按"低 PE"买入——26 倍 TTM PE 若遇到净利腰斩（2022 年发生过：-55%），瞬间变 58 倍。当前论证已通过"拒绝用 PE 做估值依据"排除此路径。</li>
+        <li>把供给约束错读成需求强劲——订单可延期、可重谈，2018 年矿卡订单一夜蒸发。部分排除：2,790 亿订单主体是云巨头而非矿场，但"订单≠收入"的教训必须保留。</li>
+        <li>忽视"客户即对手"的份额侵蚀，直到毛利率跌破 65% 才反应——已列入证伪条件强制止损式跟踪。</li>
+        <li>台海冲突：无法排除、无法对冲、无法定价。唯一手段是仓位控制，本报告边界内不给仓位建议，但必须白纸黑字写：这是持有 NVDA 无法回避的尾部。</li>
+      </ol>
+      <p><b>心理误判自检：</b>确认偏误——本报告数据采集阶段主动纳入了 Burry 质疑、集体诉讼、SAMR 调查等反面材料，及格；社会认同——"巴菲特们都不买科技股"的反向社会认同同样是偏误，已用数据独立判断；锚定——最大的锚是"它过去三年涨了十倍"，估值环节已刻意只用现金流不用历史股价；被剥夺超级反应——"再不上车就晚了"是本案最强的情绪力量，观察档结论本身就是对它的抵抗。</p>
+      <p><b>最强空头逻辑（300字内）：</b>英伟达的收入=七家公司的资本开支预算，这七家的 AI 业务现金流为负，靠核心业务利润和发债供血；英伟达再把自己的利润投资给客户（CoreWeave/OpenAI），并计划撬动 5,000 亿第三方资本——这是一个自我强化也会自我瓦解的飞轮。历史上所有"卖铲子"超级周期（思科 2000）都终结于同一句话：客户先于铲子公司发现投资回报不达预期。当第一家云巨头宣布下调 AI capex，2,790 亿订单会显示出它法律上的柔软性，市场将同时杀利润和杀估值——从 56% 净利率和 26 倍 PE 双杀开始。届时 100 美元不是底，是第一站。</p>
+      <p><b>Pre-mortem（假设 2031 年本笔投资亏损 50%，最可能原因排序）：</b>① AI 应用收入增长不及资本开支增速，2028 年起云厂商集体砍单（先行信号：任一巨头 capex 指引负增长、GPU 现货租赁价格跌破长约价 30% 以上）；② 推理市场被 ASIC+开源软件栈拿走 40% 份额，毛利率滑向 55%（先行信号：毛利率连续两季 &lt;68%、博通 AI 收入增速持续高于 NVDA 数据中心）；③ 地缘事件（管制升级/台海）造成供应或市场的硬缺口（先行信号：无，此为跳变风险）。</p>
+      <p><b>关键判断质询：</b>变量①的近端判断基于一手公开数据（订单、指引），合格；远端诚实标注不可知，合格。变量②以毛利率为代理指标可每季证伪，合格。变异认知测试敢于承认"未通过"，通过钢铁人测试——多头叙事（算力=新时代电力）我们能讲到多头点头，空头叙事（资本开支周期必然回摆）我们也能讲到空头点头，两边都对，分歧只在时点，而时点恰恰不可知。<b>红队裁定：论证无重大漏洞，"观察等价格"档位与证据强度匹配，不降档；但要求在结论页显著标注机会成本判定与台海尾部不可对冲性。已执行。</b></p>
+    </div>
+  </section>
+
+  <section id="conclusion">
+    <h2>十一、结论与行动</h2>
+    <p>最终档位：<span class="tag tag-amber">观察等价格</span>　综合分 76/100（巴菲特 71×40% + 段永平 84×30% + 李录 74×30%）。<b>档位由双闸门决定，分数只是叙事</b>：闸门一安全边际——现价较基准内在价值高估约 65%，为负，不过；闸门二期望回报率——期望年化 -10.6% 跑输指数约 19.6 个百分点，亏损概率 80%，不过。不是因为公司不好——公司质量在本框架历史打分中属最高一档——而是<b>现价既贵（高估）又不划算（期望回报为负）</b>，好公司 ≠ 好价格。</p>
+    <table>
+      <tr><th>档位含义</th><th>触发条件</th></tr>
+      <tr><td>转"核心买入"</td><td>股价回到 ≈76 美元（基准值 ×0.6，周期高位公司 40% 安全边际）；或关键变量①获得强证据（如头部客户披露 AI 业务经营现金流转正、AI 收入/资本开支比值持续改善），使基准情景本身上修、周期位置回落到中性区间</td></tr>
+      <tr><td>转"排除"</td><td>证伪条件任意两条同时触发</td></tr>
+    </table>
+    <h3>持有体验预演（先看清最坏，再谈拥有）</h3>
+    <p>近五年真实记录：<span class="vnum" data-src="valuation.json" data-path="holding_experience.max_drawdown" data-fmt="pct1">-65.9%</span> 最大回撤（2021-11 峰 → 2022-10 谷），修复用了 <span class="vnum" data-src="valuation.json" data-path="holding_experience.repair_days" data-fmt="num0">553</span> 天。再往前，2018 年加密崩盘回撤同样超过 50%。这只股票的历史节奏是：每 3-4 年一次腰斩级回撤，然后创新高。<b>灵魂拷问：若买入后下跌 40% 而基本面未变，你敢不敢加仓？</b>敢——你才配持有它；不敢——说明仓位或标的不适合你，2022 年 10 月那一天，绝大多数人是不敢的。</p>
+    <h3>证伪条件（出现即说明论点错了，逐条挂关键变量）</h3>
+    <ul class="checklist">
+      <li>【变量① 资本开支持续性】任一头部云厂商年度 capex 指引转为负增长；或 NVDA 数据中心收入环比连续两季下滑。</li>
+      <li>【变量① 资本开支持续性】客户承诺订单余额连续两季环比下降（本季 2,790 亿美元为基线）。</li>
+      <li>【变量② CUDA 锁定力】GAAP 毛利率连续两个季度低于 68%（管理层指引底线 71-72% 再破位），说明定价权正在被定制芯片实质侵蚀。</li>
+      <li>【变量② CUDA 锁定力】博通 AI 半导体收入增速连续三季显著高于 NVDA 数据中心增速且差距扩大。</li>
+      <li>【共同】存货+供应承诺合计增速持续大幅高于收入增速（复刻 2022 年减值前形态）。</li>
+    </ul>
+    <h3>季度跟踪清单</h3>
+    <table>
+      <tr><th>指标</th><th>当前值</th><th>警戒线</th><th>说明</th></tr>
+      <tr><td>GAAP 毛利率</td><td>75.0%（FY2027Q2）</td><td>&lt;70% 警觉，&lt;68% 证伪</td><td>定价权最诚实的代理指标</td></tr>
+      <tr><td>数据中心收入环比</td><td>+18%</td><td>连续两季 &lt;0%</td><td>需求主线</td></tr>
+      <tr><td>客户承诺订单</td><td>2,790 亿美元</td><td>连续两季环比下降</td><td>需求可见度</td></tr>
+      <tr><td>四大云厂商合计 capex 指引</td><td>同比 +111%（2026，C级）</td><td>任一家转负</td><td>关键变量①的上游信号</td></tr>
+      <tr><td>存货+采购承诺 vs 收入增速差</td><td>存货 150 亿美元</td><td>增速差 &gt;30pct 持续两季</td><td>2022 减值剧本的前兆指标</td></tr>
+    </table>
+    <h3>你的初判 vs 本报告结论</h3>
+    <p>用户初判：未提供（Phase 0 已询问）。→ 本报告结论：观察等价格。无对照分歧可记录；建议下次分析前先写两句你自己的判断，防止思考外包。</p>
+    <h3>与上次分析对比</h3>
+    <p>首次分析，无历史决策日志。本次结论与关键变量判断已写入 decision-log.md，下次复分析将强制 diff。</p>
+  </section>
+
+  <section id="appendix">
+    <h2>附录：数据来源与校验</h2>
+    <p class="source-note"><b>数据来源清单：</b>① NVDA/AMD/INTC/AVGO 年度财务：SEC EDGAR XBRL companyfacts API（A 级，2026-08-27 抓取）；NVDA 早年 capex（FY2016-2021）取自 10-K 原文合并现金流量表（A 级，原文存档 data/filings/）。② NVDA 命门科目双源核对：近 3 财年收入/净利/经营现金流/摊薄股本已与 10-K 原文逐项核对，一致（crosscheck 区块）。③ 行情快照/周K/近12季财务：westock-data（A 级，2026-08-27）。④ FY2027Q2 财报数字与 FY2028 指引：公司财报与电话会，经多家媒体交叉（B 级）。⑤ 财报前一致预期：LSEG/Visible Alpha 转引（B 级）。⑥ 行业 capex、诉讼进展：公开报道（C 级，仅作旁证）。</p>
+    <p class="source-note"><b>入口校验（validate_data）：</b>NVDA 通过（错误 0/警告 0，含双源核对）；AMD/INTC 通过（警告：EDGAR 无总负债标签，未做三表勾稽，不影响利润/现金流主线）；AVGO 通过（FY2017 权益改用含少数股东权益口径，已在底稿标注）。<b>竞对三家按规则豁免年报原文核对</b>，其财务数据仍为 EDGAR 官方 XBRL。</p>
+    <p class="source-note"><b>数字校验（verify_report）：</b>本报告关键数字均带 vnum 溯源标签，交付前脚本比对通过（59 项全部通过）。</p>
+    <p class="source-note"><b>估值口径（本次修订）：</b>本报告估值采用 2026-08-27 修订后的引擎——本股被 compute_metrics 判定为周期高位（最新净利率为十一年均值 1.66 倍），DCF 基期禁用当期 Owner Earnings，改用正常化混合口径基期 72,756 百万美元；期望年化回报由 reverse_dcf.py expected-return 引擎计算（期末回归内在价值、不含股息、概率加权）。初版报告（峰值基期 121,123）曾得出基准价值 211.65 美元、买点 148 美元，与新口径结果（基准 127.14、买点 76）差异源于基期正常化，此差异本身即是该关卡价值的实证。</p>
+    <p class="source-note"><b>口径注：</b>四家均 US-GAAP/美元。财年错位：NVDA 1月末、AVGO 10月末、AMD/INTC 12月末，图表中按"覆盖主要自然年"对齐，趋势对比不受实质影响。</p>
+    <h3>术语速查表</h3>
+    <table>
+      <tr><th>术语</th><th>白话解释</th></tr>
+      <tr><td>ROIC</td><td>投入资本回报率：公司用股东的钱+借的钱做生意，每一块钱本金一年赚回几毛。15% 算优秀，NVDA 是 140%</td></tr>
+      <tr><td>ROIIC</td><td>增量资本回报率：最近新投进去的钱赚钱效率如何，衡量"增长值不值得投"</td></tr>
+      <tr><td>Owner Earnings</td><td>股东盈余（巴菲特发明）：净利润修正为"股东真正能拿走的现金"，扣掉维持生意必须再投入的钱</td></tr>
+      <tr><td>反向 DCF</td><td>不预测未来算价值，而是反过来问：现在的股价等于假设公司未来每年增长多少？再判断这个假设靠不靠谱</td></tr>
+      <tr><td>安全边际</td><td>用五毛买一块钱的东西，错了也不至于大亏。本报告要求 30% 折扣才算达标</td></tr>
+      <tr><td>变异认知</td><td>你和市场想的不一样、且你是对的，才能赚超额收益。想的一样=只能赚市场平均</td></tr>
+      <tr><td>ASIC</td><td>为单一用途定制的芯片。云厂商自研 ASIC 替代通用 GPU，是 NVDA 最大的长期威胁</td></tr>
+      <tr><td>TTM</td><td>最近 12 个月滚动数据，比单看年报更新</td></tr>
+    </table>
+  </section>
+
+  <footer class="disclaimer">
+    本报告由分析工具生成，仅供研究参考，不构成任何投资建议。市场有风险，投资需谨慎。
+  </footer>
+</div>
+
+<script>
+const COLOR = { primary:'#1a3a5c', accent:'#d97706', grays:['#9ca3af','#6b7280','#d1d5db','#4b5563'] };
+const charts = [];
+function initChart(id, option) {
+  const el = document.getElementById(id);
+  if (!el || typeof echarts === 'undefined') return;
+  const c = echarts.init(el);
+  c.setOption(Object.assign({
+    textStyle:{fontFamily:'-apple-system, PingFang SC, Microsoft YaHei'},
+    grid:{left:70,right:40,top:50,bottom:40},
+    tooltip:{trigger:'axis'}
+  }, option));
+  charts.push(c);
+}
+window.addEventListener('resize', () => charts.forEach(c => c.resize()));
+if (typeof echarts === 'undefined') {
+  document.querySelectorAll('.chart').forEach(el => {
+    el.innerHTML = '<p style="color:#b91c1c;padding:20px">图表需联网加载 ECharts 后显示</p>';
+  });
+}
+const YEARS = ['FY2016','FY2017','FY2018','FY2019','FY2020','FY2021','FY2022','FY2023','FY2024','FY2025','FY2026'];
+
+initChart('chart-radar-summary', {
+  tooltip:{}, radar:{ indicator:[
+    {name:'能力圈/懂不懂',max:5},{name:'护城河/模式',max:5},{name:'增长/复利机器',max:5},
+    {name:'管理层/文化',max:5},{name:'价格/安全边际',max:5}]},
+  series:[{type:'radar',data:[
+    {value:[3,4,4,4,2],name:'巴菲特',itemStyle:{color:COLOR.primary}},
+    {value:[3,5,4,4,2.5],name:'段永平',itemStyle:{color:COLOR.accent}},
+    {value:[4,4,4,4,1],name:'李录',itemStyle:{color:'#15803d'}}]}],
+  legend:{bottom:0}
+});
+
+initChart('chart-valuation-band', {
+  grid:{left:80,right:60,top:20,bottom:30},
+  xAxis:{type:'value',name:'美元/股',min:0,max:280},
+  yAxis:{type:'category',data:['估值区间']},
+  series:[
+    {type:'bar',stack:'v',itemStyle:{color:'transparent'},data:[63.14],tooltip:{show:false}},
+    {type:'bar',stack:'v',itemStyle:{color:'#93c5fd'},barWidth:40,data:[175.05],
+     markLine:{symbol:'none',lineStyle:{width:2},data:[
+       {xAxis:209.66,label:{formatter:'现价 209.66'},lineStyle:{color:'#b91c1c'}},
+       {xAxis:127.14,label:{formatter:'基准 127.14',position:'insideEndTop'},lineStyle:{color:'#1a3a5c'}},
+       {xAxis:76,label:{formatter:'买点 76'},lineStyle:{color:'#15803d'}}]}}]
+});
+
+initChart('chart-revenue-structure', {
+  tooltip:{trigger:'item'},
+  legend:{bottom:0},
+  series:[{name:'FY2026 收入结构',type:'pie',radius:['40%','65%'],center:['30%','45%'],
+    label:{formatter:'{b}\n{d}%'},
+    data:[{value:193479,name:'Compute & Networking',itemStyle:{color:COLOR.primary}},
+          {value:22459,name:'Graphics',itemStyle:{color:COLOR.accent}}]},
+   {name:'FY2025 区域(开票地)',type:'pie',radius:['40%','65%'],center:['75%','45%'],
+    label:{formatter:'{b}\n{d}%'},
+    data:[{value:61257,name:'美国',itemStyle:{color:COLOR.primary}},
+          {value:23684,name:'新加坡(开票)',itemStyle:{color:'#3b82f6'}},
+          {value:20573,name:'台湾',itemStyle:{color:COLOR.accent}},
+          {value:17108,name:'中国(含港)',itemStyle:{color:'#9ca3af'}},
+          {value:7875,name:'其他',itemStyle:{color:'#d1d5db'}}]}]
+});
+
+initChart('chart-q1', {
+  legend:{top:0},
+  xAxis:{type:'category',data:YEARS},
+  yAxis:[{type:'value',name:'百万美元'},{type:'value',name:'净利率',axisLabel:{formatter:'{value}%'},max:60}],
+  series:[
+    {name:'收入',type:'bar',data:[5010,6910,9714,11716,10918,16675,26914,26974,60922,130497,215938],itemStyle:{color:COLOR.primary}},
+    {name:'归母净利润',type:'bar',data:[614,1666,3047,4141,2796,4332,9752,4368,29760,72880,120067],itemStyle:{color:COLOR.accent}},
+    {name:'净利率%',type:'line',yAxisIndex:1,data:[12.3,24.1,31.4,35.3,25.6,26.0,36.2,16.2,48.8,55.8,55.6],itemStyle:{color:'#15803d'}}]
+});
+
+initChart('chart-q2', {
+  legend:{top:0},
+  xAxis:{type:'category',data:YEARS},
+  yAxis:{type:'value',axisLabel:{formatter:'{value}%'},min:0,max:80},
+  series:[
+    {name:'NVDA 毛利率',type:'line',lineStyle:{width:3},data:[56.1,58.8,59.9,61.2,62.0,62.3,64.9,56.9,72.7,75.0,71.1],itemStyle:{color:COLOR.primary}},
+    {name:'NVDA 净利率',type:'line',data:[12.3,24.1,31.4,35.3,25.6,26.0,36.2,16.2,48.8,55.8,55.6],itemStyle:{color:COLOR.accent}},
+    {name:'AMD 净利率',type:'line',data:[-16.5,-11.5,-0.6,5.2,5.1,25.5,19.2,5.6,3.8,6.4,12.5],itemStyle:{color:'#9ca3af'}},
+    {name:'AVGO 净利率',type:'line',data:[null,-13.1,9.6,58.8,12.1,12.4,24.5,34.6,39.3,11.4,36.2],itemStyle:{color:'#6b7280'}}]
+});
+
+initChart('chart-q3', {
+  legend:{top:0},
+  xAxis:{type:'category',data:['2017','2018','2019','2020','2021','2022','2023','2024','2025']},
+  yAxis:{type:'value',axisLabel:{formatter:'{value}%'},name:'ROIC'},
+  series:[
+    {name:'NVDA',type:'line',lineStyle:{width:3},data:[168.5,105.2,68.3,50.3,60.6,20.2,122.8,197.7,140.8],itemStyle:{color:COLOR.primary}},
+    {name:'AMD',type:'line',data:[17.4,43.7,39.5,45.7,89.2,4.3,0.7,3.4,6.4],itemStyle:{color:'#9ca3af'}},
+    {name:'INTC',type:'line',data:[21.2,25.2,22.5,23.6,18.2,2.1,0.1,-8.9,-1.8],itemStyle:{color:'#6b7280'}},
+    {name:'AVGO',type:'line',data:[12.7,6.4,6.3,13.3,23.8,28.1,13.2,17.1,null],itemStyle:{color:'#4b5563'}}]
+});
+
+initChart('chart-q4', {
+  legend:{top:0},
+  xAxis:{type:'category',data:YEARS},
+  yAxis:{type:'value',name:'百万美元'},
+  series:[
+    {name:'归母净利润',type:'bar',data:[614,1666,3047,4141,2796,4332,9752,4368,29760,72880,120067],itemStyle:{color:COLOR.accent}},
+    {name:'自由现金流(OCF-capex)',type:'bar',data:[1089,1496,2909,3143,4272,4694,8132,3808,27021,60853,96676],itemStyle:{color:COLOR.primary}}]
+});
+
+initChart('chart-q5', {
+  tooltip:{trigger:'item'},
+  legend:{bottom:0},
+  series:[{name:'10年经营现金流去向',type:'pie',radius:['35%','62%'],
+    label:{formatter:'{b}\n{c} ({d}%)'},
+    data:[
+      {value:16228,name:'资本开支',itemStyle:{color:COLOR.primary}},
+      {value:97178,name:'回购',itemStyle:{color:COLOR.accent}},
+      {value:4971,name:'分红',itemStyle:{color:'#15803d'}},
+      {value:111944,name:'留存(净现金+投资并购等)',itemStyle:{color:'#9ca3af'}}]}]
+});
+</script>
+</body>
+</html>

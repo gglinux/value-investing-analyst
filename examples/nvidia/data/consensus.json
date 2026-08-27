@@ -1,0 +1,61 @@
+{
+ "as_of": "2026-08-27",
+ "source_level": "B/C（财报前卖方一致预期+财报后管理层指引，新闻综述转引 LSEG/Visible Alpha）",
+ "fy2027_q2_pre_consensus": {
+  "revenue_bn": 92.07,
+  "eps_adj": 2.09,
+  "dc_revenue_bn": 85.67
+ },
+ "fy2027_q2_actual": {
+  "revenue_bn": 96.221,
+  "yoy_pct": 106,
+  "net_income_gaap_bn": 59.688,
+  "eps_gaap": 2.46,
+  "eps_adj": 2.22,
+  "gross_margin_pct": 75.0,
+  "dc_revenue_bn": 89.0,
+  "dc_yoy_pct": 117,
+  "fcf_bn": 21.34,
+  "hyperscaler_rev_bn": 48.71,
+  "enterprise_other_bn": 40.31,
+  "buyback_dividend_bn": 26,
+  "buyback_auth_left_bn": 99
+ },
+ "fy2027_q3_guidance": {
+  "revenue_bn": 108.0,
+  "range_pct": 2,
+  "gm_pct": 74.0,
+  "excl_china_dc": true,
+  "street_pre": 105.15
+ },
+ "fy2028_guidance": {
+  "mgmt_revenue_growth_pct": 70,
+  "street_pre_growth_pct": 44.5,
+  "note": "管理层称真实需求接近翻倍，70%是供给约束下的可交付量；供应（芯片/内存/电力/机房）至少到FY2028末仍是主约束"
+ },
+ "gm_path": {
+  "fy2027_q4_pct": "71-72（内存涨价冲击）",
+  "fy2028_pct": "72-73（涨价传导后企稳）"
+ },
+ "backlog": {
+  "customer_committed_orders_bn": 279,
+  "prev_quarter_bn": 119,
+  "note": "客户承诺订单环比 1190→2790 亿美元",
+  "customer_committed_orders_yi_usd": 2790.0,
+  "prev_quarter_yi_usd": 1190.0
+ },
+ "other": {
+  "aws_additional_gpus_mm": 2.0,
+  "vera_rubin": "已全面投产",
+  "third_party_capital_plan_bn": 500
+ },
+ "fy2027_q1_actual": {
+  "revenue_bn": 81.62,
+  "dc_revenue_bn": 75.2,
+  "eps_adj": 1.87
+ },
+ "sources": [
+  "华尔街见闻/财联社/证券时报/21世纪经济报道 2026-08-27 财报报道",
+  "AlphaStreet/Investopedia(Visible Alpha) 财报前预期"
+ ]
+}

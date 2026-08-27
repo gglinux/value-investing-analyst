@@ -1,0 +1,101 @@
+{
+ "as_of": "2026-08-27",
+ "engine": "scripts/reverse_dcf.py（两阶段DCF，fade模式）",
+ "base_oe_mm": 121123.0,
+ "shares_mm": 24221.0,
+ "market_cap_mm": 5078175.0,
+ "normalization": {
+  "cyclicality": "周期高位",
+  "margin_ratio_latest_vs_avg": 1.6647795668293073,
+  "base_oe_recommended_mm": 72756.41917607641,
+  "base_oe_range_mm": [
+   51642.695526006915,
+   72756.41917607641
+  ],
+  "oe_current_mm": 121123.4,
+  "basis": "正常化混合口径（周期高位禁用当期基期）",
+  "note": "基期口径差异致基准价值从 211.65 降至 127.14，差距 40%，超过 30% 披露阈值"
+ },
+ "implied_growth_fade_r10_tg3_current_basis": 0.2975,
+ "implied_growth_fade_r10_tg3_normalized_basis": 0.4384,
+ "scenarios": {
+  "pessimistic": {
+   "growth0": 0.15,
+   "r": 0.105,
+   "tg": 0.025,
+   "fade": true,
+   "per_share": 63.14
+  },
+  "base": {
+   "growth0": 0.3,
+   "r": 0.1,
+   "tg": 0.03,
+   "fade": true,
+   "per_share": 127.14
+  },
+  "optimistic": {
+   "growth0": 0.45,
+   "r": 0.095,
+   "tg": 0.03,
+   "fade": true,
+   "per_share": 238.19
+  }
+ },
+ "scenario_probabilities": {
+  "pessimistic": 0.3,
+  "base": 0.5,
+  "optimistic": 0.2
+ },
+ "probability_weighted_central": 130.15,
+ "price": 209.66,
+ "margin_of_safety_vs_base": -0.649,
+ "margin_of_safety_vs_central": -0.6109,
+ "expected_return": {
+  "price": 209.66,
+  "hold_years": 5,
+  "scenarios": [
+   {
+    "name": "悲观",
+    "probability": 0.3,
+    "value_per_share": 63.14,
+    "total_return": -0.6988457502623295,
+    "annualized_irr": -0.21339301385540121
+   },
+   {
+    "name": "基准",
+    "probability": 0.5,
+    "value_per_share": 127.14,
+    "total_return": -0.393589621291615,
+    "annualized_irr": -0.0951984724456868
+   },
+   {
+    "name": "乐观",
+    "probability": 0.2,
+    "value_per_share": 238.19,
+    "total_return": 0.13607745874272625,
+    "annualized_irr": 0.025844628117098978
+   }
+  ],
+  "expected_value_per_share": 130.15,
+  "expected_total_return": -0.379233043975961,
+  "expected_annualized_irr": -0.10644821475604396,
+  "loss_probability": 0.8,
+  "expected_downside_given_loss": -0.5080606696556329,
+  "probability_weighted_downside": -0.40644853572450634,
+  "index_hurdle": 0.09,
+  "beats_index": false,
+  "excess_vs_index": -0.19644821475604396,
+  "note": "期末股价回归内在价值假设，不含股息；亏损概率为期末低于现价的情景概率之和"
+ },
+ "buy_trigger_price": 76.0,
+ "buy_trigger_note": "周期高位公司按 valuation-guide 用 ≥40% 安全边际：基准内在价值 127.14 × 0.6 ≈ 76 美元",
+ "holding_experience": {
+  "max_drawdown": -0.659,
+  "peak_date": "2021-11-19",
+  "trough_date": "2022-10-14",
+  "repair_date": "2023-05-26",
+  "repair_days": 553,
+  "sample": "2021-08~2026-08 周K（westock-data，A级）",
+  "current_vs_sample_high": -0.069
+ }
+}

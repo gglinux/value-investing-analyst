@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{{公司名}} 价值投资分析报告</title>
+<script src="https://cdn.jsdelivr.net/npm/echarts@5/dist/echarts.min.js"></script>
+<style>
+  :root {
+    --primary: #1a3a5c;
+    --accent: #d97706;
+    --bg: #f7f8fa;
+    --card: #ffffff;
+    --text: #24292f;
+    --muted: #6b7280;
+    --green: #15803d;
+    --red: #b91c1c;
+    --border: #e5e7eb;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif;
+    background: var(--bg); color: var(--text); line-height: 1.75; font-size: 15px;
+  }
+  .container { max-width: 1080px; margin: 0 auto; padding: 24px 20px 80px; }
+  header.report-header {
+    background: var(--primary); color: #fff; border-radius: 12px;
+    padding: 40px 36px; margin-bottom: 28px;
+  }
+  header.report-header h1 { font-size: 26px; font-weight: 700; }
+  header.report-header .meta { margin-top: 8px; opacity: .75; font-size: 13px; }
+  .verdict-banner {
+    display: flex; align-items: center; gap: 24px; margin-top: 24px;
+    background: rgba(255,255,255,.08); border-radius: 10px; padding: 20px 24px;
+  }
+  .verdict-label { font-size: 34px; font-weight: 800; letter-spacing: 2px; }
+  .verdict-buy { color: #4ade80; }
+  .verdict-watch { color: #fbbf24; }
+  .verdict-hard { color: #94a3b8; }
+  .verdict-reject { color: #f87171; }
+  .verdict-score { font-size: 15px; opacity: .9; }
+  .snapshot-grid {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 10px; margin-top: 16px;
+  }
+  .snapshot-item {
+    background: rgba(255,255,255,.08); border-radius: 8px; padding: 10px 14px;
+  }
+  .snapshot-item .k { font-size: 12px; opacity: .65; }
+  .snapshot-item .v { font-size: 17px; font-weight: 700; margin-top: 2px; }
+  .snapshot-time { font-size: 11px; opacity: .55; margin-top: 8px; }
+  section { background: var(--card); border-radius: 12px; padding: 32px 36px; margin-bottom: 24px; border: 1px solid var(--border); }
+  h2 {
+    font-size: 20px; color: var(--primary); padding-bottom: 10px; margin-bottom: 18px;
+    border-bottom: 3px solid var(--accent); display: inline-block;
+  }
+  h3 { font-size: 16px; color: var(--primary); margin: 22px 0 10px; }
+  p { margin-bottom: 12px; }
+  .chart { width: 100%; height: 400px; margin: 12px 0 4px; }
+  .chart-note { font-size: 12px; color: var(--muted); margin-bottom: 16px; }
+  .insight-title { font-size: 15px; font-weight: 700; color: var(--text); margin: 20px 0 4px; }
+  table { width: 100%; border-collapse: collapse; margin: 14px 0; font-size: 14px; }
+  th { background: var(--primary); color: #fff; padding: 10px 12px; text-align: left; font-weight: 600; }
+  td { padding: 9px 12px; border-bottom: 1px solid var(--border); }
+  tr:nth-child(even) td { background: #fafbfc; }
+  .tag { display: inline-block; padding: 2px 10px; border-radius: 20px; font-size: 12px; font-weight: 600; }
+  .tag-green { background: #dcfce7; color: var(--green); }
+  .tag-amber { background: #fef3c7; color: #b45309; }
+  .tag-red { background: #fee2e2; color: var(--red); }
+  .points-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin: 16px 0; }
+  .point-card { border-radius: 10px; padding: 16px 18px; border: 1px solid var(--border); }
+  .point-card.bull { border-left: 4px solid var(--green); }
+  .point-card.bear { border-left: 4px solid var(--red); }
+  .point-card h4 { font-size: 14px; margin-bottom: 8px; }
+  .point-card ul { padding-left: 18px; font-size: 14px; }
+  .point-card li { margin-bottom: 6px; }
+  blockquote.persona {
+    border-left: 4px solid var(--accent); background: #fffbf5;
+    padding: 16px 20px; margin: 14px 0; border-radius: 0 8px 8px 0; font-size: 14px;
+  }
+  blockquote.persona .persona-name { font-weight: 700; color: var(--primary); display: block; margin-bottom: 6px; }
+  .redteam { background: #1f2937; color: #e5e7eb; border-radius: 10px; padding: 24px 28px; margin: 16px 0; }
+  .redteam h3 { color: #fbbf24; margin-top: 0; }
+  .redteam ul, .redteam ol { padding-left: 20px; }
+  .redteam li { margin-bottom: 8px; }
+  .checklist li { margin-bottom: 8px; }
+  footer.disclaimer {
+    font-size: 12px; color: var(--muted); text-align: center; margin-top: 40px;
+    padding-top: 20px; border-top: 1px solid var(--border);
+  }
+  .source-note { font-size: 12px; color: var(--muted); }
+  @media print { section { break-inside: avoid; } .chart { height: 360px; } }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <header class="report-header">
+    <h1>{{公司名}}（{{代码}}）价值投资分析报告</h1>
+    <div class="meta">报告日期：{{日期}} ｜ 数据截止：{{数据截止日}} ｜ 现价：{{现价}} ｜ 市值：{{市值}}</div>
+    <div class="verdict-banner">
+      <!-- verdict-label 类根据结论切换: verdict-buy / verdict-watch / verdict-hard / verdict-reject -->
+      <div class="verdict-label verdict-watch">{{结论档位}}</div>
+      <div class="verdict-score">
+        综合评分：<b>{{综合分}}</b> / 100（巴菲特 {{分1}} ｜ 段永平 {{分2}} ｜ 李录 {{分3}}）<br>
+        内在价值区间：{{悲观值}} ~ {{乐观值}}（中枢 {{中枢值}}）｜ 安全边际：{{安全边际}}
+      </div>
+    </div>
+    <!-- 市场快照信息卡：数据取自 data/market_snapshot.json，关键数字用 vnum 溯源标签包裹，例：
+         <span class="vnum" data-src="market_snapshot.json" data-path="pe_ttm" data-fmt="num1">18.3</span> -->
+    <div class="snapshot-grid">
+      <div class="snapshot-item"><div class="k">现价</div><div class="v">{{现价}}</div></div>
+      <div class="snapshot-item"><div class="k">总市值</div><div class="v">{{市值}}</div></div>
+      <div class="snapshot-item"><div class="k">PE-TTM</div><div class="v">{{PE}}</div></div>
+      <div class="snapshot-item"><div class="k">PB</div><div class="v">{{PB}}</div></div>
+      <div class="snapshot-item"><div class="k">股息率</div><div class="v">{{股息率}}</div></div>
+      <div class="snapshot-item"><div class="k">52周位置</div><div class="v">{{52周位置}}</div></div>
+      <div class="snapshot-item"><div class="k">日均成交额(20日)</div><div class="v">{{日均成交额}}</div></div>
+    </div>
+    <div class="snapshot-time">行情快照时间：{{快照抓取时间}}（来源等级 A）</div>
+  </header>
+
+  <section id="summary">
+    <h2>一、投资摘要</h2>
+    <p><b>一句话生意：</b>{{一句话描述这门生意}}</p>
+    <div class="points-grid">
+      <div class="point-card bull">
+        <h4>三大投资论点</h4>
+        <ul><li>{{论点1}}</li><li>{{论点2}}</li><li>{{论点3}}</li></ul>
+      </div>
+      <div class="point-card bear">
+        <h4>三大核心风险</h4>
+        <ul><li>{{风险1}}</li><li>{{风险2}}</li><li>{{风险3}}</li></ul>
+      </div>
+    </div>
+    <p><b>本笔投资取决于：</b>{{关键变量1}}；{{关键变量2}}；{{关键变量3（如有）}}</p>
+    <p class="source-note"><b>信息局限声明：</b>{{哪些结论因数据缺失/信息劣势置信度打折}}</p>
+    <div class="insight-title">三人评分雷达</div>
+    <div id="chart-radar-summary" class="chart" style="height:340px"></div>
+    <div class="insight-title">估值区间 vs 现价</div>
+    <div id="chart-valuation-band" class="chart" style="height:220px"></div>
+  </section>
+
+  <section id="business">
+    <h2>二、公司与生意</h2>
+    <p>{{大白话讲生意}}</p>
+    <div class="insight-title">{{收入结构洞察标题}}</div>
+    <div id="chart-revenue-structure" class="chart"></div>
+    <div class="chart-note">数据来源：{{来源}}</div>
+  </section>
+
+  <section id="quant">
+    <h2>三、定量画像</h2>
+    <!-- 每张图：insight-title + chart div + chart-note + 一段解读，按需复制 -->
+    <div class="insight-title">{{图1洞察标题}}</div>
+    <div id="chart-q1" class="chart"></div>
+    <div class="chart-note">数据来源：{{来源}}</div>
+    <p>{{图1解读}}</p>
+  </section>
+
+  <section id="moat"><h2>四、护城河分析</h2><!-- 五源表 + 定量验证 + 评级 --></section>
+  <section id="growth"><h2>五、增长空间与质量</h2><!-- TAM/S曲线/增长分解/ROIIC --></section>
+  <section id="management"><h2>六、管理层与企业文化</h2><!-- 资本配置雷达 + 承诺兑现表 --></section>
+  <section id="risk"><h2>七、财务质量与风险</h2><!-- 排雷摘要 + 深查 --></section>
+  <section id="valuation"><h2>八、估值与安全边际</h2><!-- 三情景 + 反向DCF + 敏感性 --></section>
+
+  <section id="key-judgment">
+    <h2>九、关键判断</h2>
+    <h3>关键变量（1~3 个，既重要又可知）</h3>
+    <table>
+      <tr><th>关键变量</th><th>当前判断</th><th>依据</th><th>为什么可知</th></tr>
+      <tr><td>{{变量1}}</td><td>{{判断}}</td><td>{{依据}}</td><td>{{可知性}}</td></tr>
+    </table>
+    <h3>变异认知测试</h3>
+    <p><b>市场为什么给现在这个价：</b>{{主流叙事}}</p>
+    <p><b>我们与市场的分歧：</b>{{分歧点}}</p>
+    <p><b>认知优势来源：</b>{{优势来源或"未通过：无明确认知优势"}}</p>
+    <h3>双重机会成本对照</h3>
+    <table>
+      <tr><th>对照项</th><th>预期年化回报</th><th>本标的预期回报</th><th>结论</th></tr>
+      <tr><td>指数基金（{{指数名}}）</td><td>{{指数回报}}</td><td rowspan="2">{{标的回报}}</td><td>{{跑赢/跑输}}</td></tr>
+      <tr><td>用户最好持仓（{{持仓名/未提供}}）</td><td>{{持仓回报}}</td><td>{{跑赢/跑输}}</td></tr>
+    </table>
+  </section>
+
+  <section id="committee">
+    <h2>十、投委会评审</h2>
+    <blockquote class="persona"><span class="persona-name">巴菲特视角（{{分1}}/100）</span>{{巴菲特评语}}</blockquote>
+    <blockquote class="persona"><span class="persona-name">段永平视角（{{分2}}/100）</span>{{段永平评语}}</blockquote>
+    <blockquote class="persona"><span class="persona-name">李录视角（{{分3}}/100）</span>{{李录评语}}</blockquote>
+    <div class="redteam">
+      <h3>芒格式红队质询</h3>
+      <p><b>反演：怎样确保这笔投资亏大钱？</b></p>
+      <ol><li>{{亏钱路径1}}</li></ol>
+      <p><b>心理误判自检：</b>{{自检结论}}</p>
+      <p><b>最强空头逻辑：</b>{{空头摘要}}</p>
+      <p><b>Pre-mortem（假设5年后亏50%）：</b>{{事前验尸结论}}</p>
+      <p><b>关键判断质询：</b>{{对关键变量可知性与变异认知的质询结论}}</p>
+      <p><b>红队裁定：</b>{{是否降档及理由}}</p>
+    </div>
+  </section>
+
+  <section id="conclusion">
+    <h2>十一、结论与行动</h2>
+    <p>最终档位：<span class="tag tag-amber">{{结论档位}}</span></p>
+    <h3>持有体验预演</h3>
+    <p>历史最大回撤：<b>{{最大回撤}}</b>（{{回撤区间}}），修复用时 {{修复时长}}。{{同类商业模式典型回撤说明}}</p>
+    <p><b>灵魂拷问：</b>若买入后下跌 40% 而基本面未变，你敢不敢加仓？不敢，说明仓位或标的不适合你。</p>
+    <h3>证伪条件（出现即说明论点错误，逐条对应关键变量）</h3>
+    <ul class="checklist"><li>【{{关键变量}}】{{证伪条件1}}</li></ul>
+    <h3>季度跟踪清单</h3>
+    <table>
+      <tr><th>指标</th><th>当前值</th><th>警戒线</th><th>说明</th></tr>
+      <tr><td>{{指标}}</td><td>{{值}}</td><td>{{警戒线}}</td><td>{{说明}}</td></tr>
+    </table>
+    <h3>你的初判 vs 本报告结论</h3>
+    <p>{{用户初判原文（未提供则注明）}} → {{最终结论及主要分歧点}}</p>
+    <h3>与上次分析对比</h3>
+    <p>{{无历史记录则注明首次分析；有则列出结论变化、关键变量判断的验证/证伪情况}}</p>
+  </section>
+
+  <section id="appendix">
+    <h2>附录：数据来源与校验</h2>
+    <p class="source-note">{{全部数据来源与截止日期列表，标注来源等级 A/B/C}}</p>
+    <p class="source-note">数字校验：{{校验脚本比对结果摘要}}</p>
+    <p class="source-note">信息局限声明：{{哪些结论置信度打折及原因}}</p>
+    <h3>术语速查表</h3>
+    <table>
+      <tr><th>术语</th><th>白话解释</th></tr>
+      <tr><td>{{术语}}</td><td>{{解释}}</td></tr>
+    </table>
+  </section>
+
+  <footer class="disclaimer">
+    本报告由分析工具生成，仅供研究参考，不构成任何投资建议。市场有风险，投资需谨慎。
+  </footer>
+</div>
+
+<script>
+// ============ 图表统一配色与初始化 ============
+const COLOR = { primary: '#1a3a5c', accent: '#d97706', grays: ['#9ca3af','#6b7280','#d1d5db','#4b5563'] };
+const charts = [];
+function initChart(id, option) {
+  const el = document.getElementById(id);
+  if (!el || typeof echarts === 'undefined') return;
+  const c = echarts.init(el);
+  c.setOption(Object.assign({
+    textStyle: { fontFamily: '-apple-system, PingFang SC, Microsoft YaHei' },
+    grid: { left: 60, right: 30, top: 50, bottom: 40 },
+    tooltip: { trigger: 'axis' }
+  }, option));
+  charts.push(c);
+}
+window.addEventListener('resize', () => charts.forEach(c => c.resize()));
+if (typeof echarts === 'undefined') {
+  document.querySelectorAll('.chart').forEach(el => {
+    el.innerHTML = '<p style="color:#b91c1c;padding:20px">图表需联网加载 ECharts 后显示</p>';
+  });
+}
+
+// ============ 示例：三人评分雷达（生成报告时替换真实数据） ============
+initChart('chart-radar-summary', {
+  tooltip: {},
+  radar: {
+    indicator: [
+      { name: '护城河', max: 5 }, { name: '商业模式', max: 5 }, { name: '增长质量', max: 5 },
+      { name: '管理层', max: 5 }, { name: '估值/安全边际', max: 5 }
+    ]
+  },
+  series: [{
+    type: 'radar',
+    data: [
+      { value: [0,0,0,0,0], name: '巴菲特', itemStyle: { color: COLOR.primary } },
+      { value: [0,0,0,0,0], name: '段永平', itemStyle: { color: COLOR.accent } },
+      { value: [0,0,0,0,0], name: '李录', itemStyle: { color: '#15803d' } }
+    ]
+  }],
+  legend: { bottom: 0 }
+});
+
+// ============ 示例：估值区间横条（生成报告时替换真实数据） ============
+initChart('chart-valuation-band', {
+  grid: { left: 80, right: 60, top: 20, bottom: 30 },
+  xAxis: { type: 'value', name: '每股价值' },
+  yAxis: { type: 'category', data: ['估值区间'] },
+  series: [
+    { type: 'bar', stack: 'v', itemStyle: { color: 'transparent' }, data: [0] /* 悲观值 */ },
+    { type: 'bar', stack: 'v', itemStyle: { color: '#93c5fd' }, barWidth: 40, data: [0] /* 乐观-悲观 */ }
+  ]
+  // markLine 标注现价与中枢：在 series[1] 加 markLine data [{xAxis: 现价}]
+});
+</script>
+</body>
+</html>
