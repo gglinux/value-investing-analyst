@@ -25,7 +25,8 @@ compute_metrics.py — 价值投资分析统一口径指标计算器（Phase 2 �
       "interest_expense": 10.0,      # 利息费用（可选）
       "d_and_a": 50.0,               # 折旧摊销
       "capex": 80.0,                 # 资本开支（正数）
-      "maintenance_capex": null,     # 维持性资本开支（管理层披露口径；null 则兜底用 D&A 均值近似）
+      "maintenance_capex": null,     # 维持性资本开支（管理层披露口径；null 时按 heuristic 估算）
+      "growth_capex": null,          # 扩张性资本开支（披露或估算口径；与 capex 同正数约束）
       "wc_change": -5.0,             # 营运资本变动（增加为正）
       "ocf": 180.0,                  # 经营现金流净额
       "total_equity": 800.0,         # 归母净资产
@@ -63,6 +64,10 @@ DEFINITIONS = {
                           "另给中位数口径（mid-cycle）作交叉验证。周期性判定见 normalization.cyclicality",
     "周期位置": "最新一期利润率 ÷ 全期平均利润率。>1.25 判为周期高位（当期利润不可直接外推），"
                 "<0.75 判为周期低位（当期利润低估长期能力）",
+    "Capex拆分": "维持性 vs 扩张性资本开支。底稿可给 maintenance_capex（披露口径）或 growth_capex（扩张性）；"
+                 "两者都给则 capex_split 输出确定性拆分。缺省时按收入增速启发式估算并标注 capex_split_basis",
+    "真实FCF区间": "fcf_true_range = [ocf−全部capex（悲观，视同全是保命钱）, ocf−维持性capex（乐观，扩张性是可裁量再投资）]。"
+                    "真实盈利含金量夹在此区间；扩张性占比高且 ROIIC 高 → 偏乐观端，维持性占比高 → 偏悲观端",
 }
 
 
@@ -200,6 +205,21 @@ def compute_normalization(series):
             f"{loss_case}，周期正常化不适用。基期须由分析师按正常化路径单独论证"
             "（如产能利用率恢复后的中周期利润率），并在报告写明推导过程"
         )
+    elif cyc == "周期低位":
+        # 低位向上正常化：当期利润低估了长期能力，会用当期基期系统性低估内在价值、
+        # 漏掉"底部便宜的周期股"。同样用正常化混合口径（全期均值利润率 × 当期转化率）。
+        cands = sorted(v for v in (out["oe_normalized_hybrid"], norm_oe)
+                       if v is not None and v > 0)
+        if cands:
+            out["base_oe_recommended"] = cands[-1]
+            out["base_oe_range"] = [cands[0], cands[-1]] if len(cands) == 2 else None
+            out["base_oe_recommended_basis"] = (
+                "正常化混合口径（当期处周期低位，向上正常化；区间下界为历史OE利润率均值口径）"
+            )
+        else:
+            out["base_oe_recommended"] = cur_oe
+            out["base_oe_range"] = None
+            out["base_oe_recommended_basis"] = f"当期（周期低位但正常化基期不可用，用当期+报告说明）"
     else:
         out["base_oe_recommended"] = cur_oe
         out["base_oe_range"] = None
@@ -252,18 +272,42 @@ def compute(data):
             avg_eq = (eq + prev["equity"]) / 2.0
         roe = safe_div(ni, avg_eq)
 
-        mc = mcapex
-        mc_note = "披露口径"
-        if mc is None:
-            mc = da_avg5
-            mc_note = "D&A均值近似"
-            if da_avg5 is not None:
-                warnings.append(f"{year}: 维持性capex 缺失，用近5年D&A均值 {da_avg5:.1f} 近似")
+        growth_capex = get(r, "growth_capex")
+
+        # ---- capex 真拆分 ----
+        # 优先底稿明示：maintenance_capex（披露口径）或 growth_capex（扩张性）。
+        # 缺省时按收入增速启发式估算——capex/收入比显著高于全期均值的部分视为扩张性投入，
+        # 维持性 = 全期 capex/收入比 × 当年收入 与 D&A 的较低者（避免衰退年收入萎缩时维持性虚增）。
+        capex_split_basis = None
+        if mcapex is not None:
+            mc = mcapex; capex_split_basis = "披露口径"
+        elif growth_capex is not None and capex is not None:
+            mc = capex - growth_capex; capex_split_basis = "披露口径（由growth_capex反推）"
+        elif capex is not None:
+            # 启发式：维持性 ≈ 全期 capex/收入比 中位数 × 当年收入，封顶 D&A（无 D&A 则D&A均值）
+            hist = [safe_div(get(x, "capex"), get(x, "revenue")) for x in rows]
+            hist = [h for h in hist if h is not None]
+            med_ratio = median(hist) if hist else None
+            est = (med_ratio * rev) if (med_ratio is not None and rev is not None) else da_avg5
+            cap = da if da is not None else da_avg5
+            mc = min(est, cap) if (est is not None and cap is not None) else (est if est is not None else cap)
+            capex_split_basis = "启发式估算（capex/收入比中位数，封顶D&A）"
+            if mc is not None:
+                warnings.append(f"{year}: capex未披露拆分，按{capex_split_basis}估维持性 ≈{mc:.1f}")
+        else:
+            mc = None
+        growth_part = (capex - mc) if (capex is not None and mc is not None) else None
+
         oe = None
         if ni is not None and da is not None and mc is not None:
             oe = ni + da - mc - (wc or 0.0)
 
         fcf = ocf - capex if (ocf is not None and capex is not None) else None
+        # 真实 FCF 区间：悲观=全部 capex 视同维持（fcf），乐观=扩张性 capex 视为可裁量再投资（ocf−mc）
+        fcf_optimistic = (ocf - mc) if (ocf is not None and mc is not None) else None
+        fcf_true_range = None
+        if fcf is not None and fcf_optimistic is not None and abs(fcf_optimistic - fcf) > 1e-9:
+            fcf_true_range = [min(fcf, fcf_optimistic), max(fcf, fcf_optimistic)]
 
         item = {
             "year": year,
@@ -272,9 +316,13 @@ def compute(data):
             "roic": roic, "roe": roe,
             "gross_margin": safe_div(get(r, "gross_profit"), rev),
             "net_margin": safe_div(ni, rev),
-            "owner_earnings": oe, "maintenance_capex_used": mc,
-            "maintenance_capex_basis": mc_note if mc is not None else None,
+            "owner_earnings": oe,
+            "capex_total": capex,
+            "maintenance_capex_used": mc,
+            "growth_capex_used": growth_part,
+            "capex_split_basis": capex_split_basis,
             "fcf": fcf,
+            "fcf_true_range": fcf_true_range,
             "fcf_to_ni": safe_div(fcf, ni),
             "ocf_to_ni": safe_div(ocf, ni),
             "shares_diluted": shares,
@@ -372,9 +420,11 @@ def compute(data):
                 f"当期 Owner Earnings 禁止直接作为 DCF 基期；正常化基期区间 {rng_txt}{pct_txt}"
             )
         elif cyc == "周期低位":
+            rec = normalization.get("base_oe_recommended")
+            rec_txt = f"；向上正常化基期 {rec:,.0f}" if rec is not None else ""
             alerts.append(
                 f"周期低位提示：最新净利率仅为全期均值的 {normalization['margin_ratio_latest_vs_avg']:.2f} 倍，"
-                f"当期利润低估长期盈利能力，用当期基期会低估内在价值"
+                f"当期利润低估长期盈利能力，用当期基期会低估内在价值{rec_txt}"
             )
         elif "亏损" in cyc:
             alerts.append(
@@ -383,6 +433,30 @@ def compute(data):
                 f"周期正常化不适用，禁止直接用当期数据做 DCF 基期，须单独论证正常化盈利路径"
             )
 
+    # chart_series：报告 ECharts 图直接从本区块引用数据（并由 verify_report.py 的
+    # vchart 锚点校验），禁止模型手抄数组进 HTML——图表数据唯一来源是这里。
+    def col(key):
+        return [s.get(key) for s in series]
+
+    chart_series = {
+        "years": [s["year"] for s in series],
+        "revenue": col("revenue"),
+        "net_income": col("net_income"),
+        "net_margin": col("net_margin"),
+        "gross_margin": col("gross_margin"),
+        "roe": col("roe"),
+        "roic": col("roic"),
+        "roiic_3y": col("roiic_3y"),
+        "owner_earnings": col("owner_earnings"),
+        "fcf": col("fcf"),
+        "fcf_low": [s["fcf_true_range"][0] if s.get("fcf_true_range") else s.get("fcf") for s in series],
+        "fcf_high": [s["fcf_true_range"][1] if s.get("fcf_true_range") else s.get("fcf") for s in series],
+        "eps": col("eps"),
+        "oe_ps": col("oe_ps"),
+        "bvps": col("bvps"),
+        "shares_diluted": col("shares_diluted"),
+    }
+
     return {
         "company": data.get("company"), "ticker": data.get("ticker"),
         "currency": data.get("currency"), "unit": data.get("unit"),
@@ -390,6 +464,7 @@ def compute(data):
         "series": series, "summary": summary,
         "normalization": normalization,
         "capital_allocation": alloc,
+        "chart_series": chart_series,
         "alerts": alerts,
         "warnings": sorted(set(warnings)),
     }

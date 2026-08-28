@@ -16,6 +16,12 @@ verify_report.py — 报告数字校验脚本（Phase 5 交付前强制运行）
 校验规则：按 data-path 取底稿值，按 data-fmt 渲染后与 span 文本比对（数值容差 0.5% 相对误差）。
 报告中未包裹 vnum 的数字不校验——但 report-spec 要求所有关键结论数字必须包裹。
 
+图表校验（防止 ECharts series 手抄漂移）：图表 series 上方必须紧跟注释锚点
+    <!-- vchart src=metrics_X.json path=series scale=100 -->
+校验脚本会读取该锚点后最近的 data:[...] 数组，与底稿 path 所指数组逐项比对。
+- path: 底稿内的取值路径（点号分隔，支持负数索引，如 summary.roic_series）
+- scale: 底稿存小数、图表显示百分数时设为 100
+
 用法：
     python3 verify_report.py <report.html> --data-dir <公司名>_analysis/data
 退出码：0 全部通过；1 存在不一致或无法溯源。
@@ -94,15 +100,22 @@ def main():
 
     cache = {}
     passed, failed = 0, []
-    for src, path, fmt, text in matches:
+
+    def load_json(src, context):
         fp = os.path.join(args.data_dir, src)
         if fp not in cache:
             if not os.path.exists(fp):
-                failed.append((src, path, "底稿文件不存在", text))
-                continue
+                failed.append((src, context, "底稿文件不存在", ""))
+                return None
             with open(fp, "r", encoding="utf-8") as f:
                 cache[fp] = json.load(f)
-        value = get_by_path(cache[fp], path)
+        return cache[fp]
+
+    for src, path, fmt, text in matches:
+        obj = load_json(src, path)
+        if obj is None:
+            continue
+        value = get_by_path(obj, path)
         if value is KeyError:
             failed.append((src, path, "底稿中无此路径", text))
             continue
@@ -127,7 +140,58 @@ def main():
         else:
             failed.append((src, path, f"数值不一致：底稿={expect}", text.strip()))
 
-    print(f"校验完成：{passed} 通过 / {len(failed)} 失败 / 共 {len(matches)} 项")
+    # ---- 图表数据校验（防止 ECharts series 手抄漂移）----
+    # 机制：图表 series 上方紧跟一个 HTML 注释锚点，格式：
+    #   <!-- vchart src=metrics_X.json path=series scale=100 -->
+    #   {name:'净利率%',type:'line',data:[12.3,24.1,...]}
+    # 校验规则：取该锚点后 400 字符内第一个 data:[...] 数组，
+    # 解析为数字数组，与底稿 path 指向的数组（乘以 scale，底稿小数→报告百分数时用 100）逐项比对。
+    chart_pattern = re.compile(
+        r"<!--\s*vchart\s+src=([^\s>]+)\s+path=([^\s>]+)(?:\s+scale=([\d.]+))?\s*-->"
+        r"(.{0,400}?)data\s*:\s*\[([^\]]*)\]",
+        re.S,
+    )
+    chart_matches = chart_pattern.findall(html)
+    chart_checked = 0
+    for src, path, scale_s, _ctx, arr_text in chart_matches:
+        obj = load_json(src, f"vchart:{path}")
+        if obj is None:
+            continue
+        scale = float(scale_s) if scale_s else 1.0
+        expected = get_by_path(obj, path)
+        if expected is KeyError:
+            failed.append((src, path, "底稿中无此路径（vchart）", ""))
+            continue
+        if not isinstance(expected, list):
+            failed.append((src, path, "底稿该路径不是数组", ""))
+            continue
+        nums = []
+        try:
+            for tok in arr_text.split(","):
+                tok = tok.strip().strip("'\"")
+                nums.append(round(float(tok) / scale, 10))
+        except ValueError:
+            failed.append((src, path, "图表 data 数组含无法解析的值", arr_text[:50]))
+            continue
+        if len(nums) != len(expected):
+            failed.append((src, path, f"长度不符：图表 {len(nums)} 项 vs 底稿 {len(expected)} 项", arr_text[:50]))
+            continue
+        ok = True
+        for a, b in zip(nums, expected):
+            if b is None:
+                continue
+            tol = max(abs(float(b)) * 0.005, 0.02)
+            if abs(a - float(b)) > tol:
+                failed.append((src, path, f"图表数值不一致：图表={a} 底稿={b}", arr_text[:60]))
+                ok = False
+                break
+        if ok:
+            chart_checked += 1
+    total = len(matches) + len(chart_matches)
+    passed_total = passed + chart_checked
+
+    print(f"校验完成：{passed_total} 通过 / {len(failed)} 失败 / 共 {total} 项"
+          f"（正文数字 {len(matches)} 项 + 图表数组 {len(chart_matches)} 组）")
     if failed:
         for src, path, reason, text in failed:
             print(f"  [FAIL] {src}:{path} — {reason}；报告显示={text}")

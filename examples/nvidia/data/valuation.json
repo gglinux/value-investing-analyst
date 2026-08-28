@@ -95,7 +95,7 @@
   "trough_date": "2022-10-14",
   "repair_date": "2023-05-26",
   "repair_days": 553,
-  "sample": "2021-08~2026-08 周K（westock-data，A级）",
+  "sample": "2021-08~2026-08 周K（行情数据接口，A级）",
   "current_vs_sample_high": -0.069
  }
 }

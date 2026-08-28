@@ -1,6 +1,6 @@
 {
  "as_of": "2026-08-27（美股上一交易日收盘）",
- "source": "westock-data quote usNVDA.OQ",
+ "source": "行情数据接口",
  "source_level": "A",
  "price_usd": 209.66,
  "prev_close": 213.05,

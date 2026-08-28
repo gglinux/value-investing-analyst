@@ -35,7 +35,7 @@
   },
   {
    "file": "market_snapshot.json",
-   "source": "westock-data quote",
+   "source": "行情数据接口",
    "level": "A",
    "fetched_at": "2026-08-27 18:32",
    "coverage": "2026-08-27",
@@ -58,8 +58,8 @@
    "validated": "n/a"
   },
   {
-   "file": "nvda_westock_finance_44q.txt",
-   "source": "westock-data finance",
+   "file": "nvda_finance_44q.txt",
+   "source": "财务数据接口",
    "level": "A",
    "fetched_at": "2026-08-27 18:32",
    "coverage": "近12季+3年年度",
@@ -67,7 +67,7 @@
   },
   {
    "file": "nvda_kline_week.txt",
-   "source": "westock-data kline week",
+   "source": "行情数据接口周K",
    "level": "A",
    "fetched_at": "2026-08-27 18:32",
    "coverage": "约5年周K",
@@ -75,7 +75,7 @@
   },
   {
    "file": "nvda_reports.txt",
-   "source": "westock-data report list",
+   "source": "研报数据接口",
    "level": "B",
    "fetched_at": "2026-08-27 18:32",
    "coverage": "近期研报8篇",

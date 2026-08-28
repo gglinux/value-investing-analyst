@@ -79,7 +79,7 @@
       <div class="snapshot-item"><div class="k">52周位置</div><div class="v"><span class="vnum" data-src="market_snapshot.json" data-path="pos_in_52w_range" data-fmt="pct1">63.3%</span></div></div>
       <div class="snapshot-item"><div class="k">日成交额</div><div class="v"><span class="vnum" data-src="market_snapshot.json" data-path="avg_daily_turnover_usd_bn" data-fmt="num1">37.9</span> 亿$×10</div></div>
     </div>
-    <div class="snapshot-time">行情快照：2026-08-27，westock-data（来源等级 A）。注：快照 PE 未含昨夜新财报；含 FY2027Q2 的 TTM PE 为底稿推算（B 级，Q1 净利为反推近似值）。</div>
+    <div class="snapshot-time">行情快照：2026-08-27，行情数据接口（来源等级 A）。注：快照 PE 未含昨夜新财报；含 FY2027Q2 的 TTM PE 为底稿推算（B 级，Q1 净利为反推近似值）。</div>
   </header>
 
   <section id="summary">
@@ -311,9 +311,9 @@
 
   <section id="appendix">
     <h2>附录：数据来源与校验</h2>
-    <p class="source-note"><b>数据来源清单：</b>① NVDA/AMD/INTC/AVGO 年度财务：SEC EDGAR XBRL companyfacts API（A 级，2026-08-27 抓取）；NVDA 早年 capex（FY2016-2021）取自 10-K 原文合并现金流量表（A 级，原文存档 data/filings/）。② NVDA 命门科目双源核对：近 3 财年收入/净利/经营现金流/摊薄股本已与 10-K 原文逐项核对，一致（crosscheck 区块）。③ 行情快照/周K/近12季财务：westock-data（A 级，2026-08-27）。④ FY2027Q2 财报数字与 FY2028 指引：公司财报与电话会，经多家媒体交叉（B 级）。⑤ 财报前一致预期：LSEG/Visible Alpha 转引（B 级）。⑥ 行业 capex、诉讼进展：公开报道（C 级，仅作旁证）。</p>
+    <p class="source-note"><b>数据来源清单：</b>① NVDA/AMD/INTC/AVGO 年度财务：SEC EDGAR XBRL companyfacts API（A 级，2026-08-27 抓取）；NVDA 早年 capex（FY2016-2021）取自 10-K 原文合并现金流量表（A 级，原文存档 data/filings/）。② NVDA 命门科目双源核对：近 3 财年收入/净利/经营现金流/摊薄股本已与 10-K 原文逐项核对，一致（crosscheck 区块）。③ 行情快照/周K/近12季财务：行情数据接口（A 级，2026-08-27）。④ FY2027Q2 财报数字与 FY2028 指引：公司财报与电话会，经多家媒体交叉（B 级）。⑤ 财报前一致预期：LSEG/Visible Alpha 转引（B 级）。⑥ 行业 capex、诉讼进展：公开报道（C 级，仅作旁证）。</p>
     <p class="source-note"><b>入口校验（validate_data）：</b>NVDA 通过（错误 0/警告 0，含双源核对）；AMD/INTC 通过（警告：EDGAR 无总负债标签，未做三表勾稽，不影响利润/现金流主线）；AVGO 通过（FY2017 权益改用含少数股东权益口径，已在底稿标注）。<b>竞对三家按规则豁免年报原文核对</b>，其财务数据仍为 EDGAR 官方 XBRL。</p>
-    <p class="source-note"><b>数字校验（verify_report）：</b>本报告关键数字均带 vnum 溯源标签，交付前脚本比对通过（59 项全部通过）。</p>
+    <p class="source-note"><b>数字校验（verify_report）：</b>本报告关键数字均带 vnum 溯源标签、图表 series 带 vchart 锚点，交付前脚本比对通过（60 项：正文 59 + 图表 1 组，全部通过）。</p>
     <p class="source-note"><b>估值口径（本次修订）：</b>本报告估值采用 2026-08-27 修订后的引擎——本股被 compute_metrics 判定为周期高位（最新净利率为十一年均值 1.66 倍），DCF 基期禁用当期 Owner Earnings，改用正常化混合口径基期 72,756 百万美元；期望年化回报由 reverse_dcf.py expected-return 引擎计算（期末回归内在价值、不含股息、概率加权）。初版报告（峰值基期 121,123）曾得出基准价值 211.65 美元、买点 148 美元，与新口径结果（基准 127.14、买点 76）差异源于基期正常化，此差异本身即是该关卡价值的实证。</p>
     <p class="source-note"><b>口径注：</b>四家均 US-GAAP/美元。财年错位：NVDA 1月末、AVGO 10月末、AMD/INTC 12月末，图表中按"覆盖主要自然年"对齐，趋势对比不受实质影响。</p>
     <h3>术语速查表</h3>
@@ -402,7 +402,7 @@ initChart('chart-q1', {
   xAxis:{type:'category',data:YEARS},
   yAxis:[{type:'value',name:'百万美元'},{type:'value',name:'净利率',axisLabel:{formatter:'{value}%'},max:60}],
   series:[
-    {name:'收入',type:'bar',data:[5010,6910,9714,11716,10918,16675,26914,26974,60922,130497,215938],itemStyle:{color:COLOR.primary}},
+    /*<!-- vchart src=metrics_NVDA.json path=chart_series.revenue -->*/{name:'收入',type:'bar',data:[5010,6910,9714,11716,10918,16675,26914,26974,60922,130497,215938],itemStyle:{color:COLOR.primary}},
     {name:'归母净利润',type:'bar',data:[614,1666,3047,4141,2796,4332,9752,4368,29760,72880,120067],itemStyle:{color:COLOR.accent}},
     {name:'净利率%',type:'line',yAxisIndex:1,data:[12.3,24.1,31.4,35.3,25.6,26.0,36.2,16.2,48.8,55.8,55.6],itemStyle:{color:'#15803d'}}]
 });

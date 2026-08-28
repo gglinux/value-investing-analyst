@@ -6,9 +6,10 @@
   再按拆股表调整到最新股本口径。
 - year 映射：财年截止月 >=6 → end.year；否则 end.year-1（NVDA 1月财年 → 归入覆盖的主要日历年）。
 """
-import json, datetime
+import json, datetime, os
 
-BASE = "/Users/guojiawei/With/20260827/popz/英伟达_analysis/data"
+# 数据目录：默认取本脚本所在样例的 data/，可用环境变量 VIA_DATA_DIR 覆盖
+BASE = os.environ.get("VIA_DATA_DIR", os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "data"))
 
 CAND = {
     "revenue": ["RevenueFromContractWithCustomerExcludingAssessedTax", "Revenues", "SalesRevenueNet"],

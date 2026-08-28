@@ -102,8 +102,9 @@
       <!-- verdict-label 类根据结论切换: verdict-buy / verdict-watch / verdict-hard / verdict-reject -->
       <div class="verdict-label verdict-watch">{{结论档位}}</div>
       <div class="verdict-score">
-        综合评分：<b>{{综合分}}</b> / 100（巴菲特 {{分1}} ｜ 段永平 {{分2}} ｜ 李录 {{分3}}）<br>
-        内在价值区间：{{悲观值}} ~ {{乐观值}}（中枢 {{中枢值}}）｜ 安全边际：{{安全边际}}
+        <b>双闸门状态</b>：安全边际 {{安全边际达标否}} ｜ 期望年化 IRR {{期望IRR达标否}}<br>
+        三位大师独立判断：巴菲特【{{巴菲特结论}}】｜ 段永平【{{段永平结论}}】｜ 李录【{{李录结论}}】<br>
+        内在价值区间：{{悲观值}} ~ {{乐观值}}（基准 {{基准值}}）｜ 期望年化回报：{{期望IRR}}（5年期，亏损概率 {{亏损概率}}）
       </div>
     </div>
     <!-- 市场快照信息卡：数据取自 data/market_snapshot.json，关键数字用 vnum 溯源标签包裹，例：
@@ -135,8 +136,9 @@
     </div>
     <p><b>本笔投资取决于：</b>{{关键变量1}}；{{关键变量2}}；{{关键变量3（如有）}}</p>
     <p class="source-note"><b>信息局限声明：</b>{{哪些结论因数据缺失/信息劣势置信度打折}}</p>
-    <div class="insight-title">三人评分雷达</div>
+    <div class="insight-title">三位大师独立判断对照（各自独立评估，分歧即信号）</div>
     <div id="chart-radar-summary" class="chart" style="height:340px"></div>
+    <div class="chart-note">三份评估各自从原始证据独立推导，互不参考；分歧点写入"投委会评审"章节的分歧对照表。</div>
     <div class="insight-title">估值区间 vs 现价</div>
     <div id="chart-valuation-band" class="chart" style="height:220px"></div>
   </section>
