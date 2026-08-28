@@ -171,9 +171,6 @@ def main():
                     if key not in notes:
                         errors.append(f"{y}: `{k}` 同比变动 {chg:+.0%} 超过 ±50%，"
                                       f"spike_notes 缺少 `{key}` 的原因标注（业务变化或数据修正）")
-                if key not in notes:
-                    errors.append(f"{y}: `{k}` 同比变动 {chg:+.0%} 超过 ±50%，"
-                                  f"spike_notes 缺少 `{key}` 的原因标注（业务变化或数据修正）")
 
     # 5. 双源交叉验证（银行命门科目改：营业收入/归母净利润；实业：收入/归母净利润/经营现金流/股本）
     if args.skip_crosscheck:
