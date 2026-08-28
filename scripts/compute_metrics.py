@@ -227,13 +227,30 @@ def compute_normalization(series):
     return out
 
 
+# 行业类型门控：本脚本的口径（revenue/capex/OE/ROIC）只适用于一般工商企业。
+# 银行/保险/券商的报表结构完全不同（利息收支、浮存金、准备金），喂进来会
+# 一本正经地算出错误的 ROIC 和 Owner Earnings——所以对金融类硬拒绝。
+FINANCIAL_TYPES = {"bank", "银行", "insurance", "保险", "broker", "券商",
+                   "securities", "金融", "financial"}
+
 def compute(data):
+    ctype = str(data.get("company_type", "")).strip().lower()
+    if ctype in FINANCIAL_TYPES:
+        raise SystemExit(
+            f"错误：company_type={data.get('company_type')} 属于金融类。"
+            "本脚本的通用口径（OE/ROIC/capex拆分）对金融股会产出错误结果，已拒绝执行。"
+            "金融股请按 references/metric-playbook.md 的银行/保险专属指标集手工建底稿"
+            "（净息差/不良率/拨备覆盖率 或 EV/NBV/综合成本率），估值按 valuation-guide 金融股方法树。"
+        )
     tax = data.get("tax_rate") or DEFAULT_TAX
     rows = sorted(data.get("annual", []), key=lambda r: r["year"])
     if len(rows) < 3:
         raise SystemExit("错误：年度数据不足 3 年，无法计算长期指标。请先补齐数据底稿。")
 
     warnings = []
+    if not ctype:
+        warnings.append("company_type 未填写——Phase 0 应判定七类型之一（见 metric-playbook），"
+                        "金融类严禁走本管道；非金融也需按类型选关键指标集")
     # 维持性 capex 兜底：近5年 D&A 均值
     da_list = [get(r, "d_and_a") for r in rows if get(r, "d_and_a") is not None]
     da_avg5 = sum(da_list[-5:]) / len(da_list[-5:]) if da_list else None

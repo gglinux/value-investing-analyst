@@ -273,5 +273,6 @@
   "2017.balance_note": "FY2017 双实体架构（Broadcom Ltd/Partnership），XBRL StockholdersEquity 不含合伙非控制性权益；total_equity 改用 资产-负债 含NCI口径；FY2017 10-K",
   "2017.ocf": "Broadcom/Avago 并购整合完成后首个完整年度，盈利能力正常化；FY2017 10-K",
   "2017.total_equity": "口径切换（见 2017.balance_note）"
- }
+ },
+ "company_type": "tech_hardware"
 }

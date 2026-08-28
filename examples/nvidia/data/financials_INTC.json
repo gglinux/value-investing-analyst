@@ -287,5 +287,6 @@
   "2024.buyback": "停止回购",
   "2022.ocf": "盈利恶化",
   "2023.capex": "代工扩产高峰"
- }
+ },
+ "company_type": "tech_hardware"
 }

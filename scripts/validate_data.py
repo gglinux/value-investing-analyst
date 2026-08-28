@@ -71,6 +71,18 @@ def main():
 
     errors, warns = [], []
 
+    # 0. 行业类型门控（金融股禁走通用管道）
+    FINANCIAL_TYPES = {"bank", "银行", "insurance", "保险", "broker", "券商",
+                       "securities", "金融", "financial"}
+    ctype = str(data.get("company_type", "")).strip().lower()
+    if ctype in FINANCIAL_TYPES:
+        errors.append(f"行业门控：company_type={data.get('company_type')} 为金融类，"
+                      "通用底稿/compute_metrics 管道不适用（利息收支/浮存金/准备金口径不同），"
+                      "请按 metric-playbook 银行/保险专属指标集单独建稿")
+    elif not ctype:
+        warns.append("行业门控：company_type 缺失——Phase 0 必须判定商业模式类型（metric-playbook 七类）"
+                     "并写入底稿头字段，金融类严禁走通用管道")
+
     # 1. 口径注册表
     for k in ("company", "currency", "unit"):
         if not data.get(k):
