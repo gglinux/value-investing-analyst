@@ -250,6 +250,47 @@ with tempfile.TemporaryDirectory() as td:
           r2.stdout[-200:])
     check("通配登记的指针可通过", "t-2024.htm" not in r2.stdout)
 
+print("== 9. 银行校验（validate_data 银行旁路） ==")
+with tempfile.TemporaryDirectory() as td:
+    good = {
+        "company": "测试银行", "ticker": "TB", "currency": "CNY", "unit": "million",
+        "company_type": "银行", "accounting_standard": "CAS", "fiscal_year_end": "12-31",
+        "annual": [
+            {"year": 2022, "publish_date": "2023-03-25", "operating_income": 280000.0,
+             "net_interest_income": 190000.0, "non_interest_income": 90000.0,
+             "net_income": 110000.0, "gross_loans": 4600000.0,
+             "npl_balance": 46000.0, "provision_balance": 190000.0},
+            {"year": 2023, "publish_date": "2024-03-25", "operating_income": 290000.0,
+             "net_interest_income": 195000.0, "non_interest_income": 95000.0,
+             "net_income": 115000.0, "gross_loans": 4800000.0,
+             "npl_balance": 48000.0, "provision_balance": 195000.0},
+            {"year": 2024, "publish_date": "2025-03-25", "operating_income": 300000.0,
+             "net_interest_income": 200000.0, "non_interest_income": 100000.0,
+             "net_income": 120000.0, "gross_loans": 5000000.0,
+             "npl_balance": 50000.0, "provision_balance": 200000.0},
+        ],
+        "crosscheck": [
+            {"year": 2022, "source": "2022年报摘要", "operating_income": 280000.0, "net_income": 110000.0},
+            {"year": 2023, "source": "2023年报摘要", "operating_income": 290000.0, "net_income": 115000.0},
+            {"year": 2024, "source": "2024年报摘要", "operating_income": 300000.0, "net_income": 120000.0},
+        ],
+    }
+    import copy
+    bad = copy.deepcopy(good)
+    bad["annual"][2]["npl_balance"] = 800000.0
+    bad["annual"][2]["provision_balance"] = 30000.0
+    gp = os.path.join(td, "g.json"); bp = os.path.join(td, "b.json")
+    json.dump(good, open(gp, "w")); json.dump(bad, open(bp, "w"))
+
+    def vr(path):
+        return subprocess.run([sys.executable, os.path.join(SCRIPTS, "validate_data.py"), path],
+                              capture_output=True, text=True)
+    r1 = vr(gp)
+    check("好银行底稿通过", r1.returncode == 0, r1.stdout[-200:])
+    r2 = vr(bp)
+    check("坏银行底稿被拒", r2.returncode == 1, r2.stdout[-200:])
+    check("不良率超界被逮住", "不良率" in r2.stdout, r2.stdout[-200:])
+
 print()
 if FAILED:
     print(f"结果：{len(FAILED)} 项失败 → {FAILED}")

@@ -89,10 +89,11 @@ def compute(data):
         shares = _f(r, "shares_diluted")
 
         # --- 勾稽（银行版硬检查）---
-        npl_ratio = npl / loans if (npl is not None and loans) else None
+        # 不良率/拨备覆盖：优先从余额反算；底稿直接给披露比率时直接采用（两种口径兼容）
+        npl_ratio = npl / loans if (npl is not None and loans) else _f(r, "npl_ratio")
         if npl_ratio is not None and not (0.0 <= npl_ratio <= 0.15):
             errors.append(f"{y}: 不良率 {npl_ratio:.2%} 超出 0~15% 合理带，疑似单位/科目错误")
-        coverage = prov / npl if (prov is not None and npl) else None
+        coverage = prov / npl if (prov is not None and npl) else _f(r, "provision_coverage")
         if coverage is not None and coverage < 1.0:
             alerts.append(f"{y}: 拨备覆盖率 {coverage:.0%} < 100%——低于监管红线（120~150%），"
                           "资产质量或利润真实性重大警报")
@@ -104,7 +105,11 @@ def compute(data):
             errors.append(f"{y}: 净利润({ni}) > 营业收入({opin})，疑似单位混淆")
 
         roa = ni / ta if (ni is not None and ta) else None
-        roe = ni / eq if (ni is not None and eq) else None
+        # 银行股 ROE 口径：优先用官方披露 ROAE（归属普通股股东，剔除优先股/永续债），
+        # 避免其他权益工具导致含NCI口径系统性低估（招行 2025 官方 13.44% vs 含NCI 11.7%）
+        roe = _f(r, "roe_reported")
+        if roe is None:
+            roe = ni / eq if (ni is not None and eq) else None
         leverage = ta / eq if (ta and eq) else None
         if leverage is not None and leverage > 20:
             alerts.append(f"{y}: 权益乘数 {leverage:.1f}x > 20x，杠杆超出稳健银行常态（10~16x）")
@@ -121,7 +126,8 @@ def compute(data):
             "core_tier1_ratio": _f(r, "core_tier1_ratio"),
             "special_mention_ratio": _f(r, "special_mention_ratio"),
             "credit_cost": (_f(r, "provision_charge") / loans) if (_f(r, "provision_charge") is not None and loans) else None,
-            "bvps": eq / shares if (eq and shares) else None,
+            "bvps": _f(r, "bvps_reported") if _f(r, "bvps_reported") is not None
+                    else (eq / shares if (eq and shares) else None),
             "eps": ni / shares if (ni is not None and shares) else None,
             "dps": _f(r, "dividend_per_share"),
             "loan_to_deposit": (loans / _f(r, "deposits")) if (loans and _f(r, "deposits")) else None,

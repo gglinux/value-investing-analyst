@@ -74,13 +74,15 @@ def main():
     # 0. 行业类型门控（金融股禁走通用管道）
     FINANCIAL_TYPES = {"bank", "银行", "insurance", "保险", "broker", "券商",
                        "securities", "金融", "financial"}
+    BANK_TYPES = {"bank", "银行"}
     ctype = str(data.get("company_type", "")).strip().lower()
-    if ctype in FINANCIAL_TYPES:
+    is_bank = ctype in BANK_TYPES
+    if ctype in FINANCIAL_TYPES and not is_bank:
         errors.append(f"行业门控：company_type={data.get('company_type')} 为金融类，"
                       "通用底稿/compute_metrics 管道不适用（利息收支/浮存金/准备金口径不同），"
                       "请按 metric-playbook 银行/保险专属指标集单独建稿")
     elif not ctype:
-        warns.append("行业门控：company_type 缺失——Phase 0 必须判定商业模式类型（metric-playbook 七类）"
+        warns.append("行业门控：company_type 缺失——Phase 0 必须判定商业模式类型（metric-playbook 十类）"
                      "并写入底稿头字段，金融类严禁走通用管道")
 
     # 1. 口径注册表
@@ -93,14 +95,12 @@ def main():
 
     # 1.5 前视偏差防线：年报数据必须记录发布日（publish_date），复盘校准时
     # 按发布日截断"当时市场知道什么"——2025 年报 3 月底才发布，1 月的分析不该用它。
-    rows_probe = data.get("annual", []) or []
-    missing_pub = [r.get("year") for r in rows_probe[-3:] if not r.get("publish_date")]
+    rows = sorted(data.get("annual", []), key=lambda r: r.get("year", 0))
+    missing_pub = [r.get("year") for r in rows[-3:] if not r.get("publish_date")]
     if missing_pub:
         warns.append(f"前视偏差：最近年度 {missing_pub} 缺 `publish_date`（年报发布日，"
                      "A股接口有 InfoPublDate 现成可用；EDGAR 用 filing date）——"
                      "复盘校准协议依赖该字段按发布日截断信息集")
-
-    rows = sorted(data.get("annual", []), key=lambda r: r.get("year", 0))
     if not rows:
         errors.append("annual 为空")
         report(errors, warns, args)
@@ -110,45 +110,72 @@ def main():
         v = row.get(key)
         return float(v) if v is not None else None
 
-    # 2 & 3. 勾稽与单位 sanity（逐年）
-    for r in rows:
-        y = r.get("year")
-        rev, ni = g(r, "revenue"), g(r, "net_income")
-        gp, ocf = g(r, "gross_profit"), g(r, "ocf")
-        ta, tl, eq = g(r, "total_assets"), g(r, "total_liabilities"), g(r, "total_equity")
+    # === 银行专属旁路：通用三表勾稽/单位突变/OCF突变对银行无意义，改查银行勾稽 ===
+    if is_bank:
+        for r in rows:
+            y = r.get("year")
+            opin, nii, nonii = g(r, "operating_income"), g(r, "net_interest_income"), g(r, "non_interest_income")
+            ni, ta, te, gl = g(r, "net_income"), g(r, "total_assets"), g(r, "total_equity"), g(r, "gross_loans")
+            npl, prov = g(r, "npl_balance"), g(r, "provision_balance")
+            if opin is None:
+                errors.append(f"{y}: 银行底稿缺 `operating_income`（营业收入）")
+            if nii is not None and nonii is not None and opin is not None:
+                if abs(opin - (nii + nonii)) / max(opin, 1e-9) > 0.05:
+                    errors.append(f"{y}: 营收({opin}) ≠ 利息净收入+非息收入({nii}+{nonii})，偏差>5%")
+            if npl is not None and gl:
+                nplr = npl / gl
+                if not (0.0 <= nplr <= 0.15):
+                    errors.append(f"{y}: 不良率 {nplr:.2%} 超 0~15% 合理带，疑似单位/科目错误")
+            if prov is not None and npl:
+                cov = prov / npl
+                if cov < 1.0:
+                    warns.append(f"{y}: 拨备覆盖率 {cov:.0%} < 100%（监管红线 120%~150%），资产质量警报")
+            if ni is not None and opin is not None and ni > opin * 0.6:
+                warns.append(f"{y}: 净利率({ni}/{opin}) 超 60%，银行一般 25%~45%，请复核单位")
+        warns.append("已启用银行专属校验（跳过三表勾稽/单位突变/OCF突变，改查营收拆分/不良率/拨备覆盖）")
+    else:
+        # 2 & 3. 勾稽与单位 sanity（逐年）
+        for r in rows:
+            y = r.get("year")
+            rev, ni = g(r, "revenue"), g(r, "net_income")
+            gp, ocf = g(r, "gross_profit"), g(r, "ocf")
+            ta, tl, eq = g(r, "total_assets"), g(r, "total_liabilities"), g(r, "total_equity")
 
-        if ta is not None and tl is not None and eq is not None:
-            d = rel_diff(ta, tl + eq)
-            if d is not None and d > TOL:
-                errors.append(f"{y}: 勾稽失败 资产({ta}) ≠ 负债({tl})+权益({eq})，偏差 {d:.1%}"
-                              "（注意：total_equity 若为归母口径需并入少数股东权益后再核）")
-        elif ta is None or tl is None:
-            warns.append(f"{y}: 缺 total_assets/total_liabilities，无法做三表勾稽")
+            if ta is not None and tl is not None and eq is not None:
+                d = rel_diff(ta, tl + eq)
+                if d is not None and d > TOL:
+                    errors.append(f"{y}: 勾稽失败 资产({ta}) ≠ 负债({tl})+权益({eq})，偏差 {d:.1%}"
+                                  "（注意：total_equity 若为归母口径需并入少数股东权益后再核）")
+            elif ta is None or tl is None:
+                warns.append(f"{y}: 缺 total_assets/total_liabilities，无法做三表勾稽")
 
-        if rev is not None and gp is not None and gp > rev * (1 + TOL):
-            errors.append(f"{y}: 毛利({gp}) > 收入({rev})，疑似科目或单位错误")
-        if rev is not None and ni is not None and abs(ni) > abs(rev) * 1.5:
-            errors.append(f"{y}: |净利润|({ni}) > 收入×1.5({rev})，疑似百万/亿单位混淆")
-        if rev is not None and ocf is not None and abs(ocf) > abs(rev) * 2:
-            warns.append(f"{y}: |经营现金流|({ocf}) > 收入×2，量级异常，请复核")
+            if rev is not None and gp is not None and gp > rev * (1 + TOL):
+                errors.append(f"{y}: 毛利({gp}) > 收入({rev})，疑似科目或单位错误")
+            if rev is not None and ni is not None and abs(ni) > abs(rev) * 1.5:
+                errors.append(f"{y}: |净利润|({ni}) > 收入×1.5({rev})，疑似百万/亿单位混淆")
+            if rev is not None and ocf is not None and abs(ocf) > abs(rev) * 2:
+                warns.append(f"{y}: |经营现金流|({ocf}) > 收入×2，量级异常，请复核")
 
-    # 4. 突变检测
-    notes = data.get("spike_notes", {}) or {}
-    for i in range(1, len(rows)):
-        prev, cur = rows[i - 1], rows[i]
-        y = cur.get("year")
-        for k in SPIKE_KEYS:
-            a, b = g(prev, k), g(cur, k)
-            if a is None or b is None or abs(a) < 1e-9:
-                continue
-            chg = (b - a) / abs(a)
-            if abs(chg) > SPIKE_THRESHOLD:
-                key = f"{y}.{k}"
+        # 4. 突变检测
+        notes = data.get("spike_notes", {}) or {}
+        for i in range(1, len(rows)):
+            prev, cur = rows[i - 1], rows[i]
+            y = cur.get("year")
+            for k in SPIKE_KEYS:
+                a, b = g(prev, k), g(cur, k)
+                if a is None or b is None or abs(a) < 1e-9:
+                    continue
+                chg = (b - a) / abs(a)
+                if abs(chg) > SPIKE_THRESHOLD:
+                    key = f"{y}.{k}"
+                    if key not in notes:
+                        errors.append(f"{y}: `{k}` 同比变动 {chg:+.0%} 超过 ±50%，"
+                                      f"spike_notes 缺少 `{key}` 的原因标注（业务变化或数据修正）")
                 if key not in notes:
                     errors.append(f"{y}: `{k}` 同比变动 {chg:+.0%} 超过 ±50%，"
                                   f"spike_notes 缺少 `{key}` 的原因标注（业务变化或数据修正）")
 
-    # 5. 双源交叉验证
+    # 5. 双源交叉验证（银行命门科目改：营业收入/归母净利润；实业：收入/归母净利润/经营现金流/股本）
     if args.skip_crosscheck:
         warns.append("已跳过双源核对（--skip-crosscheck）：仅限竞对公司；报告脚注必须披露该公司未做原文核对")
     else:
@@ -157,6 +184,7 @@ def main():
         if len(cc) < CROSSCHECK_MIN_YEARS:
             errors.append(f"双源核对：crosscheck 区块不足 {CROSSCHECK_MIN_YEARS} 个年度"
                           "（命门科目须与年报原文核对：收入/归母净利润/经营现金流/股本）")
+        xkeys = ["operating_income", "net_income"] if is_bank else CROSSCHECK_KEYS
         for entry in cc:
             y = entry.get("year")
             if not entry.get("source"):
@@ -165,7 +193,7 @@ def main():
             if row is None:
                 errors.append(f"双源核对 {y}: annual 中无该年度数据")
                 continue
-            for k in CROSSCHECK_KEYS:
+            for k in xkeys:
                 ov = entry.get(k)
                 dv = row.get(k)
                 if ov is None:
