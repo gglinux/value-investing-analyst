@@ -39,6 +39,14 @@ SKILL.md 只保留数据分级与降级协议的原则，各市场的实操路�
 - **估值弃用单阶段 Gordon PB-ROE**：可持续 ROE×(1−分红率) 的隐含 g 逼近折现率时分母趋零（招行算出过 +141% 公允价）。银行统一用两阶段现价回归（分红折现 + 终期 BVPS×终期 PB）。
 - **vchart 校验约束**：ECharts 图表 data 必须与底稿 JSON 数组完全一致且为一维数字数组；二维坐标（[[x,y],...]）和嵌套数组无法被校验器解析。带 `scale=0.01` 时图表显示亿元、底稿存百万。
 
+## A 股实证要点（伊利股份全链路验证过，2026-08-28）
+
+- **字段名与港股不同**：A股接口（CLS fallback→东财）归母净利是 `NPParentCompanyOwners`（非港股的 ProfitToShareholders）、经营现金流是 `NetOperateCashFlow`（非 CFO）、营业成本 `OperatingCost`。营收字段 A 股完整（`OperatingRevenue`），与年报核对 0 误差。
+- **TotalAssets 缺失**：A 股接口资产负债表无 TotalAssets 字段，用 `TotalLiability + TotalShareholderEquity` 推导（伊利 2025 验证误差 <0.1%）。
+- **capex 无独立科目**：A 股接口现金流量表同样缺"购建固定资产"科目（只有净额 NetInvestCashFlow），capex 序列需从研报（华泰/东吴等有历史序列）或年报现金流量表原文手工补齐，标注 B 级。
+- **减值年必须标注**：含大额一次性减值的年份（伊利 2024 年 52.3 亿）必须在 spike_notes 说明"还原后真实增长"，否则次年高增长（+36.8%）会被突变检测误报，且估值基期会被低基数扭曲。
+- **十年序列标注量**：成熟公司 spike 标注约 18 条，显著少于 IPO 高增长公司（40+ 条）——验证器工作量随公司成长性指数级下降。
+
 ## 港股实证要点（泡泡玛特全链路验证过，2026-08-28）
 
 - **接口无营收字段**：westock finance 港股接口（hk 前缀）利润表 `OperatingRevenue` 字段为空，需用年报公告披露值+汇率反推双源构建底稿。
