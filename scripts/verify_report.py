@@ -22,6 +22,15 @@ verify_report.py — 报告数字校验脚本（Phase 5 交付前强制运行）
 - path: 底稿内的取值路径（点号分隔，支持负数索引，如 summary.roic_series）
 - scale: 底稿存小数、图表显示百分数时设为 100
 
+证据指针校验（定性论断防幻觉，report-spec 质量红线）：
+    报告中的证据指针写法 [E:<文件名>] 或 [E:<文件名>#补充说明]。
+    规则一：指针指向的文件名必须能在 data/manifest.json 的 files[].file 中找到
+            （支持前缀匹配，如 manifest 登记 "filings/nvda-*.htm" 可匹配
+             [E:filings/nvda-20260125.htm]）。查无此文件 → 失败。
+    规则二：五维章节（标题含 商业模式/护城河/增长/管理层/财务质量）各自的
+            [E:] 指针数量 ≥ 3，不达标 → 失败（该维度论断没挂够证据）。
+    manifest 不存在时此项降级为警告（不拦截），但报告附录必须说明。
+
 用法：
     python3 verify_report.py <report.html> --data-dir <公司名>_analysis/data
 退出码：0 全部通过；1 存在不一致或无法溯源。
@@ -187,11 +196,56 @@ def main():
                 break
         if ok:
             chart_checked += 1
-    total = len(matches) + len(chart_matches)
-    passed_total = passed + chart_checked
+
+    # ---- 证据指针校验（定性论断防幻觉）----
+    # [E:文件名] 必须能在 manifest 登记中找到；五维章节各自指针数 ≥ 3。
+    epointer_checked = 0
+    manifest_fp = os.path.join(args.data_dir, "manifest.json")
+    epointers = re.findall(r"\[E:([^\]#]+)(?:#[^\]]*)?\]", html)
+    if epointers:
+        if not os.path.exists(manifest_fp):
+            print("警告：报告含 [E:] 证据指针但 data/manifest.json 不存在，"
+                  "无法核验指针指向——报告附录必须说明。")
+        else:
+            with open(manifest_fp, "r", encoding="utf-8") as f:
+                manifest = json.load(f)
+            registered = [it.get("file", "") for it in manifest.get("files", [])]
+
+            def in_manifest(name):
+                name = name.strip()
+                for reg in registered:
+                    if reg == name:
+                        return True
+                    if "*" in reg:  # 通配登记，如 filings/nvda-*.htm
+                        rx = "^" + re.escape(reg).replace(r"\*", ".*") + "$"
+                        if re.match(rx, name):
+                            return True
+                return False
+
+            for name in set(epointers):
+                if in_manifest(name):
+                    epointer_checked += 1
+                else:
+                    failed.append(("manifest.json", f"E:{name}",
+                                   "证据指针指向的文件未在 manifest 登记", ""))
+        # 五维章节指针密度检查：按标题切分正文，各维 ≥3 条
+        plain = re.sub(r"<script.*?</script>", "", html, flags=re.S)
+        dims = ["商业模式", "护城河", "增长", "管理层", "财务质量"]
+        heads = [(m.start(), d) for d in dims
+                 for m in re.finditer(r"<h[12][^>]*>[^<]*" + d, plain)]
+        heads.sort()
+        for i, (pos, dim) in enumerate(heads):
+            end = heads[i + 1][0] if i + 1 < len(heads) else len(plain)
+            cnt = len(re.findall(r"\[E:[^\]]+\]", plain[pos:end]))
+            if cnt < 3:
+                failed.append(("report", f"五维:{dim}",
+                               f"证据指针不足：该维度仅 {cnt} 条 [E:]（要求 ≥3）", ""))
+    total = len(matches) + len(chart_matches) + len(set(epointers))
+    passed_total = passed + chart_checked + epointer_checked
 
     print(f"校验完成：{passed_total} 通过 / {len(failed)} 失败 / 共 {total} 项"
-          f"（正文数字 {len(matches)} 项 + 图表数组 {len(chart_matches)} 组）")
+          f"（正文数字 {len(matches)} 项 + 图表数组 {len(chart_matches)} 组"
+          f" + 证据指针 {len(set(epointers))} 个）")
     if failed:
         for src, path, reason, text in failed:
             print(f"  [FAIL] {src}:{path} — {reason}；报告显示={text}")

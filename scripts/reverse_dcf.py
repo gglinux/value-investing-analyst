@@ -16,7 +16,8 @@ reverse_dcf.py — 反向 DCF 求解器（Phase 4 强制使用）
       --discount-rate 0.10 --terminal-growth 0.025 --years 10 --shares 1000 \
       [--fade]   # 增速在预测期内线性衰减到永续增速（更保守、更真实）
   python3 reverse_dcf.py expected-return --price 209.75 --hold-years 5 \
-      --scenarios "悲观:105:0.3,基准:212:0.5,乐观:397:0.2" --index-hurdle 0.09
+      --scenarios "悲观:105:0.3,基准:212:0.5,乐观:397:0.2" --index-hurdle 0.09 \
+      [--dividend-yield 0.05]   # 高股息标的必填，与门槛比较用含息 IRR
 
 单位：market-cap / base-oe 用同一货币单位（建议百万）；shares 百万股。
 base-oe = 基期 Owner Earnings（来自 compute_metrics.py 输出，保持口径一致）。
@@ -62,20 +63,27 @@ def solve_implied_growth(market_cap, base_oe, discount, terminal_g, years, fade=
     return (lo + hi) / 2
 
 
-def expected_return(price, scenarios, hold_years, index_hurdle=0.09):
+def expected_return(price, scenarios, hold_years, index_hurdle=0.09,
+                    dividend_yield=0.0):
     """期望回报率引擎：把三情景估值转成"这笔钱年化几个点"。
 
     价值投资的决策变量不是"公司好不好"，而是"相对机会成本，这笔钱划不划算"。
     单点内在价值只能回答贵不贵，无法回答期望回报与亏损概率。
 
     scenarios: [{"name","value_per_share","probability"}, ...]，概率之和须为 1。
-    假设持有期末股价回归各情景内在价值（不含股息，故为保守下界）。
+    假设持有期末股价回归各情景内在价值。
+    dividend_yield: 预期持有期平均股息率（对成本价口径，如 0.05 = 5%）。
+      股价回归假设不含股息，对长江基建/神华这类股息率 5~7% 的标的，五年漏掉
+      25%+ 回报会导致双闸门系统性误杀——所以含息 IRR 才是与机会成本门槛比较的口径。
+      近似算法：年化 IRR + 股息率（线性叠加，未复投，仍偏保守）。
     """
     total_p = sum(s["probability"] for s in scenarios)
     if abs(total_p - 1.0) > 1e-6:
         raise SystemExit(f"错误：三情景概率之和为 {total_p:.4f}，必须等于 1")
     if price <= 0:
         raise SystemExit("错误：现价必须为正")
+    if dividend_yield < 0 or dividend_yield > 0.20:
+        raise SystemExit("错误：股息率应在 0~20% 之间（按小数传入，如 0.05）")
 
     rows = []
     exp_irr = 0.0
@@ -89,27 +97,34 @@ def expected_return(price, scenarios, hold_years, index_hurdle=0.09):
         rows.append({
             "name": s["name"], "probability": p, "value_per_share": v,
             "total_return": total_ret, "annualized_irr": irr,
+            "annualized_irr_incl_div": irr + dividend_yield,
         })
         exp_irr += p * irr
         exp_terminal += p * v
-        if total_ret < 0:
+        # 亏损判定含股息缓冲：期末价值 + 累计股息 仍低于成本才算亏
+        total_ret_incl_div = total_ret + dividend_yield * hold_years
+        if total_ret_incl_div < 0:
             loss_prob += p
-            downside += p * total_ret
+            downside += p * total_ret_incl_div
 
     exp_total = exp_terminal / price - 1.0
+    exp_irr_incl_div = exp_irr + dividend_yield
     return {
         "price": price, "hold_years": hold_years,
+        "dividend_yield": dividend_yield,
         "scenarios": rows,
         "expected_value_per_share": exp_terminal,
         "expected_total_return": exp_total,
         "expected_annualized_irr": exp_irr,
+        "expected_annualized_irr_incl_div": exp_irr_incl_div,
         "loss_probability": loss_prob,
         "expected_downside_given_loss": downside / loss_prob if loss_prob > 0 else None,
         "probability_weighted_downside": downside,
         "index_hurdle": index_hurdle,
-        "beats_index": exp_irr > index_hurdle,
-        "excess_vs_index": exp_irr - index_hurdle,
-        "note": "期末股价回归内在价值假设，不含股息；亏损概率为期末低于现价的情景概率之和",
+        "beats_index": exp_irr_incl_div > index_hurdle,
+        "excess_vs_index": exp_irr_incl_div - index_hurdle,
+        "note": "期末股价回归内在价值假设；含息 IRR = 不含息 IRR + 股息率（线性近似、未复投）；"
+                "亏损概率按含股息口径判定；与机会成本门槛比较用含息 IRR",
     }
 
 
@@ -142,6 +157,9 @@ def main():
                     help='三情景每股价值与概率，格式："悲观:105.12:0.3,基准:211.65:0.5,乐观:396.52:0.2"')
     p3.add_argument("--index-hurdle", type=float, default=0.09,
                     help="机会成本门槛（指数长期年化），默认 9%%")
+    p3.add_argument("--dividend-yield", type=float, default=0.0,
+                    help="预期持有期平均股息率（小数，如 0.05）。高股息标的必填，"
+                         "否则期望 IRR 系统性低估、双闸门误杀")
     p3.add_argument("-o", "--output", help="输出 JSON 路径")
 
     args = ap.parse_args()
@@ -154,21 +172,25 @@ def main():
                 raise SystemExit(f"情景格式错误：{part}，应为 名称:每股价值:概率")
             scen.append({"name": bits[0], "value_per_share": float(bits[1]),
                          "probability": float(bits[2])})
-        res = expected_return(args.price, scen, args.hold_years, args.index_hurdle)
-        print(f"现价 {res['price']:,.2f}，持有期 {res['hold_years']} 年\n")
+        res = expected_return(args.price, scen, args.hold_years, args.index_hurdle,
+                              args.dividend_yield)
+        print(f"现价 {res['price']:,.2f}，持有期 {res['hold_years']} 年，"
+              f"股息率假设 {res['dividend_yield']:.1%}\n")
         print(f"{'情景':<8}{'概率':>8}{'每股价值':>12}{'总回报':>10}{'年化':>10}")
         for r in res["scenarios"]:
             print(f"{r['name']:<8}{r['probability']:>8.0%}{r['value_per_share']:>12,.2f}"
                   f"{r['total_return']:>10.1%}{r['annualized_irr']:>10.1%}")
         print(f"\n期望每股价值        : {res['expected_value_per_share']:,.2f}")
         print(f"期望总回报          : {res['expected_total_return']:.1%}")
-        print(f"期望年化回报（IRR） : {res['expected_annualized_irr']:.2%}")
-        print(f"亏损概率            : {res['loss_probability']:.0%}")
+        print(f"期望年化（不含息）  : {res['expected_annualized_irr']:.2%}")
+        print(f"期望年化（含股息）  : {res['expected_annualized_irr_incl_div']:.2%}"
+              f"{'  ← 与机会成本门槛比较用这个' if res['dividend_yield'] > 0 else ''}")
+        print(f"亏损概率            : {res['loss_probability']:.0%}（含股息缓冲口径）")
         if res["expected_downside_given_loss"] is not None:
             print(f"亏损情景平均跌幅    : {res['expected_downside_given_loss']:.1%}")
         print(f"机会成本门槛（指数）: {res['index_hurdle']:.1%}")
         verdict = "跑赢" if res["beats_index"] else "跑输"
-        print(f"结论：期望年化{verdict}指数 {abs(res['excess_vs_index']):.2%}"
+        print(f"结论：期望年化（含息）{verdict}指数 {abs(res['excess_vs_index']):.2%}"
               f"{'' if res['beats_index'] else '，机会成本不划算 → 结论最高只能给「观察等价格」'}")
         if args.output:
             with open(args.output, "w", encoding="utf-8") as f:

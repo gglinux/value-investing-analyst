@@ -91,6 +91,15 @@ def main():
         if not data.get(k):
             warns.append(f"口径注册表：`{k}` 缺失——跨市场竞对对比时必填，图表脚注需注明")
 
+    # 1.5 前视偏差防线：年报数据必须记录发布日（publish_date），复盘校准时
+    # 按发布日截断"当时市场知道什么"——2025 年报 3 月底才发布，1 月的分析不该用它。
+    rows_probe = data.get("annual", []) or []
+    missing_pub = [r.get("year") for r in rows_probe[-3:] if not r.get("publish_date")]
+    if missing_pub:
+        warns.append(f"前视偏差：最近年度 {missing_pub} 缺 `publish_date`（年报发布日，"
+                     "A股接口有 InfoPublDate 现成可用；EDGAR 用 filing date）——"
+                     "复盘校准协议依赖该字段按发布日截断信息集")
+
     rows = sorted(data.get("annual", []), key=lambda r: r.get("year", 0))
     if not rows:
         errors.append("annual 为空")
