@@ -26,8 +26,8 @@
 
 ```bash
 # 在 skill 根目录执行；DATA 指向 data/ 即可
-python3 scripts/validate_data.py examples/nvidia/data/financials_NVDA.json
-python3 scripts/compute_metrics.py examples/nvidia/data/financials_NVDA.json -o /tmp/metrics.json
+python3 scripts/validate_data.py cases/nvidia/data/financials_NVDA.json
+python3 scripts/compute_metrics.py cases/nvidia/data/financials_NVDA.json -o /tmp/metrics.json
 # 看 normalization.base_oe_recommended（周期高位时为正常化基期）
 
 python3 scripts/reverse_dcf.py expected-return \
@@ -37,8 +37,8 @@ python3 scripts/reverse_dcf.py expected-return \
 
 # 校验报告数字与底稿一致
 python3 scripts/verify_report.py \
-  examples/nvidia/英伟达_价值投资分析报告_20260827.html \
-  --data-dir examples/nvidia/data
+  cases/nvidia/英伟达_价值投资分析报告_20260827.html \
+  --data-dir cases/nvidia/data
 ```
 
 ## 框架演进说明

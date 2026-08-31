@@ -1,8 +1,0 @@
-{
- "as_of": "2026-08-27",
- "basis": "FY2026(截至2026-01-25)年报 + FY2027 Q1/Q2 季报（财报新闻+公司披露）",
- "revenue_mm": 302974,
- "net_income_mm": 193076.0,
- "note": "FY2027Q1 GAAP净利=Q2环比+2%反推≈58,518；TTM PE=市值/TTM净利",
- "pe_ttm_post_earnings": 26.3
-}
