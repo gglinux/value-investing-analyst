@@ -1,0 +1,28 @@
+{
+  "company": "台积电",
+  "as_of": "FY2025 全年 / 4Q25 季报",
+  "source": "[E:filings/tsm_fy2025_consolidated_report.htm] 附注 + 法说会披露",
+  "segments": {
+    "by_platform_2025": [
+      {"name": "HPC 高性能计算", "share": 0.58, "note": "FY2025 全年占比约 58% (Q1 51%→Q4 55-57%)，AI GPU/ASIC/CPU 主引擎"},
+      {"name": "智能手机", "share": 0.31, "note": "苹果 A19/20 Pro 等旗舰主芯片"},
+      {"name": "IoT", "share": 0.05, "note": "占比小"},
+      {"name": "汽车", "share": 0.04, "note": "占比小"},
+      {"name": "DCE/其他", "share": 0.02, "note": "占比小"}
+    ],
+    "by_technology_4q25": [
+      {"name": "3nm", "share": 0.28},
+      {"name": "5nm", "share": 0.35},
+      {"name": "7nm", "share": 0.14},
+      {"name": "16nm+", "share": 0.23, "note": "先进制程(≤7nm)合计 77%"}
+    ],
+    "by_region_2025": [
+      {"name": "北美客户", "share": 0.74},
+      {"name": "亚太", "share": 0.09},
+      {"name": "中国大陆", "share": 0.09},
+      {"name": "日本", "share": 0.04},
+      {"name": "EMEA", "share": 0.04}
+    ]
+  },
+  "note": "区域/平台占比源自公司 4Q25 法说会与季报披露（B级转引）；公司不披露分客户收入，前三大客户(苹果/NVDA/AMD)合计估计 30%+。"
+}

@@ -1,0 +1,23 @@
+{
+  "entries": [
+    {
+      "date": "2026-08-31",
+      "price": 417.52,
+      "verdict": "观察等价格",
+      "margin_of_safety": -0.217,
+      "expected_irr": -0.0382,
+      "loss_probability": 0.80,
+      "key_variables": [
+        {"name": "AI资本开支兑现周期", "judgment": "2026-27有合约背书，2028后不可知"},
+        {"name": "先进节点定价权", "judgment": "极强且变宽，毛利率59.9%"},
+        {"name": "地缘尾部风险", "judgment": "不可知，仓位纪律对冲"}
+      ],
+      "falsifiers": ["超大规模厂商AI capex指引连续两季下调", "毛利率<53%", "先进制程份额<60%", "台海实质冲突"],
+      "persona_verdicts": {"buffett": "拒绝价格(71)", "duan": "观察(90，250-260以下重仓)", "li_lu": "值得跟踪未懂(77)"},
+      "user_prior": null,
+      "motivation": "用户要求实测skill分析美股台积电",
+      "buy_trigger": "≤257 USD 买入讨论；<343 重跑评估",
+      "review_due": "2027-02-28 或跌破343即触发"
+    }
+  ]
+}

@@ -279,6 +279,15 @@ with tempfile.TemporaryDirectory() as td:
     check("乱码序列被逮住", r.returncode == 1 and "text-integrity" in r.stdout,
           r.stdout[-200:])
 
+    # fmt 捕获回归（实证 bug：data-path 后贪婪 [^>]* 吞噬 data-fmt，
+    # 导致显示精度容差永不生效，pct1 合法舍入被误报）
+    json.dump({"kpi": 0.0077}, open(os.path.join(ddir, "m2.json"), "w"))
+    edge = os.path.join(td, "edge.html")
+    open(edge, "w").write('<span class="vnum" data-src="m2.json" data-path="kpi" '
+                          'data-fmt="pct1">0.8%</span>')
+    r = vr8(edge)
+    check("pct1 合法舍入容差生效（fmt 必须被捕获）", r.returncode == 0, r.stdout[-200:])
+
 print("== 8.6 双轨基期（均值扭曲年防误杀） ==")
 # 爬坡期公司：前3年亏损 + 后期利润率稳定爬升 → 判定"周期高位"但应输出双轨
 ramp = mk_rows([-0.05, -0.02, 0.02, 0.06, 0.10, 0.14, 0.17, 0.19, 0.21, 0.22, 0.23],

@@ -1,0 +1,22 @@
+{
+  "company": "台积电",
+  "ticker": "TSM",
+  "market": "NYSE ADR (1 ADR = 5 普通股 2330.TW)",
+  "as_of": "2026-08-28 收盘",
+  "price_usd": 417.52,
+  "price_twd_per_adr": 12847.0,
+  "market_cap_usd": 2166000,
+  "market_cap_twd": 66623000,
+  "pe_ttm": 31.1,
+  "pb": 10.73,
+  "dividend_yield_ttm": 0.0077,
+  "eps_ttm_usd": 13.72,
+  "eps_2025_twd": 66.25,
+  "high_52week": 479.0,
+  "low_52week": 222.13,
+  "position_52week_pct": 0.761,
+  "avg_daily_amount_usd": 3754000000,
+  "fx_twd_usd": 30.76,
+  "source": "[E:data/raw_finance_income.txt] 结构化金融数据接口TSM",
+  "note": "行情快照由结构化行情接口拉取；美元价，市值 2.17 万亿美元。"
+}

@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>台积电（TSM）价值投资分析报告 — 2026-08-31</title>
+<script src="https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"></script>
+<style>
+:root{--main:#1a3a5c;--accent:#d97706;--pos:#15803d;--neg:#b91c1c;--muted:#6b7280;--bg:#f8fafc;--line:#e5e7eb}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif;color:#1f2937;line-height:1.75;background:#fff}
+.wrap{max-width:1060px;margin:0 auto;padding:32px 28px}
+h1{font-size:28px;color:var(--main);border-bottom:3px solid var(--main);padding-bottom:12px;margin-bottom:6px}
+.meta{color:var(--muted);font-size:13px;margin-bottom:28px}
+h2{font-size:21px;color:var(--main);margin:40px 0 14px;padding-left:12px;border-left:5px solid var(--main)}
+h3{font-size:16px;color:var(--main);margin:22px 0 8px}
+p{margin:10px 0;font-size:14.5px}
+table{border-collapse:collapse;width:100%;margin:14px 0;font-size:13.5px}
+th,td{border:1px solid var(--line);padding:7px 10px;text-align:left}
+th{background:var(--main);color:#fff;font-weight:600}
+tr:nth-child(even){background:var(--bg)}
+.card{border:1px solid var(--line);border-radius:10px;padding:20px 22px;margin:18px 0;background:var(--bg)}
+.card-verdict{border:2px solid var(--neg);background:#fef2f2}
+.verdict-big{font-size:26px;font-weight:700;color:var(--neg)}
+.gate{display:inline-block;padding:5px 14px;border-radius:6px;margin:4px 8px 4px 0;font-size:13.5px;font-weight:600}
+.gate-fail{background:#fee2e2;color:#991b1b}
+.gate-pass{background:#dcfce7;color:#166534}
+.chart{width:100%;height:360px;margin:16px 0}
+.chart-note{font-size:12px;color:var(--muted);margin:-8px 0 14px}
+.vnum{font-variant-numeric:tabular-nums}
+.persona{border:1px solid var(--line);border-radius:10px;padding:18px 20px;margin:14px 0}
+.persona h3{margin-top:0}
+.kv{display:flex;flex-wrap:wrap;gap:10px;margin:12px 0}
+.kv>div{flex:1 1 150px;background:#fff;border:1px solid var(--line);border-radius:8px;padding:10px 12px;text-align:center}
+.kv .k{font-size:11.5px;color:var(--muted)}
+.kv .v{font-size:17px;font-weight:700;color:var(--main)}
+.tag{display:inline-block;font-size:11px;padding:1px 8px;border-radius:4px;background:#e0e7ff;color:#3730a3;margin-left:6px;vertical-align:middle}
+.small{font-size:12.5px;color:var(--muted)}
+.warn{background:#fffbeb;border-left:4px solid #f59e0b;padding:10px 14px;margin:12px 0;font-size:13.5px}
+blockquote{border-left:4px solid var(--main);padding:8px 16px;margin:12px 0;color:#374151;background:#f0f4f8;font-size:13.5px}
+ol,ul{padding-left:22px;margin:8px 0;font-size:14px}
+li{margin:4px 0}
+a{color:var(--main)}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<h1>台积电（NYSE: TSM）价值投资分析报告</h1>
+<div class="meta">分析日期 2026-08-31 ｜ 数据截止 2026-08-28 收盘 / FY2025 审计报表 ｜ 分析方法：value-investing-analyst v2.5 全流程 ｜ 币种：除注明外为美元/ADR 口径</div>
+
+<h2>一、投资摘要</h2>
+
+<div class="card card-verdict">
+<div style="font-size:13px;color:#7f1d1d;font-weight:600;margin-bottom:4px">结论档位</div>
+<div class="verdict-big">观察 · 等价格</div>
+<p class="small" style="margin-top:6px">双闸门全灭——好公司 ≠ 好价格。台积电是当代半导体最干净的生态位，但 $417.52 的价格要求未来十年每一天都不犯错。</p>
+<div style="margin-top:12px">
+<span class="gate gate-fail">闸门一 安全边际 −21.7% ✗（要求 ≥25%）</span>
+<span class="gate gate-fail">闸门二 期望含息 IRR −3.8% ✗（门槛 9%）</span>
+</div>
+</div>
+
+<div class="card">
+<h3 style="margin-top:0">首屏决策卡</h3>
+<div class="kv">
+<div><div class="k">现价（USD/ADR）</div><div class="v"><span class="vnum" data-src="market_snapshot.json" data-path="price_usd" data-fmt="num2">417.52</span></div></div>
+<div><div class="k">总市值</div><div class="v">$<span class="vnum" data-src="market_snapshot.json" data-path="market_cap_usd" data-fmt="num0">2,166,000</span>M</div></div>
+<div><div class="k">PE-TTM</div><div class="v"><span class="vnum" data-src="market_snapshot.json" data-path="pe_ttm" data-fmt="num1">31.1</span></div></div>
+<div><div class="k">PB</div><div class="v"><span class="vnum" data-src="market_snapshot.json" data-path="pb" data-fmt="num2">10.73</span></div></div>
+<div><div class="k">股息率TTM</div><div class="v"><span class="vnum" data-src="market_snapshot.json" data-path="dividend_yield_ttm" data-fmt="pct1">0.8%</span></div></div>
+<div><div class="k">52周位置</div><div class="v"><span class="vnum" data-src="market_snapshot.json" data-path="position_52week_pct" data-fmt="pct0">76%</span></div></div>
+</div>
+<table>
+<tr><th>关键变量</th><th>当前判断</th></tr>
+<tr><td>AI 资本开支可持续性</td><td>2026-27 有合约背书、可见；2028 后未经下行周期检验——这是估值的全部分歧所在</td></tr>
+<tr><td>先进节点定价权</td><td>真实且仍在变宽（3nm/5nm 满载提价、2nm 溢价），毛利率 59.9% 为证 [E:filings/tsm_fy2025_consolidated_report.htm]</td></tr>
+<tr><td>地缘尾部风险</td><td>DCF 无法表达、市场零折价；唯一对冲方式是仓位与买入纪律</td></tr>
+</table>
+<p><b>证伪条件（最关键的 2 条）</b>：① 超大规模厂商（MSFT/GOOG/META/AMZN）AI capex 指引连续两季下调；② 毛利率跌破 53%（AI 定价权松动的第一信号）。</p>
+<p><b>下次复查</b>：2026-10-15（Q3 财报）或现价跌破 <b>$343</b>（基准价值）时触发重跑；买入纪律价 <b>$257 以下</b>（基准×0.75）才讨论买。</p>
+</div>
+
+<p><b>一句话生意</b>：全世界最优秀的芯片设计公司把图纸交给它，它按片收取"别家做不出来的良率与产能"的代工费——当代半导体世界绕不开的收费站。</p>
+
+<p><b>三大投资论点</b>：① 先进制程制造垄断（≤7nm 占收入 77%），对手在亏损中掉队 [E:filings/tsm_fy2025_consolidated_report.htm]；② 定价权被反复验证：FY2025 净利率 45.1%、十年提价记录完整 [E:metrics_TSM.json]；③ 高 ROIIC × 长再投资跑道的真复利机器（capex 1.27 万亿新台币/年仍在高回报再投资）。</p>
+
+<p><b>三大风险</b>：① AI 资本开支周期终结（capex 1.27 万亿建立在客户融资性承诺上，未经下行检验）；② 地缘尾部风险（DCF 不可表达）；③ 海外建厂摊薄利润率（成本 1.3-2 倍）。</p>
+
+<p class="warn"><b>信息局限声明</b>：一致预期与目标价来自媒体汇总（C 级），变异认知测试的主锚因此改用反向 DCF 隐含增速（A 级）；客户集中度细拆为公司未披露项，仅按公开信息推断。普通投资者相对机构在本股上的信息差很小（月报制度+英文法说会公开）。</p>
+
+<h2>二、公司与生意</h2>
+<p>台积电 1987 年由张忠谋创立，是全球第一家、也是迄今最成功的纯晶圆代工厂（pure-play foundry）：不做芯片设计、不与客户竞争，只提供制造服务。FY2025 收入 NT$<span class="vnum" data-src="metrics_TSM.json" data-path="series.-1.revenue" data-fmt="num0">3,809,054</span> 百万（≈$1,224 亿，+31.6%），归母净利 NT$<span class="vnum" data-src="metrics_TSM.json" data-path="series.-1.net_income" data-fmt="num0">1,717,883</span> 百万（+46%），EPS <span class="vnum" data-src="metrics_TSM.json" data-path="series.-1.eps" data-fmt="num2">66.25</span> 新台币 [E:filings/tsm_fy2025_consolidated_report.htm]。</p>
+<p>收入结构（FY2025）：HPC 高性能计算 ≈58%（AI GPU/ASIC/CPU）、智能手机 ≈31%（苹果为主）、IoT/汽车/DCE 合计 ≈11%；按制程，先进制程（≤7nm）占 77%（3nm 28%、5nm 35%、7nm 14%，4Q25 口径）；按区域，北美客户 74% [E:segments.json]。</p>
+<p>商业模式的精髓是<b>结构性中立</b>：四十年不碰芯片设计，换取苹果、NVIDIA、AMD、博通把最贵的图纸托付给它。客户承担设计风险，它收制造的钱——AI 时代无论哪家赢，都得经过它 [E:filings/tsm-2025-20f.htm]。</p>
+
+<h2>三、定量画像</h2>
+
+<div id="chart-rev" class="chart"></div>
+<div class="chart-note">图1：收入与归母净利（NT$ 亿，2015-2025）。数据：metrics_TSM.json chart_series [E:metrics_TSM.json]。十年收入 CAGR 16.3%、净利 CAGR 18.8%；2023 年是图中唯一的下行年（半导体去库存），2024-25 由 AI 重新点燃。</div>
+
+<div id="chart-margin" class="chart"></div>
+<div class="chart-note">图2：净利率与 ROE（%，2015-2025）。净利率 45.1% 创历史峰值（十年均值 38.0%，比值 1.19 处中性区间上沿——引擎判定未触发周期高位，但已贴近 1.25 阈值）[E:metrics_TSM.json]。</div>
+
+<div id="chart-roic" class="chart"></div>
+<div class="chart-note">图3：ROIC（%，剔除超额现金口径）。十年均值 >30%，2025 年 47.5% 受现金池效应放大；ROIC−WACC 利差连续十年为正且走阔——护城河的定量底片 [E:metrics_TSM.json]。</div>
+
+<div id="chart-val" class="chart"></div>
+<div class="chart-note">图4：三情景每股价值 vs 现价（USD/ADR）。三情景全部低于现价 $417.52：悲观 $261.4 / 基准 $343.2 / 乐观 $415.5（均含净现金加回 $8.8）[E:valuation.json]。</div>
+
+<p><b>利润含金量警报（引擎）</b>：近 5 年中 4 年 FCF/净利 &lt;0.6——这不是利润质量问题，是资本开支强度问题：FY2025 capex NT$1.27 万亿（占收入 33%），每一分利润都在以 30%+ ROIIC 再投资。警报的读法是"它把印出来的钱又全部买了产能"，而非"利润是假的" [E:metrics_TSM.json]。但这同时意味着：<b>一旦 AI 需求证伪，巨额 capex 将从资产变成过剩产能的负担</b>。</p>
+<p><b>每股口径复核</b>：股本十年恒定在 25,929 百万股（零稀释），总量增长 = 每股增长，无摊薄吞噬 [E:financials_TSM.json]。</p>
+
+<h2>四、护城河</h2>
+<p><b>五源归类</b>：成本优势（规模+良率，主源）＋ 转换成本（流片锁定）＋ 无形资产（工艺 know-how 不可逆向）＋ 有效规模（先进节点市场只容一家）。<b>评级：宽，且仍在变宽</b>。</p>
+<p><b>定量验证</b>：① ROIC−WACC 利差连续 ≥10 年为正 [E:metrics_TSM.json]；② 毛利率波动带窄且抬升（FY2025 59.9%）[E:filings/tsm_fy2025_consolidated_report.htm]；③ 市占率：晶圆代工整体 72%（4Q25 TrendForce），先进制程 70%+。</p>
+<p><b>定价权三项硬测试</b>：① 提价记录——先进制程连续第四年涨价（2026 年涨幅 3-10%）[E:filings/tsm-2025-20f.htm]；② 提价不掉量——3nm/5nm 满载下仍接受涨价；③ 成本转嫁——电力/人力/折旧成本上升期毛利率不降反升（53%→59.9%，2022-2025）。三项全部通过。</p>
+<p><b>产业链议价权</b>：上游设备商（ASML/应用材料）分散且台积电是最大买家——强；下游苹果/NVIDIA 集中度高但无替代产能可去——中强。唯一约束：前五大客户集中 + 客户自研 ASIC 趋势（但 ASIC 仍需它代工，是增量不是威胁）[E:filings/tsm-2025-20f.htm]。</p>
+<p><b>进攻者尸检</b>：Intel 以数百亿美元补贴进攻代工，2024 年亏 188 亿美元 [E:manifest.json]；三星份额持续被挤压；GlobalFoundries 放弃先进节点退守成熟制程（2025 收入仅为台积电 5.6%）。十年进攻史证明：这不是钱能打开的门。</p>
+
+<h2>五、增长</h2>
+<p><b>TAM 与 S 曲线</b>：全球晶圆代工 2025 年约 $1,700 亿、AI 驱动下 2026 年预计 +17%+；先进制程子市场增速更高（Counterpoint "代工2.0"口径 Q3'25 +17%）。台积电在先进制程处黄金成长期后段（渗透率维度），但整体份额已高——未来增长主要来自 TAM 扩大（AI 服务器、边缘 AI、汽车）而非份额提升 [E:filings/tsm-2025-20f.htm]。</p>
+<p><b>增长分解（未来 5 年）</b>：行业（AI 驱动，+15%/年）＋ 份额（基本饱和，+0-1%）＋ 价（2nm/A16 溢价，+2-3%）＋ 新业务（先进封装 CoWoS，产能翻倍增长）。一致预期 FY2026 收入 +42.7%、FY2027 +34.1% [E:consensus.json]。</p>
+<p><b>增长质量（ROIIC）</b>：滚动 3 年 ROIIC 显著 >15%——每新增一块资本都在创造价值，这是"值得保留利润再投资"的公司 [E:metrics_TSM.json]。跑道：2nm 量产（2025Q4）、A16（2026H2）、先进封装扩产 100%/年——跑道真实存在，问题只在跑道尽头的需求。</p>
+
+<h2>六、管理层与文化</h2>
+<p><b>资本配置</b>：再投资纪律 5 分（AI 上行前夜的 capex 提速精准踩点）；并购 5 分（几乎不做大并购）；回购时机 3 分（极少回购、FY2024 仅 NT$31 亿）；增发克制 5 分（十年零稀释）；分红理性 4 分（股息率 35%+、稳定上调）。[E:filings/tsm_fy2025_consolidated_report.htm][E:financials_TSM.json]</p>
+<p><b>言行一致</b>：2021 年承诺"AI 时代高强度资本投入"——五年 capex 从 NT$5,072 亿增至 1.27 万亿，完全兑现；2024 年指引 2025 收入 +25%，实际 +31.6%——保守指引持续超越 [E:filings/tsm-2025-20f.htm][E:filings/tsm-2024-20f.htm]。连续八个季度利润同比增长。</p>
+<p><b>文化瑕疵（如实记录）</b>：美国厂员工歧视集体诉讼（进行中，约 30 人）暴露管理外扩短板；台湾本岛加班文化长期受批评。不影响商业模式，但"本分"维度不能给满分 [E:manifest.json]。</p>
+
+<h2>七、财务质量与风险</h2>
+<p><b>排雷结论</b>：无一票否决项。Deloitte 连续多年无保留意见（FY2025 审计 2026-02-26 签发）；无财务造假前科、无做空报告命中；对立面检索已登记 [E:manifest.json]。</p>
+<p><b>资产负债表</b>：类堡垒。期末现金及约当现金 NT$<span class="vnum" data-src="financials_TSM.json" data-path="annual.-1.cash" data-fmt="num0">2,768,000</span> 百万 vs 有息负债 NT$<span class="vnum" data-src="financials_TSM.json" data-path="annual.-1.total_debt" data-fmt="num0">896,100</span> 百万——净现金 NT$1.87 万亿（≈$61B）。总股本十年不变 [E:filings/tsm_fy2025_consolidated_report.htm]。</p>
+<p><b>可及性与摩擦</b>：ADR 直接购买，流动性极好（日均成交额 $37.5 亿）；注意 ADR 股息预扣税（台湾 21% 非居民股息税）与汇率敞口（新台币升值周期中 TWD 计价盈利折算的顺风/逆风）。</p>
+<p><b>三大真实风险</b>：① AI capex 周期：公司 33% 收入投入资本开支，客户 capex 若退潮，订单消失速度参照 2023 年手机（收入一年 -5.5%）；② 地缘：产地集中台湾本岛 >80%，海外厂 2028 年前占比仍低；③ 海外厂利润率摊薄（亚利桑那成本 1.3-2 倍）。</p>
+
+<h2>八、估值</h2>
+<p><b>基期正常化</b>：引擎判定<b>中性区间</b>（最新净利率 45.1% = 十年均值 38.0% 的 <span class="vnum" data-src="metrics_TSM.json" data-path="normalization.margin_ratio_latest_vs_avg" data-fmt="num2">1.19</span> 倍，未触 1.25 阈值），当期 Owner Earnings 可作基期。均值扭曲年检出（2020/2022 净利波动 >50%），但因未判高位，双轨未强制触发；本报告仍按双轨习惯呈现两套基期 [E:metrics_TSM.json]：</p>
+<table>
+<tr><th>基期</th><th>口径</th><th>Owner Earnings</th><th>三情景（悲观/基准/乐观）</th><th>隐含增速（fade）</th></tr>
+<tr><td>Track A</td><td>FY2025 审计基期（skill 默认纪律）</td><td>$55.85B（NT$1.72T/30.76）</td><td>$159.0 / $208.0 / $251.4</td><td><b>29.3%</b></td></tr>
+<tr><td>Track B（主轨）</td><td>FY2026E 基期（一致预期 $16.7 EPS 已含 H1'26 实绩）</td><td>$86.6B</td><td><b>$261.4 / $343.2 / $415.5</b></td><td><b>17.7%</b></td></tr>
+</table>
+<p class="small">Owner Earnings ≈ 净利润（维持性 capex ≈ 折旧假设，引擎口径）；三情景均含净现金加回 $8.8/ADR（净现金 NT$1.87T × 75% 计入）。折现率 10%、永续 2.5%、10 年 fade。Track B 即"给市场自己的盈利路径"，已是最宽容的基期 [E:valuation.json]。</p>
+
+<p><b>反向 DCF（必做）</b>：现价 $417.52 隐含未来 10 年 OE fade 增速 <b>17.7%</b>（Track B 基期）或恒定 16.7%（Track A 基期）。基率检验：收入规模 >$500 亿的公司未来 10 年收入 CAGR ≥10% 的历史达成比例仅 ~10%，≥17% 的比例 <3%——市场定价要求台积电进入历史前 3% 的少数派，而它过去十年 16.3% 的表现恰是这个少数派的成员。<b>这不是"不可能"，是"必须完美"</b>。</p>
+
+<p><b>假设一致性对账</b>：① 终年收入（基准 2035 ≈$2,700 亿）≤ 代工 TAM×合理份额上限 ✓（但乐观情景 $4,000+ 亿已贴 TAM 极限）；② 利润率假设与护城河评级匹配 ✓（宽护城河支撑 40-45% 净利率，但乐观情景要求 45%+ 持续十年——基率 <5%）；③ 再投资率与 ROIIC 一致 ✓；④ 增速基率：基准 12% 处历史前 10-15% 分位——偏高但有 AI 证据支撑；乐观 17% 处前 3%——乐观情景仅供参照；⑤ 产业链议价权对利润率无下压约束 ✓。</p>
+
+<p><b>期望回报率（双闸门之二）</b>：三情景 悲观 30% / 基准 50% / 乐观 20%（默认概率，未偏离±10pp）：期望每股价值 $333.1、期望含息年化 IRR <b><span class="vnum" data-src="expected_return.json" data-path="expected_annualized_irr_incl_div" data-fmt="pct1">-3.8%</span></b>、亏损概率 <span class="vnum" data-src="expected_return.json" data-path="loss_probability" data-fmt="pct0">80%</span>、亏损情景平均跌幅 −21.1%。红队独立概率（40/45/15）下 IRR −4.5%、亏损概率 85%——两组概率同向 [E:expected_return.json]。</p>
+
+<p><b>安全边际结论</b>：现价 vs 基准价值 $343.2 → <b>−21.7%</b>（要求 ≥25%，缺口 46.7 个百分点）；现价连乐观价值 $415.5 都未站上。触发关注区间：<b>&lt;$343 重跑评估；$257 以下（基准×0.75）进入买入讨论</b>。最敏感假设：① fade 增速 ±20%（12%→9.6%/14.4%）→ 基准价值 $290-405；② 基期取 FY2025 而非 FY2026E → 基准价值 −39%。</p>
+
+<h2>九、关键判断（Phase 4.5）</h2>
+<p><b>关键变量</b>：① <b>AI 资本开支的兑现周期</b>——既重要又可知（可通过超大规模厂商季报的 AI 收入 vs capex 比率跟踪）；当前判断：2026-27 有合约与产能锁定背书，2028 后不可知，估值按"繁荣到 2027、之后看兑现"折现。② <b>先进节点定价权</b>——可知且当前极强（满载提价），是利润率假设的锚。③ 地缘——重要但不可知，不入 DCF，入仓位纪律。</p>
+<p><b>变异认知测试（主锚：价格）</b>：市场为什么给 $417？——主流叙事是"台积电 = AI 时代的基础设施 + 唯一没有对手的军工厂"，一致预期 FY2026/27 EPS $16.7/$21.8、38 家买入零卖出。我们与市场的分歧<b>不在生意</b>（我们同样认定它是十年难遇的制造垄断），<b>在价格隐含的增长久期</b>：现价隐含 fade 17.7% vs 我方基准 12%——市场把 AI 资本开支的"合约可见期"（2 年）线性外推成了"结构性十年"。认知优势来源：不是更深的产业理解（市场对台积电研究极充分），而是<b>纪律</b>——我们拒绝为"必然正确的好公司"支付"必须完美的价格"。因一致预期为 C 级，本分歧判定置信度降一档，但双闸门结论不依赖该判定。</p>
+<p><b>双重机会成本对照</b>：期望含息 IRR <b>−3.8%</b> vs ① 标普 500 长期年化门槛 9% → 跑输 12.8 个百分点；② 同口径下连 Track A 引擎基期也仅 −12.9%。<b>机会成本不划算</b>，档位最高只能"观察等价格"——这是本报告结论的机械来源，不是观点 [E:expected_return.json]。</p>
+
+<h2>十、投委会评审</h2>
+
+<div class="persona">
+<h3>巴菲特 <span class="tag">拒绝（价格维度）</span> 71/100</h3>
+<p>独立起点：十年后经济形态可预测吗——<b>能</b>，这比绝大多数科技公司更像消费品公司。护城河宽且变宽（Intel 亏 188 亿证明钱打不开这扇门）；资本配置克制（零稀释+稳定分红）。唯一伤口是 Owner Earnings：capex NT$1.27 万亿/年必须靠 AI 需求十年后还在来消化。十年持有测试：愿意——但只在便宜得多的价格。价格 4/20 触发一票否决：<b>"等它恐惧感最重、市场怀疑 AI 是不是泡沫、股价回到 260 美元附近时，我会带着钱回来。现在，我就看着。"</b></p>
+</div>
+
+<div class="persona">
+<h3>段永平 <span class="tag">观察（生意顶级，不便宜不碰）</span> 90/100</h3>
+<p>独立起点：生意质地——典型"坐着赚钱"：客户替它背设计风险，它收别家造不出的制造费；四十年 Stop Doing List（不做设计、不与客户竞争）是它拿到所有顶级订单的根因，商业模式 34/35。十年后还在吗——在，且大概率更强。价格：买它等于付满格的钱买一个每年必须打满分的公司。<b>"台积电是我研究过的'坐着赚钱'生意里最接近完美的一个——美中不足是它不便宜。等 250-260 以下，我会重仓。现在 400+，不碰。"</b></p>
+</div>
+
+<div class="persona">
+<h3>李录 <span class="tag">值得跟踪，未到"懂且重仓"</span> 77/100</h3>
+<p>独立起点：事实 vs 推断清点——事实是十年 18.8% 净利 CAGR、45.1% 净利率、无对手；推断是"AI 需求可持续十年"（三环推断，最弱环在超大规模厂商 AI 投资回报从未被证明）。生态位判断：当代价值链最干净的环节，<b>无论 NVIDIA 赢还是 Google 赢它都赢</b>。但知识诚实要求承认：商业模式层面懂，AI 需求外推层面不懂。<b>"现价同时要求'它是唯一收费站'（真）和'车流量十年复合 17.7%'（我不能担保）。等它跌回 300 附近，或 2028 年看到超大规模厂商用 AI 赚到钱而非只是花钱时，它才会变成'懂且值得重仓'。"</b></p>
+</div>
+
+<h3>分歧对照表（核心产出）</h3>
+<table>
+<tr><th>关键问题</th><th>巴菲特</th><th>段永平</th><th>李录</th></tr>
+<tr><td>十年后经济形态可预测吗</td><td>能（少数公司之一）</td><td>能（机器已建好）</td><td>生意能、AI 需求曲线不能</td></tr>
+<tr><td>最大分歧点</td><td>价格</td><td>价格</td><td>AI 外推置信度</td></tr>
+<tr><td>买入价位</td><td>$260</td><td>$250-260</td><td>$300 或待 2028 验证</td></tr>
+<tr><td>对地缘风险处理</td><td>折价进价格</td><td>承认不可知</td><td>仓位表达而非 DCF</td></tr>
+</table>
+<p><b>共识点</b>：三人对生意质量罕见一致（宽护城河、顶级文化、制造垄断）；对价格结论一致（当前不买）；分歧只在"为什么等"——这是证据驱动的一致，非独立协议污染。</p>
+<p><b>红队质询要点</b>：独立出数悲观 $205.4（vs 主分析 $261.4，差 −21%，未触发降档线）；独立概率下 IRR −4.5%。裁定：不强制降档，但买入纪律价唯一化——<b>$257 以下才讨论买，任何"回调到 350/380 就是机会"的说法都是锚定偏差</b>。另：DCF 无法表达台海尾部风险（−70% 级事件），只能靠仓位与纪律对冲。</p>
+<p><b>档位关系说明</b>：本报告档位由双闸门唯一决定（安全边际 −21.7% ✗ + 期望含息 IRR −3.8% ✗），三位大师的高分（71/90/77）<b>不改变档位</b>——它们校准的是"这家公司值多少钱的认知质量"，不是"现在该不该买"。</p>
+
+<h2>十一、结论与行动</h2>
+<div class="card card-verdict">
+<p style="font-size:16px"><b>结论：观察 · 等价格。</b>台积电是当代半导体最好的生意，也是当前市场最贵的共识之一。双闸门全灭（安全边际 −21.7%、期望含息 IRR −3.8%），即便采用市场自己的 FY2026 盈利路径（Track B 最宽容基期），乐观情景也仅勉强够到现价。本报告与泡泡玛特案例同构：顶级生意 × 顶格价格 = 等。</p>
+</div>
+<p><b>持有体验预演</b>：该股 2021-2022 年从 $142 跌至 $60（<b>−58%</b>，修复用时约 2 年）；2025 年 4 月关税冲击单周 −25%。台积电的常态波动带是 ±40-60%。正面拷问：<b>若买入后跌 40% 而基本面未变，你敢不敢加仓？</b>不敢，说明当前价格就不该买——因为本报告的答案（$257 以下买）和情绪的答案（$417 追）中间隔着的正是这个拷问。</p>
+<p><b>证伪条件（投资论点失效信号）</b>：① 超大规模厂商 AI capex 指引连续两季下调；② 毛利率跌破 53%；③ 先进制程份额跌破 60%（Intel 18A/14A 或三星实质突破）；④ 台海发生实质冲突或禁运升级（此为持有风险而非论点证伪，触发无条件退出）。</p>
+<p><b>季度跟踪清单</b>：</p>
+<ol>
+<li>超大规模厂商 capex 指引与 AI 收入披露（警戒线：连续两季下调）</li>
+<li>毛利率（警戒线 &lt;53%）与净利率（警戒线 &lt;38% 中枢）</li>
+<li>先进制程收入占比与 2nm 爬坡（警戒线：3nm+2nm 合计占比连续两季下降）</li>
+<li>CoWoS 先进封装产能扩张进度（警戒线：扩产计划暂停）</li>
+<li>股价 vs $343 / $257 两道纪律线</li>
+</ol>
+<p><b>用户初判对照</b>：用户未提供初判（Phase 0 询问未答）。本报告独立结论如上；若你的初判是"AI 基建必赢所以台积电必买"，分歧点已在第九节写明：我们买的是生意+价格，不是叙事。</p>
+
+<h2>十二、附录</h2>
+<h3>数据底稿与来源</h3>
+<table>
+<tr><th>文件</th><th>内容</th><th>等级</th></tr>
+<tr><td>financials_TSM.json</td><td>2015-2025 年度财务（EDGAR + 20-F 审计报表组装，经 validate_data 0 错误通过）</td><td>A</td></tr>
+<tr><td>metrics_TSM.json</td><td>compute_metrics.py 统一口径输出（ROIC/OE/正常化）</td><td>A</td></tr>
+<tr><td>tsm_fy2025_consolidated_report.htm</td><td>FY2025 审计合并报表（SEC 6-K，2026-02-26）</td><td>A</td></tr>
+<tr><td>tsm-2025/2024/2023-20f.htm 等</td><td>SEC 20-F 原文（2017-2025 共 7 份）</td><td>A</td></tr>
+<tr><td>consensus.json</td><td>一致预期（Yahoo/MarketWatch/FactSet 汇总）</td><td>C（旁证）</td></tr>
+</table>
+<p><b>入口校验</b>：validate_data 0 错误通过；警告已登记（2015-2023 资产负债勾稽字段缺省以披露表列替代、信息时效已核对 2026Q2 半年报无未消化剧变）。</p>
+<p><b>数字校验</b>：本报告关键数字均以 vnum 溯源标签包裹、图表以 vchart 锚点校验，verify_report.py 通过后交付（结果见文末）。</p>
+<p><b>已知数据口径说明</b>：① FY2024 净利经 IFRS 重述 +1.3%（1,158.4B→1,173.3B），本报告采用 FY2025 审计报表重述后口径；② EDGAR companyfacts 的 FPI 资产负债表行存在一年错位，2022-2025 年 BS 数字以 20-F 审计原文为准；③ Owner Earnings ≈ 净利润（维持性 capex≈折旧假设），扩张性 capex 不扣减——这是本报告与"FCF 口径估值"差异的原因，保守口径下估值应再降约 20%。</p>
+<h3>术语速查</h3>
+<p class="small">Owner Earnings（所有者盈余）：巴菲特口径的真实可分配利润 ≈ 净利+折旧摊销−维持性资本开支。ROIC（投入资本回报率）：衡量一块钱投入能赚回几毛钱。反向 DCF：从现价反推市场隐含的增长预期。安全边际：内在价值与现价的差距。fade：增速逐年线性衰减至永续增速的估值模式。</p>
+<p class="small" style="margin-top:16px;border-top:1px solid var(--line);padding-top:12px"><b>免责声明</b>：本报告由分析工具生成，仅供研究参考，不构成任何投资建议。市场有风险，投资需谨慎。分析日期 2026-08-31，数据截止 2026-08-28 收盘与 FY2025 审计报表；时效有限，重大事件后请以最新底稿重估为准。</p>
+
+</div>
+
+<script>
+function initChart(id, option){
+  var el = document.getElementById(id);
+  if(!el || typeof echarts === 'undefined') return;
+  var c = echarts.init(el);
+  c.setOption(option);
+  window.addEventListener('resize', function(){ c.resize(); });
+}
+var years = [2015,2016,2017,2018,2019,2020,2021,2022,2023,2024,2025];
+initChart('chart-rev', {
+  title:{text:'收入与归母净利：十年翻两番（NT$ 亿）', left:'center', textStyle:{fontSize:14}},
+  tooltip:{trigger:'axis'}, legend:{bottom:0},
+  xAxis:{type:'category', data:years},
+  yAxis:{type:'value'},
+  series:[
+    <!-- vchart src=metrics_TSM.json path=chart_series.revenue scale=0.01 -->
+    {name:'收入(亿)', type:'bar', data:[8434.5,9479.4,9774.5,10314.7,10699.9,13393.0,15874.2,22638.9,21617.4,28943.1,38090.5], itemStyle:{color:'#1a3a5c'}},
+    <!-- vchart src=metrics_TSM.json path=chart_series.net_income scale=0.01 -->
+    {name:'归母净利(亿)', type:'line', data:[3065.5,3342.8,3431.5,3511.3,3452.6,5181.6,5923.6,9929.2,8517.4,11732.7,17178.8], itemStyle:{color:'#d97706'}, lineStyle:{width:3}}
+  ]
+});
+initChart('chart-margin', {
+  title:{text:'净利率 45.1% 创历史峰值，ROE 回到 35%', left:'center', textStyle:{fontSize:14}},
+  tooltip:{trigger:'axis'}, legend:{bottom:0},
+  xAxis:{type:'category', data:years},
+  yAxis:{type:'value'},
+  series:[
+    <!-- vchart src=metrics_TSM.json path=chart_series.net_margin scale=100 -->
+    {name:'净利率%', type:'line', data:[36.3,35.3,35.1,34.0,32.3,38.7,37.3,43.9,39.4,40.5,45.1], itemStyle:{color:'#1a3a5c'}, lineStyle:{width:3}},
+    <!-- vchart src=metrics_TSM.json path=chart_series.roe scale=100 -->
+    {name:'ROE%', type:'line', data:[0,24.1,24.5,24.7,21.9,31.6,34.2,41.7,26.7,30.2,35.1], itemStyle:{color:'#d97706'}, lineStyle:{width:2,type:'dashed'}}
+  ]
+});
+initChart('chart-roic', {
+  title:{text:'ROIC：连续十年高于 WACC，护城河定量底片（%）', left:'center', textStyle:{fontSize:14}},
+  tooltip:{trigger:'axis'},
+  xAxis:{type:'category', data:years},
+  yAxis:{type:'value'},
+  series:[
+    <!-- vchart src=metrics_TSM.json path=chart_series.roic scale=100 -->
+    {name:'ROIC%', type:'bar', data:[0,28.5,30.6,31.5,27.2,34.9,30.3,33.6,24.2,33.1,47.5], itemStyle:{color:'#1a3a5c'}},
+    {name:'WACC 参考线 10%', type:'line', data:[10,10,10,10,10,10,10,10,10,10,10], itemStyle:{color:'#b91c1c'}, lineStyle:{type:'dashed'}, symbol:'none'}
+  ]
+});
+initChart('chart-val', {
+  title:{text:'三情景价值 vs 现价：连乐观情景也仅勉强够到（USD/ADR）', left:'center', textStyle:{fontSize:14}},
+  tooltip:{trigger:'axis'},
+  xAxis:{type:'category', data:['悲观(30%)','基准(50%)','乐观(20%)','概率加权','现价']},
+  yAxis:{type:'value', min:0},
+  series:[{type:'bar',
+    data:[{value:261.4,itemStyle:{color:'#94a3b8'}},{value:343.2,itemStyle:{color:'#1a3a5c'}},{value:415.5,itemStyle:{color:'#d97706'}},{value:333.12,itemStyle:{color:'#64748b'}},{value:417.52,itemStyle:{color:'#b91c1c'}}],
+    label:{show:true, position:'top', formatter:'${c}'}}]
+});
+</script>
+</body>
+</html>

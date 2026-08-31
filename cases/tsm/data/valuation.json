@@ -1,0 +1,21 @@
+{
+  "company": "台积电",
+  "ticker": "TSM",
+  "currency": "USD per ADR share",
+  "base_oe": {
+    "track_a_fy2025_audited": {"value": 55850, "note": "FY2025 归母净利 NT$1,717.9B / 30.76（OE≈净利，维持性capex≈折旧假设）"},
+    "track_b_fy2026e": {"value": 86600, "note": "FY2026E 一致预期 EPS $16.7 × 5,186M ADR（主轨，已发生上半年业绩+共识）"}
+  },
+  "normalization": {"cyclicality": "中性区间", "margin_ratio": 1.187, "margin_latest": 0.451, "margin_avg_10y": 0.380},
+  "scenarios_main": {
+    "bear":  {"growth_fade": 0.05, "value_per_share": 261.4, "rationale": "AI 资本开支 2028-29 消化期，利用率降至 85%，2nm 爬坡拖累毛利；行业周期性回归"},
+    "base":  {"growth_fade": 0.12, "value_per_share": 343.2, "rationale": "FY26-27 按一致预期兑现后 15%→8% 渐降，利润率向 40% 中枢回归；AI 渗透持续但基数抬高"},
+    "bull":  {"growth_fade": 0.17, "value_per_share": 415.5, "rationale": "AI 超级周期贯穿 2030s，TSM 维持 45%+ 净利率与 70%+ 先进节点份额，2nm/A16 持续定价权"}
+  },
+  "add_back": {"net_cash_per_share": 8.8, "note": "净现金 NT$1.87T（现金 2,768B − 有息 896B）≈ $61B，按 75% 计入（留存营运安全垫）"},
+  "red_team": {"bear_ps": 205.4, "bear_gap_vs_main": -0.21, "prob_set": [0.4, 0.45, 0.15], "irr_incl_div": -0.0452},
+  "expected_return": {"exp_value_ps": 333.12, "irr_incl_div": -0.0382, "loss_probability": 0.80, "avg_drawdown_if_loss": -0.211},
+  "margin_of_safety": {"vs_base": -0.217, "vs_bull": -0.005, "buy_trigger_25pct": 257.4},
+  "implied_growth": {"track_a_fade": 0.2927, "track_a_const": 0.1672, "track_b_fade": 0.1769},
+  "note": "三情景估值均含净现金加回 $8.8/ADR；Track A 悲观/基准/乐观 = 159.0/208.0/251.4。隐含增速远超 10% 基率阈值（>500 亿美元公司 10 年 ≥10% 者仅 ~10%）。"
+}

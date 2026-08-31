@@ -1,0 +1,18 @@
+{
+  "company": "台积电",
+  "as_of": "2026-08-31",
+  "source": "Yahoo Finance/MarketWatch/FactSet 转引（C级，媒体汇总口径）",
+  "grade": "C",
+  "eps_consensus_usd": {
+    "2026": {"avg": 16.7, "low": 15.2, "high": 17.8, "n": 39},
+    "2027": {"avg": 21.8, "low": 19.6, "high": 24.1},
+    "2028": {"avg": 26.3, "note": "MarketWatch 高点 33.3"}
+  },
+  "revenue_consensus_twd": {
+    "2026": {"avg": 5440000, "growth": 0.427},
+    "2027": {"avg": 7290000, "growth": 0.341}
+  },
+  "price_target": {"avg": 524.0, "median": 536.0, "high": 650.0, "low": 440.0,
+                    "ratings": {"buy": 38, "overweight": 7, "hold": 1, "sell": 0}},
+  "note": "一致预期仅作变异认知测试的旁证；主锚为反向 DCF 隐含增速。EPS 为 ADR 口径（美元）。"
+}

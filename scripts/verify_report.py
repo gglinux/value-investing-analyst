@@ -116,11 +116,14 @@ def main():
     with open(args.report, "r", encoding="utf-8") as f:
         html = f.read()
 
+    # data-path 与 '>' 之间的属性段单独捕获，再从中解析 data-fmt——
+    # 直接在同一正则里写可选组会被贪婪/懒匹配跳过（实证 bug：fmt 永远捕获为空）。
     pattern = re.compile(
         r'<span[^>]*class="[^"]*vnum[^"]*"[^>]*data-src="([^"]+)"[^>]*'
-        r'data-path="([^"]+)"[^>]*(?:data-fmt="([^"]*)")?[^>]*>(.*?)</span>',
+        r'data-path="([^"]+)"([^>]*)>(.*?)</span>',
         re.S,
     )
+    fmt_pat = re.compile(r'data-fmt="([^"]*)"')
     matches = pattern.findall(html)
     if not matches:
         print("警告：报告中未发现任何 vnum 溯源标签。按 report-spec，关键结论数字必须可溯源。")
@@ -139,7 +142,9 @@ def main():
                 cache[fp] = json.load(f)
         return cache[fp]
 
-    for src, path, fmt, text in matches:
+    for src, path, attr_seg, text in matches:
+        m_fmt = fmt_pat.search(attr_seg)
+        fmt = m_fmt.group(1) if m_fmt else ""
         obj = load_json(src, path)
         if obj is None:
             continue
