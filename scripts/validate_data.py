@@ -36,20 +36,74 @@ validate_data.py — 数据底稿入口校验器（Phase 1 收尾强制运行，
 }
 
 用法：
-    python3 validate_data.py <financials.json> [--skip-crosscheck]
+    python3 validate_data.py <financials.json> [--skip-crosscheck] [--consensus consensus.json]
     --skip-crosscheck 仅限竞对公司使用（命门科目核对只强制 A 公司），
     使用后校验结果标注"未做双源核对"，报告脚注必须披露。
+    --consensus 一致预期 JSON（可选）：做 C5 回落信号 lint（EPS[FY+2] < EPS[FY+1] →
+    告警"利润含一次性成分嫌疑"，提示估值基期通用化处理）。
+
+门禁补充（2026-08-31 GOOG/TSM 实证后新增）：
+A1 年度覆盖哨兵：过了法定申报死线，底稿最新年报年仍落后 → 报错；
+    只有 manifest.json 登记 `official_filing_missing`（写明年份与原因）才可显式豁免。
+    起源：GOOG 案例中 FY2025 10-K 实际已申报（XBRL 概念标签切换导致抽取脚本静默丢年），
+    当时被合理化为"未申报"并写进 manifest——合理化的异常必须被强制人工解释。
+A2 命门原文级：最新年报年的 crosscheck.source 必须指向官方披露原文
+    （10-K/20-F/审计报表/年报/EDGAR/巨潮/披露易/XBRL/官网），
+    "四季加总/接口/估算"等降级来源仅在年报法定申报窗口内（死线前+60天）给警告，过后报错。
+A3 一次性损益哨兵：底稿含 `interim` 区块且当期累计净利超过上年全年净利的 85%，
+    或自报同比增幅超过 100% → spike_notes 必须含 `<年份>.net_income` 或
+    `interim.net_income` 键，剖析一次性成分（GOOG H1'26 净利超上年全年是触发原型）。
 退出码：0 通过（可含警告）；1 存在错误，禁止进入 Phase 2。
 """
 import argparse
 import json
+import os
 import sys
+from datetime import date, timedelta
 
 SPIKE_KEYS = ["revenue", "net_income", "ocf", "capex", "total_equity", "shares_diluted"]
 SPIKE_THRESHOLD = 0.5
 CROSSCHECK_KEYS = ["revenue", "net_income", "ocf", "shares_diluted"]
 CROSSCHECK_MIN_YEARS = 3
 TOL = 0.01  # 1% 相对容差
+
+# A1/A2 共用：官方披露原文来源特征（降级来源：季度加总/接口/估算/推算）
+OFFICIAL_SOURCE_HINTS = ["10-K", "10K", "20-F", "20F", "审计", "年报", "annual report",
+                         "Annual Report", "EDGAR", "巨潮", "披露易", "cninfo", "hkexnews",
+                         "XBRL", "官网"]
+DOWNGRADE_SOURCE_HINTS = ["加总", "接口", "估算", "推算"]
+
+
+def issuer_wait_days(data):
+    """按会计准则推断年报法定申报等待天数（年报日之后）。"""
+    std = str(data.get("accounting_standard") or "").upper()
+    if "US" in std and "GAAP" in std:
+        return 75   # 美股本国申报人 10-K（large accelerated 60 天，取宽容 75）
+    return 120      # FPI 20-F / A股 / 港股：4 个月
+
+
+def annual_deadline(year, fiscal_md, wait_days):
+    """年报法定申报死线：次年会计年度起始日 + 等待天数。"""
+    y0 = int(year) + 1
+    base = date(y0, 1, 1)   # 简化：以自然年为近似财年（财年日用于提示，不影响死线判断主体）
+    return base + timedelta(days=wait_days)
+
+
+def load_manifest(dirname):
+    fp = os.path.join(dirname, "manifest.json")
+    if not os.path.exists(fp):
+        return None
+    try:
+        return json.load(open(fp, "r", encoding="utf-8"))
+    except (json.JSONDecodeError, OSError):
+        return None
+
+
+def is_official_source(src):
+    s = str(src or "")
+    if any(h in s for h in DOWNGRADE_SOURCE_HINTS):
+        return False
+    return any(h in s for h in OFFICIAL_SOURCE_HINTS)
 
 
 def rel_diff(a, b):
@@ -64,6 +118,8 @@ def main():
     ap.add_argument("input", help="标准格式财务底稿 JSON")
     ap.add_argument("--skip-crosscheck", action="store_true",
                     help="跳过双源核对检查（仅限竞对公司，报告须披露）")
+    ap.add_argument("--consensus", default=None,
+                    help="可选：一致预期 JSON 路径，启用 C5 回落信号 lint")
     args = ap.parse_args()
 
     with open(args.input, "r", encoding="utf-8") as f:
@@ -122,6 +178,78 @@ def main():
         errors.append("annual 为空")
         report(errors, warns, args)
         return
+
+    # === A1 年度覆盖哨兵：过了法定申报死线最新年报年仍落后 →
+    # 禁止静默用季度加总/老数据充当年报年报年（GOOG 实证：抽取脚本静默丢年被
+    # 合理化为"未申报"写进 manifest，异常没有触发人工复核，数据等级从 A 静默降 B）===
+    data_dir = os.path.dirname(os.path.abspath(args.input))
+    manifest = load_manifest(data_dir)
+    max_year = int(rows[-1].get("year"))
+    wait = issuer_wait_days(data)
+    expected = max_year
+    today = date.today()
+    for cand in range(max_year, max_year + 2):
+        if annual_deadline(cand, data.get("fiscal_year_end"), wait) <= today:
+            expected = cand
+    if expected > max_year:
+        exemption = (manifest or {}).get("official_filing_missing") or {}
+        exempt_years = exemption.get("years", exemption.get("year"))
+        if isinstance(exempt_years, int):
+            exempt_years = [exempt_years]
+        exempt_hit = isinstance(exempt_years, list) and expected in exempt_years
+        msg = (f"年度覆盖哨兵(A1)：底稿最新年报年 {max_year}，"
+               f"{expected} 年报法定申报死线（+{wait}天）已过——"
+               "底稿缺该年年报数据。若公司已延迟申报，请在 manifest.json 登记 "
+               '`official_filing_missing`（year/years + reason）；'
+               "否则严禁以季度加总/上年数据充当年报年报年")
+        if args.skip_crosscheck:
+            warns.append(msg + "（竞对底稿降级为警告）")
+        elif exempt_hit:
+            warns.append(msg + f"（manifest 已登记豁免: {exemption.get('reason', '无原因说明')}）")
+        else:
+            errors.append(msg)
+
+    # === A3 一次性损益哨兵：interim 累计净利超上年全年 85% 或同比 >100%，
+    # spike_notes 必须剖析一次性成分（GOOG H1'26 净利 > FY2025 全年为触发原型）===
+    interim = data.get("interim")
+    if isinstance(interim, dict) and interim.get("net_income") is not None:
+        latest_ni = rows[-1].get("net_income")
+        im_ni = float(interim["net_income"])
+        period = str(interim.get("period") or "")
+        im_year = period[:4] if period[:4].isdigit() else str(max_year + 1)
+        key_hit = any(str(k).startswith(f"{im_year}.") or "interim" in str(k)
+                      for k in (data.get("spike_notes") or {}))
+        hit_super = latest_ni and abs(im_ni) > abs(float(latest_ni)) * 0.85
+        yoy = interim.get("yoy_net_income_growth")
+        hit_yoy = isinstance(yoy, (int, float)) and yoy > 1.0
+        if (hit_super or hit_yoy) and not key_hit:
+            if hit_super:
+                ratio = im_ni / float(latest_ni)
+                why = f"当期累计净利已达上年全年的 {ratio:.0%}"
+            else:
+                why = f"自报同比 +{yoy:.0%}"
+            errors.append(f"一次性损益哨兵(A3)：interim({period}) 净利 {im_ni} "
+                          f"{why}——极可能含一次性损益，spike_notes 必须含 "
+                          f"`{im_year}.net_income` 或 `interim.net_income` 键逐项剖析"
+                          "（估值基期须做通用化处理，见 valuation-guide 自定义基期清单）")
+
+    # === C5 一致预期回落信号（软门）：EPS[FY+2] < EPS[FY+1] →
+    # 卖方"自认利润虚胖"，提示通用化基期（GOOG FY2027 < FY2026 为识别原型）===
+    if getattr(args, "consensus", None):
+        try:
+            cons = json.load(open(args.consensus, "r", encoding="utf-8"))
+            eps_map = cons.get("eps_consensus_usd") or cons.get("eps_consensus") or {}
+            pts = sorted(((int(y), float(v["avg"])) for y, v in eps_map.items()
+                          if str(y).isdigit() and isinstance(v, dict) and v.get("avg")),
+                         key=lambda t: t[0])
+            for i in range(len(pts) - 1):
+                (y1, e1), (y2, e2) = pts[i], pts[i + 1]
+                if e2 < e1 * 0.99:
+                    warns.append(f"一致预期回落信号(C5)：EPS[{y2}]={e2} < EPS[{y1}]={e1}——"
+                                 "卖方普遍认定利润含一次性成分，估值基期必须做通用化处理并外部锚定")
+                    break
+        except (OSError, json.JSONDecodeError, KeyError, TypeError, ValueError) as e:
+            warns.append(f"consensus lint：{args.consensus} 解析失败（{e}），C5 检查跳过")
 
     def g(row, key):
         v = row.get(key)
@@ -201,8 +329,19 @@ def main():
         xkeys = ["operating_income", "net_income"] if is_bank else CROSSCHECK_KEYS
         for entry in cc:
             y = entry.get("year")
-            if not entry.get("source"):
+            src = entry.get("source")
+            if not src:
                 errors.append(f"双源核对 {y}: 缺 source 出处（年报页码/XBRL 标签）")
+            elif not is_official_source(src):
+                # A2 命门原文级：最新年报年在窗口期外禁止降级来源充数
+                in_window = annual_deadline(int(y), None, wait) + timedelta(days=60) > today
+                a2msg = (f"命门原文级(A2) {y}: source「{src}」非官方披露原文"
+                         "（须 10-K/20-F/审计报表/年报/EDGAR/巨潮/披露易/XBRL）；"
+                         "季度加总/接口估算仅在法定申报死线 +60 天窗口期内允许")
+                if y == max_year and not in_window:
+                    errors.append(a2msg)
+                else:
+                    warns.append(a2msg)
             row = by_year.get(y)
             if row is None:
                 errors.append(f"双源核对 {y}: annual 中无该年度数据")

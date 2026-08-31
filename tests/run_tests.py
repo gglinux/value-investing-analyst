@@ -362,6 +362,14 @@ with tempfile.TemporaryDirectory() as td:
     gp = os.path.join(td, "g.json"); bp = os.path.join(td, "b.json")
     json.dump(good, open(gp, "w")); json.dump(bad, open(bp, "w"))
 
+    # A1 豁免：测试底稿止于 2024，而 2025 年报死线已过——登记延迟申报豁免
+    #（GOOG 实证后 A1 成为硬门，不登记的旧底稿一律拦截）
+    from datetime import date as _date
+    _exp_years = [y for y in range(2025, _date.today().year + 2)]
+    json.dump({"official_filing_missing": {"years": _exp_years,
+               "reason": "测试用例：示意底稿非真实公司"}},
+              open(os.path.join(td, "manifest.json"), "w"))
+
     def vr(path):
         return subprocess.run([sys.executable, os.path.join(SCRIPTS, "validate_data.py"), path],
                               capture_output=True, text=True)
@@ -370,6 +378,119 @@ with tempfile.TemporaryDirectory() as td:
     r2 = vr(bp)
     check("坏银行底稿被拒", r2.returncode == 1, r2.stdout[-200:])
     check("不良率超界被逮住", "不良率" in r2.stdout, r2.stdout[-200:])
+
+print("== 9.5 validate_data 门禁（A1/A2/A3/C5，GOOG 实证后新增） ==")
+with tempfile.TemporaryDirectory() as td:
+    import copy as _copy
+    from datetime import date as _date2
+    _cur = _date2.today().year      # 当前年；expected = _cur-1（上个自然年年报死线已过）
+    _mini = {
+        "company": "门禁测试", "ticker": "GT", "currency": "USD", "unit": "million",
+        "company_type": "平台/网络效应型", "accounting_standard": "US-GAAP",
+        "fiscal_year_end": "12-31",
+        "annual": [
+            {"year": _cur - 4, "publish_date": f"{_cur-3}-02-01", "revenue": 820.0,
+             "net_income": 164.0, "ocf": 200.0, "capex": 45.0, "d_and_a": 36.0,
+             "total_equity": 730.0, "total_debt": 110.0, "cash": 140.0, "shares_diluted": 101.0},
+            {"year": _cur - 3, "publish_date": f"{_cur-2}-02-01", "revenue": 900.0,
+             "net_income": 180.0, "ocf": 220.0, "capex": 50.0, "d_and_a": 40.0,
+             "total_equity": 800.0, "total_debt": 100.0, "cash": 150.0, "shares_diluted": 100.0},
+            {"year": _cur - 2, "publish_date": f"{_cur-1}-02-01", "revenue": 990.0,
+             "net_income": 198.0, "ocf": 240.0, "capex": 60.0, "d_and_a": 44.0,
+             "total_equity": 880.0, "total_debt": 90.0, "cash": 160.0, "shares_diluted": 99.0},
+        ],
+        "crosscheck": [
+            {"year": _cur - 4, "source": f"{_cur-4} 年报 10-K", "revenue": 820.0,
+             "net_income": 164.0, "ocf": 200.0, "shares_diluted": 101.0},
+            {"year": _cur - 3, "source": f"{_cur-3} 年报 10-K", "revenue": 900.0,
+             "net_income": 180.0, "ocf": 220.0, "shares_diluted": 100.0},
+            {"year": _cur - 2, "source": f"{_cur-2} 年报 10-K", "revenue": 990.0,
+             "net_income": 198.0, "ocf": 240.0, "shares_diluted": 99.0},
+        ],
+    }
+
+    def vd(path, extra=None):
+        cmd = [sys.executable, os.path.join(SCRIPTS, "validate_data.py"), path] + (extra or [])
+        return subprocess.run(cmd, capture_output=True, text=True)
+
+    # --- A1：无豁免 manifest → 必须拦截 ---
+    p1 = os.path.join(td, "a1.json")
+    json.dump(_mini, open(p1, "w"))
+    r = vd(p1)
+    check("A1 缺最新年报被拦截", r.returncode == 1 and "年度覆盖哨兵" in r.stdout,
+          r.stdout[-200:])
+
+    # --- A1 豁免：manifest 登记 official_filing_missing → 放行 ---
+    json.dump({"official_filing_missing": {"years": [_cur - 1], "reason": "公司已公告延迟申报"}},
+              open(os.path.join(td, "manifest.json"), "w"))
+    r = vd(p1)
+    check("A1 登记豁免后放行", r.returncode == 0, r.stdout[-200:])
+
+    # --- A2：最新年 crosscheck source 为降级来源（窗口期外）→ 拦截 ---
+    bad_a2 = _copy.deepcopy(_mini)
+    bad_a2["crosscheck"][-1]["source"] = "结构化接口四季加总"
+    p2 = os.path.join(td, "a2.json")
+    json.dump(bad_a2, open(p2, "w"))
+    r = vd(p2)
+    check("A2 降级来源充数被拦截", r.returncode == 1 and "命门原文级" in r.stdout,
+          r.stdout[-200:])
+    bad_a2["crosscheck"][-1]["source"] = f"{_cur-2} 年报 10-K"
+    json.dump(bad_a2, open(p2, "w"))
+    r = vd(p2)
+    check("A2 官方来源放行", r.returncode == 0, r.stdout[-200:])
+
+    # --- A3：interim 净利超上年全年 85% 且无 spike 剖析 → 拦截 ---
+    bad_a3 = _copy.deepcopy(_mini)
+    bad_a3["interim"] = {"period": f"{_cur-1}H1", "net_income": 210.0}
+    p3 = os.path.join(td, "a3.json")
+    json.dump(bad_a3, open(p3, "w"))
+    r = vd(p3)
+    check("A3 interim 利润异常被拦截", r.returncode == 1 and "一次性损益哨兵" in r.stdout,
+          r.stdout[-200:])
+    bad_a3["spike_notes"] = {f"{_cur-1}.net_income": "含一次性投资收益约 30"}
+    json.dump(bad_a3, open(p3, "w"))
+    r = vd(p3)
+    check("A3 剖析后放行", r.returncode == 0, r.stdout[-200:])
+
+    # --- C5：consensus 回落信号 → 警告但放行 ---
+    cons = os.path.join(td, "consensus.json")
+    json.dump({"eps_consensus_usd": {str(_cur - 2): {"avg": 20.0},
+               str(_cur - 1): {"avg": 15.0}}}, open(cons, "w"))
+    r = vd(p1, ["--consensus", cons])
+    check("C5 回落信号告警", r.returncode == 0 and "回落信号" in r.stdout,
+          r.stdout[-200:])
+
+print("== 9.6 extract_edgar_annual 逐年概念回退（B4，GOOG 实证） ==")
+with tempfile.TemporaryDirectory() as td:
+    cf = {"$schema": "x", "facts": {"us-gaap": {
+        "RevenueFromContractWithCustomerExcludingAssessedTax": {"units": {"USD": [
+            {"fy": 2024, "start": "2024-01-01", "end": "2024-12-31",
+             "val": 100, "form": "10-K", "filed": "2025-02-01"}]}},
+        "Revenues": {"units": {"USD": [
+            {"fy": 2024, "start": "2024-01-01", "end": "2024-12-31",
+             "val": 100, "form": "10-K", "filed": "2025-02-01"},
+            {"fy": 2025, "start": "2025-01-01", "end": "2025-12-31",
+             "val": 120, "form": "10-K", "filed": "2026-02-01"}]}},
+        "NetIncomeLoss": {"units": {"USD": [
+            {"fy": 2024, "start": "2024-01-01", "end": "2024-12-31",
+             "val": 30, "form": "10-K", "filed": "2025-02-01"},
+            {"fy": 2025, "start": "2025-01-01", "end": "2025-12-31",
+             "val": 35, "form": "10-K", "filed": "2026-02-01"}]}},
+    }}}
+    cfp = os.path.join(td, "cf.json")
+    json.dump(cf, open(cfp, "w"))
+    outp = os.path.join(td, "out.json")
+    r = subprocess.run([sys.executable, os.path.join(SCRIPTS, "extract_edgar_annual.py"),
+                        "--companyfacts", cfp, "--taxonomy", "us-gaap",
+                        "--year-from", "2024", "--year-to", "2025", "--out", outp],
+                       capture_output=True, text=True)
+    ok = False
+    if r.returncode == 0 and os.path.exists(outp):
+        tab = json.load(open(outp))
+        ok = (tab.get("2025", {}).get("revenue") == 120
+              and tab["2025"].get("revenue__concept") == "Revenues")
+    check("概念切换年份逐年回退（2025 由 Revenues 补位）", ok,
+          (r.stderr or r.stdout)[-200:])
 
 print()
 if FAILED:

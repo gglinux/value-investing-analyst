@@ -83,16 +83,16 @@ ol{padding-left:22px;margin:8px 0;font-size:14px}
 
 <p><b>三大风险</b>：① AI 自我蚕食——Gemini 做得越好，广告链接被看见越少（结构性矛盾）；② capex 吞噬自由现金流（Q2'26 FCF 已转正为负 $5.9B）；③ 反垄断监管（DOJ 案败诉后对 Chrome/搜索分发协议的拆分风险）[E:manifest.json]。</p>
 
-<p class="warn"><b>信息局限声明</b>：一致预期 C 级；2026 年利润通用化（剔除一次性投资收益）为本报告关键手工处理，已在 consensus.json 和 valuation.json 双注记；FY2025 的 10-K 未入 EDGAR，底稿基于季度加总，待官方 10-K（2026-02）入库后须回补复审。</p>
+<p class="warn"><b>信息局限声明</b>：一致预期 C 级；2026 年利润通用化（剔除一次性投资收益）为本报告关键手工处理，已在 consensus.json 和 valuation.json 双注记；FY2025 的 10-K 未入 EDGAR，底稿基于季度加总，FY2025 已按 10-K 锁定（详见附录口径声明）。</p>
 
 <h2>二、公司与生意</h2>
-<p>Alphabet 1998 年创立（Google 搜索引擎），2015 年重组为 Alphabet 控股。FY2025 收入 $403.5B、净利 $132.2B、OCF $164.7B。分部：Google Services（搜索+YouTube+订阅，占比约 86%）、Google Cloud（约 12%，FY2025 +36%，经营利润转正后快速扩张）、Other Bets（Waymo/Verily/X，约 2%，常年亏损）[E:segments.json]。</p>
+<p>Alphabet 1998 年创立（Google 搜索引擎），2015 年重组为 Alphabet 控股。FY2025 收入 $402.8B、净利 $132.2B、OCF $164.7B。分部：Google Services（搜索+YouTube+订阅，占比约 86%）、Google Cloud（约 12%，FY2025 +36%，经营利润转正后快速扩张）、Other Bets（Waymo/Verily/X，约 2%，常年亏损）[E:segments.json]。</p>
 <p>商业模式核心是<b>搜索广告的意图变现</b>：用户主动告诉你他要什么，你把意图卖给想找到他的人。十多年来这个模式几乎无懈可击——必应烧了 20 年钱没能撼动，社交平台的推荐逻辑也替代不了主动搜索。AI 的出现是第一次有技术能直接回答而非引导点击，这是结构性变量 [E:manifest.json]。</p>
 
 <h2>三、定量画像</h2>
 
 <div id="chart-rev" class="chart"></div>
-<div class="chart-note">图1：收入与归母净利（$B，2015-2025）。十年收入 CAGR 18.0%、净利 CAGR 23.3%；2017 年净利凹陷为 TCJA 税改一次性税费（数据已标注）[E:metrics_GOOG.json]。</div>
+<div class="chart-note">图1：收入与归母净利（$B，2015-2025）。十年收入 CAGR 18.3%、净利 CAGR 23.3%；2017 年净利凹陷为 TCJA 税改一次性税费（数据已标注）[E:metrics_GOOG.json]。</div>
 
 <div id="chart-margin" class="chart"></div>
 <div class="chart-note">图2：净利率与 ROE（%）。净利率 FY2025 32.8% 是十年均值 23.3% 的 1.40 倍——引擎自动判定周期高位（均值扭曲年 2018 +143% 与 2021 +89% 为爆发型非衰退型）。ROE 已升至 35.7% [E:metrics_GOOG.json]。</div>
@@ -209,7 +209,7 @@ ol{padding-left:22px;margin:8px 0;font-size:14px}
 </table>
 <p><b>入口校验</b>：validate_data 0 错误通过；信息时效已核对（Q1/Q2 财报与 capex 上修已消化，一次性收益已通用化处理）。</p>
 <p><b>数字校验</b>：本报告关键数字 vnum 溯源、图表 vchart 锚点，verify_report.py 通过后交付。</p>
-<p><b>重要口径声明</b>：① 2026 年利润含一次性投资收益（Q1 SafeWise 相关结算约 $15B + Q2 其他收入结算），通用化年化为 $165B 是本报告与市场的核心差异处理；② FY2025 10-K 未入 EDGAR，待 2026-02 入库后须回补复审，若与季度加总差异 >5% 将触发重跑；③ FY2027 一致预期低于 FY2026 是市场"自认利润虚胖"的关键证据。</p>
+<p><b>重要口径声明</b>：① 2026 年利润含一次性投资收益（Q1 SafeWise 相关结算约 $15B + Q2 其他收入结算），通用化年化为 $165B 是本报告与市场的核心差异处理；② FY2025 已按 SEC 10-K XBRL（filed 2026-02-05）逐项锁定：净利/OCF/capex/折旧与季度加总分毫不差，收入较加总低 0.16%；股本序列曾手填低估一半（5620/6044 系列），本次已修正为 XBRL 加权摊薄值（2022-2025）与拆股调整估算值（2015-2021）——该错误由 A1/A2 门禁发现；③ FY2027 一致预期低于 FY2026 是市场"自认利润虚胖"的关键证据。</p>
 <h3>术语速查</h3>
 <p class="small">通用化（Normalizing）：剔除一次性损益后的可持续利润。OE（Owner Earnings）：巴菲特口径真实可分配利润。fade：估值中让增长逐年衰减到永续增速的保守模式。FCF 口径 vs 净利口径：前者只看能收回的现金，后者含账面上但再投入的利润。</p>
 <p class="small" style="margin-top:16px;border-top:1px solid var(--line);padding-top:12px"><b>免责声明</b>：本报告由分析工具生成，仅供研究参考，不构成任何投资建议。市场有风险，投资需谨慎。分析日期 2026-08-31，数据截止 2026-08-28 收盘与 FY2025 财务。</p>
@@ -228,7 +228,7 @@ initChart('chart-rev',{
   xAxis:{type:'category',data:years},yAxis:{type:'value'},
   series:[
     <!-- vchart src=metrics_GOOG.json path=chart_series.revenue scale=0.001 -->
-    {name:'收入($B)',type:'bar',data:[75.0,90.3,110.9,136.8,161.9,182.5,257.6,282.8,307.4,350.0,403.5],itemStyle:{color:'#1a3a5c'}},
+    {name:'收入($B)',type:'bar',data:[75.0,90.3,110.9,136.8,161.9,182.5,257.6,282.8,307.4,350.0,402.8],itemStyle:{color:'#1a3a5c'}},
     <!-- vchart src=metrics_GOOG.json path=chart_series.net_income scale=0.001 -->
     {name:'净利($B)',type:'line',data:[16.3,19.5,12.7,30.7,34.3,40.3,76.0,60.0,73.8,100.1,132.2],itemStyle:{color:'#d97706'},lineStyle:{width:3}}
   ]
