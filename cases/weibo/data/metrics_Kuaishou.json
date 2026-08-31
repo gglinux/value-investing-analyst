@@ -1,0 +1,330 @@
+{
+  "company": "快手 Kuaishou",
+  "ticker": "1024 (HKEX)",
+  "currency": "CNY",
+  "unit": "million",
+  "definitions": {
+    "NOPAT": "EBIT × (1 − 税率)；EBIT 缺失时用 归母净利润 + 利息费用×(1−税率) 近似，并在 warnings 中标注",
+    "InvestedCapital": "归母净资产 + 有息负债 − 货币资金（剔除超额现金的简化口径）",
+    "ROIC": "NOPAT ÷ 期初期末平均 InvestedCapital",
+    "ROIIC": "滚动3年：ΔNOPAT ÷ Δ平均InvestedCapital（增量资本回报率，衡量增长质量）",
+    "OwnerEarnings": "净利润 + 折旧摊销 − 维持性capex − 营运资本增加；维持性capex 缺失时兜底用近5年 D&A 均值近似（warnings 标注）",
+    "FCF": "经营现金流净额 − 资本开支",
+    "ROE": "归母净利润 ÷ 期初期末平均归母净资产",
+    "每股口径": "全部使用当年摊薄股本；CAGR 用期初/期末值几何年化",
+    "NormalizedEarnings": "正常化盈利 = 全期平均利润率 × 最新一期收入。用于消除周期位置对基期的扭曲；另给中位数口径（mid-cycle）作交叉验证。周期性判定见 normalization.cyclicality",
+    "周期位置": "最新一期利润率 ÷ 全期平均利润率。>1.25 判为周期高位（当期利润不可直接外推），<0.75 判为周期低位（当期利润低估长期能力）",
+    "Capex拆分": "维持性 vs 扩张性资本开支。底稿可给 maintenance_capex（披露口径）或 growth_capex（扩张性）；两者都给则 capex_split 输出确定性拆分。缺省时按收入增速启发式估算并标注 capex_split_basis",
+    "真实FCF区间": "fcf_true_range = [ocf−全部capex（悲观，视同全是保命钱）, ocf−维持性capex（乐观，扩张性是可裁量再投资）]。真实盈利含金量夹在此区间；扩张性占比高且 ROIIC 高 → 偏乐观端，维持性占比高 → 偏悲观端"
+  },
+  "series": [
+    {
+      "year": 2021,
+      "revenue": 81082.0,
+      "net_income": -78074.0,
+      "nopat": -78074.0,
+      "invested_capital": null,
+      "equity": 45096.0,
+      "roic": null,
+      "roe": null,
+      "gross_margin": null,
+      "net_margin": -0.9629017537801238,
+      "owner_earnings": null,
+      "capex_total": null,
+      "maintenance_capex_used": null,
+      "growth_capex_used": null,
+      "capex_split_basis": null,
+      "fcf": null,
+      "fcf_true_range": null,
+      "fcf_to_ni": null,
+      "ocf_to_ni": 0.08646924712452289,
+      "shares_diluted": null,
+      "rev_ps": null,
+      "eps": null,
+      "oe_ps": null,
+      "bvps": null,
+      "roiic_3y": null
+    },
+    {
+      "year": 2022,
+      "revenue": 94183.0,
+      "net_income": -13690.0,
+      "nopat": -13690.0,
+      "invested_capital": null,
+      "equity": 39838.0,
+      "roic": null,
+      "roe": -0.3223679562954765,
+      "gross_margin": null,
+      "net_margin": -0.1453553189004385,
+      "owner_earnings": null,
+      "capex_total": null,
+      "maintenance_capex_used": null,
+      "growth_capex_used": null,
+      "capex_split_basis": null,
+      "fcf": null,
+      "fcf_true_range": null,
+      "fcf_to_ni": null,
+      "ocf_to_ni": -0.17976625273922572,
+      "shares_diluted": null,
+      "rev_ps": null,
+      "eps": null,
+      "oe_ps": null,
+      "bvps": null,
+      "roiic_3y": null
+    },
+    {
+      "year": 2023,
+      "revenue": 113470.0,
+      "net_income": 6396.0,
+      "nopat": 6396.0,
+      "invested_capital": null,
+      "equity": 49074.0,
+      "roic": null,
+      "roe": 0.1438725931257873,
+      "gross_margin": null,
+      "net_margin": 0.056367321759055254,
+      "owner_earnings": null,
+      "capex_total": null,
+      "maintenance_capex_used": null,
+      "growth_capex_used": null,
+      "capex_split_basis": null,
+      "fcf": null,
+      "fcf_true_range": null,
+      "fcf_to_ni": null,
+      "ocf_to_ni": 3.5853658536585367,
+      "shares_diluted": null,
+      "rev_ps": null,
+      "eps": null,
+      "oe_ps": null,
+      "bvps": null,
+      "roiic_3y": null
+    },
+    {
+      "year": 2024,
+      "revenue": 126898.0,
+      "net_income": 15335.0,
+      "nopat": 15335.0,
+      "invested_capital": null,
+      "equity": 62024.0,
+      "roic": null,
+      "roe": 0.2760625753838953,
+      "gross_margin": null,
+      "net_margin": 0.1208450881810588,
+      "owner_earnings": null,
+      "capex_total": null,
+      "maintenance_capex_used": null,
+      "growth_capex_used": null,
+      "capex_split_basis": null,
+      "fcf": null,
+      "fcf_true_range": null,
+      "fcf_to_ni": null,
+      "ocf_to_ni": 2.0975546136289536,
+      "shares_diluted": null,
+      "rev_ps": null,
+      "eps": null,
+      "oe_ps": null,
+      "bvps": null,
+      "roiic_3y": null
+    },
+    {
+      "year": 2025,
+      "revenue": 142776.0,
+      "net_income": 18617.0,
+      "nopat": 18617.0,
+      "invested_capital": null,
+      "equity": 79584.0,
+      "roic": null,
+      "roe": 0.2629371221964861,
+      "gross_margin": null,
+      "net_margin": 0.13039306325993164,
+      "owner_earnings": null,
+      "capex_total": null,
+      "maintenance_capex_used": null,
+      "growth_capex_used": null,
+      "capex_split_basis": null,
+      "fcf": null,
+      "fcf_true_range": null,
+      "fcf_to_ni": null,
+      "ocf_to_ni": 1.5888166729333404,
+      "shares_diluted": null,
+      "rev_ps": null,
+      "eps": null,
+      "oe_ps": null,
+      "bvps": null,
+      "roiic_3y": null
+    }
+  ],
+  "summary": {
+    "period": "2021–2025（4 年）",
+    "cagr_total": {
+      "revenue": 0.15194750777690036,
+      "net_income": null,
+      "owner_earnings": null
+    },
+    "cagr_per_share": {
+      "rev_ps": null,
+      "eps": null,
+      "oe_ps": null,
+      "bvps": null
+    },
+    "share_count_change": null,
+    "roic_avg_5y": null,
+    "roic_min_max_5y": null
+  },
+  "normalization": {
+    "status": "ok",
+    "basis_period": "2021–2025（5 年利润率样本）",
+    "latest_revenue": 142776.0,
+    "net_margin_latest": 0.13039306325993164,
+    "net_margin_avg": -0.16013031989610332,
+    "net_margin_median": 0.056367321759055254,
+    "margin_ratio_latest_vs_avg": -0.81429340392584,
+    "cyclicality": "全期平均亏损（不适用周期正常化）",
+    "net_income_current": 18617.0,
+    "net_income_normalized": -22862.76655348605,
+    "net_income_mid_cycle": 8047.900731470873,
+    "oe_margin_avg": null,
+    "oe_current": null,
+    "oe_normalized": null,
+    "oe_mid_cycle": null,
+    "shares_diluted": null,
+    "oe_normalized_vs_current": null,
+    "oe_to_ni_conversion_latest": null,
+    "oe_normalized_hybrid": null,
+    "oe_normalized_hybrid_vs_current": null,
+    "base_oe_recommended": null,
+    "base_oe_range": null,
+    "base_oe_recommended_basis": "全期平均亏损，周期正常化不适用。基期须由分析师按正常化路径单独论证（如产能利用率恢复后的中周期利润率），并在报告写明推导过程"
+  },
+  "capital_allocation": {
+    "cum_ocf": 80387.0,
+    "cum_capex": null,
+    "cum_dividends": null,
+    "cum_buyback": null,
+    "cum_equity_raised": null
+  },
+  "chart_series": {
+    "years": [
+      2021,
+      2022,
+      2023,
+      2024,
+      2025
+    ],
+    "revenue": [
+      81082.0,
+      94183.0,
+      113470.0,
+      126898.0,
+      142776.0
+    ],
+    "net_income": [
+      -78074.0,
+      -13690.0,
+      6396.0,
+      15335.0,
+      18617.0
+    ],
+    "net_margin": [
+      -0.9629017537801238,
+      -0.1453553189004385,
+      0.056367321759055254,
+      0.1208450881810588,
+      0.13039306325993164
+    ],
+    "gross_margin": [
+      null,
+      null,
+      null,
+      null,
+      null
+    ],
+    "roe": [
+      null,
+      -0.3223679562954765,
+      0.1438725931257873,
+      0.2760625753838953,
+      0.2629371221964861
+    ],
+    "roic": [
+      null,
+      null,
+      null,
+      null,
+      null
+    ],
+    "roiic_3y": [
+      null,
+      null,
+      null,
+      null,
+      null
+    ],
+    "owner_earnings": [
+      null,
+      null,
+      null,
+      null,
+      null
+    ],
+    "fcf": [
+      null,
+      null,
+      null,
+      null,
+      null
+    ],
+    "fcf_low": [
+      null,
+      null,
+      null,
+      null,
+      null
+    ],
+    "fcf_high": [
+      null,
+      null,
+      null,
+      null,
+      null
+    ],
+    "eps": [
+      null,
+      null,
+      null,
+      null,
+      null
+    ],
+    "oe_ps": [
+      null,
+      null,
+      null,
+      null,
+      null
+    ],
+    "bvps": [
+      null,
+      null,
+      null,
+      null,
+      null
+    ],
+    "shares_diluted": [
+      null,
+      null,
+      null,
+      null,
+      null
+    ]
+  },
+  "alerts": [
+    "基期不可用警报：全期平均亏损（不适用周期正常化）（当期净利率 13.0%，全期均值 -16.0%），周期正常化不适用，禁止直接用当期数据做 DCF 基期，须单独论证正常化盈利路径"
+  ],
+  "warnings": [
+    "2021: EBIT 缺失，NOPAT 用净利润+税后利息近似",
+    "2022: EBIT 缺失，NOPAT 用净利润+税后利息近似",
+    "2023: EBIT 缺失，NOPAT 用净利润+税后利息近似",
+    "2024: EBIT 缺失，NOPAT 用净利润+税后利息近似",
+    "2025: EBIT 缺失，NOPAT 用净利润+税后利息近似"
+  ]
+}

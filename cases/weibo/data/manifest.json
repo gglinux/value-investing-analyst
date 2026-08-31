@@ -1,0 +1,244 @@
+{
+  "files": [
+    {
+      "file": "edgar_raw/facts_0001595761.json",
+      "source": "SEC EDGAR companyfacts API",
+      "level": "A",
+      "fetched": "2026-08-29",
+      "period": "FY2012-FY2025",
+      "validated": true
+    },
+    {
+      "file": "edgar_raw/facts_0001329099.json",
+      "source": "SEC EDGAR companyfacts API",
+      "level": "A",
+      "fetched": "2026-08-29",
+      "period": "FY2014-FY2025",
+      "validated": true
+    },
+    {
+      "file": "edgar_raw/facts_0001723690.json",
+      "source": "SEC EDGAR companyfacts API",
+      "level": "A",
+      "fetched": "2026-08-29",
+      "period": "FY2018-FY2025",
+      "validated": true
+    },
+    {
+      "file": "edgar_raw/facts_0001610601.json",
+      "source": "SEC EDGAR companyfacts API",
+      "level": "A",
+      "fetched": "2026-08-29",
+      "period": "FY2014-FY2025",
+      "validated": true
+    },
+    {
+      "file": "filings/wb_20f_fy2025.htm",
+      "source": "SEC EDGAR Form 20-F FY2025（2026-04-23 申报，PwC 无保留意见）",
+      "level": "A",
+      "fetched": "2026-08-29",
+      "period": "FY2023-FY2025",
+      "validated": true
+    },
+    {
+      "file": "filings/wb_fy2025_results.htm",
+      "source": "SEC 6-K ex99.1 FY2025 业绩公告（2026-03-18）",
+      "level": "A",
+      "fetched": "2026-08-29",
+      "period": "Q4/FY2025",
+      "validated": true
+    },
+    {
+      "file": "filings/wb_fy2024_results.htm",
+      "source": "SEC 6-K ex99.1 FY2024 业绩公告（2025-03-13）",
+      "level": "A",
+      "fetched": "2026-08-29",
+      "period": "Q4/FY2024",
+      "validated": true
+    },
+    {
+      "file": "filings/wb_q1_2026_results.htm",
+      "source": "SEC 6-K ex99.1 Q1 2026 业绩公告（2026-05-28）",
+      "level": "A",
+      "fetched": "2026-08-29",
+      "period": "Q1 2026",
+      "validated": true
+    },
+    {
+      "file": "filings/wb_q2_2026_results.htm",
+      "source": "SEC 6-K ex99.1 Q2 2026 业绩公告（2026-08-19）",
+      "level": "A",
+      "fetched": "2026-08-29",
+      "period": "Q2 2026",
+      "validated": true
+    },
+    {
+      "file": "financials_WB.json",
+      "source": "由 edgar_raw + filings 构建，validate_data.py 入口校验",
+      "level": "A",
+      "fetched": "2026-08-29",
+      "period": "FY2014-FY2025",
+      "validated": true
+    },
+    {
+      "file": "financials_BIDU.json",
+      "source": "EDGAR 构建（竞对，--skip-crosscheck，未做原文核对）",
+      "level": "A-",
+      "fetched": "2026-08-29",
+      "period": "FY2016-FY2025",
+      "validated": true
+    },
+    {
+      "file": "financials_BILI.json",
+      "source": "EDGAR 构建（竞对，--skip-crosscheck）",
+      "level": "A-",
+      "fetched": "2026-08-29",
+      "period": "FY2018-FY2025",
+      "validated": true
+    },
+    {
+      "file": "financials_MOMO.json",
+      "source": "EDGAR 构建（竞对，--skip-crosscheck）",
+      "level": "A-",
+      "fetched": "2026-08-29",
+      "period": "FY2016-FY2025",
+      "validated": true
+    },
+    {
+      "file": "financials_Kuaishou.json",
+      "source": "港交所 FY2025 业绩公告五年财务概要（static.cninfo.com.cn 镜像，竞对，--skip-crosscheck）",
+      "level": "B",
+      "fetched": "2026-08-29",
+      "period": "FY2021-FY2025",
+      "validated": true
+    },
+    {
+      "file": "market_snapshot.json",
+      "source": "腾讯行情 + Yahoo Finance + 20-F",
+      "level": "A/B",
+      "fetched": "2026-08-28/29",
+      "period": "2026-08-28 收盘",
+      "validated": true
+    },
+    {
+      "file": "segments.json",
+      "source": "各年 FY 业绩公告",
+      "level": "A",
+      "fetched": "2026-08-29",
+      "period": "FY2021-2026H1",
+      "validated": true
+    },
+    {
+      "file": "platform_metrics.json",
+      "source": "业绩公告/20-F/招股书转引",
+      "level": "A/B",
+      "fetched": "2026-08-29",
+      "period": "2020-2026H1",
+      "validated": true
+    },
+    {
+      "file": "consensus.json",
+      "source": "Yahoo Finance / 媒体转引",
+      "level": "C",
+      "fetched": "2026-08-29",
+      "period": "FY2026 预期",
+      "validated": false
+    },
+    {
+      "file": "comp_comparison.json",
+      "source": "竞对 2025 比率对比（由 metrics_*.json 汇总）",
+      "level": "A(派生)",
+      "fetched": "2026-08-29",
+      "period": "-",
+      "validated": true
+    },
+    {
+      "file": "valuation.json",
+      "source": "Phase 4 估值输出汇总（reverse_dcf.py 运行结果）",
+      "level": "A(派生)",
+      "fetched": "2026-08-29",
+      "period": "-",
+      "validated": true
+    },
+    {
+      "file": "persona_scores.json",
+      "source": "三大师独立评分（workpapers/persona_*.md）",
+      "level": "A(派生)",
+      "fetched": "2026-08-29",
+      "period": "-",
+      "validated": true
+    },
+    {
+      "file": "capital_allocation.json",
+      "source": "资本配置评分卡（Phase 3）",
+      "level": "A(派生)",
+      "fetched": "2026-08-29",
+      "period": "-",
+      "validated": true
+    },
+    {
+      "file": "expected_return.json",
+      "source": "期望回报引擎输出（主分析）",
+      "level": "A(派生)",
+      "fetched": "2026-08-29",
+      "period": "-",
+      "validated": true
+    },
+    {
+      "file": "expected_return_redteam.json",
+      "source": "期望回报引擎输出（红队对照）",
+      "level": "A(派生)",
+      "fetched": "2026-08-29",
+      "period": "-",
+      "validated": true
+    },
+    {
+      "file": "metrics_WB.json",
+      "source": "compute_metrics.py 输出（微博）",
+      "level": "A(派生)",
+      "fetched": "2026-08-29",
+      "period": "-",
+      "validated": true
+    },
+    {
+      "file": "metrics_BIDU.json",
+      "source": "compute_metrics.py 输出（百度）",
+      "level": "A(派生)",
+      "fetched": "2026-08-29",
+      "period": "-",
+      "validated": true
+    },
+    {
+      "file": "metrics_BILI.json",
+      "source": "compute_metrics.py 输出（B站）",
+      "level": "A(派生)",
+      "fetched": "2026-08-29",
+      "period": "-",
+      "validated": true
+    },
+    {
+      "file": "metrics_MOMO.json",
+      "source": "compute_metrics.py 输出（挚文）",
+      "level": "A(派生)",
+      "fetched": "2026-08-29",
+      "period": "-",
+      "validated": true
+    },
+    {
+      "file": "metrics_Kuaishou.json",
+      "source": "compute_metrics.py 输出（快手）",
+      "level": "A(派生)",
+      "fetched": "2026-08-29",
+      "period": "-",
+      "validated": true
+    },
+    {
+      "file": "wb_trends.json",
+      "source": "metrics_WB 派生趋势数组",
+      "level": "A(派生)",
+      "fetched": "2026-08-29",
+      "period": "-",
+      "validated": true
+    }
+  ]
+}

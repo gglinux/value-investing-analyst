@@ -1,0 +1,19 @@
+{
+  "level": "C",
+  "source": "Yahoo Finance 分析师汇总（2026-08 中旬抓取）+ Citigroup 评级报道（2025-08-15）",
+  "fy2026": {
+    "revenue_usd_m_approx": 1780,
+    "eps_gaap_approx": 1.45,
+    "q1_2026_eps_est_vs_actual": "est 0.36 / actual 0.34（小幅 miss）"
+  },
+  "price_targets": {
+    "avg": 9.04,
+    "low": 6.6,
+    "high": 11.1,
+    "citi_2025_08": {
+      "rating": "Buy",
+      "pt": 14
+    }
+  },
+  "note": "C 级来源（媒体/聚合平台转引），按 skill 规则变异认知测试置信度降一档"
+}

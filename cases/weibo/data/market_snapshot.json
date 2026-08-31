@@ -1,0 +1,21 @@
+{
+  "as_of": "2026-08-28 美股收盘",
+  "price_usd": 6.99,
+  "market_cap_usd_m": 1717.0,
+  "pe_ttm": 5.78,
+  "pb": 0.51,
+  "dividend_per_ads_forward_usd": 0.61,
+  "dividend_yield_forward": 0.087,
+  "w52_high": 12.35,
+  "w52_low": 6.89,
+  "price_position_52w": 0.018,
+  "avg_daily_volume_shares_m": 1.19,
+  "avg_daily_turnover_usd_m": 8.3,
+  "shares_outstanding_m": 245.5,
+  "cash_st_usd_m": 2405.0,
+  "total_debt_usd_m": 1863.5,
+  "net_cash_usd_m": 541.5,
+  "ev_usd_m": 1175.5,
+  "long_term_investments_usd_m": 1663.3,
+  "source": "腾讯行情 qt.gtimg.cn（usWB，2026-08-28 收盘，A级行情）; PB/均量 Yahoo Finance 2026-08（B级）; 股本/现金/债务 FY2025 20-F（A级）"
+}
