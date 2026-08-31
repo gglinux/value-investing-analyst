@@ -1,0 +1,49 @@
+{
+ "company": "谷歌 (Alphabet)",
+ "as_of": "2026-08-31",
+ "grade": "C",
+ "source": "Yahoo/MarketWatch/S&P Global 汇总",
+ "eps_consensus_usd": {
+  "2026": {
+   "avg": 20.59,
+   "note": "H1实际14.22+H2预期6.4; 含一次性投资收益成分",
+   "n": 49
+  },
+  "2027": {
+   "avg": 14.85,
+   "note": "回落至通用化口径——卖方明确认为 2026 利润含不可年化部分",
+   "n": 51
+  },
+  "2028": {
+   "avg": 17.82
+  }
+ },
+ "revenue_consensus": {
+  "2026": {
+   "avg": 497.9,
+   "growth": 0.236
+  },
+  "2027": {
+   "avg": 608.9,
+   "growth": 0.223
+  }
+ },
+ "price_target": {
+  "avg": 426.0,
+  "median": 427.0,
+  "high": 515.0,
+  "low": 340.0,
+  "ratings": {
+   "strong_buy": 6,
+   "buy": 56,
+   "hold": 8,
+   "sell": 0
+  }
+ },
+ "note": "一致预期 C 级旁证；FY2027 EPS 一致预期低于 FY2026 是关键信号——市场自己也知道 2026 利润有杂项。",
+ "one_off_note": "H1'26 净利 175B 已超 FY2025 全年 132B；Q2'26 单季净利 112B (margin 94%)；剖析成分：Q1 约 15B 一次性投资收益(SafeWise/legal 转回)，Q2 含其他收入大额结算。通用化后年化约 165B。",
+ "segments_consensus": {
+  "cloud_fy2026e": "+45%",
+  "search_growth": "+12%"
+ }
+}

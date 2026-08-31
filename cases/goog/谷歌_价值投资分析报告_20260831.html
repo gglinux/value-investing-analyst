@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>谷歌（GOOG）价值投资分析报告 — 2026-08-31</title>
+<script src="https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"></script>
+<style>
+:root{--main:#1a3a5c;--accent:#d97706;--neg:#b91c1c;--muted:#6b7280;--bg:#f8fafc;--line:#e5e7eb}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif;color:#1f2937;line-height:1.75;background:#fff}
+.wrap{max-width:1060px;margin:0 auto;padding:32px 28px}
+h1{font-size:28px;color:var(--main);border-bottom:3px solid var(--main);padding-bottom:12px;margin-bottom:6px}
+.meta{color:var(--muted);font-size:13px;margin-bottom:28px}
+h2{font-size:21px;color:var(--main);margin:40px 0 14px;padding-left:12px;border-left:5px solid var(--main)}
+h3{font-size:16px;color:var(--main);margin:22px 0 8px}
+p{margin:10px 0;font-size:14.5px}
+table{border-collapse:collapse;width:100%;margin:14px 0;font-size:13.5px}
+th,td{border:1px solid var(--line);padding:7px 10px;text-align:left}
+th{background:var(--main);color:#fff;font-weight:600}
+tr:nth-child(even){background:var(--bg)}
+.card{border:1px solid var(--line);border-radius:10px;padding:20px 22px;margin:18px 0;background:var(--bg)}
+.card-verdict{border:2px solid var(--neg);background:#fef2f2}
+.verdict-big{font-size:26px;font-weight:700;color:var(--neg)}
+.gate{display:inline-block;padding:5px 14px;border-radius:6px;margin:4px 8px 4px 0;font-size:13.5px;font-weight:600}
+.gate-fail{background:#fee2e2;color:#991b1b}
+.chart{width:100%;height:360px;margin:16px 0}
+.chart-note{font-size:12px;color:var(--muted);margin:-8px 0 14px}
+.vnum{font-variant-numeric:tabular-nums}
+.kv{display:flex;flex-wrap:wrap;gap:10px;margin:12px 0}
+.kv>div{flex:1 1 150px;background:#fff;border:1px solid var(--line);border-radius:8px;padding:10px 12px;text-align:center}
+.kv .k{font-size:11.5px;color:var(--muted)}
+.kv .v{font-size:17px;font-weight:700;color:var(--main)}
+.tag{display:inline-block;font-size:11px;padding:1px 8px;border-radius:4px;background:#e0e7ff;color:#3730a3;margin-left:6px;vertical-align:middle}
+.small{font-size:12.5px;color:var(--muted)}
+.warn{background:#fffbeb;border-left:4px solid #f59e0b;padding:10px 14px;margin:12px 0;font-size:13.5px}
+.persona{border:1px solid var(--line);border-radius:10px;padding:18px 20px;margin:14px 0}
+blockquote{border-left:4px solid var(--main);padding:8px 16px;margin:12px 0;color:#374151;background:#f0f4f8;font-size:13.5px}
+ol{padding-left:22px;margin:8px 0;font-size:14px}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<h1>谷歌（NASDAQ: GOOG）价值投资分析报告</h1>
+<div class="meta">分析日期 2026-08-31 ｜ 数据截止 2026-08-28 收盘 / FY2025 与 2026H1 财务 ｜ 方法：value-investing-analyst v2.5 全流程 ｜ 币种：美元</div>
+
+<h2>一、投资摘要</h2>
+
+<div class="card card-verdict">
+<div style="font-size:13px;color:#7f1d1d;font-weight:600;margin-bottom:4px">结论档位</div>
+<div class="verdict-big">观察 · 等价格</div>
+<p class="small" style="margin-top:6px">双闸门全灭。AI 时代最有趣的估值题——生意比十年前更好，价格把 AI 信仰也算进去了。</p>
+<div style="margin-top:12px">
+<span class="gate gate-fail">闸门一 安全边际 −27.0% ✗（要求 ≥25%）</span>
+<span class="gate gate-fail">闸门二 期望含息 IRR −5.1% ✗（门槛 9%）</span>
+</div>
+</div>
+
+<div class="card">
+<h3 style="margin-top:0">首屏决策卡</h3>
+<div class="kv">
+<div><div class="k">现价（USD）</div><div class="v">$<span class="vnum" data-src="market_snapshot.json" data-path="price_usd" data-fmt="num2">342.88</span></div></div>
+<div><div class="k">总市值</div><div class="v">$<span class="vnum" data-src="market_snapshot.json" data-path="market_cap_usd" data-fmt="num0">4,193,000</span>M</div></div>
+<div><div class="k">PE-TTM</div><div class="v"><span class="vnum" data-src="market_snapshot.json" data-path="pe_ttm" data-fmt="num1">17.2</span></div></div>
+<div><div class="k">PB</div><div class="v"><span class="vnum" data-src="market_snapshot.json" data-path="pb" data-fmt="num2">6.74</span></div></div>
+<div><div class="k">52周位置</div><div class="v"><span class="vnum" data-src="market_snapshot.json" data-path="position_52week_pct" data-fmt="pct0">69%</span></div></div>
+<div><div class="k">日均成交额</div><div class="v">$61亿</div></div>
+</div>
+<table>
+<tr><th>关键变量</th><th>当前判断</th></tr>
+<tr><td>AI 整合是解药还是毒药</td><td>未定。Gemini 延期（3.5 Pro 推后）+ 上半年利润爆发并存；四个季度广告数据才能分辨</td></tr>
+<tr><td>2026 利润的含金量</td><td>H1'26 净利 $175B 超去年全年，但其中大块一次性收益；通用化年化约 $165B [E:consensus.json]</td></tr>
+<tr><td>capex 重压</td><td>FY2025 capex $91B，FY2026 指引 $195-205B——史上最大 FCF 转移支付 [E:financials_GOOG.json]</td></tr>
+</table>
+<p><b>证伪条件（最关键的 2 条）</b>：① 搜索广告收入连续两个季度负增长（AI 蚕食实锤）；② capex 占 OCF 比重 2027 年未按管理层指引下降（基础设施投资失控）。</p>
+<p><b>下次复查</b>：2026-10-27（Q3 财报）或跌破 $270（基准价值）触发重跑；买入纪律价 <b>$200 以下</b>才谈仓位。</p>
+</div>
+
+<p><b>一句话生意</b>：全世界 90% 的搜索查询经过它，广告主为"人类问问题"这个动作按次付费。</p>
+
+<p><b>三大投资论点</b>：① 搜索广告的完美模式（90% 份额、主动意图、零边际成本）；② 数据+流量的双重飞轮（Android/Chrome/YouTube 生态锁定）；③ 云是正在崛起的第二曲线（增速第一，FY2026E +45%）[E:segments.json]。</p>
+
+<p><b>三大风险</b>：① AI 自我蚕食——Gemini 做得越好，广告链接被看见越少（结构性矛盾）；② capex 吞噬自由现金流（Q2'26 FCF 已转正为负 $5.9B）；③ 反垄断监管（DOJ 案败诉后对 Chrome/搜索分发协议的拆分风险）[E:manifest.json]。</p>
+
+<p class="warn"><b>信息局限声明</b>：一致预期 C 级；2026 年利润通用化（剔除一次性投资收益）为本报告关键手工处理，已在 consensus.json 和 valuation.json 双注记；FY2025 的 10-K 未入 EDGAR，底稿基于季度加总，待官方 10-K（2026-02）入库后须回补复审。</p>
+
+<h2>二、公司与生意</h2>
+<p>Alphabet 1998 年创立（Google 搜索引擎），2015 年重组为 Alphabet 控股。FY2025 收入 $403.5B、净利 $132.2B、OCF $164.7B。分部：Google Services（搜索+YouTube+订阅，占比约 86%）、Google Cloud（约 12%，FY2025 +36%，经营利润转正后快速扩张）、Other Bets（Waymo/Verily/X，约 2%，常年亏损）[E:segments.json]。</p>
+<p>商业模式核心是<b>搜索广告的意图变现</b>：用户主动告诉你他要什么，你把意图卖给想找到他的人。十多年来这个模式几乎无懈可击——必应烧了 20 年钱没能撼动，社交平台的推荐逻辑也替代不了主动搜索。AI 的出现是第一次有技术能直接回答而非引导点击，这是结构性变量 [E:manifest.json]。</p>
+
+<h2>三、定量画像</h2>
+
+<div id="chart-rev" class="chart"></div>
+<div class="chart-note">图1：收入与归母净利（$B，2015-2025）。十年收入 CAGR 18.0%、净利 CAGR 23.3%；2017 年净利凹陷为 TCJA 税改一次性税费（数据已标注）[E:metrics_GOOG.json]。</div>
+
+<div id="chart-margin" class="chart"></div>
+<div class="chart-note">图2：净利率与 ROE（%）。净利率 FY2025 32.8% 是十年均值 23.3% 的 1.40 倍——引擎自动判定周期高位（均值扭曲年 2018 +143% 与 2021 +89% 为爆发型非衰退型）。ROE 已升至 35.7% [E:metrics_GOOG.json]。</div>
+
+<div id="chart-capex" class="chart"></div>
+<div class="chart-note">图3：capex 与 OCF 的撕裂（$B）。capex 从 2020 年 $22B 到 2025 年 $91B（四年四倍），2026 指引再翻倍——AI 军备竞赛正在吸干自由现金流（Q2'26 单季 FCF 为负 $5.9B）[E:financials_GOOG.json]。</div>
+
+<div id="chart-val" class="chart"></div>
+<div class="chart-note">图4：三情景每股价值 vs 现价（USD）。现价 $342.88 已超乐观值 $316.1；经营现金口径交叉验证 $122（capex 重压后真实含金量）[E:valuation.json]。</div>
+
+<p><b>利润含金量警报×2</b>：第一重，经营口径警报——做出指标引擎认定周期高位+爬坡期扭曲年双触发的"双轨基期"提示：主轨正常化 $94B/交叉轨当期 $132B；第二重，本报告主轨采用 FY2026E 通用化 $165B（H1 剔除一次性项年化），该口径含金量介于两者之间 [E:metrics_GOOG.json][E:valuation.json]。</p>
+<p><b>每股口径</b>：股本十年从 6,949M 降至 6,044M（-13%，回购+派息驱动），增长未被摊薄，每股口径同步 [E:financials_GOOG.json]。</p>
+<p><b>历史警报回应</b>：上一轮 capex 警报（2024 +63%）当时我们判断"AI 基建投入启动"，本轮确认为连续年度而非一次性——警报成为常态信号，要求管理层明确承诺 2027 年 capex 增速放缓（已承诺），这是跟踪重点。</p>
+
+<h2>四、护城河</h2>
+<p><b>五源归类</b>：无形资产（品牌=搜索代名词）+ 网络效应（数据飞轮：越搜越准）+ 转换成本（Android/Chrome/全家桶）[E:segments.json] + 有效规模（搜索广告市场难容第二家）。<b>评级：宽，但方向中性偏降</b>。</p>
+<p><b>定量验证</b>：① ROIC 连续十年 >22%，均值 43% [E:metrics_GOOG.json]；② 搜索份额 90% 稳定 20 年；③ 提价权：广告位定价长期上扬，但 2024-2025 首次讨论"AI 答案页的变现切换成本"。</p>
+<p><b>进攻者尸检</b>：必应 20 年失败；但 ChatGPT/Perplexity 不是"更好的搜索"，是"换掉搜索"——这是新物种入侵，护城河挡不住新物种。柯达类比不是玩笑：柯达也拥有最强的胶卷护城河（先例记录于排雷清单）[E:manifest.json]。</p>
+<p><b>谷歌与台积电的护城河差异</b>（对照前次分析）：台积电是"越对手死越宽"，谷歌的敌人是自己的下一代技术。</p>
+
+<h2>五、增长</h2>
+<p><b>TAM</b>：全球数字广告 2025 年约 $8,000-9,000 亿、搜索广告约占 1/4；AI 驱动的"答案+行动"新场景（搜房/比价/直购）正在打开搜索广告的新增量 [E:segments.json]。</p>
+<p><b>S 曲线</b>：传统搜索广告趋成熟（+12%），AI 整合期打开新入侵期（既有用户+新场景）；云 IaaS 仍是黄金成长期（+45% FY2026E，份额从 13% 继续上行）[E:consensus.json]。</p>
+<p><b>增长分解（未来 5 年）</b>：搜索广告 +8-10% + 云 +35-40% + YouTube 订阅 +12% + Other Bets 贡献转正可能。卖方 FY2026 收入预期 +23.6%、FY2027 +22.3%——这个一致预期高于本报告基准的 12%，是估值分歧的体现 [E:consensus.json]。</p>
+<p><b>ROIIC 增长质量</b>：滚动 ROIIC 40%+——传统业务增长确实创造价值，但 AI 再投资跑道的 ROIIC 正在下降（capex 增速 >> 净利增速的阶段），这是增长质量的分界线 [E:metrics_GOOG.json]。</p>
+
+<h2>六、管理层与文化</h2>
+<p><b>资本配置</b>：再投资 4 分（capex 激进但与 AI 战略逻辑一致）；并购 5 分（极少大收购）；回购 4 分（常年 $60B+ 稳定，但不如低谷时积极）；增发 5 分（零稀释）；分红 4 分（2024 年起派息）。[E:financials_GOOG.json]</p>
+<p><b>言行一致</b>：2023 年宣布"AI-first 战略+capex 加速"——完美兑现（两年 capex 翻倍）；2026 年指引"capex $195-205B、H2 FCF 回正"——待验证，这是下一个承诺点 [E:manifest.json]。裁员果断（2023 年 1.2 万人），成本纪律从松散转向成熟。</p>
+<p><b>文化瑕疵</b>：登月项目（Other Bets）年度 $4B 亏损在工程师文化下难以清算；Gemini 3.5 Pro 延期暴露 AI 研发承压；DOJ 反垄断败诉后应对策略仍在形成 [E:manifest.json]。</p>
+
+<h2>七、财务质量与风险</h2>
+<p><b>排雷结论</b>：无一票否决项。EY 审计稳定；红旗 1 条——多家律所 7 月证券欺诈征集（股价下跌类，常规扰动）+ DOJ 反垄断案的长期拆分尾部风险 [E:manifest.json]。</p>
+<p><b>资产负债表</b>：料堡垒。现金及短期投资 $127B vs 长期债 $28B——净现金约 $99B [E:financials_GOOG.json]。</p>
+<p><b>可及性与摩擦</b>：纳斯达克直接购买，流动性极好（日均 $61 亿）；GOOG vs GOOGL 权益差异可忽略。</p>
+<p><b>三大真实风险</b>：① AI 答案页取代广告链接的结构性风险；② $195-205B capex 若回报不达预期，从资产变成产能过剩；③ DOJ 反垄断败诉强制拆分 Chrome 或限制默认搜索协议。</p>
+
+<h2>八、估值</h2>
+<p><b>基期正常化（本案例核心工程决策）</b>：compute_metrics 自动判定<b>周期高位</b>（净利率 32.8% = 均值 23.3% 的 1.40 倍），同时触发爬坡期扭曲年提示（2018 +143%、2021 +89% 为爆发型非衰退）。本报告按双轨呈现：</p>
+<table>
+<tr><th>基期</th><th>口径</th><th>OE</th><th>悲观/基准/乐观</th><th>隐含增速</th></tr>
+<tr><td>Track A</td><td>引擎正常化（强制）</td><td>$94.1B</td><td>116.5 / 142.4 / 173.4</td><td>33.0%</td></tr>
+<tr><td>Track B</td><td>当期 FY2025</td><td>$132.2B</td><td>163.5 / 199.9 / 243.5</td><td>23.9%</td></tr>
+<tr><td><b>Track C（主轨）</b></td><td><b>FY2026E 通用化</b>（H1 实际剔一次性项年化）</td><td><b>$165B</b></td><td><b>212.6 / 270.2 / 316.1</b></td><td><b>18.1%</b></td></tr>
+</table>
+<p class="small">维持性 capex ≈ 折旧（$21B），OE ≈ 净利；净现金 $99B 按 75% 加回 $6.1/股；r=10%、永续 2.5%、10 年 fade [E:valuation.json]。Track C 是最宽容的口径——它同时容纳了"2026 利润爆发为真"和"capex 能转化为未来盈利"两个假设。</p>
+
+<p><b>反向 DCF</b>：现价隐含 fade 增速 <b>18.1%</b>。基率检验：收入 >$500 亿公司十年 CAGR ≥10% 的约 10%，≥18% 的 <3%——市场要求谷歌进入历史前 3%，与台积电同构。</p>
+
+<p><b>经营现金口径交叉验证（红队要求）</b>：以 FY2025 FCF $73.3B 扣维持性 capex $21B 后的真实自由现金流基期 $52.3B+维持开支回补约 $21B ≈ $74.8B，12% fade → 每股 <b>$122.5</b>。净利口径 $270 与 FCF 口径 $122 之间的 $148 差距，正是 $195-205B 资本开支的"转移支付成本"的定价——这是想象一下把它当公用事业股（只看能分回来多少现金）时它值多少钱。</p>
+
+<p><b>假设一致性对账</b>：① 终年收入（基准 2035 € $650B）低于"AI 时代绝对垄断"的幻想上限 ✓；② 乐观情景净利率要求 35%+，基率 <5%，已标注为高端情景 ✓；③ 基准 12% 低于过去十年净利 CAGR 23.3%、低于卖方 FY2026 收入预期 +23.6%——已主动给 AI 打了保守折扣 ✓；④ 乐观情景收入 FY2035 $1,400B 已接近全球数字广告 TAM 上限 ✓。</p>
+
+<p><b>期望回报率</b>：三情景 30/50/20 → 期望价值 $<span class="vnum" data-src="expected_return.json" data-path="expected_value_per_share" data-fmt="num1">262.1</span>；期望含息 IRR <b><span class="vnum" data-src="expected_return.json" data-path="expected_annualized_irr_incl_div" data-fmt="pct1">-5.1%</span></b>、亏损概率 <span class="vnum" data-src="expected_return.json" data-path="loss_probability" data-fmt="pct0">100%</span>、亏损情景均跌 −22.3% [E:expected_return.json]。红队独立概率（40/45/15）下 IRR −5.6%、亏损均跌 −24.7%——两组完全一致的方向：现价没有正期望可能性。</p>
+
+<p><b>安全边际</b>：现价 vs 基准 $270.2 → <b>−27.0%</b>；vs 乐观 $316.1 → −8.5%。触发关注区间：跌破 $270 重估；买入纪律价 <b>$200 以下</b>才谈仓位。</p>
+
+<h2>九、关键判断（Phase 4.5）</h2>
+<p><b>关键变量</b>：① <b>AI 整合后广告位的单位价值</b>——最重要且 4 个季度内可知（跟踪搜索广告收入和 CTR）；② <b>capex 增速拐点</b>——2027Q1送出财报是关键验证点（管理层承诺放缓）；③ <b>反垄断拆分</b>——重要但进程缓慢，进入跟踪不入估值。</p>
+<p><b>变异认知测试（主锚端价格）</b>：市场给 $342 的主流叙事是"AI 时代的谷歌 = 搜索垄断 × AI 平台"，58 家买入零卖出。我方基准与市场分歧：市场将 FY2026 的利润爆发（一次性重）线性外推，我方按通用化 $165B 处理——这个处理不是保守，是<b>卖方自己也在 FY2027 的 $14.85 一致预期里承认了这一点</b>。认知优势：不是信息，是纪律（不把一次性当常态）。</p>
+<p><b>双重机会成本</b>：期望含息 IRR <b>−5.1%</b> vs 标普 500 门槛 9% → <b>跑输 14.1 个百分点</b>；且亏损概率 100%（除非股价跌破乐观值）。<b>机会成本不划算</b>，档位上限"观察等价格" [E:expected_return.json]。</p>
+
+<h2>十、投委会评审</h2>
+
+<div class="persona">
+<h3>巴菲特 <span class="tag">拒绝（价格+形态可预测性） 62/100</h3>
+<p>"十年后它还在收费回答问题吗？"这个问题他给出了两个同样可信的答案（AI 是加固护城河或挖开护城河），所以他不能十年持有测试通过。价格 3/20 触发一票否决：<b>"当你同时有一座堡垒和一场技术革命在同一个房间里，我不愿意先付钱再去听那场革命的结果。等 200 美元以下，我会重新读这份分析。"</b></p>
+</div>
+
+<div class="persona">
+<h3>段永平 <span class="tag">不碰（价格超所有情景上限） 80/100</h3>
+<p>生意模式真正"坐着赚钱"（商业模式 30/35），但 AI 自我蚕食矛盾不糊弄过关。价格 343 超过他的全部情景上限：<b>"我愿意买它，但前提是市场先恐慌到相信'AI 毁了搜索广告'——那时候 400 美元会变成 200 美元。现在 343，市场已经替我乐观过了。"</b></p>
+</div>
+
+<div class="persona">
+<h3>李录 <span class="tag">值得跟踪，未达懂且重仓 73/100</h3>
+<p>事实点赞（十年净利 23.3% CAGR、ROIC 43%），但推断链太长：AI 整合成败三环验证、capex 回报零环证据。卖方 FY2027 一致预期回落是他收获的最重要信号：<b>"市场知道今年的利润有虚胖，我至少要等两个连续四个季度的广告数据，再决定它是好公司还是昂贵教训。"</b></p>
+</div>
+
+<h3>分歧对照与裁决</h3>
+<table>
+<tr><th>问题</th><th>巴菲特</th><th>段永平</th><th>李录</th></tr>
+<tr><td> AI 会让护城河变宽还是变窄</td><td>两个答案都成立</td><td>矛盾，不糊弄</td><td>倾向于加固，但要数据</td></tr>
+<tr><td>买入价位</td><td>$200</td><td>$210-240（恐慌时）</td><td>估值信号+数据信号齐全再说</td></tr>
+<tr><td>核心分歧</td><td>形态可预测性</td><td>价格容忍度</td><td>AI 证据的充分性</td></tr>
+</table>
+<p><b>共识点</b>：三人在不同时期都说过"这可能是全世界最好的商业模式"，三人在 343 这个价位都不买。</p>
+<p class="small"><b>红队独立出数</b>：悲观 $172.7（-18.7%，未触发降档线）；独立概率 IRR −5.6%、亏损概率 100%。裁定：与双闸门同向，不强制降档。记录关键提示：FCF 口径估值仅 $122，定价差距来自 capex $195-205B 的质询。</p>
+
+<h2>十一、结论与行动</h2>
+<div class="card card-verdict">
+<p><b>结论：观察 · 等价格。</b>谷歌是这个时代最有趣的估值问题——生意比十年前更好（ROIC 43%、收入还在加速），价格里却包含了"AI 会带它进入下一个十年"的信仰。这不是"公司不好"，是"价格已经先走了二十年"。双闸门全灭（安全边际 −27.0%、期望含息 IRR −5.1%），经营现金口径更冷酷——把 $195-205B capex 的转移支付算进去，它只值 $122。</p>
+</div>
+<p><b>持有体验预演</b>：2022 年从 $150 跌到 $83（−45%）；2026 年 7 月单月从 $370 跌到 $318（−14%）。波动带常态 ±35-50%。正面拷问：<b>若跌到 $250 而基本面未变，你敢加仓吗？</b>如果不敢，343 就不该碰——因为它跌下去的那个时刻你敢不敢买才是真正决策。</p>
+<p><b>证伪条件</b>：① 搜索广告连续两个季度负增长；② 2027Q1 capex 未按指引放缓；③ DOJ 强制拆分 Chrome 或限制默认搜索协议；④ Gemini 整合后季度活跃广告单价（CPC）跌破 2024 年低点。</p>
+<p><b>季度跟踪清单</b>：</p>
+<ol>
+<li>搜索广告收入增速（警戒：连续两季为负）</li>
+<li>Google Cloud 收入增速（警戒：跌破 +30%）与经营利润率（警戒：低于 12%）</li>
+<li>capex 占 OCF 比重（警戒：2027Q1 未降至 55% 以下）</li>
+<li>自由现金流回正时点（警戒：2026 全年 FCF 为负）</li>
+<li>股价 vs $270 / $200 两道纪律线</li>
+</ol>
+<p><b>用户初判对照</b>：用户未提供初判（Phase 0 询问未答）。如果你的初判是"谷歌是 AI 时代最大受益者"——本报告的分歧点很具体：这判断可能完全正确，但 343 美元的价格已经把这个正确预支完了。</p>
+
+<h2>十二、附录</h2>
+<h3>数据底稿与来源</h3>
+<table>
+<tr><th>文件</th><th>内容</th><th>等级</th></tr>
+<tr><td>financials_GOOG.json</td><td>2015-2025 年度财务（EDGAR companyfacts + 季度加总）</td><td>A</td></tr>
+<tr><td>metrics_GOOG.json</td><td>compute_metrics.py 输出（周期位+双轨基期提示）</td><td>A</td></tr>
+<tr><td>goog_companyfacts.json</td><td>SEC XBRL（FY2016-2024 为完整官方源）</td><td>A</td></tr>
+<tr><td>consensus.json</td><td>一致预期（含 FY2027 回落的关键信号）</td><td>C（旁证）</td></tr>
+</table>
+<p><b>入口校验</b>：validate_data 0 错误通过；信息时效已核对（Q1/Q2 财报与 capex 上修已消化，一次性收益已通用化处理）。</p>
+<p><b>数字校验</b>：本报告关键数字 vnum 溯源、图表 vchart 锚点，verify_report.py 通过后交付。</p>
+<p><b>重要口径声明</b>：① 2026 年利润含一次性投资收益（Q1 SafeWise 相关结算约 $15B + Q2 其他收入结算），通用化年化为 $165B 是本报告与市场的核心差异处理；② FY2025 10-K 未入 EDGAR，待 2026-02 入库后须回补复审，若与季度加总差异 >5% 将触发重跑；③ FY2027 一致预期低于 FY2026 是市场"自认利润虚胖"的关键证据。</p>
+<h3>术语速查</h3>
+<p class="small">通用化（Normalizing）：剔除一次性损益后的可持续利润。OE（Owner Earnings）：巴菲特口径真实可分配利润。fade：估值中让增长逐年衰减到永续增速的保守模式。FCF 口径 vs 净利口径：前者只看能收回的现金，后者含账面上但再投入的利润。</p>
+<p class="small" style="margin-top:16px;border-top:1px solid var(--line);padding-top:12px"><b>免责声明</b>：本报告由分析工具生成，仅供研究参考，不构成任何投资建议。市场有风险，投资需谨慎。分析日期 2026-08-31，数据截止 2026-08-28 收盘与 FY2025 财务。</p>
+
+</div>
+
+<script>
+function initChart(id, option){
+  var el=document.getElementById(id); if(!el||typeof echarts==='undefined')return;
+  var c=echarts.init(el); c.setOption(option); window.addEventListener('resize',function(){c.resize();});
+}
+var years=[2015,2016,2017,2018,2019,2020,2021,2022,2023,2024,2025];
+initChart('chart-rev',{
+  title:{text:'收入与归母净利：十年收入翻 4 番（$B）',left:'center',textStyle:{fontSize:14}},
+  tooltip:{trigger:'axis'},legend:{bottom:0},
+  xAxis:{type:'category',data:years},yAxis:{type:'value'},
+  series:[
+    <!-- vchart src=metrics_GOOG.json path=chart_series.revenue scale=0.001 -->
+    {name:'收入($B)',type:'bar',data:[75.0,90.3,110.9,136.8,161.9,182.5,257.6,282.8,307.4,350.0,403.5],itemStyle:{color:'#1a3a5c'}},
+    <!-- vchart src=metrics_GOOG.json path=chart_series.net_income scale=0.001 -->
+    {name:'净利($B)',type:'line',data:[16.3,19.5,12.7,30.7,34.3,40.3,76.0,60.0,73.8,100.1,132.2],itemStyle:{color:'#d97706'},lineStyle:{width:3}}
+  ]
+});
+initChart('chart-margin',{
+  title:{text:'净利率 32.8% 创周期高位，ROE 升至 35.7%',left:'center',textStyle:{fontSize:14}},
+  tooltip:{trigger:'axis'},legend:{bottom:0},
+  xAxis:{type:'category',data:years},yAxis:{type:'value'},
+  series:[
+    <!-- vchart src=metrics_GOOG.json path=chart_series.net_margin scale=100 -->
+    {name:'净利率%',type:'line',data:[21.8,21.6,11.4,22.5,21.2,22.1,29.5,21.2,24.0,28.6,32.8],itemStyle:{color:'#1a3a5c'},lineStyle:{width:3}},
+    <!-- vchart src=metrics_GOOG.json path=chart_series.roe scale=100 -->
+    {name:'ROE%',type:'line',data:[0,15.0,8.7,18.6,18.1,19.0,32.1,23.6,27.4,32.9,35.7],itemStyle:{color:'#d97706'},lineStyle:{width:2,type:'dashed'}}
+  ]
+});
+initChart('chart-capex',{
+  title:{text:'capex 四年四倍，吞噬自由现金流（$B）',left:'center',textStyle:{fontSize:14}},
+  tooltip:{trigger:'axis'},legend:{bottom:0},
+  xAxis:{type:'category',data:[2019,2020,2021,2022,2023,2024,2025]},yAxis:{type:'value'},
+  series:[
+    {name:'经营现金流',type:'line',data:[54.5,65.1,91.7,91.5,101.7,125.3,164.7],itemStyle:{color:'#1a3a5c'},lineStyle:{width:3}},
+    {name:'资本开支',type:'bar',data:[23.5,22.3,24.6,31.5,32.3,52.5,91.4],itemStyle:{color:'#b91c1c'}},
+    {name:'自由现金流',type:'line',data:[31.0,42.8,67.1,60.0,69.5,72.8,73.3],itemStyle:{color:'#d97706'},lineStyle:{width:2,type:'dashed'}}
+  ]
+});
+initChart('chart-val',{
+  title:{text:'三情景价值 vs 现价：现价已超乐观情景（USD/股）',left:'center',textStyle:{fontSize:14}},
+  tooltip:{trigger:'axis'},
+  xAxis:{type:'category',data:['悲观(30%)','基准(50%)','乐观(20%)','概率加权','现价']},yAxis:{type:'value',min:0},
+  series:[{type:'bar',
+    data:[{value:212.6,itemStyle:{color:'#94a3b8'}},{value:270.2,itemStyle:{color:'#1a3a5c'}},{value:316.1,itemStyle:{color:'#d97706'}},{value:267.1,itemStyle:{color:'#64748b'}},{value:342.88,itemStyle:{color:'#b91c1c'}}],
+    label:{show:true,position:'top',formatter:'${c}'}}]
+});
+</script>
+</body>
+</html>

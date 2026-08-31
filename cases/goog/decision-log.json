@@ -1,0 +1,23 @@
+{
+  "entries": [
+    {
+      "date": "2026-08-31",
+      "price": 342.88,
+      "verdict": "观察等价格",
+      "margin_of_safety": -0.270,
+      "expected_irr": -0.0514,
+      "loss_probability": 1.00,
+      "key_variables": [
+        {"name": "AI整合后广告位单位价值", "judgment": "最重要且4季度内可知"},
+        {"name": "capex增速拐点", "judgment": "2027Q1管理层承诺放缓待验证"},
+        {"name": "DOJ反垄断拆分", "judgment": "长期尾部，不入DCF只入跟踪"}
+      ],
+      "falsifiers": ["搜索广告连续两季负增长", "2027Q1 capex未按指引放缓", "DOJ强制拆分Chrome/默认协议", "CPC跌破2024低点"],
+      "persona_verdicts": {"buffett": "拒绝(62)", "duan": "不碰(80)", "li_lu": "跟踪未懂(73)"},
+      "user_prior": null,
+      "motivation": "用户要求实测skill分析美股谷歌",
+      "buy_trigger": "≤200 USD 买入讨论；<270 重跑评估",
+      "review_due": "2027-02-28 或跌破270即触发"
+    }
+  ]
+}

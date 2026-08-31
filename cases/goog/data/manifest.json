@@ -1,0 +1,86 @@
+{
+ "company": "谷歌 (Alphabet)",
+ "ticker": "GOOG",
+ "built_at": "2026-08-31",
+ "latest_quarter_checked": "已核对 2026Q1/Q2（4/29、7/22 财报，含 capex 上修至 $195-205B、Q2 负 FCF $5.9B、Gemini 3.5 Pro 延期报道）；无未消化剧变，Q2'26 一次性收益已作通用化处理",
+ "files": [
+  {
+   "file": "financials_GOOG.json",
+   "source": "EDGAR companyfacts + 结构化金融数据接口四季加总",
+   "grade": "A",
+   "validated": true,
+   "period": "2015-2025"
+  },
+  {
+   "file": "metrics_GOOG.json",
+   "source": "compute_metrics.py 输出",
+   "grade": "A",
+   "validated": true,
+   "note": "周期高位+爬坡期扭曲年双触发；引擎推荐正常化 94.1B，本报告按双轨+FY2026E 通用化主轨 165B"
+  },
+  {
+   "file": "market_snapshot.json",
+   "source": "结构化行情接口",
+   "grade": "A",
+   "date": "2026-08-31"
+  },
+  {
+   "file": "segments.json",
+   "source": "10-K 分部披露+StatCounter",
+   "grade": "A/B"
+  },
+  {
+   "file": "consensus.json",
+   "source": "Yahoo/MarketWatch/S&P Global 汇总",
+   "grade": "C",
+   "note": "旁证；FY2027 EPS 回落为关键证据"
+  },
+  {
+   "file": "valuation.json",
+   "source": "reverse_dcf.py 输出整合",
+   "grade": "A",
+   "validated": true
+  },
+  {
+   "file": "expected_return.json",
+   "source": "reverse_dcf.py expected-return 输出",
+   "grade": "A",
+   "validated": true
+  },
+  {
+   "file": "raw_finance_income.txt",
+   "source": "结构化金融数据接口（季度，USD）",
+   "grade": "A"
+  },
+  {
+   "file": "raw_finance_balance.txt",
+   "source": "结构化金融数据接口（季度，USD）",
+   "grade": "A"
+  },
+  {
+   "file": "raw_finance_cashflow.txt",
+   "source": "结构化金融数据接口（季度，USD）",
+   "grade": "A"
+  },
+  {
+   "file": "filings/goog_companyfacts.json",
+   "source": "SEC XBRL companyfacts",
+   "grade": "A"
+  },
+  {
+   "file": "manifest.json",
+   "source": "数据清单与排雷检索记录",
+   "grade": "A"
+  }
+ ],
+ "adversarial_check": {
+  "query": "Alphabet/Google + fraud/造假/诉讼/审计意见",
+  "result": "无财务造假前科，审计师 EY 稳定。命中：①多家律所股价下跌集体征集（2026Q2 财报后 -6.9% 触发，属市场常规扰动非实质指控）；②Gemini 3.5 Pro 延期报道；③历史欧盟反垄断罚款（一次性合规成本，非财务造假）；④DOJ 反垄断案（2024 败诉，Chrome/搜索分发协议审查中，中期尾部风险）。记红旗 1 条（监管与披露透明度争议），不构成否决。",
+  "date": "2026-08-31"
+ },
+ "notes": [
+  "2026 年利润含大额一次性投资收益（Q1 SafeWise 相关约 15B + Q2 其他收入结算），通用化后年化约 165B",
+  "结构化金融数据接口年度行实为 Q4 单季值（TSM 同款口径已识别），全系列按季度加总处理",
+  "FY2025 已收官但 10-K 未入 EDGAR（2026-02 才申报），本底稿暂以 结构化金融数据接口四季加总+期末 BS 构建；待 10-K 入库后须回补复审"
+ ]
+}

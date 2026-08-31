@@ -1,0 +1,54 @@
+{
+ "company": "谷歌 (Alphabet)",
+ "ticker": "GOOG",
+ "currency": "USD/share",
+ "base_oe": {
+  "track_a_normalized": {
+   "value": 94128,
+   "note": "compute_metrics 推荐正常化(均值口径)；周期高位+爬坡期扭曲年双触发的强制产物"
+  },
+  "track_b_current": {
+   "value": 132170,
+   "note": "当期 FY2025 OE=净利；引擎禁用作主轨"
+  },
+  "track_c_adj_fy2026e": {
+   "value": 165000,
+   "note": "主轨：H1'26 实际 175B 剔除一次性项(约 25-30B)后年化 165B；与 FY2027 一致预期通用化口径同逻辑"
+  }
+ },
+ "scenarios_main": {
+  "bear": {
+   "growth_fade": 0.06,
+   "value_per_share": 212.57,
+   "rationale": "搜索被 AI 答案侵蚀+云价格战，5% fade 10年"
+  },
+  "base": {
+   "growth_fade": 0.12,
+   "value_per_share": 270.15,
+   "rationale": "FY27通用化一致预期后+AI推动可持续性12%渐降到8%"
+  },
+  "bull": {
+   "growth_fade": 0.16,
+   "value_per_share": 316.06,
+   "rationale": "AI既是威胁也是解法——Gemini整合成功+云持续40%+"
+  }
+ },
+ "red_team": {
+  "bear_ps": 172.74,
+  "bear_gap_vs_main": -0.187,
+  "note": "未触发30%降档线"
+ },
+ "expected_return": {
+  "irr_incl_div": -0.0514,
+  "loss_probability": 1.0
+ },
+ "margin_of_safety": {
+  "vs_base": -0.269,
+  "buy_trigger_25pct": 202.6
+ },
+ "implied_growth_main": 0.181,
+ "cross_check_ocf": {
+  "value_per_share": 122.47,
+  "note": "经营现金口径 FCF 基期 74.8B (扣维持capex21B) 12% fade → 122。capex 91B/年把故事拉回地面"
+ }
+}

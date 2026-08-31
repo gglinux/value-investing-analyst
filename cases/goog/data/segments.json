@@ -1,0 +1,26 @@
+{
+ "company": "谷歌 (Alphabet)",
+ "as_of": "FY2025",
+ "source": "[E:filings/goog_companyfacts.json] 10-K 分部披露",
+ "segments": {
+  "by_segment_2025": [
+   {
+    "name": "Google Services",
+    "share": 0.86,
+    "note": "搜索+YouTube广告+订阅+Play"
+   },
+   {
+    "name": "Google Cloud",
+    "share": 0.12,
+    "note": "FY2025 收入约 48B, +36%, 经营利润率转正后快速扩张"
+   },
+   {
+    "name": "Other Bets",
+    "share": 0.02,
+    "note": "Waymo/Verily/X, 多年亏损约 4B/年"
+   }
+  ],
+  "search_share_2025": "全球搜索市场份额约 90%（StatCounter）",
+  "cloud_position": "全球云 IaaS+PaaS 第3（约13%），增速第一"
+ }
+}

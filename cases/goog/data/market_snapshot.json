@@ -1,0 +1,17 @@
+{
+ "company": "谷歌 (Alphabet)",
+ "ticker": "GOOG",
+ "market": "NASDAQ (Class C)",
+ "as_of": "2026-08-31 收盘",
+ "price_usd": 342.88,
+ "market_cap_usd": 4193000,
+ "pe_ttm": 17.2,
+ "pb": 6.74,
+ "dividend_yield_ttm": 0.0025,
+ "eps_ttm_usd": 19.93,
+ "high_52week": 404.47,
+ "low_52week": 206.96,
+ "position_52week_pct": 0.689,
+ "avg_daily_amount_usd": 6113000000,
+ "note": "行情快照来自结构化行情接口；市值取 market_cap 字段，股本 12.23B。PE 17.2 是 TTM 口径但分子被 2026 年一次性投资收益推高，通用化 PE 约 25。"
+}
