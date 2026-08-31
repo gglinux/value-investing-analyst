@@ -11,7 +11,8 @@ run_tests.py — 脚本引擎回归测试（任何人改 scripts/ 前后必须�
   5. 金融股门控：compute_metrics 必须拒绝执行
   6. capex 拆分：披露口径优先于启发式
   7. reverse_dcf：forward-value 与 expected-return 输出合理性
-  7.5 股息口径：含息 IRR 叠加正确、亏损概率含股息缓冲、门槛比较用含息口径
+  7.5 期望回报口径：终值时点铁律（P=V0→IRR=r）、股息不叠加、下行指标输出
+  7.55 终值占比诊断：split 拆分、增速越高占比越高、fade 降低占比
   7.6 银行管道：compute_metrics_bank 指标正确、非银行拒绝、低拨备 alert
   8. verify_report 负向：篡改的 vnum/vchart 与幽灵 [E:] 指针必须被逮住
 
@@ -156,26 +157,65 @@ with tempfile.TemporaryDirectory() as td:
         check("亏损概率=悲观情景概率", isinstance(lp, (int, float)) and abs(lp - 0.3) < 1e-6,
               str(lp))
 
-print("== 7.5 股息口径（高股息误杀防线） ==")
+print("== 7.5 期望回报口径（v2.9 终值时点修正 + 股息不叠加） ==")
 with tempfile.TemporaryDirectory() as td:
     fp0 = os.path.join(td, "er0.json")
     fp5 = os.path.join(td, "er5.json")
+    fpx = os.path.join(td, "erx.json")
     scen = "悲观:80:0.3,基准:105:0.5,乐观:130:0.2"
     p0 = run(["expected-return", "--price", "100", "--hold-years", "5",
               "--scenarios", scen, "-o", fp0])
     p5 = run(["expected-return", "--price", "100", "--hold-years", "5",
               "--scenarios", scen, "--dividend-yield", "0.06", "-o", fp5])
-    check("含息模式运行成功", p0.returncode == 0 and p5.returncode == 0)
+    check("expected-return 运行成功", p0.returncode == 0 and p5.returncode == 0)
     if p0.returncode == 0 and p5.returncode == 0:
         e0, e5 = json.load(open(fp0)), json.load(open(fp5))
-        check("含息IRR = 不含息IRR + 股息率",
+        # 核心：股息不再改变 IRR（修正式已隐含分红+留存的全部股东回报）
+        check("股息不叠加进 IRR（叠加即重复计算）",
+              abs(e5["expected_annualized_irr"]
+                  - e0["expected_annualized_irr"]) < 1e-12,
+              f"{e0['expected_annualized_irr']} vs {e5['expected_annualized_irr']}")
+        check("兼容字段 incl_div 与主字段同值",
               abs(e5["expected_annualized_irr_incl_div"]
-                  - (e5["expected_annualized_irr"] + 0.06)) < 1e-9)
-        check("含息后亏损概率下降（股息缓冲）",
-              e5["loss_probability"] < e0["loss_probability"],
-              f"{e0['loss_probability']} -> {e5['loss_probability']}")
-        check("门槛比较用含息口径", e5["beats_index"] ==
-              (e5["expected_annualized_irr_incl_div"] > e5["index_hurdle"]))
+                  - e5["expected_annualized_irr"]) < 1e-12)
+        check("分红贡献占比 = 股息率/折现率",
+              abs(e5["dividend_share_of_return"] - 0.06 / 0.10) < 1e-9,
+              str(e5.get("dividend_share_of_return")))
+        check("股息不改变亏损概率（口径统一）",
+              abs(e5["loss_probability"] - e0["loss_probability"]) < 1e-12)
+        # 终值时点铁律：买在内在价值上，IRR 恒等于折现率
+        px = run(["expected-return", "--price", "100", "--hold-years", "5",
+                  "--scenarios", "悲观:100:0.3,基准:100:0.5,乐观:100:0.2",
+                  "--discount-rate", "0.10", "-o", fpx])
+        if px.returncode == 0:
+            ex = json.load(open(fpx))
+            check("P=V0 时 IRR 恒等于折现率（终值时点铁律）",
+                  abs(ex["expected_annualized_irr"] - 0.10) < 1e-9,
+                  str(ex["expected_annualized_irr"]))
+            check("期末价值 V_H = V0×(1+r)^H",
+                  abs(ex["scenarios"][0]["value_per_share_terminal"]
+                      - 100 * 1.10 ** 5) < 1e-6)
+            check("门槛≤折现率时标记闸门失效",
+                  ex["hurdle_above_discount_rate"] is False)
+        check("下行指标已输出（闸门二独立信息）",
+              "pessimistic_irr" in e0 and isinstance(e0["pessimistic_irr"], float))
+        check("门槛比较用主 IRR 字段", e5["beats_index"] ==
+              (e5["expected_annualized_irr"] > e5["index_hurdle"]))
+
+print("== 7.55 终值占比诊断（估值可靠性关卡） ==")
+with tempfile.TemporaryDirectory() as td:
+    import reverse_dcf as rd  # noqa: E402
+    tot, fpv, tpv = rd.dcf_value(100, 0.0, 0.10, 0.025, 10, split=True)
+    check("split 拆分求和等于总值", abs(tot - (fpv + tpv)) < 1e-9)
+    check("零增长终值占比约 46%", 0.44 < tpv / tot < 0.48, f"{tpv/tot:.3f}")
+    t2, f2, p2 = rd.dcf_value(100, 0.20, 0.10, 0.025, 10, split=True)
+    check("高增长终值占比更高", p2 / t2 > tpv / tot, f"{p2/t2:.3f} vs {tpv/tot:.3f}")
+    t3, f3, p3_ = rd.dcf_value(100, 0.20, 0.10, 0.025, 10, fade=True, split=True)
+    check("fade 降低终值占比", p3_ / t3 < p2 / t2, f"{p3_/t3:.3f} vs {p2/t2:.3f}")
+    out = run(["forward-value", "--base-oe", "100", "--growth", "0.20",
+               "--discount-rate", "0.10", "--years", "10"])
+    check("forward-value 打印终值占比诊断",
+          "终值占比" in out.stdout, out.stdout[-200:])
 
 print("== 7.6 银行专属管道 ==")
 import compute_metrics_bank as cmb  # noqa: E402
