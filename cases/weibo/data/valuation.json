@@ -1,0 +1,50 @@
+{
+  "base_oe_normalized": 307.4,
+  "base_oe_current": 471.6,
+  "ev_usd_m": 1175.5,
+  "net_cash_usd_m": 541.5,
+  "lt_investments_usd_m": 1663.3,
+  "lt_discount": 0.6,
+  "shares_diluted_m": 268.6,
+  "price": 6.99,
+  "discount_rate": 0.1,
+  "scenarios": {
+    "bear": {
+      "growth": -0.05,
+      "tg": 0.0,
+      "op_dcf": 2518,
+      "per_share": 15.11,
+      "prob": 0.3
+    },
+    "base": {
+      "growth": 0.0,
+      "tg": 0.01,
+      "op_dcf": 3314,
+      "per_share": 18.07,
+      "prob": 0.5
+    },
+    "bull": {
+      "growth": 0.03,
+      "tg": 0.02,
+      "op_dcf": 4082,
+      "per_share": 20.93,
+      "prob": 0.2
+    }
+  },
+  "margin_of_safety_vs_base": 0.613,
+  "expected_irr_incl_div": 0.2907,
+  "loss_probability": 0.0,
+  "redteam": {
+    "bear_per_share": 11.7,
+    "probs": "40/45/15",
+    "expected_irr_incl_div": 0.2613
+  },
+  "base_if_current_oe": 24.65,
+  "dividend_yield": 0.087,
+  "per_share_series": [
+    15.11,
+    18.07,
+    20.93
+  ],
+  "implied_growth": -0.2723
+}

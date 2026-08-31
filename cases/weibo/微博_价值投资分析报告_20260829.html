@@ -1,0 +1,565 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>微博（WB）价值投资分析报告</title>
+<script src="https://cdn.jsdelivr.net/npm/echarts@5/dist/echarts.min.js"></script>
+<style>
+  :root {
+    --primary: #1a3a5c; --accent: #d97706; --bg: #f7f8fa; --card: #ffffff;
+    --text: #24292f; --muted: #6b7280; --green: #15803d; --red: #b91c1c; --border: #e5e7eb;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif; background: var(--bg); color: var(--text); line-height: 1.75; font-size: 15px; }
+  .container { max-width: 1080px; margin: 0 auto; padding: 24px 20px 80px; }
+  header.report-header { background: var(--primary); color: #fff; border-radius: 12px; padding: 40px 36px; margin-bottom: 28px; }
+  header.report-header h1 { font-size: 26px; font-weight: 700; }
+  header.report-header .meta { margin-top: 8px; opacity: .75; font-size: 13px; }
+  .verdict-banner { display: flex; align-items: center; gap: 24px; margin-top: 24px; background: rgba(255,255,255,.08); border-radius: 10px; padding: 20px 24px; }
+  .verdict-label { font-size: 34px; font-weight: 800; letter-spacing: 2px; }
+  .verdict-buy { color: #4ade80; }
+  .verdict-score { font-size: 15px; opacity: .95; }
+  .snapshot-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 10px; margin-top: 16px; }
+  .snapshot-item { background: rgba(255,255,255,.08); border-radius: 8px; padding: 10px 14px; }
+  .snapshot-item .k { font-size: 12px; opacity: .65; }
+  .snapshot-item .v { font-size: 17px; font-weight: 700; margin-top: 2px; }
+  .snapshot-time { font-size: 11px; opacity: .55; margin-top: 8px; }
+  section { background: var(--card); border-radius: 12px; padding: 32px 36px; margin-bottom: 24px; border: 1px solid var(--border); }
+  h2 { font-size: 20px; color: var(--primary); padding-bottom: 10px; margin-bottom: 18px; border-bottom: 3px solid var(--accent); display: inline-block; }
+  h3 { font-size: 16px; color: var(--primary); margin: 22px 0 10px; }
+  p { margin-bottom: 12px; }
+  .chart { width: 100%; height: 400px; margin: 12px 0 4px; }
+  .chart-note { font-size: 12px; color: var(--muted); margin-bottom: 16px; }
+  .insight-title { font-size: 15px; font-weight: 700; color: var(--text); margin: 20px 0 4px; }
+  table { width: 100%; border-collapse: collapse; margin: 14px 0; font-size: 14px; }
+  th { background: var(--primary); color: #fff; padding: 10px 12px; text-align: left; font-weight: 600; }
+  td { padding: 9px 12px; border-bottom: 1px solid var(--border); }
+  tr:nth-child(even) td { background: #fafbfc; }
+  .tag { display: inline-block; padding: 2px 10px; border-radius: 20px; font-size: 12px; font-weight: 600; }
+  .tag-green { background: #dcfce7; color: var(--green); }
+  .tag-amber { background: #fef3c7; color: #b45309; }
+  .tag-red { background: #fee2e2; color: var(--red); }
+  .points-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin: 16px 0; }
+  .point-card { border-radius: 10px; padding: 16px 18px; border: 1px solid var(--border); }
+  .point-card.bull { border-left: 4px solid var(--green); }
+  .point-card.bear { border-left: 4px solid var(--red); }
+  .point-card h4 { font-size: 14px; margin-bottom: 8px; }
+  .point-card ul { padding-left: 18px; font-size: 14px; }
+  .point-card li { margin-bottom: 6px; }
+  blockquote.persona { border-left: 4px solid var(--accent); background: #fffbf5; padding: 16px 20px; margin: 14px 0; border-radius: 0 8px 8px 0; font-size: 14px; }
+  blockquote.persona .persona-name { font-weight: 700; color: var(--primary); display: block; margin-bottom: 6px; }
+  .redteam { background: #1f2937; color: #e5e7eb; border-radius: 10px; padding: 24px 28px; margin: 16px 0; }
+  .redteam h3 { color: #fbbf24; margin-top: 0; }
+  .redteam ul, .redteam ol { padding-left: 20px; }
+  .redteam li { margin-bottom: 8px; }
+  .checklist li { margin-bottom: 8px; }
+  footer.disclaimer { font-size: 12px; color: var(--muted); text-align: center; margin-top: 40px; padding-top: 20px; border-top: 1px solid var(--border); }
+  .source-note { font-size: 12px; color: var(--muted); }
+  .warn-banner { background: #fef3c7; border: 1px solid #d97706; border-radius: 8px; padding: 12px 16px; font-size: 13px; margin: 12px 0; }
+  @media print { section { break-inside: avoid; } .chart { height: 360px; } }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <header class="report-header">
+    <h1>微博 Weibo Corporation（NASDAQ: WB / HKEX: 9898）价值投资分析报告</h1>
+    <div class="meta">报告日期：2026-08-29 ｜ 数据截止：行情 2026-08-28 收盘、财务 FY2025（20-F，2026-04-23 申报）+ 2026Q2 业绩 ｜ 现价：$6.99 ｜ 市值：$17.2 亿</div>
+    <div class="verdict-banner">
+      <div class="verdict-label verdict-buy">核心买入</div>
+      <div class="verdict-score">
+        <b>双闸门状态</b>：安全边际 <span class="vnum" data-src="valuation.json" data-path="margin_of_safety_vs_base" data-fmt="pct1">61.3%</span> ✓（窄护城河标准 ≥40%）｜ 期望年化 IRR（含息）<span class="vnum" data-src="expected_return.json" data-path="expected_annualized_irr_incl_div" data-fmt="pct1">29.1%</span> ✓（门槛 9%）<br>
+        三位大师独立判断：巴菲特【观察 70】｜ 段永平【观察 62】｜ 李录【值得跟踪但未懂 64】<br>
+        内在价值区间：$<span class="vnum" data-src="valuation.json" data-path="scenarios.bear.per_share" data-fmt="num2">15.11</span> ~ $<span class="vnum" data-src="valuation.json" data-path="scenarios.bull.per_share" data-fmt="num2">20.93</span>（基准 $<span class="vnum" data-src="valuation.json" data-path="scenarios.base.per_share" data-fmt="num2">18.07</span>）｜ 亏损概率 <span class="vnum" data-src="expected_return.json" data-path="loss_probability" data-fmt="pct1">0%</span>（5 年期含息口径）<br>
+        <b>性质声明</b>：这是深度价值/烟蒂式仓位，不是长期复利仓位（ROIIC&lt;8%、无再投资跑道）；置信度经三大师校准为<b>中等偏低</b>。
+      </div>
+    </div>
+    <div class="snapshot-grid">
+      <div class="snapshot-item"><div class="k">现价</div><div class="v">$<span class="vnum" data-src="market_snapshot.json" data-path="price_usd" data-fmt="num2">6.99</span></div></div>
+      <div class="snapshot-item"><div class="k">总市值</div><div class="v">$<span class="vnum" data-src="market_snapshot.json" data-path="market_cap_usd_m" data-fmt="num0">1,717</span> 百万</div></div>
+      <div class="snapshot-item"><div class="k">PE-TTM</div><div class="v"><span class="vnum" data-src="market_snapshot.json" data-path="pe_ttm" data-fmt="num1">5.8</span></div></div>
+      <div class="snapshot-item"><div class="k">PB</div><div class="v"><span class="vnum" data-src="market_snapshot.json" data-path="pb" data-fmt="num2">0.51</span></div></div>
+      <div class="snapshot-item"><div class="k">股息率（前瞻）</div><div class="v"><span class="vnum" data-src="market_snapshot.json" data-path="dividend_yield_forward" data-fmt="pct1">8.7%</span></div></div>
+      <div class="snapshot-item"><div class="k">52周位置</div><div class="v">贴最低位（6.89~12.35）</div></div>
+      <div class="snapshot-item"><div class="k">日均成交额</div><div class="v">$<span class="vnum" data-src="market_snapshot.json" data-path="avg_daily_turnover_usd_m" data-fmt="num1">8.3</span> 百万</div></div>
+      <div class="snapshot-item"><div class="k">现金+短投</div><div class="v">$<span class="vnum" data-src="market_snapshot.json" data-path="cash_st_usd_m" data-fmt="num0">2,405</span> 百万</div></div>
+    </div>
+    <div class="snapshot-time">行情快照：2026-08-28 美股收盘（腾讯行情，A 级；PB/均量 Yahoo Finance，B 级）｜ 现金/债务：FY2025 20-F（A 级）</div>
+  </header>
+
+  <section id="summary">
+    <h2>一、投资摘要</h2>
+    <div class="warn-banner"><b>⚠️ 基期口径警示（差异 &gt;30%，强制披露）</b>：估值基期采用正常化 Owner Earnings $<span class="vnum" data-src="metrics_WB.json" data-path="normalization.base_oe_recommended" data-fmt="num1">307.4</span> 百万（当期 $<span class="vnum" data-src="metrics_WB.json" data-path="normalization.oe_current" data-fmt="num1">471.6</span> 百万的 65%，因 2025 净利率为 12 年均值的 <span class="vnum" data-src="metrics_WB.json" data-path="normalization.margin_ratio_latest_vs_avg" data-fmt="num2">1.54</span> 倍，脚本判定周期高位）。若改用当期基期，基准价值将从 $18.07 升至 $24.65（+36%）——本报告坚持保守口径。</div>
+    <p><b>一句话生意：</b>微博是中国的"公共广场"——5.6 亿月活用户围观热点，品牌广告主花钱买"被围观"的机会（广告占收入约 85%），是一台轻资产、高毛利、强现金流的注意力收费机器；问题是广场上的人流正在缓慢搬向短视频。</p>
+    <div class="points-grid">
+      <div class="point-card bull">
+        <h4>三大投资论点</h4>
+        <ul>
+          <li><b>比现金还便宜</b>：市值 $17.2 亿 &lt; 账上现金+短投 $24.1 亿，企业价值（EV）仅 $11.8 亿，对应正常化 OE $3.1 亿，EV/OE ≈ 3.8 倍。</li>
+          <li><b>市场定价的是"崩溃"，证据支持的是"缓退"</b>：反向 DCF 显示现价隐含 OE 每年萎缩 <span class="vnum" data-src="valuation.json" data-path="implied_growth" data-fmt="pct1">-27.2%</span>（十年报废），而我们最悲观假设仅 -5%/年。</li>
+          <li><b>股东回报已制度化且覆盖充足</b>：年度分红 $1.5 亿（前瞻股息率 8.7%），经营现金流 $5.2 亿覆盖 3.5 倍；分红+回购史 $6.4 亿。</li>
+        </ul>
+      </div>
+      <div class="point-card bear">
+        <h4>三大核心风险</h4>
+        <ul>
+          <li><b>注意力迁移不可逆</b>：MAU 从 2023 年 5.98 亿降至 2026 年 6 月 5.61 亿；广告收入四年零增长，恒定汇率口径 2026Q2 仍 -6%。</li>
+          <li><b>治理结构对小股东不友好</b>：新浪系控制 62.5% 投票权，历史上有应收母公司 $4.5 亿占款；最大尾部风险是低价私有化（新浪 2021 年有先例）。</li>
+          <li><b>价值陷阱风险</b>：挚文集团（MOMO）就是"分红回购多年、股价长期低迷"的先例——便宜可以是常态而非错误。</li>
+        </ul>
+      </div>
+    </div>
+    <p><b>本笔投资取决于两个关键变量</b>：① 广告收入能否止跌（当前：2025 年持平，2026Q1 +9%/Q2 -1%，恒定汇率口径仍小幅下滑——企稳未确认，但季度可知）；② 分红政策能否持续（现金流覆盖 3.5 倍，但依赖新浪系董事会）。</p>
+    <p><b>证伪条件（最关键两条）</b>：广告收入连续 2 个季度恒定汇率同比 &lt; -8%；年度分红降至 $1 亿以下或取消。</p>
+    <p><b>下次复查</b>：2026 年 11 月（Q3 2026 财报）或触发价 $5.5（跌破即重估衰退斜率）。</p>
+    <p class="source-note"><b>信息局限声明</b>：卖方一致预期仅来自 Yahoo 聚合（C 级），变异认知测试置信度降一档；$11.2 亿私募股权组合缺乏明细（按 6 折折价处理）；普通投资者相对机构在该股上的信息差主要体现在广告主预算迁移的微观数据（QuestMobile 级），我们无法验证"品牌广告回流"的叙事。</p>
+    <div class="insight-title">三位大师独立判断对照（各自独立评估，分歧即信号）</div>
+    <div id="chart-radar-summary" class="chart" style="height:340px"></div>
+    <div class="chart-note">三份评估各自从原始证据独立推导、互不参考（分离生成协议）；分歧对照表见第十节。</div>
+    <div class="insight-title">估值区间 vs 现价（每股，美元）</div>
+    <div id="chart-valuation-band" class="chart" style="height:260px"></div>
+    <div class="chart-note">三情景每股股权价值 = 经营 DCF（正常化基期 OE $307M，折现 10%）+ 净现金 $5.4 亿 + 长期股权投资 6 折；股本用摊薄口径 268.6M（保守）。数据：data/valuation.json。</div>
+  </section>
+
+  <section id="business">
+    <h2>二、公司与商业模式</h2>
+    <p>微博 2009 年由新浪孵化，2014 年纳斯达克上市（ADS 1:1 对应 A 类普通股），2021 年港股二次上市（9898）。收入公式：<b>用户注意力 × 广告变现</b>——FY2025 广告及营销收入 $15.0 亿（85.5%）、增值服务 $2.56 亿（14.5%）[E:filings/wb_fy2025_results.htm][E:segments.json]。付钱的是中国消费品牌与中小商家，买的是热搜/信息流/开屏等"公共场景曝光"。</p>
+    <p>单位经济极佳：毛利率十年稳定于 76~84% [E:metrics_WB.json]，capex 仅占收入 2~3%，边际服务一个新用户的成本接近零。客户粘性来自"品类唯一"——中文互联网没有第二个公共舆论场，新品发布、危机公关、明星营销的第一落点仍是微博 [E:filings/wb_20f_fy2025.htm]。但要注意结构性弱点：品牌总预算在向短视频迁移（快手 2025 年线上营销收入约 RMB 815 亿且仍 +12.5% 增长，而微博广告四年零增长）[E:financials_Kuaishou.json]。</p>
+    <div class="insight-title">收入结构：广告是绝对主业（约 85%），四年零增长</div>
+    <div id="chart-segments" class="chart"></div>
+    <div class="chart-note">数据来源：各年 FY 业绩公告（SEC 6-K ex99.1，A 级）[E:segments.json]；2024 年广告收入为总收入减 VAS 的残差口径。</div>
+    <div class="insight-title">用户基本盘：MAU 2023 年见顶 5.98 亿后连续下滑</div>
+    <div id="chart-mau" class="chart"></div>
+    <div class="chart-note">数据来源：各年业绩公告与 20-F（A 级）[E:platform_metrics.json]。DAU/MAU 稳定在 43~45%——核心用户没走，走的是边缘用户。</div>
+    <p>这张图是全篇最重要的一张：MAU 从 5.98 亿（2023-12）→ 5.90 亿（2024-12）→ 5.67 亿（2025-12）→ 5.61 亿（2026-06）[E:platform_metrics.json]。广场没有塌，但广场外围的人在离开。这决定了本报告对增长的全部假设上限。</p>
+  </section>
+
+  <section id="quant">
+    <h2>三、定量画像</h2>
+    <div class="insight-title">收入 2021 年见顶后停滞四年，净利润 2025 年反弹（含投资损益扰动）</div>
+    <div id="chart-rev-ni" class="chart"></div>
+    <div class="chart-note">数据来源：SEC EDGAR XBRL 全历史数据（A 级），经 20-F 原文核对 [E:metrics_WB.json]。单位：百万美元。</div>
+    <p>收入 2014-2025 总量 CAGR <span class="vnum" data-src="metrics_WB.json" data-path="summary.cagr_total.revenue" data-fmt="pct1">16.3%</span>，但每股口径仅 <span class="vnum" data-src="metrics_WB.json" data-path="summary.cagr_per_share.rev_ps" data-fmt="pct1">12.5%</span>——股本 11 年膨胀至 <span class="vnum" data-src="metrics_WB.json" data-path="summary.share_count_change" data-fmt="num2">1.44</span> 倍（可转债+期权摊薄），增长被摊薄吃掉一截。2022 年净利润 -80% 是"疫情广告下滑+投资减值"双杀；2025 年 25.6% 净利率含约 $1 亿利息及投资损益，引擎因此判"周期高位"并强制正常化基期。</p>
+    <div class="insight-title">毛利率十年 76~84% 极窄波动带：平台成本结构极轻</div>
+    <div id="chart-margins" class="chart"></div>
+    <div class="chart-note">数据来源：metrics_WB.json（A 级）。毛利率波动带窄 = 定价结构稳固的证据；净利率波动大则来自费用周期与投资损益。</p>
+    <div class="insight-title">ROIC 从 85% 峰值衰减至 10.8%：护城河的定量底片在变薄</div>
+    <div id="chart-roic" class="chart"></div>
+    <div class="chart-note">数据来源：wb_trends.json（由 metrics_WB.json 剔除空值派生，数值不变）。近 5 年 ROIC 均值 <span class="vnum" data-src="metrics_WB.json" data-path="summary.roic_avg_5y" data-fmt="pct1">15.2%</span>，仍高于 WACC（约 10%），但方向向下。</div>
+    <div class="insight-title">经营现金流常年高于净利润：利润全部是真现金</div>
+    <div id="chart-fcf" class="chart"></div>
+    <div class="chart-note">数据来源：metrics_WB.json（A 级）。Owner Earnings（巴菲特口径：净利润+折旧摊销−维持性 capex）与自由现金流长期高于净利润——广告预收+轻资产的结果。</div>
+    <div class="insight-title">股本 11 年膨胀 1.44 倍：摊薄是这家公司给股东的隐形成本</div>
+    <div id="chart-shares" class="chart"></div>
+    <div class="chart-note">数据来源：metrics_WB.json（A 级）。2024 年摊薄股本跳升 +10.5% 是可转债 if-converted 会计处理所致；本报告估值全程用 268.6M 摊薄口径（保守）。</div>
+    <div class="insight-title">竞对镜像：微博利润率最高，但增长垫底——挚文就是"衰退现金牛"的完整先例</div>
+    <div id="chart-comp" class="chart"></div>
+    <div class="chart-note">数据来源：各公司 EDGAR XBRL / 港交所业绩公告（竞对未做原文核对，A-/B 级）[E:comp_comparison.json]。口径提示：百度/B站/挚文为 US-GAAP 各自报告币种，快手为 IFRS 人民币，仅比较比率。挚文收入 2019 年见顶后连降 6 年——它今天的样子（高分红、低估值、股价长期低迷）就是微博最可能的明天。</div>
+    <p><b>定量画像小结</b>：数字讲的是"高利润率、零增长、衰减中的现金牛"。与竞对最大的三个差异：① 利润率鹤立鸡群（2025 净利率 25.6% vs 百度 4.2%/B站 3.9%/挚文 7.8%）；② 现金流转化率最高（OCF/净利润长期 &gt;1.3）；③ 增长最差（唯一收入四年零增长的一家）。</p>
+  </section>
+
+  <section id="moat">
+    <h2>四、护城河分析</h2>
+    <table>
+      <tr><th>护城河来源</th><th>判定</th><th>证据</th></tr>
+      <tr><td>网络效应（主）</td><td><span class="tag tag-green">成立</span></td><td>名人/媒体/机构 ↔ 围观群众的双边网络；热点越集中越不可替代 [E:filings/wb_20f_fy2025.htm]</td></tr>
+      <tr><td>有效规模（辅）</td><td><span class="tag tag-green">成立</span></td><td>中文公共舆论场只容得下一个玩家；腾讯微博携巨资进攻后于 2013-14 年放弃（进攻者尸检是最强证据）[E:filings/wb_20f_fy2025.htm]</td></tr>
+      <tr><td>无形资产</td><td><span class="tag tag-amber">弱</span></td><td>"微博=热点"的品牌认知仍在，但无牌照排他</td></tr>
+      <tr><td>转换成本</td><td><span class="tag tag-red">弱</span></td><td>用户多归属严重：同一批人既刷微博也刷抖音/小红书 [E:platform_metrics.json]</td></tr>
+      <tr><td>成本优势</td><td><span class="tag tag-amber">结构性</span></td><td>边际成本近零（毛利率 76~84%），但这是平台共性而非微博独有 [E:metrics_WB.json]</td></tr>
+    </table>
+    <h3>定量验证</h3>
+    <ul>
+      <li>ROIC−WACC 利差：近 5 年 ROIC 均值 15.2% &gt; WACC≈10% ✓ 但趋势向下（22.3%→10.8%）[E:metrics_WB.json]</li>
+      <li>毛利率波动带：十年 76~84% 极窄 ✓ [E:metrics_WB.json]</li>
+      <li>市占率趋势：中国网络广告大盘中个位数增长 vs 微博广告四年零增长 → 份额持续流失 ✗ [E:segments.json][E:financials_Kuaishou.json]</li>
+      <li><b>定价权三项硬测试：未通过</b>——① 无自主提价记录（广告为竞价/刊例，价格由需求方预算决定）；② 提价-销量反应不适用；③ 成本转嫁部分通过（内容分成上涨年份毛利率守住 76%+）[E:metrics_WB.json]</li>
+    </ul>
+    <h3>产业链议价权</h3>
+    <ul>
+      <li>下游（广告主）：分散但预算可迁移 → <b>议价权弱</b>（宏观一冷广告立刻 -19%，2022 年实证）[E:segments.json]</li>
+      <li>上游（内容方/KOL 分成）：毛利率十年稳定 → 议价权中等 [E:metrics_WB.json]</li>
+      <li>占款能力：应收仅 $4.0 亿且下降，OCF/净利润 &gt;1.3 ✓；但历史上应收新浪 $4.5 亿属母公司占款（治理减分）[E:filings/wb_20f_fy2025.htm]</li>
+      <li><b>对估值的约束</b>：下游议价权弱 → 基准情景广告增速上限 0~2%，禁止"广告复苏"叙事给更高增长（已在 Phase 4 执行）</li>
+    </ul>
+    <p><b>评级：窄护城河，趋势变窄。</b>核心依据：品类唯一的公共舆论场仍有网络效应与有效规模，但承载它的注意力在迁移。最大侵蚀风险：短视频/私域继续分流品牌预算。</p>
+  </section>
+
+  <section id="growth">
+    <h2>五、增长空间与质量</h2>
+    <ul>
+      <li><b>TAM</b>：中国网络广告市场约 RMB 7,000~8,000 亿（C 级，行业公开区间），微博份额约 1.5% 且缓慢下滑 [E:segments.json]</li>
+      <li><b>S 曲线定位</b>：成熟期偏衰退——MAU 见顶回落 [E:platform_metrics.json]，广告进入存量博弈</li>
+      <li><b>增长分解（未来 5 年）</b>：行业 +3~5% × 份额 -2~-3% + AI 搜索/内容营销提效 +1~2% + 新业务 ~0 → 净 -1%~+2%，中枢 0% [E:filings/wb_q2_2026_results.htm]</li>
+      <li><b>ROIIC（增量资本回报率）</b>：滚动 3 年 &lt;8%（脚本警报），2024 年一度为负——<b>再投资不创造价值，利润就该分掉</b>，管理层 2023 年起正是这么做的 [E:metrics_WB.json][E:filings/wb_fy2025_results.htm]</li>
+      <li><b>判断</b>：无增长跑道。这家公司按现金奶牛/烟蒂逻辑分析，不谈成长。</li>
+    </ul>
+  </section>
+
+  <section id="management">
+    <h2>六、管理层与企业文化</h2>
+    <h3>资本配置评分卡（Thorndike 框架，17/25）</h3>
+    <div id="chart-capalloc" class="chart" style="height:340px"></div>
+    <div class="chart-note">评分依据：data/capital_allocation.json；分红/回购/股本数据 [E:metrics_WB.json][E:filings/wb_fy2025_results.htm]。</div>
+    <ul>
+      <li><b>再投资纪律 4/5</b>：ROIIC 低下后未盲目扩张，转向分红 ✓ [E:metrics_WB.json]</li>
+      <li><b>并购记录 3/5</b>：无高价并购，但 $11.2 亿私募组合记录平庸（2021H1 减值 $66.6M、2024 减值+拨备 $93.4M）[E:filings/wb_20f_fy2025.htm]</li>
+      <li><b>回购时机 3/5</b>：2021-22 年回购 $2.46 亿，价格在 $20~40 区间——回头看买贵了 [E:metrics_WB.json]</li>
+      <li><b>增发克制 3/5</b>：股本 11 年 +44%（可转债+期权+港股二次上市）[E:metrics_WB.json]</li>
+      <li><b>分红理性 4/5</b>：2023 特别分红 $2 亿 → 2025 年 3 月确立年度政策（FY2025 派 $1.5 亿，约 $0.61/ADS）[E:filings/wb_fy2025_results.htm]</li>
+    </ul>
+    <h3>言行一致追踪</h3>
+    <table>
+      <tr><th>承诺（出处）</th><th>兑现</th><th>判定</th></tr>
+      <tr><td>FY2022："2023 年继续聚焦运营效率提升，保持长期市场竞争力"（FY2022 业绩公告）</td><td>FY2023 OCF +19% 至 $6.7 亿、经营利润率 27% [E:filings/wb_fy2024_results.htm]</td><td><span class="tag tag-green">兑现</span></td></tr>
+      <tr><td>FY2024 管理层持续强调"运营效率与财务纪律"</td><td>FY2024 收入持平、OCF $6.4 亿、特别分红 $2 亿落地 [E:filings/wb_fy2024_results.htm]</td><td><span class="tag tag-green">兑现</span></td></tr>
+      <tr><td>FY2025："广告业务呈现企稳趋势"</td><td>FY2025 广告收入 flat（$15.0 亿）——用词克制，没有用增长话术包装 [E:filings/wb_fy2025_results.htm]</td><td><span class="tag tag-green">诚实</span></td></tr>
+    </table>
+    <h3>治理与文化</h3>
+    <p>减分项：新浪系 B 类股控制 62.5% 投票权（WVR）；历史上应收新浪 $4.5 亿；阿里既是股东又是客户（2025 年来自阿里的广告约 $1.7 亿，占收入 ~10%）[E:filings/wb_fy2025_results.htm]。未发现"嘴上看好、手上减持"式信号；管理层表态一贯保守。<b>诚信结论：可信；治理结构对小股东不友好（关联控制+历史占款）。</b>文化上无明确 Stop Doing List 证据，但"不追短视频烧钱补贴战、承认平台定位"本身是一种克制。</p>
+  </section>
+
+  <section id="risk">
+    <h2>七、财务质量与风险深查</h2>
+    <ul>
+      <li><b>排雷复核（全过）</b>：PwC 无保留意见、12 年未换审计师 [E:filings/wb_20f_fy2025.htm]；无造假处罚（2017 年集体诉讼系牌照披露问题且已被法院驳回）；利润全部变成现金（OCF/净利润 &gt;1.3）[E:metrics_WB.json]；无商誉泡沫（商誉 $1.7 亿，占净资产 4.3%）[E:metrics_WB.json]</li>
+      <li><b>存贷双高的解释</b>：现金+短投 $24.1 亿 vs 有息负债 $18.6 亿——属中概离岸结构常态（在岸利润、离岸融资），且 2023 年起持续分红佐证现金真实可用 [E:market_snapshot.json]</li>
+      <li><b>结构与监管</b>：VIE 协议控制 + PFIC + HFCAA 残余风险（已有港股 9898 双上市对冲）[E:filings/wb_20f_fy2025.htm]</li>
+      <li><b>私募组合不透明</b>：$11.2 亿长期股权投资有减值史，估值中按 6 折单独处理，不计入经营价值 [E:filings/wb_20f_fy2025.htm]</li>
+      <li><b>可及性与摩擦</b>：美股 ADS（1:1）直接可买；港股 9898 流动性更低；分红存在 10% 中国预提税摩擦；汇率敞口人民币/美元。</li>
+    </ul>
+    <p><b>结论：财务质量高（真现金、低杠杆、无造假信号）；风险集中在治理与监管结构，不在报表本身。</b></p>
+  </section>
+
+  <section id="valuation">
+    <h2>八、估值与安全边际</h2>
+    <h3>方法选择</h3>
+    <p>现金流稳定可预测的成熟平台 → 首选 Owner Earnings 三情景 DCF；交叉验证：反向 DCF（市场预期反推）+ 资产折价法（净现金+投资组合）。<b>基期正常化（强制前置关卡）</b>：引擎判定 2025 为周期高位（净利率 25.6% = 12 年均值 16.6% 的 1.54 倍），基期采用正常化 OE $<span class="vnum" data-src="metrics_WB.json" data-path="normalization.base_oe_recommended" data-fmt="num1">307.4</span> 百万，禁用当期 $471.6 百万 [E:metrics_WB.json]。</p>
+    <h3>三情景（折现率 10%，股本 268.6M 摊薄口径，净现金 $5.4 亿与长期投资 6 折单独加回）</h3>
+    <table>
+      <tr><th>情景</th><th>OE 增速/永续</th><th>对应 Phase 3 判断</th><th>每股价值</th><th>概率</th></tr>
+      <tr><td>悲观</td><td>-5% / 0%</td><td>注意力流失加速，广告持续下滑</td><td>$<span class="vnum" data-src="valuation.json" data-path="scenarios.bear.per_share" data-fmt="num2">15.11</span></td><td>30%</td></tr>
+      <tr><td>基准</td><td>0% / 1%</td><td>广告企稳（2025 flat 外推），AI 提效对冲用户下滑</td><td>$<span class="vnum" data-src="valuation.json" data-path="scenarios.base.per_share" data-fmt="num2">18.07</span></td><td>50%</td></tr>
+      <tr><td>乐观</td><td>+3% / 2%</td><td>AI 搜索与内容营销带来低个位数增长</td><td>$<span class="vnum" data-src="valuation.json" data-path="scenarios.bull.per_share" data-fmt="num2">20.93</span></td><td>20%</td></tr>
+    </table>
+    <p class="source-note">基率检验：三情景增速 -5%/0%/+3% 全部落在最平庸的历史区间，不要求公司做到任何罕见之事 ✓。假设一致性对账：终年收入 ≤ TAM×份额 ✓；利润率=正常化均值 ✓；不再投资假设与 ROIIC&lt;8% 一致 ✓；下游议价权弱 → 增速上限 0~2% 已遵守 ✓。</p>
+    <h3>反向 DCF：市场在想什么</h3>
+    <p>EV $11.8 亿对正常化基期 OE $3.07 亿，现价隐含未来 10 年 OE 年增速 <span class="vnum" data-src="valuation.json" data-path="implied_growth" data-fmt="pct1">-27.2%</span>——<b>市场把这台现金机器定价为"十年内报废"</b>。对照 Phase 3 基准（0% 增长），市场预期不是苛刻，是极度悲观；本笔投资的全部超额收益来自"它死得比市场定价慢得多"。</p>
+    <h3>安全边际与期望回报</h3>
+    <ul>
+      <li>安全边际（vs 基准 $18.07）：<span class="vnum" data-src="valuation.json" data-path="margin_of_safety_vs_base" data-fmt="pct1">61.3%</span>，窄护城河标准 ≥40% → <b>达标 ✓</b></li>
+      <li>期望年化 IRR（含息 8.7%，5 年期）：<span class="vnum" data-src="expected_return.json" data-path="expected_annualized_irr_incl_div" data-fmt="pct1">29.1%</span>（不含息 <span class="vnum" data-src="expected_return.json" data-path="expected_annualized_irr" data-fmt="pct1">20.4%</span>）；亏损概率 <span class="vnum" data-src="expected_return.json" data-path="loss_probability" data-fmt="pct1">0%</span>（含息缓冲口径：5 年股息累计已回收约 44% 成本）→ 门槛 9% <b>大幅跑赢 ✓</b></li>
+      <li>红队对照：红队悲观 $11.70（g=-8%/永续-1%/折现 11%/长期投资 4 折）vs 主分析悲观 $15.11，差 22.6% &lt;30% ✓；红队概率 40/45/15 下期望含息 IRR <span class="vnum" data-src="expected_return_redteam.json" data-path="expected_annualized_irr_incl_div" data-fmt="pct1">26.1%</span>，结论不变</li>
+    </ul>
+    <h3>敏感性（最敏感的两个假设）</h3>
+    <table>
+      <tr><th>假设</th><th>±20% 变动</th><th>基准价值影响</th></tr>
+      <tr><td>基期 OE（$307M）</td><td>±$61M</td><td>$18.07 → $14.5 ~ $21.7（约 ±20%，线性）</td></tr>
+      <tr><td>长期股权组合折价率（6 折）</td><td>4 折 ~ 8 折</td><td>$18.07 → $16.8 ~ $19.3（±6%）</td></tr>
+    </table>
+    <p class="source-note">最敏感变量其实是"衰退斜率"而非参数：若广告以 -10%/年 下滑（超悲观），每股经营价值约 $12——仍高于现价。现价下方的保护来自资产负债表，不来自盈利预测。</p>
+  </section>
+
+  <section id="key-judgment">
+    <h2>九、关键判断</h2>
+    <h3>关键变量（既重要又可知）</h3>
+    <table>
+      <tr><th>关键变量</th><th>当前判断</th><th>依据</th><th>为什么可知</th></tr>
+      <tr><td>① 广告收入能否止跌</td><td>企稳未确认：2025 flat；2026Q1 +9%/Q2 -1%（恒定汇率 Q2 -6%）</td><td>季度业绩公告 [E:filings/wb_q1_2026_results.htm][E:filings/wb_q2_2026_results.htm]</td><td>每季度披露，含恒定汇率口径，直接可跟踪</td></tr>
+      <tr><td>② 分红政策持续性</td><td>制度化中：年度 $1.5 亿，OCF 覆盖 3.5 倍</td><td>FY2025 业绩公告年度分红政策 [E:filings/wb_fy2025_results.htm]</td><td>每年 3 月年报季公告验证；现金流覆盖倍数底稿可查 [E:metrics_WB.json]</td></tr>
+    </table>
+    <p class="source-note">候选变量"AI 搜索变现"被排除：重要但当前不可知（无收入拆分披露），列入观察而非论点。</p>
+    <h3>变异认知测试</h3>
+    <p><b>市场为什么给现在这个价：</b>主流叙事=「微博是下一个报纸股/价值陷阱」——卖方目标价中值约 $9（C 级聚合），PE 5.8/PB 0.5 的定价隐含 OE 每年 -27% 的崩溃预期，叠加中概/VIE/治理折价 [E:consensus.json]。</p>
+    <p><b>我们与市场的分歧：</b>我方基准情景（0% 增长）vs 市场隐含（-27%/年）。分歧不在"会不会衰退"（共识：会），在"衰退多快"。</p>
+    <p><b>认知优势来源：</b>不是信息优势，是预期差与久期差——市场按"永续快速衰退"定价，我们只需"缓慢衰退+真金白银分红"成立即可。注意：因一致预期数据为 C 级，本测试置信度降一档 [E:consensus.json]。</p>
+    <h3>双重机会成本对照</h3>
+    <table>
+      <tr><th>对照项</th><th>预期年化回报</th><th>本标的期望年化（含息）</th><th>结论</th></tr>
+      <tr><td>指数基金（标普 500 长期年化门槛）</td><td>9%</td><td rowspan="2"><span class="vnum" data-src="expected_return.json" data-path="expected_annualized_irr_incl_div" data-fmt="pct1">29.1%</span>（红队口径 26.1%）</td><td>跑赢 +20.1pp ✓</td></tr>
+      <tr><td>用户持仓对照：台积电</td><td>未做同口径分析（定性：合理价格的高确定性增长复利）</td><td>性质不同——WB 期望 IRR 更高但置信度更低、回撤体验远差；两者不互斥</td></tr>
+    </table>
+  </section>
+
+  <section id="committee">
+    <h2>十、投委会评审</h2>
+    <p class="source-note">三份评估按分离生成协议独立完成（各自只读 Phase 1~4 底稿，互不参考），全文见 workpapers/persona_*.md，以下为各自结论与评语。</p>
+    <blockquote class="persona">
+      <span class="persona-name">巴菲特（70/100）→ 结论：观察</span>
+      价格是 20 年罕见的便宜——买这家公司比买它手里的现金还便宜，还送一台年产 $5 亿现金的机器。但我的第一条规则是"只打我能预测的球"：我一生最痛的教训就在报纸业，收费亭的消失不是渐进的、是悬崖式的。微博就是数字时代的中文报纸。十年持有测试我不通过：十年后它仍在印钱的可能性只有六成，我的体系要九成。<b>把它排除的是我的纪律，不是它的价格。</b>（分项：能力圈 12/20｜护城河持久 12/25｜Owner Earnings 17/20｜管理层 10/15｜价格 19/20）
+    </blockquote>
+    <blockquote class="persona">
+      <span class="persona-name">段永平（62/100）→ 结论：观察</span>
+      生意模式是好生意的架子——毛利率 80%、坐着收钱；但地基在漏水，广场上的人在搬家。更在意的是人：新浪系 62.5% 投票权、应收母公司 $4.5 亿，这不本分；也没有丁磊那样又懂产品又本分的人坐在那。买苹果买茅台是买"十年后更好"，买微博只能是买"它死得比市场想的慢"——前者是投资，后者是算术。算术可以做，别用重仓的仓位做。（分项：商业模式 25/35｜企业文化 15/30｜十年后还在吗 10/20｜懂不懂 12/15）
+    </blockquote>
+    <blockquote class="persona">
+      <span class="persona-name">李录（64/100）→ 结论：值得跟踪但未懂</span>
+      事实清单很硬：现金 $24 亿&gt;市值 $17 亿、OCF 三年 $19 亿全部经审计、分红制度化。它不是复利机器（ROIIC&lt;8%、无跑道），不在我"真正懂的个位数清单"里。但这笔投资不需要进那个清单——它是 3~5 年期的期望值判断：市场隐含机器十年报废，证据支持缓慢衰退，这个差距大到我不需要预测终局也能赢。警惕的是：价值释放的节奏握在新浪系手里。（分项：认知 22/30｜复利机器 5/30｜知识诚实 23/25｜安全边际 14/15）
+    </blockquote>
+    <h3>分歧对照表（分歧是核心产出）</h3>
+    <table>
+      <tr><th>关键问题</th><th>巴菲特</th><th>段永平</th><th>李录</th></tr>
+      <tr><td>这笔投资需要多高的终局确定性？</td><td>九成（十年持有测试不过=出局）</td><td>要"十年后更强"，不接受"还在但更小"</td><td>3~5 年期望值成立即可，终局可留给跟踪</td></tr>
+      <tr><td>对治理的容忍度</td><td>关联占款减分但不致命</td><td>不本分，接近一票否决</td><td>定价已含治理折价，但需盯私有化风险</td></tr>
+      <tr><td>便宜本身是不是理由？</td><td>不是（纪律优先于价格）</td><td>不是（仓位性质决定）</td><td>是（资产折价+催化齐备时可以是理由）</td></tr>
+      <tr><td>最深分歧</td><td colspan="3">对"衰退现金牛"这一资产类别的可投资性判断：巴菲特用报纸教训否决，段永平用重仓标准否决，李录用期望值框架接纳</td></tr>
+    </table>
+    <p><b>共识点（比分歧更能支撑行动）</b>：三人一致认可——① 财务真实、现金流极硬；② 现价极端便宜（市值低于净现金+任何合理经营估值）；③ 它不是长期复利标的。</p>
+    <p><b>本次采纳谁的裁决及理由</b>：采纳<b>李录</b>框架为主体——本笔投资的决策变量是 3~5 年期望值与证伪条件，而非 10 年终局；同时把巴菲特的"衰退可能悬崖式加速"和段永平的"治理不本分"写入证伪条件与跟踪清单，作为仓位上限的理由。<b>最终档位仍由双闸门唯一决定（全过 → 核心买入），三大师的作用是置信度校准：中等偏低，仓位性质=深度价值而非复利持仓。</b></p>
+    <div class="redteam">
+      <h3>芒格式红队质询</h3>
+      <p><b>反演：怎样确保这笔投资亏大钱？</b></p>
+      <ol>
+        <li>广告进入 -10%/年加速下滑（MAU 流失加速），现金牛十年内瘦死；</li>
+        <li>新浪系低价私有化（新浪 2021 年 $25.9/ADS 私有化有先例）——估值回归永远不来；</li>
+        <li>HFCAA/地缘再生变，ADS 退市转港股，流动性折价扩大；</li>
+        <li>分红政策取消（$1.5 亿/年无法律约束）；</li>
+        <li>$11.2 亿私募组合继续减值（2021/2024 有前科）。</li>
+      </ol>
+      <p><b>心理误判自检：</b>用户初判=看好、动机=深度低估筛选——存在先射靶后画靶风险。对冲：基期正常化（当期 65%）、长期投资 6 折、股本摊薄口径，所有争议参数取保守侧。"现金&gt;市值"的锚已用 VIE/预提税摩擦打折。</p>
+      <p><b>最强空头逻辑：</b>微博是 2015 年的报纸股——注意力迁移不可逆，分红是清算式返还，市场可以永远不给修复（挚文集团分红回购多年、股价依旧低迷，就是先例）。便宜可以是常态而非错误。</p>
+      <p><b>Pre-mortem（5 年后 -50% 至 $3.5）：</b>需要"广告 -10%/年 × 5 年 + 分红取消 + 治理事件"三者同时发生；即便如此，5 年股息已回收约 44% 成本。证伪条件清单正是盯这两个扳机。</p>
+      <p><b>对三份评估的质询：</b>巴菲特的报纸类比低估了"公共议程设置"的准公共品属性（政务/媒体/明星必须用微博），但其谨慎被采纳；段永平拿重仓的尺子量烟蒂，尺子错了，但治理扣分正确；李录的"未懂"可能过度谦虚——本笔投资的可知变量都是季度硬数据。独立性检查：三人理由链互不相同，无一致性污染 ✓。</p>
+      <p><b>红队出数：</b>红队悲观 $11.70 vs 主分析悲观 $15.11（差 22.6% &lt; 30% ✓ 悲观足够）；红队概率 40/45/15 → 期望含息 IRR 26.1% vs 主分析 29.1%，两组均远超 9% 门槛。</p>
+      <p><b>红队裁定：不降档。</b>双闸门余量足够大，最严假设下结论不变。强制要求：分红持续性与广告增速进季度红线；私募组合与新浪系动向每次财报复查。</p>
+    </div>
+  </section>
+
+  <section id="conclusion">
+    <h2>十一、结论与行动</h2>
+    <p>最终档位：<span class="tag tag-green">核心买入</span>（双闸门全过）｜ 性质：<span class="tag tag-amber">深度价值/烟蒂式仓位，非长期复利持仓</span>｜ 置信度：<span class="tag tag-amber">中等偏低（三大师均未给"买"级结论）</span></p>
+    <h3>持有体验预演</h3>
+    <p>历史最大回撤：2018 年 2 月峰值市值超 $300 亿（股价约 $140）至 2026-08-24 的 $6.89，<b>最大回撤约 -95%，8 年未修复</b> [E:market_snapshot.json]。同类商业模式（挚文集团）2018 年高点至今回撤亦超 -80%。<b>这只股票可以在极度便宜之后继续便宜很多年</b>——买入它的体验不是"等待成长兑现"，而是"忍受长期低迷，靠股息和可能的估值回归收钱"。</p>
+    <p><b>灵魂拷问：若买入后下跌 40% 而基本面未变，你敢不敢加仓？</b>不敢，说明仓位或标的不适合你。</p>
+    <h3>证伪条件（出现即说明论点错误）</h3>
+    <ul class="checklist">
+      <li>【变量①】广告收入连续 2 个季度恒定汇率同比 &lt; -8% → "缓慢衰退"假设破产，衰退进入加速通道</li>
+      <li>【变量②】年度分红降至 $1 亿以下或取消 → 股东回报论点崩塌，烟蒂失去"烟气"</li>
+      <li>【结构性】MAU 跌破 5.2 亿（较 2026-06 再 -7%）→ 舆论场地位动摇，护城河叙事失效</li>
+      <li>【治理】新浪系提出低价私有化动议 / 关联占款重新扩大 → 小股东价值释放路径被切断</li>
+    </ul>
+    <h3>季度跟踪清单</h3>
+    <table>
+      <tr><th>指标</th><th>当前值</th><th>警戒线</th><th>说明</th></tr>
+      <tr><td>广告收入同比（恒定汇率）</td><td>2026Q2 -6%</td><td>连续 2 季 &lt; -8%</td><td>关键变量①，每季财报直接可读</td></tr>
+      <tr><td>MAU</td><td>5.61 亿（2026-06）</td><td>&lt; 5.2 亿</td><td>用户基本盘斜率</td></tr>
+      <tr><td>经营现金流（TTM）</td><td>约 $5 亿</td><td>&lt; $4 亿</td><td>分红覆盖能力</td></tr>
+      <tr><td>年度分红公告（每年 3 月）</td><td>$1.5 亿</td><td>&lt; $1 亿</td><td>关键变量②</td></tr>
+      <tr><td>来自阿里的广告占比</td><td>约 10%</td><td>&gt; 15%</td><td>关联客户集中度</td></tr>
+    </table>
+    <h3>你的初判 vs 本报告结论</h3>
+    <p>你的初判：<b>看好</b>（动机：深度低估筛选——现金超市值 + 8% 股息率）。本报告结论方向一致（双闸门全过 → 核心买入档），但有一处重要修正：你因"便宜+股息"看好，报告确认便宜，同时把仓位性质限定为<b>深度价值/烟蒂式仓位</b>——它不满足长期复利持仓的条件（ROIIC&lt;8%、无再投资跑道、用户基本盘收缩），重仓逻辑不成立。若买入，持有纪律靠证伪条件驱动，不靠信仰。</p>
+    <h3>与上次分析对比</h3>
+    <p>首次分析，无历史记录。决策日志已建立（decision-log.md / decision-log.json），复盘节点：2027-02（满 6 个月）或证伪条件触发时。</p>
+  </section>
+
+  <section id="appendix">
+    <h2>附录：数据来源与校验</h2>
+    <p class="source-note">
+      <b>A 级</b>：SEC EDGAR XBRL companyfacts（微博/百度/B站/挚文，2014~2025 全历史）；微博 FY2025 Form 20-F 原文（2026-04-23，PwC 无保留意见）；FY2023~FY2025 业绩公告（6-K ex99.1）；Q1/Q2 2026 业绩公告；腾讯行情（usWB 2026-08-28 收盘）｜
+      <b>B 级</b>：快手 FY2025 业绩公告五年概要（港交所）；Yahoo Finance（PB/均量/目标价聚合）｜
+      <b>C 级</b>：卖方一致预期（Yahoo 聚合，2026-08）、Citigroup 评级报道（2025-08）。
+      全部文件登记于 data/manifest.json（19 个文件）。竞对底稿未做官方原文双源核对（--skip-crosscheck），特此披露。
+    </p>
+    <p class="source-note"><b>入口校验</b>：validate_data.py——微博底稿 0 错误 0 警告（三表勾稽/单位一致性/突变标注/双源核对全过）；4 家竞对底稿通过（含跳过双源核对警告，已披露）。百度底稿权益含可赎回少数股东权益（夹层）以完成勾稽，已注明。</p>
+    <p class="source-note"><b>数字校验</b>：verify_report.py 全部通过——62 项通过 / 0 失败（正文数字 32 项 vnum 溯源 + 图表数组 18 组 vchart 锚点 + 证据指针 12 个 [E:] 全部命中 manifest）。</p>
+    <p class="source-note"><b>信息局限声明</b>：一致预期为 C 级→变异认知置信度降一档；$11.2 亿私募组合无明细→按 6 折处理；2026 年内仅有 Q1/Q2 季报数据；微博港股链路（披露易原文）本次未单独核对（20-F 与港股公告同源）。</p>
+    <h3>术语速查表</h3>
+    <table>
+      <tr><th>术语</th><th>白话解释</th></tr>
+      <tr><td>Owner Earnings（OE）</td><td>巴菲特口径"股东真实盈余"：净利润+折旧摊销−维持性资本开支，比净利润更接近能装进股东口袋的钱</td></tr>
+      <tr><td>ROIC / ROIIC</td><td>投入资本回报率 / 增量投入资本回报率——前者看存量生意赚不赚钱，后者看新投的钱值不值</td></tr>
+      <tr><td>反向 DCF</td><td>用现价反推市场隐含的增长预期：不预测未来，先看"市场已经把多坏的未来定价了"</td></tr>
+      <tr><td>安全边际</td><td>内在价值与现价的距离：60% 意味着"我算错四成还有赚"</td></tr>
+      <tr><td>周期高位正常化</td><td>利润创纪录时禁止用当期利润外推——改用历史平均利润率重建基期，防"峰值利润×高增速"的经典翻车</td></tr>
+      <tr><td>含息 IRR</td><td>把分红算进去的年化回报；对 8.7% 股息率的股票，5 年漏算股息会低估 40%+ 回报</td></tr>
+      <tr><td>VIE / HFCAA</td><td>中概协议控制结构 / 美国审计监管法案——中概股的两大结构性风险</td></tr>
+    </table>
+  </section>
+
+  <footer class="disclaimer">
+    本报告由分析工具生成，仅供研究参考，不构成任何投资建议。市场有风险，投资需谨慎。
+  </footer>
+</div>
+
+<script>
+const COLOR = { primary: '#1a3a5c', accent: '#d97706', grays: ['#9ca3af','#6b7280','#d1d5db','#4b5563'] };
+const charts = [];
+function initChart(id, option) {
+  const el = document.getElementById(id);
+  if (!el || typeof echarts === 'undefined') return;
+  const c = echarts.init(el);
+  c.setOption(Object.assign({
+    textStyle: { fontFamily: '-apple-system, PingFang SC, Microsoft YaHei' },
+    grid: { left: 60, right: 30, top: 50, bottom: 40 },
+    tooltip: { trigger: 'axis' }
+  }, option));
+  charts.push(c);
+}
+window.addEventListener('resize', () => charts.forEach(c => c.resize()));
+if (typeof echarts === 'undefined') {
+  document.querySelectorAll('.chart').forEach(el => {
+    el.innerHTML = '<p style="color:#b91c1c;padding:20px">图表需联网加载 ECharts 后显示</p>';
+  });
+}
+
+const YEARS = [2014,2015,2016,2017,2018,2019,2020,2021,2022,2023,2024,2025];
+
+// 三大师评分雷达
+initChart('chart-radar-summary', {
+  tooltip: {},
+  radar: { indicator: [
+    { name: '护城河', max: 5 }, { name: '商业模式', max: 5 }, { name: '增长质量', max: 5 },
+    { name: '管理层', max: 5 }, { name: '估值/安全边际', max: 5 } ] },
+  legend: { bottom: 0 },
+  series: [{ type: 'radar', data: [
+    { name: '巴菲特（观察 70）', itemStyle: { color: COLOR.primary },
+      /*<!-- vchart src=persona_scores.json path=buffett -->*/
+      data: [2.4, 3.5, 1.5, 3.0, 4.9] },
+    { name: '段永平（观察 62）', itemStyle: { color: COLOR.accent },
+      /*<!-- vchart src=persona_scores.json path=duan -->*/
+      data: [2.5, 3.6, 1.5, 2.5, 4.5] },
+    { name: '李录（值得跟踪但未懂 64）', itemStyle: { color: '#15803d' },
+      /*<!-- vchart src=persona_scores.json path=lilu -->*/
+      data: [2.5, 3.5, 1.2, 3.0, 4.8] }
+  ] }]
+});
+
+// 估值区间 vs 现价
+initChart('chart-valuation-band', {
+  grid: { left: 80, right: 60, top: 20, bottom: 30 },
+  xAxis: { type: 'category', data: ['悲观(-5%)','基准(0%)','乐观(+3%)','现价'] },
+  yAxis: { type: 'value', name: '美元/股' },
+  series: [{ type: 'bar', barWidth: 46,
+    itemStyle: { color: (p) => ['#93c5fd', COLOR.primary, '#60a5fa', '#b91c1c'][p.dataIndex] },
+    label: { show: true, position: 'top', formatter: '${c}' },
+    data: [15.11, 18.07, 20.93, 6.99] }]
+});
+
+// 收入结构
+initChart('chart-segments', {
+  legend: { bottom: 0 },
+  xAxis: { type: 'category', data: [2021,2022,2023,2024,2025] },
+  yAxis: { type: 'value', name: '百万美元' },
+  series: [
+    { name: '广告及营销', type: 'bar', stack: 'rev', itemStyle: { color: COLOR.primary },
+      /*<!-- vchart src=segments.json path=chart_ads -->*/
+      data: [1981.0, 1597.0, 1534.0, 1498.7, 1501.6] },
+    { name: '增值服务', type: 'bar', stack: 'rev', itemStyle: { color: COLOR.accent },
+      /*<!-- vchart src=segments.json path=chart_vas -->*/
+      data: [276.3, 239.7, 225.8, 256.0, 255.6] }
+  ]
+});
+
+// MAU / DAU
+initChart('chart-mau', {
+  legend: { bottom: 0 },
+  xAxis: { type: 'category', data: ['2020','2021','2022','2023','2024','2025','2026-06'] },
+  yAxis: { type: 'value', name: '百万人', min: 200 },
+  series: [
+    { name: 'MAU', type: 'line', itemStyle: { color: COLOR.primary }, smooth: true,
+      /*<!-- vchart src=platform_metrics.json path=mau_values -->*/
+      data: [521, 573, 586, 598, 590, 567, 561] },
+    { name: 'DAU', type: 'line', itemStyle: { color: COLOR.accent }, smooth: true,
+      /*<!-- vchart src=platform_metrics.json path=dau_values -->*/
+      data: [249, 252, 257, 260, 252, 254] }
+  ]
+});
+// 修正 DAU x 轴（2021 起）
+charts[charts.length-1].setOption({ xAxis: { data: ['2021','2022','2023','2024','2025','2026-06'] } });
+
+// 收入与净利润
+initChart('chart-rev-ni', {
+  legend: { bottom: 0 },
+  xAxis: { type: 'category', data: YEARS },
+  yAxis: { type: 'value', name: '百万美元' },
+  series: [
+    { name: '收入', type: 'bar', itemStyle: { color: COLOR.primary },
+      /*<!-- vchart src=metrics_WB.json path=chart_series.revenue -->*/
+      data: [334.2, 477.9, 655.8, 1150.1, 1718.5, 1766.9, 1689.9, 2257.1, 1836.3, 1759.8, 1754.7, 1757.2] },
+    { name: '归母净利润', type: 'line', itemStyle: { color: COLOR.accent },
+      /*<!-- vchart src=metrics_WB.json path=chart_series.net_income -->*/
+      data: [-65.5, 34.2, 105.7, 350.4, 572.6, 492.8, 313.4, 428.3, 85.6, 342.6, 300.8, 449.0] }
+  ]
+});
+
+// 毛利率 / 净利率
+initChart('chart-margins', {
+  legend: { bottom: 0 },
+  xAxis: { type: 'category', data: YEARS },
+  yAxis: { type: 'value', name: '%' },
+  series: [
+    { name: '毛利率', type: 'line', itemStyle: { color: COLOR.primary }, smooth: true,
+      /*<!-- vchart src=metrics_WB.json path=chart_series.gross_margin scale=100 -->*/
+      data: [75.0, 70.3, 73.9, 79.9, 83.8, 81.4, 82.1, 82.1, 78.2, 78.7, 78.9, 76.0] },
+    { name: '净利率', type: 'line', itemStyle: { color: COLOR.accent }, smooth: true,
+      /*<!-- vchart src=metrics_WB.json path=chart_series.net_margin scale=100 -->*/
+      data: [-19.6, 7.2, 16.1, 30.5, 33.3, 27.9, 18.6, 19.0, 4.7, 19.5, 17.1, 25.6] }
+  ]
+});
+
+// ROIC / ROIIC
+initChart('chart-roic', {
+  legend: { bottom: 0 },
+  xAxis: { type: 'category', data: [2015,2016,2017,2018,2019,2020,2021,2022,2023,2024,2025] },
+  yAxis: { type: 'value', name: '%' },
+  series: [
+    { name: 'ROIC', type: 'line', itemStyle: { color: COLOR.primary }, smooth: true,
+      markLine: { data: [{ yAxis: 10, name: 'WACC≈10%' }], lineStyle: { color: '#b91c1c', type: 'dashed' } },
+      /*<!-- vchart src=wb_trends.json path=roic scale=100 -->*/
+      data: [13.8, 32.4, 84.9, 74.5, 36.9, 22.9, 22.3, 13.1, 15.2, 14.5, 10.8] }
+  ]
+});
+
+// OCF 口径：Owner Earnings 与 FCF
+initChart('chart-fcf', {
+  legend: { bottom: 0 },
+  xAxis: { type: 'category', data: YEARS },
+  yAxis: { type: 'value', name: '百万美元' },
+  series: [
+    { name: 'Owner Earnings', type: 'bar', itemStyle: { color: COLOR.primary },
+      /*<!-- vchart src=metrics_WB.json path=chart_series.owner_earnings -->*/
+      data: [-50.6, 43.8, 105.7, 350.4, 572.6, 492.8, 313.4, 428.3, 85.6, 364.6, 322.5, 471.6] },
+    { name: '自由现金流（OCF−capex）', type: 'line', itemStyle: { color: COLOR.accent },
+      /*<!-- vchart src=metrics_WB.json path=chart_series.fcf -->*/
+      data: [-34.1, 171.1, 222.9, 518.7, 459.6, 610.0, 706.8, 778.9, 521.0, 636.0, 578.4, 477.1] }
+  ]
+});
+
+// 股本变动
+initChart('chart-shares', {
+  xAxis: { type: 'category', data: YEARS },
+  yAxis: { type: 'value', name: '百万股（摊薄）', min: 150 },
+  series: [{ name: '摊薄股本', type: 'line', areaStyle: { opacity: 0.15 }, itemStyle: { color: COLOR.primary },
+    /*<!-- vchart src=metrics_WB.json path=chart_series.shares_diluted -->*/
+    data: [186.9, 217.9, 222.9, 225.4, 232.7, 226.4, 227.6, 230.2, 236.4, 240.0, 265.2, 268.6] }]
+});
+
+// 竞对对比
+initChart('chart-comp', {
+  legend: { bottom: 0 },
+  xAxis: { type: 'category', data: ['微博','百度','哔哩哔哩','挚文集团','快手'] },
+  yAxis: { type: 'value', name: '%' },
+  series: [
+    { name: '2025 净利率', type: 'bar', itemStyle: { color: COLOR.primary },
+      /*<!-- vchart src=comp_comparison.json path=net_margin_2025 -->*/
+      data: [25.6, 4.2, 3.9, 7.8, 13.0] },
+    { name: '收入 CAGR（各自上市期内）', type: 'bar', itemStyle: { color: COLOR.accent },
+      /*<!-- vchart src=comp_comparison.json path=rev_cagr_pct -->*/
+      data: [16.3, 6.9, 32.6, 11.6, 15.2] }
+  ]
+});
+
+// 资本配置雷达
+initChart('chart-capalloc', {
+  radar: { indicator: [
+    { name: '再投资纪律', max: 5 }, { name: '并购记录', max: 5 }, { name: '回购时机', max: 5 },
+    { name: '增发克制', max: 5 }, { name: '分红理性', max: 5 } ] },
+  series: [{ type: 'radar', data: [{ name: '资本配置 17/25', itemStyle: { color: COLOR.primary },
+    /*<!-- vchart src=capital_allocation.json path=scores -->*/
+    data: [4, 3, 3, 3, 4] }] }]
+});
+</script>
+</body>
+</html>

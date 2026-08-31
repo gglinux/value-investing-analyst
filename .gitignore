@@ -4,3 +4,4 @@ __pycache__/
 # 分析运行时产物（大文件原始抓取不进仓库；案例已精简）
 cases/*/data/filings/
 cases/*/data/raw_finance_*.json
+cases/*/data/edgar_raw/
