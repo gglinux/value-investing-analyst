@@ -136,7 +136,7 @@ def main():
     ctype = str(data.get("company_type", "")).strip().lower()
     is_bank = ctype in BANK_TYPES
     is_insurance = ctype in INSURANCE_TYPES
-    if ctype in FINANCIAL_TYPES:
+    if ctype in FINANCIAL_TYPES and not is_bank and not is_insurance:
         errors.append(f"行业门控：company_type={data.get('company_type')} 为金融类，"
                       "通用底稿/compute_metrics 管道不适用（利息收支/浮存金/准备金口径不同），"
                       "请按 metric-playbook 银行/保险专属指标集单独建稿")
