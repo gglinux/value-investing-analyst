@@ -88,6 +88,25 @@ def parse_number(text):
     return v
 
 
+def display_tolerance(fmt):
+    """显示格式的固有舍入容差 = 0.55 个显示最小单位。
+
+    底稿存高精度值、报告按 fmt 四舍五入显示：pct1 显示 4.5% 时底稿可以是
+    0.04453~0.04549 之间的任何值——这是合法舍入而非数字漂移。
+    旧版只用相对容差 0.5%，对小数值的百分比会误报（如 0.0453 vs 显示 4.5%）。
+    """
+    if fmt == "pct1":
+        return 0.00055
+    if fmt == "pct2":
+        return 0.000055
+    if fmt == "pct0":
+        return 0.0055
+    if fmt and fmt.startswith("num"):
+        digits = int(fmt[3:]) if len(fmt) > 3 else 0
+        return 0.55 * (10 ** -digits)
+    return 0.0
+
+
 def main():
     ap = argparse.ArgumentParser(description="报告数字校验")
     ap.add_argument("report", help="HTML 报告路径")
@@ -143,7 +162,7 @@ def main():
             else:
                 failed.append((src, path, f"文本不一致：底稿={render(value, fmt)}", text))
             continue
-        tol = max(abs(expect) * 0.005, 1e-9)
+        tol = max(abs(expect) * 0.005, display_tolerance(fmt), 1e-9)
         if abs(shown - expect) <= tol:
             passed += 1
         else:
@@ -240,6 +259,34 @@ def main():
             if cnt < 3:
                 failed.append(("report", f"五维:{dim}",
                                f"证据指针不足：该维度仅 {cnt} 条 [E:]（要求 ≥3）", ""))
+    # ---- 图表完整性校验（防"有 div 无 initChart"的空白图表）----
+    # 实证教训（泡泡玛特 chart-ip-structure）：HTML 里有图表容器 div，
+    # 但 JS 漏写 initChart 调用，图表渲染空白且数字校验完全发现不了。
+    chart_divs = set(re.findall(r'<div[^>]+id="(chart-[\w-]+)"', html))
+    chart_inits = set(re.findall(r"initChart\(\s*['\"](chart-[\w-]+)['\"]", html))
+    for cid in sorted(chart_divs - chart_inits):
+        failed.append(("report", f"chart:{cid}",
+                       "图表容器存在但无对应 initChart 调用（将渲染为空白）", ""))
+    for cid in sorted(chart_inits - chart_divs):
+        failed.append(("report", f"chart:{cid}",
+                       "initChart 调用存在但无对应容器 div（图表不会显示）", ""))
+
+    # ---- 文本完整性校验（乱码/损坏字符防护）----
+    # 实证教训（腾讯/PDD 报告）：长文本生成偶发乱码段落，肉眼难查。
+    # U+FFFD 替换符、CJK 正文中夹杂的连续拉丁扩展/西里尔等异常序列均视为损坏。
+    plain_body = re.sub(r"<script.*?</script>|<style.*?</style>|<[^>]+>", "",
+                        html, flags=re.S)
+    garbled = []
+    if "\ufffd" in plain_body:
+        garbled.append("存在 U+FFFD 替换字符（编码损坏）")
+    for m in re.finditer(r"[\u0400-\u04FF\u0100-\u024F\u3040-\u30FF]{3,}", plain_body):
+        ctx = plain_body[max(0, m.start() - 12):m.end() + 12].replace("\n", " ")
+        garbled.append(f"疑似乱码序列：…{ctx}…")
+        if len(garbled) >= 6:
+            break
+    for g in garbled:
+        failed.append(("report", "text-integrity", g, ""))
+
     total = len(matches) + len(chart_matches) + len(set(epointers))
     passed_total = passed + chart_checked + epointer_checked
 

@@ -122,6 +122,22 @@ def compute_normalization(series):
     med_nm = median(net_margins)
     cur_nm = latest.get("net_margin")
 
+    # 均值扭曲年检测（实证教训：PDD 早年亏损、腾讯/伊利减值年）——
+    # 序列中存在亏损年或净利 |同比|>50% 的异常年时，全期平均利润率被结构性拉偏，
+    # normalized 口径不再是"周期中枢"而是"被历史事故污染的均值"。
+    # 此时必须双轨输出：主轨正常化 + 交叉轨当期，由分析师在报告中并列论证。
+    distortion_years = []
+    ni_seq = [(s["year"], s.get("net_income")) for s in series]
+    for i, (y, ni) in enumerate(ni_seq):
+        if ni is not None and ni < 0:
+            distortion_years.append({"year": y, "reason": "亏损年"})
+        elif i > 0 and ni is not None and ni_seq[i - 1][1] not in (None, 0):
+            chg = ni / ni_seq[i - 1][1] - 1.0
+            if abs(chg) > 0.5:
+                distortion_years.append(
+                    {"year": y, "reason": f"净利同比 {chg:+.0%}（疑似减值/一次性损益/爆发年）"})
+    mean_distorted = bool(distortion_years)
+
     avg_oem = sum(oe_margins) / len(oe_margins) if oe_margins else None
     med_oem = median(oe_margins) if oe_margins else None
 
@@ -164,6 +180,13 @@ def compute_normalization(series):
         "oe_normalized": avg_oem * rev_latest if avg_oem is not None else None,
         "oe_mid_cycle": med_oem * rev_latest if med_oem is not None else None,
         "shares_diluted": shares,
+        "mean_distortion": {
+            "distorted": mean_distorted,
+            "years": distortion_years,
+            "note": ("序列含亏损年/剧烈波动年，全期平均利润率被结构性拉偏——"
+                     "normalized 口径偏离周期中枢，启用双轨基期" if mean_distorted else
+                     "序列平稳，均值可作周期中枢"),
+        },
     }
     cur_oe, norm_oe = out["oe_current"], out["oe_normalized"]
     out["oe_normalized_vs_current"] = safe_div(norm_oe, cur_oe)
@@ -191,6 +214,20 @@ def compute_normalization(series):
                 if len(cands) == 2 else
                 "正常化（当期处周期高位；另一口径为非正值已剔除，说明历史盈利能力薄弱，须在报告说明）"
             )
+            if mean_distorted:
+                # 爬坡期公司防误判（实证教训：PDD 早年亏损把均值拉到 10.4%，
+                # "周期高位"判定实为"商业模式换挡"，强制正常化会过度保守）。
+                # 双轨输出：主轨仍为正常化（纪律不放松），交叉轨当期基期，
+                # 由分析师在报告中论证当期利润率是"周期顶"还是"新常态"。
+                out["base_oe_dual_track"] = {
+                    "main": {"basis": "正常化（纪律主轨）", "value": out["base_oe_recommended"]},
+                    "cross": {"basis": "当期（爬坡期交叉轨）", "value": cur_oe},
+                    "adjudication": (
+                        "均值扭曲年存在，'周期高位'判定可能是'商业模式换挡'的误报。"
+                        "报告必须并列两轨估值并论证：当期利润率是周期顶（用主轨）"
+                        "还是结构性新常态（可向交叉轨靠拢）；证据看利润率来源"
+                        "（提价/份额/结构 vs 景气/一次性）"),
+                }
         else:
             out["base_oe_recommended"] = None
             out["base_oe_range"] = None
@@ -436,6 +473,15 @@ def compute(data):
                 f"{normalization['net_margin_avg']:.1%} 的 {normalization['margin_ratio_latest_vs_avg']:.2f} 倍，"
                 f"当期 Owner Earnings 禁止直接作为 DCF 基期；正常化基期区间 {rng_txt}{pct_txt}"
             )
+            if normalization.get("base_oe_dual_track"):
+                dt = normalization["base_oe_dual_track"]
+                alerts.append(
+                    f"双轨基期提示：序列含均值扭曲年"
+                    f"（{'；'.join(y['reason'] + str(y['year']) for y in normalization['mean_distortion']['years'][:3])}"
+                    f"{'…' if len(normalization['mean_distortion']['years']) > 3 else ''}），"
+                    f"'周期高位'可能是商业模式换挡的误报——主轨正常化 {dt['main']['value']:,.0f}"
+                    f" / 交叉轨当期 {dt['cross']['value']:,.0f}，报告须并列两轨估值并论证利润率来源"
+                )
         elif cyc == "周期低位":
             rec = normalization.get("base_oe_recommended")
             rec_txt = f"；向上正常化基期 {rec:,.0f}" if rec is not None else ""

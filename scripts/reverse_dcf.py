@@ -139,6 +139,9 @@ def main():
     p1.add_argument("--terminal-growth", type=float, default=0.025)
     p1.add_argument("--years", type=int, default=10)
     p1.add_argument("--fade", action="store_true", help="增速线性衰减到永续增速")
+    p1.add_argument("--deduct", type=float, default=0.0,
+                    help="从市值中剔除的非经营资产（净现金/投资组合折价可回收值，"
+                         "与 market-cap 同币种同单位）——反解的是经营业务隐含增速")
 
     p2 = sub.add_parser("forward-value", help="给定假设正向估值")
     p2.add_argument("--base-oe", type=float, required=True)
@@ -148,6 +151,14 @@ def main():
     p2.add_argument("--years", type=int, default=10)
     p2.add_argument("--shares", type=float, help="摊薄股本（百万股），提供则输出每股价值")
     p2.add_argument("--fade", action="store_true")
+    p2.add_argument("--add-back", type=float, default=0.0,
+                    help="非经营资产加回总额（与 base-oe 同币种同单位）：净现金、"
+                         "投资组合折价后可回收价值等。DCF 只估经营业务，"
+                         "'经营+投资'双轮公司（如腾讯）与高净现金公司（如 PDD）必填，"
+                         "否则系统性低估。折价论证写在 valuation.json（如上市9折/非上市6折）")
+    p2.add_argument("--fx", type=float, default=1.0,
+                    help="每股价值的币种换算系数（报告币→行情币），如 CNY→HKD 用 1.087。"
+                         "默认 1.0 不换算")
 
     p3 = sub.add_parser("expected-return",
                         help="三情景转期望年化回报率（Phase 4.5 机会成本对照强制使用）")
@@ -199,7 +210,11 @@ def main():
         return
 
     if args.mode == "implied-growth":
-        g = solve_implied_growth(args.market_cap, args.base_oe, args.discount_rate,
+        mc = args.market_cap - args.deduct
+        if args.deduct:
+            print(f"市值 {args.market_cap:,.0f} 剔除非经营资产 {args.deduct:,.0f}"
+                  f" → 经营业务隐含市值 {mc:,.0f}")
+        g = solve_implied_growth(mc, args.base_oe, args.discount_rate,
                                  args.terminal_growth, args.years, args.fade)
         if g is None:
             print("无解：在给定折现率/永续增速下，现价无法用 -50%~+60% 的增速解释。"
@@ -212,9 +227,16 @@ def main():
     else:
         v = dcf_value(args.base_oe, args.growth, args.discount_rate,
                       args.terminal_growth, args.years, args.fade)
-        print(f"企业价值（Owner Earnings 口径 DCF）: {v:,.0f}")
+        print(f"经营业务价值（Owner Earnings 口径 DCF）: {v:,.0f}")
+        total = v + args.add_back
+        if args.add_back:
+            print(f"非经营资产加回: {args.add_back:,.0f} → 股权价值合计: {total:,.0f}")
         if args.shares:
-            print(f"每股价值: {v / args.shares:,.2f}")
+            ps = total / args.shares
+            if args.fx != 1.0:
+                print(f"每股价值: {ps:,.2f}（报告币） = {ps * args.fx:,.2f}（行情币，fx={args.fx}）")
+            else:
+                print(f"每股价值: {ps:,.2f}")
 
 
 if __name__ == "__main__":

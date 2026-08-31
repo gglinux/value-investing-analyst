@@ -250,6 +250,77 @@ with tempfile.TemporaryDirectory() as td:
           r2.stdout[-200:])
     check("通配登记的指针可通过", "t-2024.htm" not in r2.stdout)
 
+print("== 8.5 图表完整性与乱码防护（verify_report 新增） ==")
+with tempfile.TemporaryDirectory() as td:
+    ddir = os.path.join(td, "data"); os.makedirs(ddir)
+    json.dump({"kpi": 0.123}, open(os.path.join(ddir, "m.json"), "w"))
+    vn = '<span class="vnum" data-src="m.json" data-path="kpi" data-fmt="pct1">12.3%</span>'
+    ok_html = vn + '<div id="chart-a"></div><script>initChart(\'chart-a\',{});</script>'
+    orphan_div = vn + '<div id="chart-a"></div><div id="chart-b"></div><script>initChart(\'chart-a\',{});</script>'
+    orphan_init = vn + '<div id="chart-a"></div><script>initChart(\'chart-a\',{});initChart(\'chart-x\',{});</script>'
+    garbled = vn + '<p>正常段落 但这里有乱码 приветика 混入正文</p>'
+    paths = {}
+    for name, content in [("ok", ok_html), ("od", orphan_div),
+                          ("oi", orphan_init), ("gb", garbled)]:
+        paths[name] = os.path.join(td, name + ".html")
+        open(paths[name], "w").write(content)
+
+    def vr8(path):
+        return subprocess.run([sys.executable, os.path.join(SCRIPTS, "verify_report.py"),
+                               path, "--data-dir", ddir], capture_output=True, text=True)
+    check("图表配对完整的报告通过", vr8(paths["ok"]).returncode == 0)
+    r = vr8(paths["od"])
+    check("空白图表（div无init）被逮住", r.returncode == 1 and "chart-b" in r.stdout,
+          r.stdout[-200:])
+    r = vr8(paths["oi"])
+    check("悬空init（init无div）被逮住", r.returncode == 1 and "chart-x" in r.stdout,
+          r.stdout[-200:])
+    r = vr8(paths["gb"])
+    check("乱码序列被逮住", r.returncode == 1 and "text-integrity" in r.stdout,
+          r.stdout[-200:])
+
+print("== 8.6 双轨基期（均值扭曲年防误杀） ==")
+# 爬坡期公司：前3年亏损 + 后期利润率稳定爬升 → 判定"周期高位"但应输出双轨
+ramp = mk_rows([-0.05, -0.02, 0.02, 0.06, 0.10, 0.14, 0.17, 0.19, 0.21, 0.22, 0.23],
+               growth=1.30)
+r = cm.compute(base(ramp))
+n = r["normalization"]
+check("扭曲年被检出", n["mean_distortion"]["distorted"],
+      str(n["mean_distortion"]))
+if n["cyclicality"] == "周期高位":
+    check("高位+扭曲输出双轨", n.get("base_oe_dual_track") is not None)
+    if n.get("base_oe_dual_track"):
+        dt = n["base_oe_dual_track"]
+        check("双轨含主轨与交叉轨", dt["main"]["value"] is not None
+              and dt["cross"]["value"] == n["oe_current"])
+        check("双轨发 alert", any("双轨基期" in a for a in r["alerts"]))
+# 平稳公司不应误报扭曲
+r_smooth = cm.compute(base(mk_rows([0.15, 0.16, 0.15, 0.14, 0.16, 0.15, 0.16,
+                                    0.15, 0.16, 0.15, 0.16])))
+check("平稳序列不报扭曲", not r_smooth["normalization"]["mean_distortion"]["distorted"],
+      str(r_smooth["normalization"]["mean_distortion"]["years"]))
+
+print("== 8.7 reverse_dcf 非经营资产加回 ==")
+p_no = run(["forward-value", "--base-oe", "1000", "--growth", "0.05", "--years", "10",
+            "--shares", "100", "--fade"])
+p_ab = run(["forward-value", "--base-oe", "1000", "--growth", "0.05", "--years", "10",
+            "--shares", "100", "--fade", "--add-back", "5000", "--fx", "1.087"])
+check("add-back 运行成功", p_ab.returncode == 0, p_ab.stderr[:120])
+if p_no.returncode == 0 and p_ab.returncode == 0:
+    import re as _re
+    v0 = float(_re.search(r"每股价值[:：]\s*([\d,\.]+)", p_no.stdout).group(1).replace(",", ""))
+    m_ab = _re.search(r"每股价值[:：]\s*([\d,\.]+)（报告币） = ([\d,\.]+)（行情币", p_ab.stdout)
+    check("加回后每股 = 原每股 + 加回/股本",
+          m_ab and abs(float(m_ab.group(1).replace(",", "")) - (v0 + 50.0)) < 0.02,
+          p_ab.stdout[-150:])
+    check("fx 换算正确",
+          m_ab and abs(float(m_ab.group(2).replace(",", ""))
+                       - float(m_ab.group(1).replace(",", "")) * 1.087) < 0.02)
+p_dd = run(["implied-growth", "--market-cap", "30000", "--base-oe", "1000",
+            "--deduct", "5000", "--fade"])
+check("implied-growth deduct 运行成功", p_dd.returncode == 0
+      and "剔除非经营资产" in p_dd.stdout, (p_dd.stderr or p_dd.stdout)[:120])
+
 print("== 9. 银行校验（validate_data 银行旁路） ==")
 with tempfile.TemporaryDirectory() as td:
     good = {
