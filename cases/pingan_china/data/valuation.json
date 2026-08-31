@@ -1,0 +1,45 @@
+{
+ "company": "中国平安",
+ "ticker": "601318",
+ "currency": "CNY/share",
+ "valuation_framework": "保险专属 P/EV 主轨 + 股息贴现 + 期望回报率三通道",
+ "base_pev": 0.75,
+ "pev_scenarios": {
+  "bear": {
+   "pev": 0.5,
+   "evps": 83.07,
+   "value": 41.54,
+   "rationale": "利差损深化+NBV 连续负增长→ P/EV 历史底部 0.48 重测"
+  },
+  "base": {
+   "pev": 0.75,
+   "evps": 88.9,
+   "value": 66.68,
+   "rationale": "EV+7% 一年至 88.9 元，估值修复至 P/EV 中枢下界 0.75x"
+  },
+  "bull": {
+   "pev": 1.0,
+   "evps": 88.9,
+   "value": 88.9,
+   "rationale": "机构一致目标区间上界，完整改革完成"
+  }
+ },
+ "ddm_cross_check": {
+  "bear_46.4": "g=3%, r=9%",
+  "base_56.2": "g=4%, r=9% —— 恰好等于现价 55.82，市场已按现金牛定价",
+  "bull_70.9": "g=5%, r=9%"
+ },
+ "expected_return": {
+  "irr_incl_div": 0.0684,
+  "loss_probability": 0.3,
+  "downside_loss": -0.016
+ },
+ "margin_of_safety": {
+  "vs_base": 0.163,
+  "vs_bear": -0.258,
+  "vs_bull": -0.372
+ },
+ "options": {
+  "h_share_advantage": "H 股 56.55 HKD ≈ 52 CNY，比 A 股便宜 6.8%，股息率 5.4% 相同——长期持有优先 H 股"
+ }
+}

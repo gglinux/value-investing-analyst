@@ -128,16 +128,19 @@ def main():
     errors, warns = [], []
 
     # 0. 行业类型门控（金融股禁走通用管道）
-    FINANCIAL_TYPES = {"bank", "银行", "insurance", "保险", "broker", "券商",
+    FINANCIAL_TYPES = {"bank", "银行", "broker", "券商",
                        "securities", "金融", "financial"}
     BANK_TYPES = {"bank", "银行"}
+    INSURANCE_TYPES = {"insurance", "保险", "保险集团", "寿险", "财险",
+                      "insurance_group", "life", "p&c"}
     ctype = str(data.get("company_type", "")).strip().lower()
     is_bank = ctype in BANK_TYPES
-    if ctype in FINANCIAL_TYPES and not is_bank:
+    is_insurance = ctype in INSURANCE_TYPES
+    if ctype in FINANCIAL_TYPES:
         errors.append(f"行业门控：company_type={data.get('company_type')} 为金融类，"
                       "通用底稿/compute_metrics 管道不适用（利息收支/浮存金/准备金口径不同），"
                       "请按 metric-playbook 银行/保险专属指标集单独建稿")
-    elif not ctype:
+    elif not is_insurance and not ctype:
         warns.append("行业门控：company_type 缺失——Phase 0 必须判定商业模式类型（metric-playbook 十类）"
                      "并写入底稿头字段，金融类严禁走通用管道")
 
@@ -255,7 +258,7 @@ def main():
         v = row.get(key)
         return float(v) if v is not None else None
 
-    # === 银行专属旁路：通用三表勾稽/单位突变/OCF突变对银行无意义，改查银行勾稽 ===
+    # === 银行/保险专属旁路：通用三表勾稽/单位突变/OCF突变对金融无意义，改查金融勾稽 ===
     if is_bank:
         for r in rows:
             y = r.get("year")
@@ -278,6 +281,48 @@ def main():
             if ni is not None and opin is not None and ni > opin * 0.6:
                 warns.append(f"{y}: 净利率({ni}/{opin}) 超 60%，银行一般 25%~45%，请复核单位")
         warns.append("已启用银行专属校验（跳过三表勾稽/单位突变/OCF突变，改查营收拆分/不良率/拨备覆盖）")
+    elif is_insurance:
+        # 保险专属勾稽（v2.8 新增）：EV/NBV/综合成本率/偿付能力/股息/利差联查
+        warns.append("已启用保险专属校验（跳过实业三表勾稽/单位突变，改查 EV/NBV/COR/偿付能力/股息覆盖）")
+        for r in rows:
+            y = r.get("year")
+            ev, nbv = g(r, "embedded_value"), g(r, "nbv")
+            cori, solv = g(r, "combined_ratio_pnc"), g(r, "solvency_ratio")
+            roe, div_ps = g(r, "roe"), g(r, "dividend_per_share")
+            ni, rev, eq = g(r, "net_income"), g(r, "revenue"), g(r, "total_equity")
+            # EV 必须为正且通常大于净资产（有效业务价值 EV - 净资产 = 有效业务价值）；
+            # 若 EV < 净资产×0.8，要么是口径错（如拿了分部 EV），要么是商誉/假设问题
+            if ev is not None and eq is not None and ev < eq * 0.8:
+                warns.append(f"{y}: 集团内含价值({ev}) < 归母净资产×80%({eq})——"
+                             "请核对是集团 EV 还是寿健险分部 EV，后者需注明口径")
+            # NBV 必须为正但必须合理（< EV 的 30%，超 30% 是糟糕的前视/双重计算信号）
+            if nbv is not None and ev is not None and nbv > ev * 0.30:
+                errors.append(f"{y}: 一年新业务价值({nbv}) > 内含价值×30%({ev}×0.3)——"
+                              "NBV 占比过高，请核对是否把 '当期销售新业务价值' 误作 '一年新业务价值'")
+            # COR 只能在 85%~115% 之间；<85% 是超常规盈利或数据错，>115% 是承保亏损
+            if cori is not None and not (0.85 <= cori <= 1.15):
+                errors.append(f"{y}: 综合成本率 {cori:.1%} 超 85%~115% 合理带，疑似单位或口径错误")
+            # 偿付能力充足率 < 100% 是监管红线；< 150% 是监管关注区
+            if solv is not None and solv < 1.0:
+                errors.append(f"{y}: 综合偿付能力充足率 {solv:.0%} < 100%——监管底线突破，一票否决")
+            elif solv is not None and solv < 1.5:
+                warns.append(f"{y}: 综合偿付能力充足率 {solv:.0%} < 150%——进入监管关注区，须跟踪")
+            # ROE 对保险是核心质量指标（中位 12%）；<5% 是经营警报
+            if roe is not None and roe < 0.05:
+                warns.append(f"{y}: ROE {roe:.1%} < 5%——保险经营水准低，请复核利差/承保利润真实性")
+        # 保险命门突变检测（独立索引循环，避免嵌套里 index() 错位）
+        notes_i = data.get("spike_notes", {}) or {}
+        for i in range(1, len(rows)):
+            prev, cur = rows[i - 1], rows[i]
+            y = cur.get("year")
+            for k in ["embedded_value", "nbv", "dividend_per_share", "solvency_ratio"]:
+                a, b = g(prev, k), g(cur, k)
+                if a is None or b is None or abs(a) < 1e-9:
+                    continue
+                chg = (b - a) / abs(a)
+                if abs(chg) > 0.5 and f"{y}.{k}" not in notes_i:
+                    errors.append(f"{y}: 保险命门 `{k}` 同比变动 {chg:+.0%} > ±50%（保险行业正常区间<30%），"
+                                  f"spike_notes 缺少 `{y}.{k}` 的原因标注")
     else:
         # 2 & 3. 勾稽与单位 sanity（逐年）
         for r in rows:

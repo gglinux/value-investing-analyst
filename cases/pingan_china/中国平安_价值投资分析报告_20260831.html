@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>中国平安（601318）价值投资分析报告 — 2026-08-31</title>
+<script src="https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"></script>
+<style>
+:root{--main:#1a3a5c;--accent:#d97706;--neg:#b91c1c;--muted:#6b7280;--bg:#f8fafc;--line:#e5e7eb}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif;color:#1f2937;line-height:1.75;background:#fff}
+.wrap{max-width:1060px;margin:0 auto;padding:32px 28px}
+h1{font-size:28px;color:var(--main);border-bottom:3px solid var(--main);padding-bottom:12px;margin-bottom:6px}
+.meta{color:var(--muted);font-size:13px;margin-bottom:28px}
+h2{font-size:21px;color:var(--main);margin:40px 0 14px;padding-left:12px;border-left:5px solid var(--main)}
+h3{font-size:16px;color:var(--main);margin:22px 0 8px}
+p{margin:10px 0;font-size:14.5px}
+table{border-collapse:collapse;width:100%;margin:14px 0;font-size:13.5px}
+th,td{border:1px solid var(--line);padding:7px 10px;text-align:left}
+th{background:var(--main);color:#fff;font-weight:600}
+tr:nth-child(even){background:var(--bg)}
+.card{border:1px solid var(--line);border-radius:10px;padding:20px 22px;margin:18px 0;background:var(--bg)}
+.card-verdict{border:2px solid var(--neg);background:#fef2f2}
+.verdict-big{font-size:26px;font-weight:700;color:var(--neg)}
+.gate{display:inline-block;padding:5px 14px;border-radius:6px;margin:4px 8px 4px 0;font-size:13.5px;font-weight:600}
+.gate-fail{background:#fee2e2;color:#991b1b}
+.gate-pass{background:#d1fae5;color:#065f46}
+.chart{width:100%;height:360px;margin:16px 0}
+.chart-note{font-size:12px;color:var(--muted);margin:-8px 0 14px}
+.vnum{font-variant-numeric:tabular-nums}
+.kv{display:flex;flex-wrap:wrap;gap:10px;margin:12px 0}
+.kv>div{flex:1 1 140px;background:#fff;border:1px solid var(--line);border-radius:8px;padding:10px 12px;text-align:center}
+.kv .k{font-size:11.5px;color:var(--muted)}
+.kv .v{font-size:17px;font-weight:700;color:var(--main)}
+.tag{display:inline-block;font-size:11px;padding:1px 8px;border-radius:4px;background:#e0e7ff;color:#3730a3;margin-left:6px;vertical-align:middle}
+.small{font-size:12.5px;color:var(--muted)}
+.warn{background:#fffbeb;border-left:4px solid #f59e0b;padding:10px 14px;margin:12px 0;font-size:13.5px}
+.persona{border:1px solid var(--line);border-radius:10px;padding:18px 20px;margin:14px 0}
+blockquote{border-left:4px solid var(--main);padding:8px 16px;margin:12px 0;color:#374151;background:#f0f4f8;font-size:13.5px}
+ol{padding-left:22px;margin:8px 0;font-size:14px}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<h1>中国平安（SSE: 601318）价值投资分析报告</h1>
+<div class="meta">分析日期 2026-08-31 ｜ 数据截止 2026-08-28 收盘 / FY2025 年度报告 2026-03-27 ｜ 方法：value-investing-analyst v2.8（保险专属管道首次实战） ｜ 币种：人民币</div>
+
+<h2>一、投资摘要</h2>
+
+<div class="card card-verdict">
+<div style="font-size:13px;color:#7f1d1d;font-weight:600;margin-bottom:4px">结论档位</div>
+<div class="verdict-big">观察 · 等价格</div>
+<p class="small" style="margin-top:6px">双闸门不通过但比招商银行更符合结构：利差是日本幽灵的真实压力，P/EV 修复故事需要时间证明。</p>
+<div style="margin-top:12px">
+<span class="gate gate-fail">闸门一 安全边际 +16.3% ✗（要求≥25%）</span>
+<span class="gate gate-fail">闸门二 期望含息 IRR +6.84% ✗（门槛 9%）</span>
+</div>
+</div>
+
+<div class="card">
+<h3 style="margin-top:0">首屏决策卡</h3>
+<div class="kv">
+<div><div class="k">现价（CNY）</div><div class="v">¥<span class="vnum" data-src="market_snapshot.json" data-path="price_cny" data-fmt="num2">55.82</span></div></div>
+<div><div class="k">总市值</div><div class="v">¥<span class="vnum" data-src="market_snapshot.json" data-path="market_cap_cny" data-fmt="num0">1,010,770</span>M</div></div>
+<div><div class="k">P/EV（2025） </div><div class="v"><span class="vnum" data-src="market_snapshot.json" data-path="pev" data-fmt="num3">0.672</span></div></div>
+<div><div class="k">PB</div><div class="v"><span class="vnum" data-src="market_snapshot.json" data-path="pb" data-fmt="num2">1.02</span></div></div>
+<div><div class="k">股息率</div><div class="v"><span class="vnum" data-src="market_snapshot.json" data-path="dividend_yield_ttm" data-fmt="pct2">4.84%</span></div></div>
+<div><div class="k">十年 P/EV 分位</div><div class="v"><span class="vnum" data-src="market_snapshot.json" data-path="pev_quantile_10y" data-fmt="pct0">17%</span></div></div>
+</div>
+<table>
+<tr><th>关键变量</th><th>当前判断</th></tr>
+<tr><td>利差（投资收益率 - 长期假设）</td><td>+0.9pct（4.9% 实 vs 4.0% 假设）是正面信号，但 10Y 国债 1.7% 持续向假设方向压缩空间</td></tr>
+<tr><td>NBV 复苏可持续性</td><td>2025 +29.3% 复苏有力，但 Q2'26 增速+11.2% 较 Q1+20.8% 大幅收窄——基数效应已现</td></tr>
+<tr><td>合规处罚集中度</td><td>2026 上半年六省八地密集罚款（"财务数据不真实"类），南方周末将平安列风险榜第二——红旗不入表决，但纳入估值折扣</td></tr>
+<tr><td>H 股折价</td><td>H 股 56.55 HKD vs A 股 55.82 CNY（AH 溢价 13.2%），同权同利——长期持有优先 H</td></tr>
+</table>
+<p><b>证伪条件（最关键的 3 条）</b>：① 2026 全年 NBV 负增长（则 P/EV 修复故事证伪）；② 投资收益连续 2 年低于 3.5%（利差缩窄成为现实）；③ 平安寿险或财险综合偿付能力跌破 150%（监管介入实质风险资要求）。</p>
+<p><b>下次复查</b>：2026-10-27（Q3 财报）或跌破 48 元（P/EV 0.58 历史底部支撑）；买入纪律价 <b>≤42 元（P/EV 0.50x，对应 20%+ 下行空间）</b>才谈仓位。</p>
+</div>
+
+<p><b>一句话生意</b>：2.51 亿中国人先付给它一大笔保费，它用这笔钱放着 6.49 万亿投资，在 M+100 年后分一点利息回来——这是全世界最大的浮存金生意模型之一。</p>
+
+<p><b>三大投资论点</b>：① 利差结构仍健康（10 年平均投资收益率 4.9% > 长期假设 4.0%）；② NBV 连续三年正增长重新建立（2025 +29.3%）；③ 高股息且可预期（14 年连续增长，A股 4.84%，H股 5.4%）[E:financials_pingan_insurance.json]。</p>
+
+<p><b>三大风险</b>：① 利率下行通道的利差损风险——日本 90 年代剧本的中国版本不能排除；② NBV 修复基于低基数的真实成分不明；③ 合规处罚持续集中在分支结构，尚未收敛 [E:manifest.json]。</p>
+
+<p class="warn"><b>信息局限声明</b>：一致预期 C 级；利差损与低利率情景采用情景假设并无一手证据；平安分红险的利差递延结构（偿付成本是未来的，浮存金收益是当期的）没有十年对比数据；机构 18 家全部看多——中国保险行业上次"全看多"发生在 2019-2020，之后 NBV 连续 3 年负增长。</p>
+
+<h2>二、公司与生意</h2>
+<p>中国平安 1988 年成立于蛇口，是中国第一家股份制保险公司，A+H 两地上市。FY2025 总资产 13.9 万亿、归母净资产首次突破万亿达 10,004 亿、年保费约 5,595 亿 [E:financials_pingan_insurance.json]。</p>
+<p>结构上是"五个合伙人在同一家公司上班"：寿险及健康险（经营利润约 833 亿）、财产险（146 亿）、平安银行（426 亿）、资管、科技赋能 [E:segments.json]。</p>
+
+<h2>三、定量画像（v2.8 保险专属管道全链路输出）</h2>
+
+<div id="chart-ev-nbv" class="chart"></div>
+<div class="chart-note">图1：内含价值与新业务价值十年走势。EV 从 4,015 亿 → 15,043 亿（10年 CAGR 12.8%——真实复利机器）；NBV 呈现 U 形还原（2020 年 629 亿高点 → 2023 年谷底 311 亿 → 2025 年 369 亿）[E:metrics_pingan_insurance.json]。</div>
+
+<div id="chart-nbv-growth" class="chart"></div>
+<div class="chart-note">图2：NBV 增速十年历史。2021-2024 连续四年负增长（-24%、-36%、+2%、-8%），2025 年才反弹到 +29.3%——核心观察是上升是否持续，基数效应的 2024 低基数也是混合物 [E:metrics_pingan_insurance.json]。</div>
+
+<div id="chart-roic-pev" class="chart"></div>
+<div class="chart-note">图3：ROE/ROEV 趋势与 P/EV 分位。ROE 从 2019 年 21.6% 峰值降到 2023 年 10.9% 底部，2025 年回到 14.0%；P/EV 0.67 处于近 10 年 17% 分位[市场风险溢价 9pct][E:metrics_pingan_insurance.json]。</div>
+
+<div id="chart-scenarios" class="chart"></div>
+<div class="chart-note">图4：三情景每股价值 vs 现价。P/EV 悲观 0.50x → DDM g=3% → 41.5-46.4；基准 0.75x → 66.7 / DDM g=4% → 56.2；乐观 1.00x → 88.9 / DDM g=5% → 70.9 [E:valuation.json]。</div>
+
+<p><b>利差损的"意外"与"必然"</b>：平安 2025 年综合投资收益率 6.3%，10 年平均 4.9%，长期假设 4.0%——超假设 +2.3pct 是惊人的安全垫。但市场现在不把这个当质量信号，当投资风险——10Y 国债 1.7% 每季停会让滚到期资产重新装进一个较低利率环境。**仍然是安全边际**——但已经被证明是死期 [E:metrics_pingan_insurance.json]。</p>
+<p><b>人寿 vs 财险双引擎</b>：财险 COR 从 99.1%（2020）降到 96.8%（2025）连续 5 年优化，承保真实转向盈利——**这是比人寿 NBV 反弹更硬的信号** [E:metrics_pingan_insurance.json]。</p>
+<p><b>分红险的影响</b>：分红险占期交 >90%，新业务中"保证+浮动"结构将利润释放推迟——平安自己透露分红险的 EVT 贡献比个险渠道低 12.5ppt 但比银保更高——这个内变是中性偏正面 [E:consensus.json]。</p>
+
+<h2>四、护城河</h2>
+<p><b>五源归类</b>：无形资产（品牌=平安是唯一进入千家万户保单的国民品牌）+ 高转换成本（寿险退保损失 + 综合金融交叉购买率 2.94 合同/客户）+ 监管牌照规模（全牌照是政策稀缺资源）+ 数据极强网络（33 万亿文本 + 85 亿图片 + 1,200 万 AI 医生用户）[E:segments.json]。<b>评级：宽，但方向向下</b>。</p>
+<p><b>人力护城河的拆毁</b>：个险代理人从 120 万 → 44 万（5 年）→ 32.5 万（2026H1）——断崖不可逆行翻转；银保渠道补上来，但 margin 比个险低 25-30ppt，这是**质量阶下降**不是自我"渠道理解" [E:metrics_pingan_insurance.json]。</p>
+<p><b>综合金融的量化证据</b>：交叉销售 4.15 亿次/年，3 类+ 产品留存率 99%，内部获客成本省 35-45%——**真实但不是无法复制的网红故事**[E:segments.json]。</p>
+
+<h2>五、增长</h2>
+<p><b>增长引擎切换正在发生</b>：NBV 的新驱动不再是个险代理人（占 NBV 已降至 1/3）而是银保渠道（2025 +138%）+ 社区渠道 + 医疗健康生态的长期渗透 [E:consensus.json]。</p>
+<p><b>增长质量</b>：NBV 2025 +29.3% 不是波动——2025 年是"好年份"（低基数+投资端回暖+利率环境相对稳定，含利润记录其中[E:manifest.json]）。H1'26 +11.2% 代表了更真实的可持续增长率。<b>EV 增速 5.7%**（2025）是中低速节点——这是成熟期保险集团的真实成长区间。</p>
+<p><b>双轨基期提示（本能用预测）</b>：NBV 2024 低基数是真实的，2025 飙升反弹对平均值脱节；营运利润是核心通用化口径 [E:financials_pingan_insurance.json]。</p>
+
+<h2>六、管理层与文化</h2>
+<p><b>马明哲与谢永林班子</b>：40 年管理这家公司的记录无可可批评：2003 年分业重组、2011 整合深发银行、2020 年宣布代理人改革、2024 年成功切入分红险渠道——每一次都先于市场认知 [E:manifest.json]。</p>
+<p><b>言行一致跟踪</b>：2023-2026 经营指标从"转型阵痛"到"高值增长"兑现率很高；但 CFO 付欣多次公开叫卖方目标价"远高 50%"——这是高管罕见的公开喊话，说明她知道市场错了，也说明她知道公司没法自己证 [E:consensus.json]。</p>
+<p><b>商誉与分红</b>：14 年连续增息（A股 4.84%）已构成 A 股 A 级的事实护城河——平安连续 14 年中超没有断过,所以回购与派息都 max 名牌 [E:market_snapshot.json]。</p>
+<p><b>警告</b>：六省八地"财务数据不真实"处罚不符合"制度信任"这本书[evanced best players never文章]——**中国保险业只要是保险费收益不过地区、分支、代理人、征信、总办层面不能 0 整 fraudulent** [E:manifest.json]。</p>
+
+<h2>七、财务质量与风险</h2>
+<p><b>排雷结论</b>：审计无保留 + 安永华明 + 四大会计师事务所自 2024 起无 ADR/底特律异动；偿付能力 193.3% > 150%红线。红旗 2 条（合规处罚 + 权益仓位一年内翻倍）已记录 [E:manifest.json]。</p>
+<p><b>资产端最重要的非财务表</b>：6.49 万亿投资组合中权益仓位 20%（一年从 9.9% 翻倍）、不动产含收租物业占不动产 84.7%、长久期利率债增持——这个配置的利率风险是系统性的。若 10Y 国债从 1.7% 涨到 3.0%，固收资产会直接跌 (但 EV 贴现率会掉落)， accelerate 双升 EV [E:consensus.json]。</p>
+<p><b>集团负债端</b>：13.9 万亿资产中保险负债约 80%——只要 NBV 复苏属实，利差可保持；Q2'26 出现回落必须警示 [E:metrics_pingan_insurance.json]。</p>
+
+<h2>八、估值（保险专属 P/EV + DDM + 期望回报率三通道交叉）</h2>
+
+<p><b>主轨 P/EV 对应规则（重要）</b>：A股保险业 P/EV 常见区间 0.50-1.20；平安十年 0.48-1.82 极差，三年区间 0.55-0.85。当前 0.67 是近十年 17% 分位——**历史底一次是 2022-09 至 0.53**，那时 NBV 还连续 3 年负增长 [E:market_snapshot.json]。</p>
+
+<table>
+<tr><th>情景</th><th>P/EV 目标</th><th>股本调整</th><th>每股价值</th><th>Gordon 支持</th><th>解释</th></tr>
+<tr><td>悲观 30%</td><td>0.50x</td><td>现有股本不变</td><td>41.5 元</td><td>DDM g=3%: 46.4</td><td>利差损彻底化/NBV 再度负增长/P/EV 到历史底部支撑</td></tr>
+<tr><td>基准 50%</td><td>0.75x</td><td>EV 一年+7% 至 88.9</td><td>66.7 元</td><td>DDM g=4%: 56.2</td><td>2026 年 NBV +8% - ±10%，估值修复至区间下界</td></tr>
+<tr><td>乐观 20%</td><td>1.00x</td><td>EV 一年+7%至 88.9</td><td>88.9 元</td><td>DDM g=5%: 70.9</td><td>机构一致目标区间上界，利差完整修复证明</td></tr>
+</table>
+
+<p><b>DDM 的一段好话</b>：r=9%, g=4% → <b>D₁/(r−g) = 2.808/0.05 = 56.2 元 ≈ 现价 55.82 元</b>。这说明市场**已经把平安现在的价码精确精确到按"营运利润永续4%增长"的标配现金牛公式给定价**，一点估值修复的期权都没给 [E:valuation.json]。</p>
+<p><b>期望回报率</b>：三情景 30/50/20 → 期望价值 61.9 元；5 年 <b>期望含息 IRR +6.84%</b>（股息率 4.84% 假装 5% 的缓冲每年），亏损概率 <b>30%</b>，亏损情景平均跌幅 −1.6% [E:expected_return.json]。相对指数门槛 9% → <b>跑输 2.16 个百分点</b>，机会成本不划算 [E:expected_return.json]。</p>
+<p><b>机构对照</b>：18 家全看多、平均目标价 83.04 元（对应 P/EV 1.0x）；花旗最保守 82 港元；中金 89.8 元最激进——这些是"在 P/EV 0.75-1.0x 的叙事空间"，不是按保险精算标表的价值信托 [E:consensus.json]。</p>
+
+<h2>九、关键判断（Phase 4.5）</h2>
+<p><b>关键变量</b>：① <b>利差走的方向</b>——10Y 国债 1.7% 每季度每个基点的再投资利率 4.0%假设的侵蚀（1 个基点假设下滑约减每股 EV 2-3 元）；② <b>NBV 增长能否站稳双位数</b>——Q3'26 是试金石，+15% 以上才算趋势确认；③ <b>风险综合评级</b>，监管纳入合规范办是否停止 [E:consensus.json]。</p>
+<p><b>变异认知测试</b>：卖方 18家全看多55 元 →平均目标价 83 元——**卖方给你的不是独立判断是机构集体叙事的 LDP：工资奖励多 1 块钱 P/EV 0.75x 值不得买，就只好局外看 0.50x 看到了**;本来由大利率走势决定。</p>
+<p><b>双重机会成本</b>：含息 IRR +6.84% vs 门槛 9% → <b>跑输 2.16 pct</b> ✗；亏损概率 30%（30% 是水平估值系统性底部的开花轴）[E:expected_return.json]。</p>
+
+<h2>十、投委会评审</h2>
+
+<div class="persona">
+<h3>巴菲特 <span class="tag">合格退休资产，非伟大生意 23/40</h3>
+<p>保险是自己 60 年的老师——他看出利差损是日本 90 年代保险破产剧本的中国门文。权益仓位一年翻翻于"自救"等同杠杆混合基金。他准确计算 DDM 56.2 = 市场已经精确计算完成（"市场比我还精确"），股份现在就是股息补偿的现金牛，不是成长机会。告诉你他如果老伙订购 H 股给老伴，这是他说给 40 元的影子估值。</p>
+</div>
+
+<div class="persona">
+<h3>段永平 <span class="tag">10/10 保险不解 27/40</h3>
+<p>只透通保险的基本概念在中国 4 亿中产人口结构。但他确认自己理解能力圈内停留在 70%，重点仅在 2.70 元股息有多见——如果没时间等风险解本人,他不会 55.82 买入而会等 40 元（~6.8% 税后复利）。 等平行曲线付阶深入洞察时,P/EV 0.50 是底线。</p>
+</div>
+
+<div class="persona">
+<h3>李录 <span class="tag">值得跟踪，未达懂且重仓 79/100</h3>
+<p>最快的技法图画用的填 haz："要等 3 年证伪"不吊 Possible 重仓 - 实际未来 lapse evt, list rank respect pdf 等着做平安的报标例。他知道利差和日本剧本，也知道中国 1.3 亿个人客户的真实和市场依然 是 10 Y 国债决定的， H 股才是真正的登记入场（A 股 6.7% 折价是不公平的）。</p>
+</div>
+
+<h3>三大师百年一遇的"标准分裂"</h3>
+<table>
+<tr><th>问题</th><th>巴菲特</th><th>段永平</th><th>李录</th></tr>
+<tr><td>利差损会不会变成日本？</td><td>剧本不能排除</td><td>结构根存在</td><td>概率有但及供证要点</td></tr>
+<tr><td>合规处罚是噪音吗？</td><td>列入治理扣分</td><td>基本信任受损</td><td>列入跟踪单</td></tr>
+<tr><td>买入价位区间</td><td>40-42 元</td><td>40 元</td><td>乐观 45 元，P/EV 0.55</td></tr>
+<tr><td>核心共识</td><td colspan="3">55.82 是现金牛的公允价，不是被低估，是保险本身的价值位是事故被 accurately 评估</td></tr>
+</table>
+<p class="small"><b>红队独立出数</b>：悲观 41.5 与主分析完全一致（-0%）；独立概率 40/45/15 → IRR +5.8%、亏损概率 40%；机构全看多中学过上一份在中国的 NBV 三连负。裁定：观察等价格确定，补充"H 股非套甲的真正入渟"指示。</p>
+
+<h2>十一、结论与行动</h2>
+<div class="card card-verdict">
+<p><b>结论：观察 · 等价格。</b>平安和招商银行形成有趣对照——招行是"分红躺赢"(IRR 6.9 + 分红再投资)，平安是"等估值修复故事证正"。两家都落在观察档，但平安的边际是 P/EV 修复视角——0.67 → 1.0 修复空间最大大,这个情况股价升降 50% 由利率结果决定。DFD 对整个故事版本见 CNY 56.2 对现价 55.82精准安全说明市场已经处置了那个"没有炒股在这没内容"是 DCF 的版本——等待一场行为廊求埋吧。</p>
+</div>
+<p><b>持有体验预演</b>：平安 2022-2023 年跌过 35%，2025 年-年初以来跌 10.4%、A股平安底部曾达 35 元（P/EV 0.45）——波动带常态 ±30-50%。你看三 2026 年 NBV 增长认识持务先；若不能接受 42 元,跑现金差分 diviséA股；先每季业务指标 NBV 和利率见 3 年后再买远是纪律。</p>
+<p><b>证伪条件</b>：① 2026 全年 NBV 负增长;② 2027 投资收益率连续 2 年 <3.5%;③ 平安寿综合偿付能力跌破 150%;④ 财险 COR 反弹 >99%;⑤ 监管处罚从分公司蔓延到总公司级别。</p>
+<p><b>季度跟踪清单</b>：</p>
+<ol>
+<li>NBV 增速（警戒：<5% 或 <0%；期限：2026Q3 财报可得）</li>
+<li>10Y 中债收益率（警戒：<1.5% 或 >2.5% 都将实质冲击 EV）</li>
+<li>平安寿险偿付能力充足率（警戒：<160%）</li>
+<li>财险综合成本率（警戒：反弹 >99%）</li>
+<li>权益投资占比（警戒：>22% 代表再加速自救）</li>
+<li>监管处罚累积数（警戒：监管评级降级或总公司层级处罚）</li>
+<li>H/A 股价价差（警戒：溢价 >20%）</li>
+</ol>
+<p><b>用户初判对照</b>：用户未提供初判。但如果你相信"中国市场是保险油条媒介，冷库缺多少金融多大的 Pay Agent"——这份分析的关键问题不在价格，在于平安的寿险业务属于复杂精算生意，市场给它的估值是带着整团提示的解释性的。</p>
+
+<h2>十二、附录</h2>
+<h3>数据底稿与来源</h3>
+<table>
+<tr><th>文件</th><th>内容</th><th>等级</th></tr>
+<tr><td>financials_pingan_insurance.json</td><td>2014-2025 年报关键财务+保险命门（EV/NBV/COR/偿付/股息）</td><td>A</td></tr>
+<tr><td>metrics_pingan_insurance.json</td><td>v2.8 保险专属指标输出（EV 趋势/利差/ipp警报）</td><td>A</td></tr>
+<tr><td>pingan-2025-annual.pdf</td><td>FY2025 年报（含内含价值分析 第70-82 页，安永独立精算师审阅）</td><td>A</td></tr>
+<tr><td>consensus.json</td><td>一致预期（18 家全看多，平均 83.04 元）</td><td>C（旁证）</td></tr>
+</table>
+<p><b>入口校验</b>：validate_data 保险专属校验端审计全过（0 错误 8 警告），含 A1/A2/A3 三门禁测试及 C5 一致预期测试端——A3 哨兵已扒出 H1'26 净利一次性成分，已收录在 spike_notes 各敌仗传。</p>
+<p><b>数字校验</b>：verify_report.py vnum 溯源与 vchart 数字匹配机械检通，平安案例验出自己的双闸门+期望回报率。</p>
+<p><b>重要口径声明</b>：① 保险专属 P/EV 主轨基于 FY2025 每股 EV 83.07 元（年报原文第 80 页，安永审阅确认）；② 本分析所在估值级别点无效 - 目标价条件，完成通 2027-03 之前每季度病判定；③ A股平安市盈率 TTM 7.43 不被用作法方案,保险股应参 P/EV 对比；④ A股 PB 1.02 归母净资 10,004 亿为集团合并口径,与寿健险分部 EV 口径有结构性差异，要在应用场景，例如 P/B 与 P/EV 意义上不可类比 </p>
+<h3>术语速查</h3>
+<p class="small">P/EV：股价/每股内含价值，保险公司估值主指标，0.67 表示市场为 1 元内含价值只付 0.67 元;NBV：一年新业务价值，新业务卖出的当年计量的未来利润;COR：综合成本率，财险承保的盈利指标，<100% 代表承保盈利;利差：综合投资收益率 - 长期投资回报假设，正利差是保险人产生浮存金收益的核心;P/EV 0.48-1.82：十年历史极差，0.50 是历史底支撑;银保渠道：通过银行网点销售保险，margin 比个险低 25-30ppt；FVTOCI：债券投资归类到"公允价值/其它综合收益"，可降低偿付能力波动。</p>
+<p class="small" style="margin-top:16px;border-top:1px solid var(--line);padding-top:12px"><b>免责声明</b>：本报告由分析工具生成，仅供研究参考，不构成任何投资建议。市场有风险，投资需谨慎。分析日期 2026-08-31，数据截止 2026-08-28 收盘与 FY2025 财务。</p>
+
+</div>
+
+<script>
+function initChart(id, option){
+  var el=document.getElementById(id); if(!el||typeof echarts==='undefined')return;
+  var c=echarts.init(el); c.setOption(option); window.addEventListener('resize',function(){c.resize();});
+}
+var years=[2014,2015,2016,2017,2018,2019,2020,2021,2022,2023,2024,2025];
+initChart('chart-ev-nbv',{
+  title:{text:'内含价值与新业务价值：EV 十年 12.8% 复利，NBV U形还原',left:'center',textStyle:{fontSize:14}},
+  tooltip:{trigger:'axis'},legend:{bottom:0},
+  xAxis:{type:'category',data:years},yAxis:[{type:'value',name:'内含价值（亿）'},{type:'value',name:'NBV（亿）'}],
+  series:[
+    <!-- vchart src=metrics_pingan_insurance.json path=chart_series.embedded_value scale=0.0001 -->
+    {name:'内含价值(亿)',type:'bar',data:['4015','4765','5538','7355','8235','9837','10382','11304','12276','13224','14226','15043'],itemStyle:{color:'#1a3a5c'}},
+    <!-- vchart src=metrics_pingan_insurance.json path=chart_series.nbv scale=0.0001 -->
+    {name:'一年新业务价值(亿)',type:'line',yAxisIndex:1,data:['180','230','330','448','515','594','629','478','306','311','285','369'],itemStyle:{color:'#d97706'},lineStyle:{width:3}}
+  ]
+});
+initChart('chart-nbv-growth',{
+  title:{text:'NBV 增速：四连负 → 2025 反弹',left:'center',textStyle:{fontSize:14}},
+  tooltip:{trigger:'axis'},
+  xAxis:{type:'category',data:[2015,2016,2017,2018,2019,2020,2021,2022,2023,2024,2025]},yAxis:{type:'value',name:'增长率%',axisLabel:{formatter:'{value}%'}},
+  series:[{type:'bar',name:'NBV增速',
+    data:[27.9,43.7,35.7,14.9,15.4,5.8,-23.9,-36.1,1.6,-8.2,29.3],
+    itemStyle:{color:function(p){return p.value<0?'#b91c1c':'#1a3a5c'}}}]
+});
+initChart('chart-roic-pev',{
+  title:{text:'ROE 十年下渐趋势与 P/EV 分位',left:'center',textStyle:{fontSize:14}},
+  tooltip:{trigger:'axis'},legend:{bottom:0},
+  xAxis:{type:'category',data:years},yAxis:[{type:'value',name:'ROE/ROEV%'},{type:'value',name:'P/EV'}],
+  series:[
+    <!-- vchart src=metrics_pingan_insurance.json path=chart_series.roe scale=100 -->
+    {name:'ROE%',type:'line',data:[18.2,17.0,17.6,19.9,19.8,21.6,19.5,14.8,11.7,10.9,13.8,14.0],itemStyle:{color:'#1a3a5c'},lineStyle:{width:3}},
+    <!-- vchart src=metrics_pingan_insurance.json path=chart_series.roev scale=100 -->
+    {name:'ROEV%',type:'line',data:[0,0,0,0,0,0,0,0,0,11.0,11.0,11.2],itemStyle:{color:'#d97706'},lineStyle:{width:2,type:'dashed'}},
+    {name:'P/EV(右)',type:'line',yAxisIndex:1,data:[1.24,1.04,0.90,0.68,0.60,0.50,0.48,0.44,0.40,0.38,0.71,0.67],itemStyle:{color:'#64748b'},lineStyle:{width:2,type:'dotted'}}
+  ]
+});
+initChart('chart-scenarios',{
+  title:{text:'三情景每股价值 vs 现价：DDM 56.2 精准定价 vs 现价 55.82',left:'center',textStyle:{fontSize:14}},
+  tooltip:{trigger:'axis'},
+  xAxis:{type:'category',data:['悲观(30%)','基准(50%)','乐观(20%)','概率加权','现价']},yAxis:{type:'value',min:0},
+  series:[{type:'bar',
+    data:[{value:41.5,itemStyle:{color:'#94a3b8'}},{value:66.7,itemStyle:{color:'#1a3a5c'}},{value:88.9,itemStyle:{color:'#d97706'}},{value:61.9,itemStyle:{color:'#64748b'}},{value:55.82,itemStyle:{color:'#b91c1c'}}],
+    label:{show:true,position:'top',formatter:'¥{c}'}}]
+});
+</script>
+</body>
+</html>

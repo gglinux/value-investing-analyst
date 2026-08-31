@@ -1,0 +1,74 @@
+{
+ "company": "中国平安",
+ "ticker": "601318",
+ "built_at": "2026-08-31",
+ "latest_quarter_checked": "已核对 2026Q1/Q2（净利 250.22+675.63=925.85 亿；InfoPublDate 2026-04-29+2026-08-21）；NBV 增速从 Q1+20.8% 收窄至 H1+11.2% 是重要的非负面信号；利差+6.3% 对假设 4.0% 健康；合规处罚记录 2026 上半年六省八地发生，记入红旗不入表决",
+ "files": [
+  {
+   "file": "financials_pingan_insurance.json",
+   "source": "结构化金融数据接口保险专属字段 + FY2024/FY2025 年报 EV 分析章节精修",
+   "grade": "A",
+   "validated": true,
+   "period": "2014-2025"
+  },
+  {
+   "file": "metrics_pingan_insurance.json",
+   "source": "compute_metrics_insurance.py 输出（v2.8 新管道）",
+   "grade": "A",
+   "validated": true
+  },
+  {
+   "file": "market_snapshot.json",
+   "source": "结构化金融数据接口结构化行情接口",
+   "grade": "A",
+   "date": "2026-08-28"
+  },
+  {
+   "file": "segments.json",
+   "source": "[E:filings/pingan-2025-annual.pdf] 集团分部披露",
+   "grade": "A"
+  },
+  {
+   "file": "consensus.json",
+   "source": "18+ 家卖方研报汇总",
+   "grade": "C",
+   "note": "旁证；目标价中位数 83 元 vs 现价 55.8，分歧在 P/EV 修复节奏与空间"
+  },
+  {
+   "file": "valuation.json",
+   "source": "P/EV/DDM/expected-return 三通道计算整合",
+   "grade": "A",
+   "validated": true
+  },
+  {
+   "file": "expected_return.json",
+   "source": "reverse_dcf.py expected-return 输出",
+   "grade": "A",
+   "validated": true
+  },
+  {
+   "file": "manifest.json",
+   "source": "数据清单与排雷检索记录",
+   "grade": "A"
+  },
+  {
+   "file": "filings/pingan-2025-annual.pdf",
+   "source": "FY2025 年报（CNINFO，2026-03-27 披露，370 页）",
+   "grade": "A"
+  }
+ ],
+ "adversarial_check": {
+  "query": "中国平安+财务造假+偿付能力+违规处罚+2025-2026",
+  "result": "无财务造假前科；审计师安永华明稳定出具标准无保留意见；红旗 2 条：①2026 上半年六省八地分支机构密集罚款（财务数据不真实/欺骗投保人/代理人管理不规范），南方周末将其列风险榜第二、认为合规问题已蔓延至管理层——对保险这种以'信任'为核心的行业，需要跟踪是否触发风险综合评级降级；②2025 年权益仓位一年内翻倍（9.9%→20%）被腾讯证券称为'豪赌权益自救'——投资收益率极敏感特性显著放大，2026 上半年净利 +36.1% 中较大部分是不可持续的投资收益弹性。两项都不构成否决，但 P/EV 目标应较保守。",
+  "date": "2026-08-31"
+ },
+ "notes": [
+  "平安是保险股而非银行——metric-playbook 类型七，用专属管道（v2.8 新建立 validate_data.py 保险旁路 + compute_metrics_insurance.py）",
+  "FY2025 EV/NBV 命门数据从年报原文（第 74-82 页内含价值分析）精准抽取，含安永独立精算师审阅（A级）",
+  "P/EV 0.67 为近十年 17% 分位；DDM r=9% 精确给出 56 元 ≈ 现价——市场价格已按'股息现金牛'定价，未给任何估值修复溢价",
+  "NBV 2022-2024 三连弱（-36%,+2%,-8%）后 2025 +29.3%，但 H1'26 增速收窄至 11.2%，反弹是否可持续是关键观察项",
+  "2026H1 净利的 +36.1% 中超半数是投资收益弹性（不可年化），通用化处理用 FY2025 营运利润 1344 亿为基期",
+  "H 股 56.55 HKD 相对 A 股折价 13%，同权同利——长期持有优先 H 股（A股投资者付 IRR 1.5-2pct 买买卖通道）",
+  "首次实战 v2.8 保险管道：validate_data.py 新增保险旁路（EV/NBV/COR/偿付/股息 A 级验证）、compute_metrics_insurance.py 新建（EV 趋势/NBV 增速/利差/警报）、14 年数据一扫通过"
+ ]
+}

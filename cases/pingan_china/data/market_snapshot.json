@@ -1,0 +1,19 @@
+{
+ "company": "中国平安",
+ "ticker": "601318",
+ "as_of": "2026-08-28 收盘",
+ "price_cny": 55.82,
+ "market_cap_cny": 1010770,
+ "pb": 1.02,
+ "pe_ttm": 7.43,
+ "dividend_yield_ttm": 0.0484,
+ "pev": 0.672,
+ "pev_quantile_3y": 0.34,
+ "pev_quantile_10y": 0.17,
+ "h_share_price_hkd": 56.55,
+ "ah_premium_pct": 0.13,
+ "high_52week": 63.0,
+ "low_52week": 45.4,
+ "position_52week_pct": 0.59,
+ "note": "PE(TTM)=7.43是公允法；P/EV=0.67为保险标杆，低于同业（国寿0.81/太保0.62/新华0.80）；AH差价13.2%——H股对国内投资者更划算"
+}

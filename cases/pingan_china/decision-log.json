@@ -1,0 +1,42 @@
+{
+ "entries": [
+  {
+   "date": "2026-08-31",
+   "price": 55.82,
+   "verdict": "观察等价格",
+   "margin_of_safety": 0.163,
+   "expected_irr": 0.0684,
+   "loss_probability": 0.3,
+   "key_variables": [
+    {
+     "name": "10Y国债利率走向",
+     "judgment": "每1bp变EV 2-3元/股"
+    },
+    {
+     "name": "NBV 增速是否站稳双位数",
+     "judgment": "Q3'26 是试金石（H1 已收窄至+11.2%）"
+    },
+    {
+     "name": "风险综合评级",
+     "judgment": "监管合规蔓延是否停止"
+    }
+   ],
+   "falsifiers": [
+    "2026全年NBV负增长",
+    "连续2年投资收益率<3.5%",
+    "平安寿险偿付能力<150%",
+    "财险COR反弹>99%",
+    "合规处罚升级至总公司"
+   ],
+   "persona_verdicts": {
+    "buffett": "合格退休资产非伟大生意(23)",
+    "duan": "保险不懂(27)",
+    "li_lu": "值得跟踪未达重仓(79)"
+   },
+   "user_prior": null,
+   "motivation": "用户要求实测 skill 分析 A 股中国平安（首次保险管道）",
+   "buy_trigger": "≤42元（P/EV 0.50x）；<48元重跑评估",
+   "review_due": "2026-10-27（Q3财报）或跌破48元即触发"
+  }
+ ]
+}
