@@ -1,0 +1,79 @@
+{
+ "company": "工商银行",
+ "ticker": "sh601398",
+ "currency": "CNY",
+ "unit": "million",
+ "company_type": "银行",
+ "accounting_standard": "CAS",
+ "fiscal_year_end": "12-31",
+ "annual": [
+  {
+   "year": 2020,
+   "publish_date": "2021-03-27",
+   "operating_income": 882665.0,
+   "net_income": 315906.0,
+   "total_assets": 33345058.0,
+   "total_equity": 2909515.0,
+   "gross_loans": 18136328.0,
+   "deposits": 25134726.0
+  },
+  {
+   "year": 2021,
+   "publish_date": "2022-03-31",
+   "operating_income": 942762.0,
+   "net_income": 348338.0,
+   "total_assets": 35171383.0,
+   "total_equity": 3275258.0,
+   "gross_loans": 20109200.0,
+   "deposits": 26441774.0
+  },
+  {
+   "year": 2022,
+   "publish_date": "2023-03-31",
+   "operating_income": 875734.0,
+   "net_income": 361132.0,
+   "total_assets": 39610146.0,
+   "total_equity": 3515419.0,
+   "gross_loans": 22591676.0,
+   "deposits": 29870491.0
+  },
+  {
+   "year": 2023,
+   "publish_date": "2024-03-28",
+   "operating_income": 843070.0,
+   "net_income": 363993.0,
+   "total_assets": 44697079.00000001,
+   "total_equity": 3776588.0,
+   "gross_loans": 25386933.0,
+   "deposits": 33521174.0
+  },
+  {
+   "year": 2024,
+   "publish_date": "2025-03-29",
+   "operating_income": 821803.0,
+   "net_income": 365863.0,
+   "total_assets": 48821746.0,
+   "total_equity": 3987266.0,
+   "gross_loans": 27613781.0,
+   "deposits": 34836973.0
+  },
+  {
+   "year": 2025,
+   "publish_date": "2026-03-28",
+   "operating_income": 838270.0,
+   "net_income": 368562.0,
+   "total_assets": 53477772.99999999,
+   "total_equity": 4272024.0,
+   "gross_loans": 29712359.0,
+   "deposits": 37311778.0,
+   "npl_ratio": 0.0131,
+   "provision_coverage": 2.136,
+   "core_tier1_ratio": 0.13570000000000002,
+   "nim": 0.0128,
+   "roe_reported": 0.09449999999999999,
+   "bvps_reported": 10.63,
+   "dividend_per_share": 0.31,
+   "shares_diluted": 356406.0
+  }
+ ]
+}

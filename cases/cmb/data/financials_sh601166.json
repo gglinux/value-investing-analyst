@@ -1,0 +1,79 @@
+{
+ "company": "兴业银行",
+ "ticker": "sh601166",
+ "currency": "CNY",
+ "unit": "million",
+ "company_type": "银行",
+ "accounting_standard": "CAS",
+ "fiscal_year_end": "12-31",
+ "annual": [
+  {
+   "year": 2020,
+   "publish_date": "2021-03-31",
+   "operating_income": 203137.0,
+   "net_income": 66626.0,
+   "total_assets": 7894000.0,
+   "total_equity": 624803.0,
+   "gross_loans": 3867321.0,
+   "deposits": 4084242.0
+  },
+  {
+   "year": 2021,
+   "publish_date": "2022-03-25",
+   "operating_income": 221236.0,
+   "net_income": 82680.0,
+   "total_assets": 8603024.0,
+   "total_equity": 694298.0,
+   "gross_loans": 4310306.0,
+   "deposits": 4355748.0
+  },
+  {
+   "year": 2022,
+   "publish_date": "2023-03-31",
+   "operating_income": 222374.0,
+   "net_income": 91377.0,
+   "total_assets": 9266671.0,
+   "total_equity": 757298.0,
+   "gross_loans": 4869879.0,
+   "deposits": 4788754.0
+  },
+  {
+   "year": 2023,
+   "publish_date": "2024-03-29",
+   "operating_income": 210831.0,
+   "net_income": 77116.0,
+   "total_assets": 10158326.0,
+   "total_equity": 807719.0,
+   "gross_loans": 5333483.0,
+   "deposits": 5217064.0
+  },
+  {
+   "year": 2024,
+   "publish_date": "2025-03-28",
+   "operating_income": 212226.0,
+   "net_income": 77205.0,
+   "total_assets": 10507898.0,
+   "total_equity": 893611.0,
+   "gross_loans": 5608859.0,
+   "deposits": 5630360.0
+  },
+  {
+   "year": 2025,
+   "publish_date": "2026-03-27",
+   "operating_income": 212741.0,
+   "net_income": 77469.0,
+   "total_assets": 11094256.0,
+   "total_equity": 913646.0,
+   "gross_loans": 5821808.0,
+   "deposits": 6020806.0,
+   "npl_ratio": 0.0108,
+   "provision_coverage": 2.2841,
+   "core_tier1_ratio": 0.10830000000000001,
+   "nim": 0.0171,
+   "roe_reported": 0.0915,
+   "bvps_reported": 38.83,
+   "dividend_per_share": 1.07,
+   "shares_diluted": 20774.0
+  }
+ ]
+}

@@ -1,0 +1,18 @@
+{
+ "fetched_at": "2026-08-28 收盘",
+ "source": "行情接口（A级）",
+ "price_hkd": 158.4,
+ "price_cny_est": 145.7,
+ "fx_hkd_cny": 0.92,
+ "total_market_cap_yi_hkd": 2109.5,
+ "total_market_cap_yi_cny": 1940.7,
+ "pe_ttm": 13.84,
+ "pb": 7.95,
+ "dividend_yield_ttm": 0.0173,
+ "high_52w_hkd": 328.875,
+ "low_52w_hkd": 137.375,
+ "position_52w": 0.11,
+ "amount_20d_avg_note": "日均成交约10亿港元级别，流动性充裕",
+ "total_shares": 1331779203,
+ "drawdown_note": "2025-08-29历史高点337.075，最大回撤-90.0%（上市以来两次）；距今-51.7%"
+}

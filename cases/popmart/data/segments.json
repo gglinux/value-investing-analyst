@@ -1,0 +1,168 @@
+{
+ "currency": "CNY_yi",
+ "fy2025_ips": [
+  {
+   "name": "THE MONSTERS (LABUBU家族)",
+   "revenue": 141.45,
+   "share": 0.381,
+   "yoy": 3.86
+  },
+  {
+   "name": "SKULLPANDA",
+   "revenue": 35.39,
+   "share": 0.095,
+   "yoy": 1.42
+  },
+  {
+   "name": "DIMOO",
+   "revenue": 27.78,
+   "share": 0.075,
+   "yoy": 0.61
+  },
+  {
+   "name": "CRYBABY",
+   "revenue": 24.14,
+   "share": 0.065,
+   "yoy": 2.16
+  },
+  {
+   "name": "MOLLY",
+   "revenue": 33.3,
+   "share": 0.09,
+   "yoy": 0.4
+  },
+  {
+   "name": "HIRONO",
+   "revenue": 20.55,
+   "share": 0.055,
+   "yoy": 0.83
+  },
+  {
+   "name": "其他17+个IP",
+   "revenue": 88.6,
+   "share": 0.239,
+   "yoy": null
+  }
+ ],
+ "fy2025_regions": [
+  {
+   "name": "中国内地",
+   "revenue": 208.5,
+   "share": 0.562,
+   "yoy": 1.41
+  },
+  {
+   "name": "港澳台及海外",
+   "revenue": 162.7,
+   "share": 0.438,
+   "yoy": 2.92
+  }
+ ],
+ "fy2025_categories": [
+  {
+   "name": "毛绒",
+   "revenue": 187.1,
+   "share": 0.504,
+   "yoy": 5.61
+  },
+  {
+   "name": "手办",
+   "revenue": 120.2,
+   "share": 0.324,
+   "yoy": 0.73
+  },
+  {
+   "name": "MEGA/衍生品等",
+   "revenue": 63.9,
+   "share": 0.172,
+   "yoy": null
+  }
+ ],
+ "h1_2026_ips": [
+  {
+   "name": "THE MONSTERS",
+   "revenue": 44.54,
+   "yoy": -0.075
+  },
+  {
+   "name": "星星人",
+   "revenue": 26.5,
+   "yoy": 5.806
+  },
+  {
+   "name": "CRYBABY",
+   "revenue": 16.33,
+   "yoy": 0.34
+  },
+  {
+   "name": "DIMOO",
+   "revenue": 16.19,
+   "yoy": 0.465
+  },
+  {
+   "name": "SKULLPANDA",
+   "revenue": 15.51,
+   "yoy": 0.271
+  },
+  {
+   "name": "HIRONO",
+   "revenue": 10.09,
+   "yoy": 0.385
+  },
+  {
+   "name": "MOLLY",
+   "revenue": 9.01,
+   "yoy": -0.336
+  }
+ ],
+ "h1_2026_regions": [
+  {
+   "name": "中国内地",
+   "revenue": 122.01,
+   "yoy": 0.473
+  },
+  {
+   "name": "亚太",
+   "revenue": 25.8,
+   "yoy": -0.097
+  },
+  {
+   "name": "美洲",
+   "revenue": 18.9,
+   "yoy": 0.0
+  },
+  {
+   "name": "欧洲及其他",
+   "revenue": 5.1,
+   "yoy": -0.165
+  }
+ ],
+ "note": "1H26 LABUBU家族首次负增长、星星人+580.6%接棒；汇兑损失7.2亿拖累净利。2026年回购20-50亿HKD计划进行中",
+ "ip_names": [
+  "THE MONSTERS (LABUBU家族)",
+  "SKULLPANDA",
+  "DIMOO",
+  "CRYBABY",
+  "MOLLY",
+  "HIRONO",
+  "其他17+个IP"
+ ],
+ "ip_revenue": [
+  141.45,
+  35.39,
+  27.78,
+  24.14,
+  33.3,
+  20.55,
+  88.6
+ ],
+ "ip_share_pct": [
+  38.1,
+  9.5,
+  7.5,
+  6.5,
+  9.0,
+  5.5,
+  23.9
+ ]
+}

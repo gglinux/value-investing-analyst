@@ -1,0 +1,96 @@
+{
+ "currency": "USD",
+ "unit": "/ADS",
+ "method": "双轨基期 DCF（主轨=引擎强制正常化 65 亿 USD；交叉轨=当期 136 亿 USD）+ 净现金回补 + 反向 DCF + 期望回报引擎",
+ "normalization": {
+  "status": "周期高位强制启用",
+  "net_margin_latest": 0.2266,
+  "net_margin_avg": 0.104,
+  "ratio": 2.18,
+  "base_oe": 6547,
+  "base_oe_range": [
+   6233,
+   6547
+  ],
+  "alert": "亏损→盈利爬坡期公司，正常化基期天然偏保守，故双轨呈现"
+ },
+ "net_cash": {
+  "cash_st_q2_2026": 4564,
+  "unit": "亿CNY",
+  "usd": 665,
+  "debt": 7.7,
+  "net_cash_usd": 662,
+  "per_ads": 47.4,
+  "ev": 543,
+  "note": "Q2 末披露现金+短投 4564 亿 CNY，按财报汇率 6.77 折算 674 亿 USD，减酌处费/优先股等后净现金约 662 亿 USD"
+ },
+ "implied_growth_at_price": {
+  "ev": 543,
+  "base_oe": 6547,
+  "wacc": 0.11,
+  "terminal_g": 0.02,
+  "implied_10y_cagr": -0.0576,
+  "comment": "正常化基期口径下，市场为 PDD 定价的是'OE 十年年降 5.8%'——即国内电商利润减半+Temu 归零的极端剧本"
+ },
+ "tracks": {
+  "A_正常化基期65亿": {
+   "bear_g0": 96.44,
+   "base_g5": 107.21,
+   "bull_g8": 114.69,
+   "note": "三情景已含净现金每股 47.4"
+  },
+  "B_当期基期136亿": {
+   "bear_g_minus5": 130.73,
+   "base_g0": 149.34,
+   "bull_g5": 171.74,
+   "note": "承认 2025 年利润为新常态的口径"
+  },
+  "red_team": {
+   "bear_g_minus5": 85.56,
+   "note": "正常化下界 62 亿 + g=-5% + 净现金回补——几乎正好等于现价；市场正在按'红队剧本'定价"
+  }
+ },
+ "scenarios_main": [
+  {
+   "name": "悲观",
+   "prob": 0.3,
+   "value_per_ads": 96.44,
+   "narrative": "正常化基期+零增长：国内电商利润稳定至腰斩水位，Temu 价值按零计"
+  },
+  {
+   "name": "基准",
+   "prob": 0.45,
+   "value_per_ads": 107.21,
+   "narrative": "正常化基期+10年5%：Temu 合规成本常态化后回归微利，国内利润随行业自然增长"
+  },
+  {
+   "name": "乐观",
+   "prob": 0.25,
+   "value_per_ads": 114.69,
+   "narrative": "正常化基期+10年8%：Temu 本地化转型成功+国内份额稳固"
+  }
+ ],
+ "cross_validation": [
+  {
+   "method": "EV/净现金",
+   "logic": "净现金 662 亿 USD 占市值 55%——相当于市场按经营业务 EV 543 亿美元定价，对年化 OCF 150-170 亿 USD 的业务给 EV/OCF≈3.5x",
+   "result": "深度价值区"
+  },
+  {
+   "method": "PE 口径",
+   "logic": "TTM PE 9.23x；若 2026 净利 1000-1100 亿 CNY（卖方预期），2026E PE≈7.5-8x；与阿里 10x / 京东 9x 比折价合理但有修复弹性",
+   "result": "低估区间"
+  }
+ ],
+ "buy_zone_usd": [
+  70,
+  80
+ ],
+ "margin_of_safety_vs_base": 0.21,
+ "red_team_final": "悲观 85.56 ≈ 现价——市场定价已在红队最保守剧本上；红队裁定：不可能再降档（下方空间已被价格自身封闭），但无法升档过闸门二（4.53% < 9%）",
+ "band_usd": [
+  96.44,
+  107.21,
+  114.69
+ ]
+}

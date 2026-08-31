@@ -1,0 +1,18 @@
+{
+ "generated_at": "2026-08-28",
+ "company": "拼多多 usPDD",
+ "note": "美股中概链路实跑。接口为 Futu 通道（USD million 口径），已用 20-F 披露值按汇率核对。2026Q2 财报（2026-08-24 发布）数据为 6-K 原文 A 级。",
+ "files": [
+  {"file": "financials_PDD.json", "source": "结构化金融数据接口（Futu）2019-2025 + 20-F 交叉核对", "level": "A/B", "validated": "pass（0错3警）"},
+  {"file": "raw_finance_pdd.json", "source": "结构化金融数据接口PDD", "level": "A", "validated": "源数据"},
+  {"file": "segments.json", "source": "2026Q2 业绩公告 6-K 原文 + 2025 年报", "level": "A", "validated": "结构化"},
+  {"file": "market_snapshot.json", "source": "行情接口PDD", "level": "A", "validated": "n/a"},
+  {"file": "consensus.json", "source": "WSJ/彭博/高盛/大摩转引", "level": "B"},
+  {"file": "metrics_PDD.json", "source": "compute_metrics.py", "level": "derived"},
+  {"file": "valuation.json", "source": "估值底稿（双轨+净现金回补）", "level": "derived"},
+  {"file": "expected_return.json", "source": "reverse_dcf expected-return", "level": "derived"}
+ ],
+ "user_prior": "用户未提供初始判断",
+ "peer_note": "本次未单独跑竞对底稿；行业对照用阿里/京东同季业绩快照量级参考（报告中披露口径）",
+ "timing_note": "2026Q2 财报于 2026-08-24 发布（分析日前 4 天），信息完全新鲜：Q2 归母净利 -12%（连续第3季负增长），经营利润 +8%（一次性其他损失74亿拖累报表利润）"
+}

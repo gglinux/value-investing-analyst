@@ -1,0 +1,53 @@
+{
+ "method": "两阶段现价回归（分红折现+终期BVPS×终期PB折现），交叉验证：原桂公式PB-ROE与DDM",
+ "note": "弃用单阶段PB-ROE公式（(ROE-g)/(r-g)在g接近r时发散，是Gordon经典陷阱）",
+ "params": {
+  "bvps_start": 43.41,
+  "roe_path": "13.4%→12.0%",
+  "payout": 0.3534,
+  "r_range": [
+   0.09,
+   0.1
+  ]
+ },
+ "band": [
+  34,
+  47,
+  58
+ ],
+ "scenarios_detail": {
+  "悲观": {
+   "value": 34,
+   "prob": 0.3,
+   "assumption": "息差续降至1.5%、零售不良超预期，ROE落至10%，终期PB 0.75，r=10%"
+  },
+  "基准": {
+   "value": 47,
+   "prob": 0.5,
+   "assumption": "息差1.8%附近企稳，ROE中枢12%，终期PB 1.0，r=9.5%"
+  },
+  "乐观": {
+   "value": 58,
+   "prob": 0.2,
+   "assumption": "息差企稳回升+财富管理放量，ROE守住13%，终期PB 1.15，r=9%"
+  }
+ },
+ "price": 39.43,
+ "margin_of_safety_vs_base": 0.161,
+ "buy_zone": [
+  30,
+  35.3
+ ],
+ "red_team_scenarios": {
+  "bear": 28,
+  "base": 38,
+  "bull": 52,
+  "expected_irr_incl_div": 0.036,
+  "note": "红队独立假设：悲观情景另考虑监管让利加码；概率35/45/20"
+ },
+ "red_band": [
+  28,
+  38,
+  52
+ ]
+}

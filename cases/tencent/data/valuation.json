@@ -1,0 +1,85 @@
+{
+ "currency": "HKD",
+ "unit": "/股",
+ "method": "双轨基期 DCF（主轨当期 OE 2994 亿 / 保守轨正常化 OE 2190 亿）+ 投资组合折价加回 + 净现金 + 反向 DCF + 期望回报引擎",
+ "normalization": {
+  "status": "中性区间",
+  "margin_ratio_latest_vs_avg": 1.2,
+  "base_oe_recommended": 299409,
+  "base_oe_range": [
+   219013,
+   256881
+  ],
+  "note": "引擎推荐当期 OE 2994 亿（OCF/净利 1.35 转化率），正常化区间 2190-2569 亿作保守轨；2023 年利润异常低点（投资减值）拉低均值，normalized 偏保守"
+ },
+ "investment_portfolio": {
+  "listed_fv": 487200,
+  "unlisted_bv": 387900,
+  "unit": "百万CNY",
+  "total": 875100,
+  "conservative_recoverable": 583800,
+  "neutral_recoverable": 671200,
+  "per_share_neutral_hkd": 80.2,
+  "note": "上市投资打9折+非上市打6折=6712 亿（中性）；保守口径 5838 亿。投资组合占市值约 16-18%"
+ },
+ "net_cash": 58200,
+ "scenarios_main": [
+  {
+   "name": "悲观",
+   "prob": 0.3,
+   "growth": 0.03,
+   "base": "正常化OE2190亿",
+   "value_per_share_hkd": 441.5,
+   "narrative": "AI 资本开支长期侵蚀利润+游戏/广告增速回落至低个位数，10年 OE g=3%"
+  },
+  {
+   "name": "基准",
+   "prob": 0.45,
+   "growth": 0.05,
+   "base": "正常化OE2190亿",
+   "value_per_share_hkd": 482.8,
+   "narrative": "广告 AI 化+游戏长青化兑现，但 AI 投入压制利润释放，10年 OE g=5%"
+  },
+  {
+   "name": "乐观",
+   "prob": 0.25,
+   "growth": 0.08,
+   "base": "当期OE2994亿",
+   "value_per_share_hkd": 697.6,
+   "narrative": "AI 变现超预期（云+广告+办公），利润增速恢复双位数，10年 OE g=8%"
+  }
+ ],
+ "implied_growth": {
+  "conservative_base": 0.0321,
+  "current_base": -0.0436,
+  "note": "正常化 OE 口径隐含 10 年 +3.2%（温和）；当期 OE 口径隐含 -4.4%（苛刻）——市场对 AI 投入的态度是'增长中枢下修'而非'归零'"
+ },
+ "cross_validation": [
+  {
+   "method": "投资组合支撑",
+   "logic": "上市 4872 亿+非上市 3879 亿，中性可回收 6712 亿 CNY≈80 HKD/股，占现价 17.6%——投资组合为估值提供硬底",
+   "result": "支撑成立"
+  },
+  {
+   "method": "PE 口径",
+   "logic": "PE-TTM 15.28x；Non-IFRS 2026E 归母约 3000 亿 CNY→2026E PE≈13x，处于腾讯历史估值区间下沿（2018-2025 区间 13-45x）",
+   "result": "历史下沿"
+  },
+  {
+   "method": "回购支撑",
+   "logic": "2024 年回购 1120 亿 HKD、2025 年约 1300 亿 HKD、2026Q2 再回购 169 亿——持续大额回购注销提供股价支撑",
+   "result": "强"
+  }
+ ],
+ "buy_zone_hkd": [
+  380,
+  420
+ ],
+ "margin_of_safety_vs_base": 0.057,
+ "red_team_final": "悲观 441.5（保守投资组合口径）≈ 现价下方 3%——下行空间有限；红队不降档，但要求买入区下移至 380-420",
+ "band_hkd": [
+  441.5,
+  482.8,
+  697.6
+ ]
+}

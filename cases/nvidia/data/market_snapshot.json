@@ -1,0 +1,22 @@
+{
+ "as_of": "2026-08-27（美股上一交易日收盘）",
+ "source": "行情数据接口",
+ "source_level": "A",
+ "price_usd": 209.66,
+ "prev_close": 213.05,
+ "total_market_cap_usd_mm": 5078174.86,
+ "total_shares_mm": 24221.0,
+ "pe_ttm": 32.11,
+ "pb": 25.98,
+ "dividend_yield_ttm_pct": 0.13,
+ "high_52w": 236.26,
+ "low_52w": 163.82,
+ "pos_in_52w_range": 0.633,
+ "avg_daily_turnover_recent_usd": 37883346967,
+ "chg_ytd_pct": 12.56,
+ "chg_5d_pct": -3.63,
+ "chg_20d_pct": 10.34,
+ "note": "日均成交额取当日成交额37.9B美元量级（近20日普遍200-400亿美元），流动性对个人投资者完全无约束",
+ "avg_daily_turnover_usd_bn": 37.88,
+ "market_cap_usd_tn": 5.08
+}

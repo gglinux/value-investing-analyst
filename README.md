@@ -2,6 +2,8 @@
 
 对单一公司做机构级价值投资深度分析，输出一份数字与图表全程可溯源校验的中文单文件 HTML 报告。
 
+本仓库同时是**价值分析管理仓库**：`cases/` 存档全部真实分析案例（数据底稿+工作底稿+决策日志+报告），供历史回溯、触发价跟踪与复盘校准；案例暴露的问题持续固化为引擎修复，git 历史即方法论进化史。案例索引与跟踪清单见 [cases/README.md](cases/README.md)。
+
 流水线：排雷过滤 → 数据采集（双源核对 + 入口校验）→ 定量画像（统一口径 + 周期正常化 + capex 拆分）→ 五维定性（商业模式/护城河/增长/管理层/财务质量）→ 估值与安全边际（基期正常化 + 三情景 DCF + 反向 DCF + 基率检验 + 假设一致性对账 + 期望回报率）→ 关键判断收敛（关键变量/变异认知/机会成本）→ 三位大师独立评估（巴菲特/段永平/李录，各自从原始证据独立推导，显式呈现分歧）+ 芒格式红队 → 四档结论（核心买入/观察等价格/太难放弃/排除）+ 证伪条件 + 跟踪清单 + 决策日志 + 复盘校准。
 
 ## 核心设计
@@ -24,32 +26,33 @@ SKILL.md                     主流程（七阶段流水线 + 纪律卡 + 数据
 assets/report_template.html  HTML 报告模板（首屏决策卡 + ECharts）
 references/
   forensic-checklist.md      排雷清单（一票否决 + 红旗项 + A股防割）
-  data-sourcing.md           各市场数据采集实操与踩坑记录（美股/A股已实证）
+  data-sourcing.md           各市场数据采集实操与踩坑记录（美股/A股/港股/银行均实证）
   metric-playbook.md         商业模式十类型 → 专属指标映射
   moat-framework.md          商业模式 + 护城河五源 + 定价权测试 + 产业链议价权
   growth-framework.md        TAM/S曲线/增长分解 + ROIIC 增长质量
   management-checklist.md    资本配置评分 + 言行一致追踪
-  valuation-guide.md         估值方法树 + 基期正常化 + 基率检验 + 期望回报率
+  valuation-guide.md         估值方法树 + 基期正常化（含双轨） + 基率检验 + 期望回报率
   investor-personas.md       三位大师独立评估协议 + 芒格式红队
   report-spec.md             报告章节规范 + 溯源质量红线
 scripts/
   validate_data.py           底稿入口校验（错误清零才进 Phase 2）
-  compute_metrics.py         统一口径指标（ROIC/ROIIC/OE/正常化/capex拆分/chart_series）
+  compute_metrics.py         统一口径指标（ROIC/ROIIC/OE/正常化/双轨基期/capex拆分）
   compute_metrics_bank.py    银行专属管道（NPL/拨备/成本收入比/PB-ROE 输入）
-  reverse_dcf.py             反向 DCF + 三情景正向 + 期望回报率（含股息口径）
-  verify_report.py           报告溯源校验（vnum/vchart/证据指针，发布前强制）
-tests/run_tests.py           回归测试（39 项，改脚本前后必跑）
+  reverse_dcf.py             反向 DCF + 三情景正向（非经营资产加回） + 期望回报率
+  verify_report.py           报告溯源校验（vnum/vchart/证据指针/图表完整性/乱码检测）
+tests/run_tests.py           回归测试（改脚本前后必跑）
 examples/nvidia/             黄金样例（英伟达完整分析，2026-08）
+cases/                       实证案例库（6 案例：美股/中概/A股/银行/港股，索引见 cases/README.md）
 ```
 
 ## 黄金样例
 
 `examples/nvidia/` 是一次真实全流程分析，特意保留了初版估值错误（峰值基期）与修订结果（正常化基期）的对照——亏损概率 30% → 80%，是"基期正常化"关卡价值的实证。样例的投委会章节为 v1 评分卡结构，新框架下会呈现为三份独立评估 + 分歧对照表（见样例 README 的框架演进说明）。
 
-## 实证状态（诚实声明）
+## 实证状态
 
-- 已实证：美股全流程（NVDA + 三竞对）、A股采集链路（海天味业）、全部脚本引擎（39 项回归测试）。
-- 未实证：港股链路、银行管道真实数据（仅合成数据测试）、周期低位向上正常化真实标的。首次触达这些分支时按实证模式操作，踩坑固化回 `references/data-sourcing.md`。
+- 已实证（全流程真实标的）：美股（英伟达 + 三竞对）、中概美股（拼多多）、A股（伊利股份）、A股银行专属管道（招商银行 + 四大行对照）、港股（泡泡玛特、腾讯控股）。脚本引擎全部经回归测试覆盖（50+ 项）。
+- 未实证：保险/券商（无专属管道，触达时须手工建稿并按实证模式操作）、周期低位真实标的（向上正常化逻辑仅合成数据测试过）。首次触达时踩坑固化回 `references/data-sourcing.md`。
 
 ## 边界
 

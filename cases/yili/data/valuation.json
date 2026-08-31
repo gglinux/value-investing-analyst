@@ -1,0 +1,73 @@
+{
+ "currency": "CNY",
+ "unit": "元/股",
+ "method": "当期 OE 基期 DCF（引擎中性判定）+ 反向 DCF + 三情景 + 期望回报引擎；交叉验证：PE 历史区间与分红回报率",
+ "normalization": {
+  "status": "中性区间（净利率 9.96% vs 全期均值约8.7%，比值1.14<1.25）",
+  "base_oe": 11565,
+  "base_oe_range": null,
+  "alert": "无周期高位警报，当期 OE 可作基期"
+ },
+ "implied_growth_at_price": {
+  "market_cap_cny": 169899,
+  "net_debt": 31320,
+  "ev": 138579,
+  "base_oe": 11565,
+  "wacc": 0.1,
+  "terminal_g": 0.025,
+  "implied_10y_cagr": -0.0071,
+  "comment": "市场对伊利的定价隐含十年 OE 每年-0.71%（缓慢下行）；EV/OE=12.0x，市场给的是'零增长消费股'定价"
+ },
+ "scenarios_main": [
+  {
+   "name": "悲观",
+   "prob": 0.3,
+   "growth": 0.02,
+   "value_per_share_cny": 19.53,
+   "narrative": "原奶反弹+需求疲态延续+奶粉增长放缓，10年 OE g=2%（增速慢于通胀）"
+  },
+  {
+   "name": "基准",
+   "prob": 0.45,
+   "growth": 0.05,
+   "value_per_share_cny": 22.71,
+   "narrative": "需求温和恢复+奶粉第二曲线兑现+净利率稳健，10年 OE g=5%（温和增长）"
+  },
+  {
+   "name": "乐观",
+   "prob": 0.25,
+   "growth": 0.08,
+   "value_per_share_cny": 26.27,
+   "narrative": "成人营养品/奶酪/海外三条曲线齐发力，10年 OE g=8%（降$复增长）"
+  }
+ ],
+ "cross_validation": [
+  {
+   "method": "PE 回归中枢",
+   "logic": "历史十年 PE 中枢 25x，悲观 PE 18x × 2026E EPS 1.96 = 35.3 元；但若长期增长中枢下移，合理 PE 可能已系统性下修至 15-18x（对应 29-35 元）",
+   "result": "与 DCF 乐观值 26.27 存在 10-15% 差距，主因 DCF 用了 10% 折现率+2.5% 永续（保守参数）"
+  },
+  {
+   "method": "分红回报率",
+   "logic": "分红率 75%+，股息率 5.14%。若 PE 长期 16x + 分红 5%，10 年期年化回报约 13-15%（假设 PE 不变），隐含股价 34-40 元",
+   "result": "比 DCF 三情景上限 26.27 高 30-50%，前提是 PE 不再收缩"
+  }
+ ],
+ "red_team_scenarios": {
+  "bear": 15,
+  "base": 20,
+  "bull": 25,
+  "prob": "40/40/20",
+  "note": "红队把基准增长率从 5% 降至 3%（对应原奶红利回吐+渠道增负重），悲观 g=0%，悲观价 = 15 元（-44%）"
+ },
+ "buy_zone_cny": [
+  18,
+  22
+ ],
+ "margin_of_safety_vs_base": -0.155,
+ "band_cny": [
+  19.53,
+  22.71,
+  26.27
+ ]
+}

@@ -1,0 +1,154 @@
+{
+ "generated_at": "2026-08-28 15:30",
+ "company": "招商银行 sh600036",
+ "note": "银行专属管道首次真实数据实证（compute_metrics_bank）。底层校验器 validate_data 已加银行旁路（本技能 v2.4 改动）。",
+ "files": [
+  {
+   "file": "financials_CMB.json",
+   "source": "结构化金融数据接口三表（A级）+ 标普信评2026-06债券通评级报告2021-2025银行指标（B级）+ 年报历史披露2016-2020拨备/资本充足率（A级）+ 官网股本分红（A级）",
+   "level": "A/B",
+   "fetched_at": "2026-08-28",
+   "coverage": "2016-2025（10年）",
+   "validated": "pass（0错1警：银行专属旁路提示）"
+  },
+  {
+   "file": "raw_finance_cmb.json",
+   "source": "结构化金融数据接口600036 --start 2015",
+   "level": "A",
+   "fetched_at": "2026-08-28",
+   "coverage": "2015-2025 三表",
+   "validated": "源数据"
+  },
+  {
+   "file": "financials_sh601166.json",
+   "source": "结构化金融数据接口（A级）+2025年报快报指标（B级）",
+   "level": "A/B",
+   "fetched_at": "2026-08-28",
+   "coverage": "2020-2025",
+   "validated": "竞对豁免 crosscheck"
+  },
+  {
+   "file": "financials_sh600000.json",
+   "source": "同上",
+   "level": "A/B",
+   "fetched_at": "2026-08-28",
+   "coverage": "2020-2025",
+   "validated": "竞对豁免 crosscheck"
+  },
+  {
+   "file": "financials_sh601398.json",
+   "source": "同上",
+   "level": "A/B",
+   "fetched_at": "2026-08-28",
+   "coverage": "2020-2025",
+   "validated": "竞对豁免 crosscheck"
+  },
+  {
+   "file": "financials_sh601288.json",
+   "source": "同上",
+   "level": "A/B",
+   "fetched_at": "2026-08-28",
+   "coverage": "2020-2025",
+   "validated": "竞对豁免 crosscheck"
+  },
+  {
+   "file": "metrics_CMB_bank.json",
+   "source": "compute_metrics_bank.py 输出",
+   "level": "derived",
+   "fetched_at": "2026-08-28",
+   "validated": "39+3项回归测试通过"
+  },
+  {
+   "file": "peer_table.json",
+   "source": "五家银行管道输出汇总",
+   "level": "derived",
+   "fetched_at": "2026-08-28",
+   "validated": "n/a"
+  },
+  {
+   "file": "market_snapshot.json",
+   "source": "行情接口",
+   "level": "A",
+   "fetched_at": "2026-08-28 15:00",
+   "coverage": "2026-08-28",
+   "validated": "n/a"
+  },
+  {
+   "file": "report_gs_1q26.json",
+   "source": "国盛证券2026一季报点评（含盈利预测2026-2028净利+2.39%/4.13%/4.27%）",
+   "level": "B",
+   "fetched_at": "2026-05-10",
+   "validated": "一致预期锚"
+  },
+  {
+   "file": "report_cj_0504.json",
+   "source": "长江证券点评（三年维度ROE维持12%预判）",
+   "level": "B",
+   "fetched_at": "2026-05-04",
+   "validated": "交叉参照"
+  },
+  {
+   "file": "report_gd_0430.json",
+   "source": "光大证券2026一季报点评",
+   "level": "B",
+   "fetched_at": "2026-04-30",
+   "validated": "交叉参照"
+  },
+  {
+   "file": "filings/cmb_2025_ar.pdf",
+   "source": "披露易 2025年度审计报告（安永无保留意见）",
+   "level": "A",
+   "fetched_at": "2026-08-28",
+   "coverage": "FY2025",
+   "validated": "双源核对依据"
+  },
+  {
+   "file": "cmb_reports.txt",
+   "source": "结构化金融数据接口 report list",
+   "level": "B",
+   "fetched_at": "2026-08-28",
+   "coverage": "近10篇研报",
+   "validated": "仅提取事实"
+  },
+  {
+   "file": "cmb_notices.txt",
+   "source": "公告列表接口",
+   "level": "A",
+   "fetched_at": "2026-08-28",
+   "coverage": "近期公告",
+   "validated": "n/a"
+  },
+  {
+   "file": "segments.json",
+   "source": "2025年报分部披露整理",
+   "level": "A",
+   "fetched_at": "2026-08-28",
+   "coverage": "FY2025",
+   "validated": "n/a"
+  },
+  {
+   "file": "consensus.json",
+   "source": "国盛/太平洋证券研报盈利预测+机构综合目标价转引",
+   "level": "B",
+   "fetched_at": "2026-08-28",
+   "coverage": "2026-2028E",
+   "validated": "低置信度锚"
+  },
+  {
+   "file": "expected_return.json",
+   "source": "reverse_dcf.py expected-return 引擎输出",
+   "level": "derived",
+   "fetched_at": "2026-08-28",
+   "validated": "引擎计算值"
+  },
+  {
+   "file": "valuation.json",
+   "source": "两阶段现价回归法估值底稿（含红队对照情景）",
+   "level": "derived",
+   "fetched_at": "2026-08-28",
+   "validated": "n/a"
+  }
+ ],
+ "user_prior": "招行是中国体验最好的银行，有大量低成本资金，股息率好，基本能永续经营；关注动机：趋势有好转了",
+ "peer_selection_reason": "兴业/浦发同为全国性股份行（业务分部重叠度最高）；工行/农行为国有大行参照系（检验招行相对系统重要性银行的溢价是否成立）"
+}

@@ -1,0 +1,80 @@
+{
+ "currency": "CNY",
+ "unit": "million RMB ae / CNY per share",
+ "method": "正常化 OE 基期 DCF（峰值禁用）+ 反向 DCF + 三情景 + 期望回报引擎；交叉验证：2026E 一致预期基期与 2025 峰值基期两种对照",
+ "normalization": {
+  "status": "周期高位强制启用",
+  "net_margin_latest": 0.344,
+  "net_margin_avg": 0.215,
+  "ratio": 1.6,
+  "base_oe": 9175,
+  "base_oe_range": [
+   7991,
+   9175
+  ],
+  "alert": "当期 OE 禁止直接作基期（compute_metrics 自动判定）"
+ },
+ "implied_growth_at_price": {
+  "market_cap_cny": 194070,
+  "base_oe": 9175,
+  "wacc": 0.11,
+  "terminal_g": 0.02,
+  "implied_10y_cagr": 0.1809,
+  "comment": "现价隐含十年 18% 增长；一致预期 2026 是负增长"
+ },
+ "scenarios_main": [
+  {
+   "name": "悲观",
+   "prob": 0.35,
+   "growth": 0.0,
+   "value_per_share_cny": 72.09,
+   "value_hkd": 78.4,
+   "narrative": "IP 周期复现（LABUBU 退烧+接棒失败），回到 2022 式的均值回归"
+  },
+  {
+   "name": "基准",
+   "prob": 0.45,
+   "growth": 0.05,
+   "value_per_share_cny": 87.93,
+   "value_hkd": 95.6,
+   "narrative": "爆款间隔复现：2026 负增长，2027 起中低双位数，长坡缓慢"
+  },
+  {
+   "name": "乐观",
+   "prob": 0.2,
+   "growth": 0.1,
+   "value_per_share_cny": 106.92,
+   "value_hkd": 116.2,
+   "narrative": "IP 矩阵真平滑+全球化持续兑现：十年 OE CAGR 10%"
+  }
+ ],
+ "cross_validation": [
+  {
+   "base": "2026E 一致预期 10800",
+   "g5": 103.5,
+   "g10": 125.9,
+   "g10_hkd": 136.8,
+   "result": "仍低于现价"
+  },
+  {
+   "base": "2025 峰值 12776",
+   "g10": 148.9,
+   "g10_hkd": 161.9,
+   "result": "约等于现价158.4——市场定价=峰值×10年10%"
+  }
+ ],
+ "red_team_scenarios": {
+  "bear": 45,
+  "base": 65,
+  "bull": 95,
+  "prob": "45/40/15",
+  "note": "红队使用基期下界 7991 + 悲观 g=-5%，更假设竞争对标（TOP TOY/布鲁可）分流"
+ },
+ "buy_zone_hkd": "≤ 100",
+ "margin_of_safety_vs_base": -0.657,
+ "band_hkd": [
+  78.4,
+  95.6,
+  116.2
+ ]
+}

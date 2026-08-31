@@ -1,0 +1,91 @@
+{
+ "currency": "CNY_billion",
+ "data_source": "2026Q2 业绩公告（2026-08-12，A级原文）+ 2025 年报",
+ "q2_2026": {
+  "revenue": {
+   "total": 204.8,
+   "yoy": 0.11
+  },
+  "vas": {
+   "revenue": 98.4,
+   "yoy": 0.08,
+   "note": "增值服务：本土游戏 47.3（+17%）、国际游戏 18.6（固定汇率+4%）、社交网络 32.5（+0.8%）"
+  },
+  "marketing": {
+   "revenue": 43.6,
+   "yoy": 0.22,
+   "note": "营销服务：AI 推荐模型+AIM+投放矩阵+微信闭环，增速最快板块"
+  },
+  "fintech_cloud": {
+   "revenue": 60.3,
+   "yoy": 0.09,
+   "note": "金融科技及企业服务：商业支付/理财/消费贷+云（AI 需求）"
+  },
+  "gross_margin": 0.58,
+  "ifrs_net": {
+   "value": 56.0,
+   "yoy": 0.007,
+   "note": "IFRS 归母：分占联营亏损 100 亿（非上市投资可转债重估）"
+  },
+  "non_ifrs_net": {
+   "value": 68.4,
+   "yoy": 0.09
+  },
+  "capex": {
+   "value": 52.8,
+   "yoy": 1.76,
+   "note": "资本开支飙至 528 亿，AI 算力采购为主"
+  },
+  "fcf": {
+   "value": -13.8,
+   "note": "自由现金流转负 -138 亿（历史首次）；剔除算力预付款为 +376 亿"
+  },
+  "cash": {
+   "total": 511.2,
+   "net_cash": 58.2,
+   "net_cash_yoy": -0.22
+  },
+  "buyback": {
+   "value_hkd_亿": 169,
+   "shares_百万": 37.4,
+   "note": "Q2 回购 3738 万股"
+  },
+  "investment_portfolio": {
+   "listed_fv": 487.2,
+   "unlisted_bv": 387.9,
+   "note": "上市投资组合公允价值 4872 亿+非上市账面 3879 亿=8751 亿，占市值约 21%"
+  }
+ },
+ "fy2025_products": [
+  {
+   "name": "增值服务（游戏+社交）",
+   "revenue": 359.3,
+   "share": 0.5,
+   "yoy": 0.05
+  },
+  {
+   "name": "营销服务（广告）",
+   "revenue": 136.1,
+   "share": 0.19,
+   "yoy": 0.15
+  },
+  {
+   "name": "金融科技及企业服务",
+   "revenue": 216.8,
+   "share": 0.3,
+   "yoy": 0.07
+  },
+  {
+   "name": "其他",
+   "revenue": 6.5,
+   "share": 0.01,
+   "yoy": 0.1
+  }
+ ],
+ "wechat_metrics": {
+  "mao_2026q2": 1439,
+  "mao_yoy": 0.02,
+  "video_usage_yoy": 0.2
+ },
+ "note": "2026H1 资本开支 847 亿（+82%）；总现金 5112 亿；视频号使用时长+20%；Hy3 全球 token 消耗前三"
+}

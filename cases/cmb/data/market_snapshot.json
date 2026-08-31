@@ -1,0 +1,18 @@
+{
+ "fetched_at": "2026-08-28 15:00",
+ "source": "行情接口（A级）",
+ "price": 39.43,
+ "prev_close": 39.58,
+ "total_market_cap_yi": 9944.19,
+ "circulating_market_cap_yi": 8133.99,
+ "pe_ttm": 6.6,
+ "pb": 0.9,
+ "dividend_yield_ttm": 0.0511,
+ "high_52w": 41.97,
+ "low_52w": 34.28,
+ "position_52w": 0.669700910273082,
+ "amount_20d_avg_note": "当日成交额11.17亿元，换手0.14%，流动性充裕",
+ "total_shares": 25219845601,
+ "avg_amount_20d_yi": 28.66,
+ "avg_amount_note": "日K近20日日均"
+}

@@ -1,0 +1,69 @@
+{
+ "currency": "CNY_billion",
+ "data_source": "2026Q2 业绩公告（2026-08-24，6-K Form，A级原文）+ 2025 年报",
+ "fy2025_streams": [
+  {
+   "name": "在线营销服务（广告，主要来自国内）",
+   "revenue_fy2025": 250.0,
+   "note": "国内主站变现支柱，增速降至中个位数"
+  },
+  {
+   "name": "交易服务（佣金+物流，主要为 Temu 跨境）",
+   "revenue_fy2025": 185.0,
+   "note": "Temu 贡献；2025 下半年监管冲击开始显现"
+  }
+ ],
+ "q2_2026": {
+  "revenue_total": 112.4,
+  "yoy": 0.08,
+  "expectation": 115.2,
+  "miss": true,
+  "online_marketing": {
+   "revenue": 57.6,
+   "yoy": 0.035,
+   "note": "国内广告企稳回升，好于阿里0.7%"
+  },
+  "transaction_services": {
+   "revenue": 54.7,
+   "yoy": 0.133,
+   "note": "低于预期21%——Temu 欧盟监管冲击"
+  },
+  "net_income": {
+   "value": 27.2,
+   "yoy": -0.12,
+   "note": "连续第3季同比负增长；其他损失74亿（投资浮亏+海外减值/合规一次性）"
+  },
+  "non_gaap_net": 28.5,
+  "non_gaap_yoy": -0.13,
+  "rd_non_gaap": {
+   "value": 4.3,
+   "yoy": 0.4,
+   "note": "单季历史最高，治理/合规/供应链定向投入"
+  },
+  "cash_shortterm": 456.4,
+  "cash_note": "现金+短投4564亿CNY（约671亿USD），同比+341亿",
+  "ocf_q2": {
+   "value": 25.67,
+   "yoy": 0.19
+  },
+  "gmv_note": "国内 GMV 增速 Q2 首次跌破 10%（晚点LatePost）",
+  "new_biz": "自营品牌「新拼姆」一期注资150亿CNY，未来三年共投1000亿",
+  "guidance_note": "「三年再造一个拼多多」目标未变；明确不做即时零售；生态投入优先于短期利润"
+ },
+ "temu_metrics": {
+  "mau_jul2026": {
+   "value": 467000000.0,
+   "yoy": -0.11,
+   "source": "摩根士丹利（B级）"
+  },
+  "dau_jul2026": {
+   "value": 76700000.0,
+   "yoy": -0.13
+  },
+  "downloads_yoy": -0.48,
+  "eu_share_gmv": "约1/3",
+  "eu_regulation": "2026年7月欧盟取消de minimis+每件包裹3欧元处理费；欧盟罚款2亿欧元（违规商品）",
+  "us_regulation": "2025年美国已取消800美元以下de minimis免税",
+  "transition": "全托管→半托管+海外仓本地化转型，收入口径与毛利结构同步变化"
+ }
+}

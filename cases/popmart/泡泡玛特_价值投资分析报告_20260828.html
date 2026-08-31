@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>泡泡玛特（09992.HK）价值投资分析报告</title>
+<script src="https://cdn.jsdelivr.net/npm/echarts@5/dist/echarts.min.js"></script>
+<style>
+:root{--primary:#1a3a5c;--accent:#d97706;--bg:#f7f8fa;--card:#fff;--text:#24292f;--muted:#6b7280;--green:#15803d;--red:#b91c1c;--border:#e5e7eb}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;background:var(--bg);color:var(--text);line-height:1.75;font-size:15px}
+.container{max-width:1080px;margin:0 auto;padding:24px 20px 80px}
+header.report-header{background:var(--primary);color:#fff;border-radius:12px;padding:40px 36px;margin-bottom:28px}
+header.report-header h1{font-size:26px;font-weight:700}
+header.report-header .meta{margin-top:8px;opacity:.75;font-size:13px}
+.verdict-banner{display:flex;align-items:center;gap:24px;margin-top:24px;background:rgba(255,255,255,.08);border-radius:10px;padding:20px 24px}
+.verdict-label{font-size:34px;font-weight:800;letter-spacing:2px}
+.verdict-reject{color:#f87171}
+.verdict-score{font-size:15px;opacity:.9}
+.snapshot-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px;margin-top:16px}
+.snapshot-item{background:rgba(255,255,255,.08);border-radius:8px;padding:10px 14px}
+.snapshot-item .k{font-size:12px;opacity:.65}
+.snapshot-item .v{font-size:17px;font-weight:700;margin-top:2px}
+.snapshot-time{font-size:11px;opacity:.55;margin-top:8px}
+section{background:var(--card);border-radius:12px;padding:32px 36px;margin-bottom:24px;border:1px solid var(--border)}
+h2{font-size:20px;color:var(--primary);padding-bottom:10px;margin-bottom:18px;border-bottom:3px solid var(--accent);display:inline-block}
+h3{font-size:16px;color:var(--primary);margin:22px 0 10px}
+p{margin-bottom:12px}
+.chart{width:100%;height:400px;margin:12px 0 4px}
+.chart-note{font-size:12px;color:var(--muted);margin-bottom:16px}
+.insight-title{font-size:15px;font-weight:700;margin:20px 0 4px}
+table{width:100%;border-collapse:collapse;margin:14px 0;font-size:14px}
+th{background:var(--primary);color:#fff;padding:10px 12px;text-align:left;font-weight:600}
+td{padding:9px 12px;border-bottom:1px solid var(--border)}
+tr:nth-child(even) td{background:#fafbfc}
+.tag{display:inline-block;padding:2px 10px;border-radius:20px;font-size:12px;font-weight:600}
+.tag-green{background:#dcfce7;color:var(--green)}
+.tag-amber{background:#fef3c7;color:#b45309}
+.tag-red{background:#fee2e2;color:var(--red)}
+.points-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:16px 0}
+.point-card{border-radius:10px;padding:16px 18px;border:1px solid var(--border)}
+.point-card.bull{border-left:4px solid var(--green)}
+.point-card.bear{border-left:4px solid var(--red)}
+.point-card h4{font-size:14px;margin-bottom:8px}
+.point-card ul{padding-left:18px;font-size:14px}
+.point-card li{margin-bottom:6px}
+blockquote.persona{border-left:4px solid var(--accent);background:#fffbf5;padding:16px 20px;margin:14px 0;border-radius:0 8px 8px 0;font-size:14px}
+blockquote.persona .persona-name{font-weight:700;color:var(--primary);display:block;margin-bottom:6px}
+.redteam{background:#1f2937;color:#e5e7eb;border-radius:10px;padding:24px 28px;margin:16px 0}
+.redteam h3{color:#fbbf24;margin-top:0}
+.redteam ul,.redteam ol{padding-left:20px}
+.redteam li{margin-bottom:8px}
+.checklist li{margin-bottom:8px}
+footer.disclaimer{font-size:12px;color:var(--muted);text-align:center;margin-top:40px;padding-top:20px;border-top:1px solid var(--border)}
+.source-note{font-size:12px;color:var(--muted)}
+.vnum{border-bottom:1px dashed #9ca3af}
+.decision-card{border:2px solid var(--red);border-radius:12px;padding:20px 24px;background:#fff8f5;margin:16px 0}
+.decision-card table{margin:8px 0}
+.decision-card th{background:var(--red)}
+.divergence{display:flex;align-items:center;gap:18px;border:1.5px dashed var(--accent);border-radius:10px;padding:16px 20px;background:#fffbf5;margin:14px 0;font-size:14px}
+@media print{section{break-inside:avoid}.chart{height:360px}}
+</style>
+</head>
+<body>
+<div class="container">
+
+<header class="report-header">
+  <h1>泡泡玛特（09992.HK）价值投资分析报告</h1>
+  <div class="meta">报告日期：2026-08-28 ｜ 数据截止：2025 年报 + 2026 中报 + 2026-08-28 行情 ｜ 行业：品牌消费（潮玩 IP）｜ 管道：通用 engine（港股链路首次实证）｜ 币种：财报 CNY / 行情 HKD</div>
+  <div class="verdict-banner">
+    <div class="verdict-label verdict-reject">太贵 · 排除</div>
+    <div class="verdict-score">
+      <b>双闸门状态</b>：闸门一 安全边际 <span class="vnum" data-src="valuation.json" data-path="margin_of_safety_vs_base" data-fmt="pct1">-65.7%</span>（高估，要求 ≥25%）<b style="color:#f87171">✗</b> ｜ 闸门二 期望年化（含息）<span class="vnum" data-src="expected_return.json" data-path="expected_annualized_irr_incl_div" data-fmt="pct1">-8.4%</span>（门槛 9%）<b style="color:#f87171">✗</b><br>
+      三位大师独立判断：巴菲特【回避：价格 2/20 击穿拒绝线】｜ 段永平【生意顶级 87 分，公道价——本人已用 120 亿投下真实一票】｜ 李录【太难，但值得最贵注意力 67 分】<br>
+      内在价值区间：<span class="vnum" data-src="valuation.json" data-path="scenarios_main.0.value_hkd" data-fmt="num1">78.4</span> ~ <span class="vnum" data-src="valuation.json" data-path="scenarios_main.2.value_hkd" data-fmt="num1">116.2</span> 港币（基准 <span class="vnum" data-src="valuation.json" data-path="scenarios_main.1.value_hkd" data-fmt="num1">95.6</span>）｜ 5 年期望年化（含息）<span class="vnum" data-src="expected_return.json" data-path="expected_annualized_irr_incl_div" data-fmt="pct1">-8.4%</span>
+    </div>
+  </div>
+  <div class="snapshot-grid">
+    <div class="snapshot-item"><div class="k">现价(HKD)</div><div class="v"><span class="vnum" data-src="market_snapshot.json" data-path="price_hkd" data-fmt="num2">158.40</span></div></div>
+    <div class="snapshot-item"><div class="k">总市值</div><div class="v"><span class="vnum" data-src="market_snapshot.json" data-path="total_market_cap_yi_hkd" data-fmt="num0">2,110</span> 亿HKD</div></div>
+    <div class="snapshot-item"><div class="k">PE-TTM</div><div class="v"><span class="vnum" data-src="market_snapshot.json" data-path="pe_ttm" data-fmt="num2">13.84</span></div></div>
+    <div class="snapshot-item"><div class="k">PB</div><div class="v"><span class="vnum" data-src="market_snapshot.json" data-path="pb" data-fmt="num2">7.95</span></div></div>
+    <div class="snapshot-item"><div class="k">股息率</div><div class="v"><span class="vnum" data-src="market_snapshot.json" data-path="dividend_yield_ttm" data-fmt="pct2">1.73%</span></div></div>
+    <div class="snapshot-item"><div class="k">距52周低点</div><div class="v">+15%</div></div>
+    <div class="snapshot-item"><div class="k">距历史高点</div><div class="v">-51.7%</div></div>
+  </div>
+  <div class="snapshot-time">行情快照时间：2026-08-28 收盘（来源等级 A）</div>
+</header>
+
+<section id="summary">
+  <h2>一、投资摘要（首屏决策卡）</h2>
+  <div class="decision-card">
+    <table>
+      <tr><th style="width:22%">要素</th><th>结论</th></tr>
+      <tr><td>结论档位</td><td><b>太贵 · 排除（价格维度）</b>——生意质地 A，价格 C-；双闸门底穿，档位只能落在最低档</td></tr>
+      <tr><td>双闸门</td><td>安全边际 -65.7%（现价 145.7 元 vs 基准价值 87.93 元）✗ ｜ 期望含息 IRR -8.4% vs 门槛 9% ✗（红队独立出数同向 -10%。两闸门加权全灭，与排雷无关，纯粹是价格）</td></tr>
+      <tr><td>关键变量</td><td>① 星星人能否将 LABUBU 的衰减接住（2026-2027 新 IP 过 50 亿）② 2026 年负增长究竟落在 -13% 还是更深 ③ 海外库存 / 单店产出（存货 +259%、周期 51→79 天）</td></tr>
+      <tr><td>证伪条件</td><td>① 2026H2 星星人单 IP 收入环比滑坡 ② 2026 年报归母净利 &lt; 100 亿 ③ 存货周转天数继续恶化超 140 天</td></tr>
+      <tr><td>再评估触发</td><td>股价 ≤ 110 港币（乐观值区）或 2027 年 3 个完整 IP 周期接棒证实后重跑（跟踪清单详见十一章）</td></tr>
+    </table>
+  </div>
+  <div class="divergence">
+    <div style="font-size:22px">⚡</div>
+    <div><b>本报告最有信息量的分歧</b>：真实段永平 2026 年 5-7 月用约 120 亿港币（成本 150-162.5）买入本股 7.65%，而他的体系（段永平 persona，87 分）与我们的估值管道在<b>周期正常化基期</b>这单一变量上分道扬镳——他认为基期应该接近 127 亿，管道纪律要求用 92 亿。这份分歧不影响档位（双闸门纪律），但必须摆在桌面上交用户裁决：段看到的是"连续 5 次爆款产能"，管道看到的是"每个爆款都还在单点周期定律之下"。</div>
+  </div>
+  <p><b>一句话生意：</b>用不到收入 2.3% 的授权费成本，从全球艺术家网络中采购创意，自产/委外成 9.9~99 元的毛绒手办，用盲盒机制制造随机惊喜和复购成瘾——把"不确定的小确幸"做成了一门 72% 毛利率的全球生意。</p>
+  <div class="points-grid">
+    <div class="point-card bull">
+      <h4>三大投资论点（真实存在，不是彩虹）</h4>
+      <ul>
+        <li><b>IP 工厂连续多年验证爆款产能</b>：MOLLY→DIMOO→SP→LABUBU→星星人，2025 年 17 个 IP 收入破亿；自有 IP 90%，成本结构优于授权模式 20 分以上 [E:segments.json]</li>
+        <li><b>财务零负担</b>：零有息负债 + 现金 178 亿 + 账上短期定期 35 亿，流动性冗余行业顶级 [E:financials_POPMART.json]</li>
+        <li><b>品类/海外红利未兑现完</b>：情绪消费世代升维 + 海外 676 家门店还刚开始铺 [E:report_pacific_0826.json]</li>
+      </ul>
+    </div>
+    <div class="point-card bear">
+      <h4>三大不能闭眼的地方</h4>
+      <ul>
+        <li><b>单 IP 占收入 38%、爆款周期真实存在</b>：LABUBU 2026H1 -7.5%，2022 年 MOLLY 过气那年净利 -44%——这门生意每隔几年清零一次 [E:segments.json]</li>
+        <li><b>存货 +259% / 存货周转 102→123 天 / 现金转换 0.85</b>：利润表漂亮，但现金被库存和海外账期吃掉了 [E:financials_POPMART.json]</li>
+        <li><b>现价还在定价零周期风险</b>：飞鸽 DCF 基期 92 亿，现价隐含十年 18% 增长——等于相信每一轮爆款都接得住 [E:consensus.json]</li>
+      </ul>
+    </div>
+  </div>
+  <p><b>本笔投资取决于：</b>你是相信"爆款工厂有 N 次多分辨率产能"（你可以给它 PE 18x），还是相信"每次爆款都是独立抽签"（给它 PE 8-12x 加上正常化基期折价）。这是同一本账两种读法的时候——目前市场表现坚决站前者，我们站后者。</p>
+  <p class="source-note"><b>信息局限声明：</b>① 洪股 finance 接口无营收字段且科目为港币口径，2018-2023 部分经营现金流由港币反推（误差 &lt;1%，已交叉核对 2024/2025 公告）；② 2018-2020 年 D&A 按收入 10% 估算（B 级有限置信度）；③ 卖方一致预期分歧极大（2026E 从 -17% 至 +21%），变异认知测试低置信度；④ 段永平咨询信息来自公开权益披露+雪球言论整理（B 级转引，持股成本仅披露 3 次举牌价）。</p>
+  <div class="insight-title">估值区间 vs 现价（三情景：悲观 g=0%/基准 g=5%/乐观 g=10%，均低于现价）</div>
+  <div id="chart-valuation-band" class="chart" style="height:280px"></div>
+  <div class="chart-note">数据来源：valuation.json + expected_return.json。现价 158.4 HKD 位于乐观情景之上 36% 处。</div>
+</section>
+
+<section id="business">
+  <h2>二、商业模式与生意</h2>
+  <p>用大白话讲泡泡玛特：它是一家"情绪工程师"。它从全球 200+ 艺术家手里拿到 IP 许可（每年 8.33 亿授权费，占收入 2.2%），把 MOLLY、LABUBU 这样的角色设计出来，做成毛绒玩具、手办和盲盒，通过自己的 676 家门店、抽盒机と机器人商店卖给全球 7258 万付费会员 [E:segments.json][E:market_snapshot.json]。客户为什么买：买 9.9 元或者 59 元的"可能开出隐藏款"的小激动，买可以拍照发社交媒体的陪伴。情绪是它的货，不是玩具 [E:financials_POPMART.json]。</p>
+  <p><b>单位经济：</b>每 100 元收入 → 毛利 72 元（毛利率 72.1%），销售费用 22 + 管理 4.8 + 研发 3.8 → 经营利润约 40 元 → 净利 34.4 元。这门生意的成本被"盲盒定价权+自有 IP"打穿——对比竞品布鲁可授权 IP 为主毛利率 46.8%、名创 45%：低于你 25 个点，你仍在扩张 [E:peer_table.json]。</p>
+  <p><b>但注意这门生意的另一面（正是市场常忽略的）</b>：它是个"IP 工厂"，不是"IP 收藏馆"。MOLLY 第一波顶点是 2019，2022 年过气那年净利 -44%；LABUBU 是 2024 年爆火，2026H1 已经 -7.5%。它的护城河不是某个 IP 能活多久，而是它能否让"下一个爆款 IP 都能准时到来"。模型成立的前提：爆款产能 ≥ 衰减速度 [E:segments.json]。</p>
+  <p><b>10 年后的可持续性检验（终局思维）</b>：日本扭蛋文化告诉我们，"成年人的小确幸零售"这个需求 30 年不会消失；但泡泡玛特现在在的市场战略里，高增长期已经过去了（指引 20%），未来它将吃"稳定复利 xIP 榮景起伏"的饭。它是门好生意，但是一门不能按 2025 年利润线性外推的生意 [E:financials_POPMART.json]。分部结构见下：</p>
+  <div class="insight-title">2025 IP 分部：THE MONSTERS（LABUBU 家族）占 38.1%——单一 IP 集中度用肉眼看得见</div>
+  <div id="chart-ip-structure" class="chart" style="height:360px"></div>
+  <div class="chart-note">数据来源：segments.json（2025 年报，A 级）；2026H1 LABUBU 家族同比 -7.5%、星星人 +580.6%（中报）。</div>
+</section>
+
+<section id="quant">
+  <h2>三、定量画像</h2>
+  <div class="insight-title">收入 7 年 CAGR 84%，但真正的故事在曲线右端——陡变期 vs 均值回归</div>
+  <div id="chart-rev-ni" class="chart"></div>
+  <div class="chart-note">数据来源：metrics_POPMART.json（<span class="vnum" data-src="financials_POPMART.json" data-path="annual.7.revenue" data-fmt="num0">37,120</span> 百万 CNY，公告双源核对）</div>
+  <p>收入从 2018 年 <span class="vnum" data-src="metrics_POPMART.json" data-path="chart_series.revenue.0" data-fmt="num0">515</span> 百万到 2025 年的 <span class="vnum" data-src="metrics_POPMART.json" data-path="chart_series.revenue.7" data-fmt="num0">37,120</span> 百万（7 年 CAGR <span class="vnum" data-src="metrics_POPMART.json" data-path="summary.cagr_total.revenue" data-fmt="pct1">84.3%</span>）；归母净利从 1.02 亿涨到 127.8 亿（CAGR 99.4%）。但右侧这条几乎垂直的尾巴，是同一代消费公司里最典型的"爆款脉冲曲线"——你在图上看到的是增长，引擎看到的是"必然回摆" [E:financials_POPMART.json]。</p>
+
+  <div class="insight-title">周期高位被机器叩门口：35.1% 净利率是历史均值 21.5% 的 1.60 倍，引擎强制禁用当期基期</div>
+  <div id="chart-margin" class="chart"></div>
+  <div class="chart-note">数据来源：metrics_POPMART.json；正常化基期采用 91.75 亿（当期 72%），区间 79.91~91.75 亿 [E:metrics_POPMART.json]</div>
+  <p>毛利率一路爬到 72.1%（产品组合向毛绒/高毛利切换+规模效应），净利率跳到 <span class="vnum" data-src="metrics_POPMART.json" data-path="chart_series.net_margin.7" data-fmt="pct1">34.4%</span>。这不是常态：全期均值 21.5%，引擎判定为周期高位（比值 1.60 &gt; 1.25）。也就是说 2025 年净利的每 100 块元里有 ~28 块是爆款红利，不是结构性利润 [E:metrics_POPMART.json]。</p>
+
+  <div class="insight-title">现金含量警报：利润暴涨 3 倍，现金流只涨 1.2 倍——OCF/净利从 1.59 跌落到 0.85</div>
+  <div id="chart-ocf-ni" class="chart"></div>
+  <div class="chart-note">数据来源：metrics_POPMART.json（ocf_to_ni 比率）</div>
+  <p>2025 年经营现金流 108.65 亿 vs 净利 127.76 亿——比值 0.85（2024 年 1.585）。差异被安排在存货（54.7 亿，+259%）和应收堆里；存货周转 102→123 天，现金转换周期 51→79 天。用巴菲特的话说：利润在报表里，钱在别人的仓库里 [E:financials_POPMART.json][E:report_pacific_0826.json]。</p>
+
+  <div class="insight-title">同业对照：毛利率断层 + IP 自有率断层——生意是真的好</div>
+  <div id="chart-peer" class="chart" style="height:320px"></div>
+  <div class="chart-note">数据来源：peer_table.json（2025 财年，B 级转引，竞对未做原文核对，报告脚注披露）</div>
+  <p>对比布鲁可（授权 IP、经销商为主）和名创优品（生活方式零售 IP 联名）：泡泡玛特 72.1% 毛利率 + 90% 自有 IP 是干净利落的断层。这说明它不是踩在"潮玩风口"上，是踩在"自有 IP×盲盒机制"这道结构上。但也正因为这个结构估值贵——布鲁可 PE 22.5x（2026 预期），你买商质量但要付出更高的流量税 [E:peer_table.json]。</p>
+</section>
+
+<section id="moat">
+  <h2>四、护城河分析</h2>
+  <h3>五源归类</h3>
+  <table>
+    <tr><th>护城河源</th><th>评级</th><th>证据与边界</th></tr>
+    <tr><td>无形资产（品牌/IP 权）</td><td><span class="tag tag-green">强</span></td><td>17 个 IP 年收入破亿、自有 IP 占 90%；泡泡玛特=中国潮玩第一品牌 label [E:segments.json]</td></tr>
+    <tr><td>转换成本</td><td><span class="tag tag-red">弱</span></td><td>消费者改买下一年度流行毫无障碍；会员 7258 万是规模资产，不是锁定资产</td></tr>
+    <tr><td>成本优势（IP 成本结构）</td><td><span class="tag tag-green">强（核心）</span></td><td>授权费仅占收入 2.2% vs 布鲁可高个位数；毛利率 72.1% vs 46.8% [E:financials_POPMART.json][E:peer_table.json]</td></tr>
+    <tr><td>网络效应</td><td><span class="tag tag-amber">弱</span></td><td>门店密度+抽盒机网络有本地正向循环，但不是双边网络效应</td></tr>
+    <tr><td>有效规模</td><td><span class="tag tag-green">中强</span></td><td>行业 CR5 20.7%→32.5%（一年），公司 21.8% 绝对龙头 [E:report_pacific_0826.json]</td></tr>
+  </table>
+  <h3>定量验证与议价权</h3>
+  <ul>
+    <li><b>ROIC vs WACC 利差</b>：2024 ROE 33.9% / 2025 78.1%（爆款年化），但爆发前十年均值 ~18%——护城河结构存在，水位靠爆款灌溉 [E:metrics_POPMART.json]</li>
+    <li><b>定价权硬测试</b>：单件手办 59 元一双的定价不会改变；对上游艺术家议价强（独家签约+销售分成制），对消费者只在 IP 热度周期内有溢价控制权（IP 冷时打折/二级市场折价）</li>
+    <li><b>进攻者尸检</b>：TOP TOY（名创系）复制盲盒低价策略，布鲁可占领低价带 9.9 元，均未能冲击其 IP 塔尖位置；但进一步竞争的实质是"爆款命中率"，不是成本/渠道——没有规模壁垒</li>
+  </ul>
+  <p><b>护城河评级：中级 (经济上很厚、持久性存疑)</b>。它的无形资产不是"穿越时间的迪士尼角色"，是"爆款工厂的生产流程"——流程可以被学习，人才可以被挖走，IP 热度 是分布曲线不可双流控制 [E:segments.json][E:report_pacific_0826.json]。</p>
+</section>
+
+<section id="growth">
+  <h2>五、增长空间与质量</h2>
+  <p><b>S 曲线定位</b>：从"爆发期"进入"平台期"——2025 年 +184.7%，管理层 2026 指引"不低于 20%"，2026H1 实际 +23.8%。增长引擎重新组合中：</p>
+  <table>
+    <tr><th>引擎</th><th>5 年贡献估计</th><th>可信度</th><th>依据</th></tr>
+    <tr><td>中国区（核心基本盘）</td><td>+15%~25%/年</td><td><span class="tag tag-green">高</span></td><td>2026H1 中国 +47.3%，亚洲客单远未饱和 [E:report_pacific_0826.json]</td></tr>
+    <tr><td>海外（高增长但高基数持续消化）</td><td>波动期 0~10%/年</td><td><span class="tag tag-amber">中</span></td><td>2026H1 亚太 -9.7%、欧洲 -16.5%；LABUBU 全球的虚拟需求虚高正被挤泡沫 [E:report_pacific_0826.json]</td></tr>
+    <tr><td>新业态（乐园/动画/家电）</td><td>贡献小，期权性质</td><td><span class="tag tag-amber">中</span></td><td>乐园二期 2027 开建；索尼影业 LABUBU 电影；4 月小家电上市——变现路径长</td></tr>
+  </table>
+  <p><b>增长质量（ROIIC/现金含量测试）</b>：OCF/净利 0.85、存货天数 123、应收弱龄化（91-180 天占比 2%→21.9%，海外批发扩张所致）——增长正在消耗更多的营运资金来支持同一单位扩张，ROIIC 质量在恶化 [E:financials_POPMART.json]。</p>
+  <p><b>关键预测参考（卖方一致预期，不参与结论）</b>：4 家卖方 2026E 归母净利 106-111 亿（-13%~-17%）——市场自己也承认 2025 是峰值；东吴卖方 3 月预测的"2026E +21%"已明显被 8 月的一致预期边缘化 [E:consensus.json]。</p>
+  <p><b>再投资跑道</b>：TAM 足够大，真正的限定不再是空间，是"爆款命中率"这个艺术管理变量的随机性，以及管理团队的运营能力边界。</p>
+</section>
+
+<section id="management">
+  <h2>六、管理层与企业文化</h2>
+  <p>王宁（1987 年生）是这门生意里罕见的"诚实股"：① 2026 年 3 月业绩发布会，在所有人盯着增长曲线的时刻说"2026 年是休整年，增速不低于 20%"——在高点主动管理预期，这是远比冲爽点难的事情；② 动作一致：不借钱、不瞎并购、现金做了 178 亿的池子（储备子弹跟防）；③ 段永平调研后给出的评语"对商业的理解比乔布斯强一点点"（见的不是产品的高度，是零售运营的独到之处）是其特级背书 [E:report_pacific_0826.json]。</p>
+  <p><b>资本配置评分卡</b>：分红率 2023 年起曲折爬升（目前约 18%），回购承诺 20-50 亿（2026 起执行但未落定）印资本，优化红利还偏保守——对阶段来说合理（选择在高回报业务里投资而不是返本） [E:financials_POPMART.json]。</p>
+  <p><b>扣分项</b>：①创始人个人集中度极高（行权/品牌/决策统一），"王宁一人事件"是这个 2100 亿市值公司的单点风险；②减持记录：上市配售+2021 年老股东配售属正常 IPO 结构，但蜂巧资本清仓 22 亿港币离场是"早期资本选择兑现"的信号，要看懂不是什么故事——蜂巧是 VC，机构的久期不是产业的久期 [E:market_snapshot.json]；③信息披露风格保守，预定信息少，每次大会语速慢而谨慎——是好也是坏，市场波动会加大。</p>
+</section>
+
+<section id="risk">
+  <h2>七、财务质量与风险深查</h2>
+  <p><b>排雷</b>：一票否决 0 条；红旗 3 条（减持+存货+应收弱龄）被现金流/结构反证足够，过关但全部进入跟踪 [E:financials_POPMART.json]。</p>
+  <h3>深查：三道必须连续盯的口子</h3>
+  <table>
+    <tr><th>风险项</th><th>程度</th><th>证据</th></tr>
+    <tr><td>存货 54.7 亿（+259%）</td><td><span class="tag tag-red">高优先</span></td><td>存货周转 102→123 天，若按行业 20% 常规减值 = 10 亿利润瞬间蒸发（-8%） [E:financials_POPMART.json]</td></tr>
+    <tr><td>现金转换比 0.85 / 现金转换周期 51→79 天</td><td><span class="tag tag-amber">中</span></td><td>利润变现能力下降；海外扩张拉长账期，应收规模+弱龄化同步恶化 [E:financials_POPMART.json]</td></tr>
+    <tr><td>2026Q2 单季风险</td><td><span class="tag tag-red">观察口</span></td><td>Q1 +77%、H1 +23.8%——倒算 Q2 增速恶劣化了；LABUBU 补货到位+黄牛抛货期交叠</td></tr>
+    <tr><td>汇兑损失 7.2 亿（海外扩张同步货币敞口）</td><td><span class="tag tag-amber">中</span></td><td>人民币/美元波动直接冲击12% 净利 [E:report_pacific_0826.json]</td></tr>
+    <tr><td>估值弹性风险</td><td><span class="tag tag-red">高</span></td><td>-90% 的上市历史最大回撤存在两次；股价当下距-51.7%，但自我修复的风险仍在 [E:market_snapshot.json]</td></tr>
+  </table>
+</section>
+
+<section id="valuation">
+  <h2>八、估值与安全边际</h2>
+  <h3>关键决策：正常化强制生效——用 92 亿 OE，不用 128 亿</h3>
+  <p>compute_metrics 引擎判定 2025 处于周期高位（净利率 34.4% = 全期均值 21.5% 的 1.60× &gt; 1.25 阈值），自动禁用当期 OE 作基期，强制使用 91.75 亿（当期的 72%），区间 79.91~91.75 亿 [E:metrics_POPMART.json]。这是本报告与所有"峰值锚定分析"的分水岭。</p>
+  <h3>三情景 DCF + 隐含增速反解（WACC 11%、永续 2%）</h3>
+  <table>
+    <tr><th>情景</th><th>概率</th><th>假设</th><th>每股价值 (CNY/HKD)</th><th>vs 现价</th></tr>
+    <tr><td>悲观</td><td>30%</td><td>IP 周期复现，10 年 OE g=0%（椰菜娃娃剧本）</td><td><span class="vnum" data-src="valuation.json" data-path="scenarios_main.0.value_per_share_cny" data-fmt="num2">72.09</span> / <span class="vnum" data-src="valuation.json" data-path="scenarios_main.0.value_hkd" data-fmt="num1">78.4</span></td><td>-50%</td></tr>
+    <tr><td>基准</td><td>45%</td><td>爆款间隔复现：2026 负、随后中低双位，10 年 g=5%</td><td><span class="vnum" data-src="valuation.json" data-path="scenarios_main.1.value_per_share_cny" data-fmt="num2">87.93</span> / <span class="vnum" data-src="valuation.json" data-path="scenarios_main.1.value_hkd" data-fmt="num1">95.6</span></td><td>-40%</td></tr>
+    <tr><td>乐观</td><td>20%</td><td>IP 矩阵真平滑 + 全球化持续兑现，10 年 g=10%</td><td><span class="vnum" data-src="valuation.json" data-path="scenarios_main.2.value_per_share_cny" data-fmt="num2">106.92</span> / <span class="vnum" data-src="valuation.json" data-path="scenarios_main.2.value_hkd" data-fmt="num1">116.2</span></td><td>-27%</td></tr>
+  </table>
+  <p><b>反向验证：</b>用隐含增速求解：市场在给"十年 18.09% 增长+11% 折现率"定价（[E:valuation.json]）。作为交叉验证：即使不加正常化，用卖方一致预期 2026E 108 亿做基期 + g=10%，公允价 = 136.8 HKD——仍然低于现价；只在接受"2025 峰值=真基期"+10 年 10% CAGR 时，公允价才 ≈161.9 HKD 与现价持平。也就是说<b>现价正在演的剧本是"峰值无周期+爆款连续兑现十年"</b>。</p>
+  <h3>期望回报率（含股息，引擎计算）</h3>
+  <table>
+    <tr><th>指标</th><th>数值</th><th>对照</th></tr>
+    <tr><td>期望每股价值（概率加权）</td><td><span class="vnum" data-src="expected_return.json" data-path="expected_value_per_share" data-fmt="num2">86.18</span> CNY</td><td>vs 现价 145.7 CNY：低 41%</td></tr>
+    <tr><td>期望年化 IRR（不含息）</td><td><span class="vnum" data-src="expected_return.json" data-path="expected_annualized_irr" data-fmt="pct1">-10.1%</span></td><td>情景下行风险</td></tr>
+    <tr><td>期望年化 IRR（含股息）（判定用）</td><td><b><span class="vnum" data-src="expected_return.json" data-path="expected_annualized_irr_incl_div" data-fmt="pct1">-8.4%</span></b></td><td>vs 门槛 9%：<b><span class="vnum" data-src="expected_return.json" data-path="excess_vs_index" data-fmt="pct1">-17.4%</span></b></td></tr>
+    <tr><td>5 年亏损概率（含息）</td><td><span class="vnum" data-src="expected_return.json" data-path="loss_probability" data-fmt="pct0">100%</span></td><td>三情景全负；平均跌幅 <span class="vnum" data-src="expected_return.json" data-path="expected_downside_given_loss" data-fmt="pct1">-32.2%</span></td></tr>
+    <tr><td>红队独立对照（基期下界 7991+g 全降档）</td><td colspan="2">期望含息 IRR 约 -10%，方向一致</td></tr>
+  </table>
+  <p><b>关键判断：</b>期望回报是 -8.4%（不含对指数的机会成本溢价 17.4 个百分点）。这不是"观察等价格"的"贵了一点"，是"把 2026-2028 年的一致预期折完价之后还剩 40% 的溢价"。</p>
+</section>
+
+<section id="key-judgment">
+  <h2>九、关键判断（Phase 4.5 收敛）</h2>
+  <h3>关键变量（既重要又可知）</h3>
+  <table>
+    <tr><th>变量</th><th>当前判断</th><th>依据</th><th>为什么可知</th></tr>
+    <tr><td>① 星星人是否独立年过 50 亿</td><td><span class="tag tag-amber">方向可期，未完成时</span></td><td>H1 已 26.5 亿，按季节性看 2026 全年 50-60 亿概率不低 [E:segments.json]</td><td>中报/年报可验证，是唯一清楚的逆袭证据</td></tr>
+    <tr><td>② 2026 年负增长落点</td><td><span class="tag tag-amber">卖方一致 -13%~-17%，我们确认同方向</span></td><td>2025 高基数 127.8 亿 vs 一致预期均值 108 亿 [E:consensus.json]</td><td>4 家一致预期高度收敛（8 月更新），低置信度但共识级</td></tr>
+    <tr><td>③ 海外库存/单店产出诅咒</td><td><span class="tag tag-red">最可能被低估的风险</span></td><td>存货 +259%、门店 +46 家但仍净增；亚太欧洲已现回落 [E:financials_POPMART.json]</td><td>逐季存货周转天数 + 境外收入增速，两个硬指标</td></tr>
+  </table>
+  <h3>变异认知测试</h3>
+  <p><b>市场为什么给现在这个价：</b>卖方主流叙事"2026 年是休整年，2027 年起 IP 矩阵平滑单 IP 周期"——一致预期 2026E 归母净利约 108 亿（-13%~-17%），现价对应 2026E PE 16x，市场已用降价方式部分预支了回调，但仍隐含"十年 18% 增长"的长期定价 [E:consensus.json]。<br>
+  <b>我们与市场的分歧：</b>不是短期（都承认 2026 减速），是长期——市场把"爆款产能"当成确定性给 18% 隐含增速，我们给 5% 的中性均值回归。分歧的本质是对"爆款独立性"的基率信用。<br>
+  <b>认知优势来源：</b>无方向优势，低置信度判定。这是本报告的诚实边界——对"下一个爆款是否准时"我们没有比市场更深的认知。</p>
+  <h3>双重机会成本对照</h3>
+  <table>
+    <tr><th>对照项</th><th>长期年化</th><th>本标的期望（含息）</th><th>裁决</th></tr>
+    <tr><td>指数基金（沪深300 长期年化 9%）</td><td>9%</td><td rowspan="2"><span class="vnum" data-src="expected_return.json" data-path="expected_annualized_irr_incl_div" data-fmt="pct1">-8.4%</span></td><td><span class="tag tag-red">跑输 17.4pct</span></td></tr>
+    <tr><td>用户现有最好持仓</td><td>未提供</td><td>无法对照</td></tr>
+  </table>
+</section>
+
+<section id="committee">
+  <h2>十、投委会评审</h2>
+  <p class="source-note">三份评估按分离生成协议独立完成（互不见面），落盘于 workpapers/persona_*.md。分数不合成，分歧即信号。</p>
+  <blockquote class="persona"><span class="persona-name">巴菲特视角（57/100）：回避 — 价格 2/20，击穿拒绝线</span>
+    "一家 ROE 顶级的爆款工厂，卖出了'爆款永动机'的价格。我可以理解这门生意，我不能预测 LABUBU 明年流行不流行——这是离开我的能力圈的信号。椰菜娃娃们教过我一课，所以如果你再次要买它，我的价格是 80~100 港币，不是今天的 158。"</blockquote>
+  <blockquote class="persona"><span class="persona-name">段永平视角（87/100）：生意顶级、价格公道偏上</span>
+    "好多人把它当塑料玩具，我把它当情绪零售。茅台不是酒精，耐克不是鞋——新生代每天花 59 块买确定的小确幸，这门生意十年后还在。2025-08 我说过坚决不投，2026 年我公开认错、并用 120 亿真金白银买入到 7.65% 成为第二大股东（成本 150-162.5 港币），这是我选择的做法。但我的名字出现在这份报告里不构成你的买入依据：我的公道价不是你能力圈内的公道价，你要先自己看懂这门生意。"</blockquote>
+  <blockquote class="persona"><span class="persona-name">李录视角（67/100）：太难，但值得最贵的注意力</span>
+    "事实干净、质地顶级、周期未证、价格已经在未来。差一个证明：三个完整 IP 周期的心理学数据。我的'沉默成本'清单上这家排最前面，但现在买，我没有为'万一错了'预留折让。"</blockquote>
+  <h3>分歧对照表</h3>
+  <table>
+    <tr><th>关键问题</th><th>巴菲特（57）</th><th>段永平（87）</th><th>李录（67）</th></tr>
+    <tr><td>当前该不该买</td><td>回避（价格击穿拒绝线）</td><td>公道偏上、已真仓位做</td><td>太难等数据</td></tr>
+    <tr><td>周期正常化基期</td><td>91.75 亿（管道纪律）</td><td>接近 127 亿（产业观察）</td><td>80~108 亿之间交给数据</td></tr>
+    <tr><td>对"IP 工厂"的信任度</td><td>对单次周期不乐观</td><td>连续 5 次成功就被我说服</td><td>需要 3 个完整周期的数据</td></tr>
+    <tr><td>动手的价格</td><td>80-100 港币</td><td>已在 150-162.5 动手</td><td>等数据/或等 110 以下</td></tr>
+  </table>
+  <p><b>核心分歧点集中且透明：</b>三人唯一的分歧就是"2025 年 127.8 亿利润里，有多少是结构性利润"。巴菲特和李录偏向周期正常化（92 亿），段永平偏向"IP 工厂产能已实现流化"（127 亿+）。这不是小事，30% 的基期上去就是 35% 的公允价上去——这一参数足以决定同一份报告出"太贵"与"公道偏上"两种结果。这份分歧交给你裁决。</p>
+  <div class="redteam">
+    <h3>芒格式红队质询</h3>
+    <p><b>反演：怎样确保这笔投资亏大钱？</b>① 现价追单 IP 峰值，等下一个爆款前连续吃两次"下一款没接上"的重定价；② 把段的买入当成自己的研究结论——段的成本是公道价不是抄底价，段收着 put 的权利金结构，你没有；③ 忽略 55 亿存货需要两年时间消化，一次惯性减值就够击穿 10% 的利润。</p>
+    <p><b>心理误判自检：</b>用户初始动机"看到段永平一直在加仓"是最典型的权威锚定——复制他的结论而不是复制他的过程。本管道不顺从这个初始设置，输出的结论恰好与其相反，这是我们的价值所在。</p>
+    <p><b>最强空头逻辑（椰菜娃娃剧本）</b>：2026Q3-Q4 LABUBU 家族 -25%、星星人增速回落到 +60%（独家基数退潮）、2026 归母达标 108 亿但存货减值 10 亿，估值从 PE 14x 滚到 9x，股价 65-80 港币。</p>
+    <p><b>分别质询各份评估的盲区</b>：问巴菲特——如果正常化基期错了，你的"回避"机会成本是多少？问段永平——你的结论有没有被"真实段已买"污染立场（必须承认存在的偏见）？问李录——"太难"其实是把分歧推给时间，等 2027 涨 300 港币你再后悔也买不进这种便宜。</p>
+    <p><b>红队独立出数：</b>红队基期下界 7991 万（主分析推荐 9175 中下界），悲观 g=-5%/价 45 → 期望含息 IRR -10%，与主分析完全同向；悲观情景差 12%＜30% 重做线。<b>红队裁定：不强制降档</b>——原因是双闸门已经抢先把档位焊死在最低档，红队的意义是确认这个封顶稳健性并否决任何"好公司可以突破价格闸门"的提议。</p>
+  </div>
+</section>
+
+<section id="conclusion">
+  <h2>十一、结论与行动</h2>
+  <p>最终档位：<span class="tag tag-red"><b>太贵 · 排除</b></span>（价格维度）</p>
+  <p>双闸门全灭：①安全边际 -65.7%（现价 145.7 元 vs 基准 87.93 元）；②期望含息 IRR -8.4%。三位大师分歧显见（57/87/67），但档位由双闸门唯一决定——这是纪律。钱真正的问题是：<b>这门生意的下一波买入机会，大概率仍然来临，那就是"LABUBU 死亡报道"刷屏+股吧充满 IP 时代已死咆哮的那天</b>。</p>
+  <p><b>行动方案：</b>现价 158.4 → 不碰，列入高质量观察清单第一行；110 港币以下（乐观值区 116 以下）重新打开上行管道重跑；80-100 港币（基准值区）构成历史性买入窗口——那是"全市场都在说这只是一阵风"的时候。</p>
+  <h3>持有体验预演</h3>
+  <p>该股历史最大回撤 <b>-90.0%</b>（2025-08-29 高点 337 → 2025-12 低点 18.57×……不对，那是最初上市 2021 回撤；2025 这轮也是从高点回撤 -52% 至 137.375）。上市以来两次 -75% 级别回撤。<b>灵魂拷问：</b>如果你因为"段永平也在买"入场，158 买入后股价跌到 95 元（-40%），段还在媒体上平静地说"生意模式没变"，你还拿得住吗？如果你拿不住——不是标的不适合你，是你在用别人的逻辑替自己的钱包台上演出。</p>
+  <h3>证伪条件（出现即说明论点错）</h3>
+  <ul class="checklist">
+    <li>【变量①】星星人 2026H2 收入环比滑坡 &lt; 22 亿，或新 IP 莉莉艾未达预期——美好 IP 矩阵假的情证明失败</li>
+    <li>【变量②】2026 年报归母净利 &lt; 100 亿（跌破卖方一致预期下限 6% 以上）——说明爆款回落深度超预期，基准情景下修</li>
+    <li>【变量③】存货周转天数 &gt; 140 天——境外渠道商出货速度低于国内买气一下午</li>
+    <li>【假设一致性】2027 年 3 月年报披露前如出现重大资本动作（大额并购/股权增发/大额减值/管理层重大变动）——任何一项发生即触发重估</li>
+  </ul>
+  <h3>季度跟踪清单（每季盯 5 个数）</h3>
+  <table>
+    <tr><th>指标</th><th>当前值</th><th>警戒线</th><th>说明</th></tr>
+    <tr><td>存货周转天数</td><td>123 天</td><td>&gt; 140 天</td><td>库存风险第一信号</td></tr>
+    <tr><td>OCF/净利</td><td>0.85</td><td>&lt; 0.75</td><td>利润变现力持续坏则现金席入侵</td></tr>
+    <tr><td>星星人单 IP 收入（半年）</td><td>26.5 亿</td><td>环比下降 &gt; 25%</td><td>IP 矩阵接班证据 真伪</td></tr>
+    <tr><td>海外收入增速</td><td>-9.7%</td><td>连续两季为负</td><td>海外去灰化节奏</td></tr>
+    <tr><td>股价（触发重估）</td><td>158.4 港币</td><td>≤ 110 港币</td><td>进入评估买入的价格区间</td></tr>
+  </table>
+  <h3>你的初判 vs 本报告结论</h3>
+  <p><b>你的初判：</b>① "模式走通了，毛利率高，潮玩长期是好生意，价格适中"；② 动机："段永平一直在加仓"。<b>本报告的评价：</b>①生意判断 90% 正确——这门生意是比买卖，昊是一个正资产回报模式且邉肪异常干净；"价格适中"不成立：现价 158.4 港币隐含十年 18%、连所有卖方自己的基期都到不了的定价。②你的动机是这次分析最值得警惕的部分：段的持仓成本 150-162.5，现价 158.4——他在用保单结构+长期持有 + 一套 10 年还不一定卖的方法总；你没有你描绘的任何一项，你只有"他在买"的消息。这不是段永平的错，是抄作业的本质。</p>
+  <h3>与上次分析对比</h3>
+  <p>首次分析（无历史 decision-log），已按计划创建 6 个月复盘任务（2027-02-28 触发），届时对照 3 个关键变量和 3 个证伪条件重检。</p>
+</section>
+
+<section id="appendix">
+  <h2>附录：数据来源、校验与本次实证坑点</h2>
+  <p class="source-note"><b>数据来源与等级</b>：A 级——结构化金融数据接口港股接口（2018-2025 三表）+ 2025 年度业绩公告（披露易原文核对：收入 371.20 亿/归母 127.76 亿/经营现金流 108.65 亿/毛利率 72.1%）+ 分部披露（IFRS H1 中报与年报）+ 行情快照；B 级——太平洋/国盛/东方财富/浦银国际研报（仅取盈利预测与行业事实，不借用评级）+ 布鲁可/名创年度业绩公告（竞对量级参考）+ 港交所权益披露（段永平持仓轨迹）；C 级——公开媒体报道（中证网/腾讯证券/雪球）用于言行轨迹/减持/回购交叉参考。</p>
+  <p class="source-note"><b>入口校验</b>：validate_data.py 0 错误 3 警告（2018-2020 D&A 估算 B 级、股本 EPS 反推、网点"stock price crosscheck 股本未核"）——警告已记录 manifest。</p>
+  <p class="source-note"><b>引擎回归</b>：compute_metrics + reverse_dcf + verify_report 全套 45 项测试通过（含本次压出的 validate_data 假阳性 bug 修复）。</p>
+  <p class="source-note"><b>本次实证踩坑（已固化 data-sourcing.md）</b>：①港股 finance 接口无营收字段且科目为港币按期末汇率折人民币，需反推+A 级公告双源；②D&A 港股接口无独立科目，需从业绩公告"重大非现金开支"部分直接取两项科目叠加；③历史跨 11 年 IPO 前+上市前 的 spikes 级误差全标记。④validate_data 2018-2020 总分类嘛全年一个属于吉沛完整泡泡玛特吉金数据正确A级运行一次验证通过。</p>
+  <p class="source-note"><b>数字校验</b>：本报告关键数字经 verify_report.py 三层校验——通过（vnum / vchart / [E:] 证据指针）</p>
+  <h3>术语速查表</h3>
+  <table>
+    <tr><th>术语</th><th>白话解释</th></tr>
+    <tr><td>正常化基期</td><td>把 2025 年"爆款大年"的利润打个折扣当估值起点（92 亿 vs 当年 128 亿），防止"按大年的利润给小年估值"</td></tr>
+    <tr><td>隐含增速反解</td><td>用现价反推出来十年要涨 18%/年才能回本——问自己这事有多大概率发生</td></tr>
+    <tr><td>期望年化 IRR（含息）</td><td>坏根基计划加价（亏的概率加进去后，盈亏加权后年化回报</td></tr>
+    <tr><td>现金转换比</td><td>经营现金流/净利润，低于 1 就是说利润有一部分还在库存和别人的账户里</td></tr>
+    <tr><td>双闸门，双闸门</td><td>便宜不便宜（安全边际）+划算不划算（期望 IRR）——两道都过才能买，一档不过都不行</td></tr>
+    <tr><td>花答-Cyc Labubu</td><td>指任何单 IP 都有生命周期，从爆发→退热→衰减，泡泡玛特的真正护城河是"能不能每次都有下一个接棒"</td></tr>
+  </table>
+</section>
+
+<footer class="disclaimer">
+  本报告由分析工具生成，仅供研究参考，不构成任何投资建议。市场有风险，投资需谨慎。报告生成：value-investing-analyst skill v2.4（港股链路首次实证）。
+</footer>
+</div>
+
+<script>
+const COLOR={primary:'#1a3a5c',accent:'#d97706',green:'#15803d',gray:'#9ca3af',red:'#b91c1c'};
+const charts=[];
+function initChart(id,option){
+  const el=document.getElementById(id);if(!el||typeof echarts==='undefined')return;
+  const c=echarts.init(el);
+  c.setOption(Object.assign({textStyle:{fontFamily:'-apple-system, PingFang SC, Microsoft YaHei'},grid:{left:60,right:30,top:50,bottom:40},tooltip:{trigger:'axis'}},option));
+  charts.push(c);
+}
+window.addEventListener('resize',()=>charts.forEach(c=>c.resize()));
+if(typeof echarts==='undefined'){document.querySelectorAll('.chart').forEach(el=>{el.innerHTML='<p style="color:#b91c1c;padding:20px">图表需联网加载 ECharts</p>';});}
+
+initChart('chart-valuation-band',{
+  legend:{bottom:0},
+  xAxis:{type:'category',data:['悲观(g=0%)','基准(g=5%)','乐观(g=10%)']},
+  yAxis:{type:'value',name:'每股价值（港币）',min:0,max:200},
+  series:[
+    {name:'主分析',type:'bar',barWidth:44,itemStyle:{color:COLOR.primary},label:{show:true,position:'top',formatter:'{c} HKD'},
+     /*<!-- vchart src=valuation.json path=band_hkd -->*/
+     data:[78.4,95.6,116.2]},
+    {name:'现价',type:'line',markLine:{symbol:'none',lineStyle:{color:COLOR.red,width:2},label:{formatter:'现价 158.4 HKD',position:'end'},data:[{yAxis:158.4}]},data:[]}
+  ]
+});
+
+initChart('chart-ip-structure',{
+  tooltip:{trigger:'item',formatter:'{b}: {c}%'},
+  legend:{bottom:0,type:'scroll'},
+  series:[{
+    name:'2025 IP收入占比',type:'pie',radius:['35%','68%'],
+    itemStyle:{borderColor:'#fff',borderWidth:2},
+    label:{formatter:'{b}\\n{d}%'},
+    data:[
+      {name:'THE MONSTERS (LABUBU家族)',value:38.1,itemStyle:{color:COLOR.accent}},
+      {name:'SKULLPANDA',value:9.5,itemStyle:{color:COLOR.primary}},
+      {name:'MOLLY',value:9.0,itemStyle:{color:'#2f855a'}},
+      {name:'DIMOO',value:7.5,itemStyle:{color:'#805ad5'}},
+      {name:'CRYBABY',value:6.5,itemStyle:{color:'#3182ce'}},
+      {name:'HIRONO',value:5.5,itemStyle:{color:'#dd6b20'}},
+      {name:'其他17+个IP',value:23.9,itemStyle:{color:COLOR.gray}}
+    ]
+  }]
+});
+
+initChart('chart-rev-ni',{
+  legend:{bottom:0},
+  xAxis:{type:'category',data:[2018,2019,2020,2021,2022,2023,2024,2025]},
+  yAxis:{type:'value',name:'亿元'},
+  series:[
+    {name:'营业收入',type:'bar',barWidth:30,itemStyle:{color:COLOR.primary},
+     /*<!-- vchart src=metrics_POPMART.json path=chart_series.revenue scale=0.01 -->*/
+     data:[5.15,16.88,25.14,44.91,46.17,63.01,130.38,371.20]},
+    {name:'归母净利润',type:'line',smooth:true,itemStyle:{color:COLOR.accent},label:{show:true,formatter:'{c}',fontSize:10},
+     /*<!-- vchart src=metrics_POPMART.json path=chart_series.net_income scale=0.01 -->*/
+     data:[1.02,4.51,5.23,8.54,4.76,10.82,31.25,127.76]}
+  ]
+});
+
+initChart('chart-margin',{
+  legend:{bottom:0},
+  xAxis:{type:'category',data:[2018,2019,2020,2021,2022,2023,2024,2025]},
+  yAxis:{type:'value',name:'%',max:80},
+  series:[
+    {name:'毛利率',type:'line',smooth:true,itemStyle:{color:COLOR.primary},
+     /*<!-- vchart src=metrics_POPMART.json path=chart_series.gross_margin scale=100 -->*/
+     data:[57.92,64.77,63.43,61.43,57.48,61.33,66.79,72.10]},
+    {name:'净利率',type:'line',smooth:true,itemStyle:{color:COLOR.accent},
+     /*<!-- vchart src=metrics_POPMART.json path=chart_series.net_margin scale=100 -->*/
+     data:[19.83,26.71,20.81,19.02,10.31,17.17,23.97,34.42]},
+    {name:'周期均值(净利率)',type:'line',markLine:{symbol:'none',lineStyle:{type:'dashed',color:COLOR.gray},label:{formatter:'历史均值 21.5%'},data:[{yAxis:21.5}]},data:[]}
+  ]
+});
+
+initChart('chart-ocf-ni',{
+  legend:{bottom:0},
+  xAxis:{type:'category',data:[2018,2019,2020,2021,2022,2023,2024,2025]},
+  yAxis:[{type:'value',name:'%',max:220}],
+  series:[
+    {name:'现金转换比(OCF/净利)',type:'line',smooth:true,areaStyle:{opacity:.15},itemStyle:{color:COLOR.green},label:{show:true,formatter:'{c}%',fontSize:10},
+     /*<!-- vchart src=metrics_POPMART.json path=chart_series.ocf_to_ni scale=100 -->*/
+     data:[175.5,111.5,135.0,91.9,187.4,183.7,158.5,85.0]},
+    {name:'1.0 水平线',type:'line',markLine:{symbol:'none',lineStyle:{color:COLOR.red,type:'dashed'},label:{formatter:'1.0 提醒线'},data:[{yAxis:100}]},data:[]}
+  ]
+});
+
+initChart('chart-peer',{
+  legend:{bottom:0},
+  xAxis:{type:'category',data:['泡泡玛特','布鲁可','名创优品']},
+  yAxis:{type:'value',name:'%',max:80},
+  series:[
+    {name:'毛利率',type:'bar',barWidth:36,itemStyle:{color:COLOR.primary},label:{show:true,position:'top',formatter:'{c}%'},
+     /*<!-- vchart src=peer_table.json path=gross_margins -->*/
+     data:[72.1,46.8,45.0]},
+    {name:'PE-TTM对比',type:'bar',barWidth:36,itemStyle:{color:COLOR.accent},label:{show:true,position:'top',formatter:'{c}x'},
+     /*<!-- vchart src=peer_table.json path=pe_ttms -->*/
+     data:[13.84,22.51,10.94]}
+  ]
+});
+</script>
+</body>
+</html>

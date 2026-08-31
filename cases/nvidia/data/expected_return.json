@@ -1,0 +1,37 @@
+{
+  "price": 209.66,
+  "hold_years": 5,
+  "scenarios": [
+    {
+      "name": "悲观",
+      "probability": 0.3,
+      "value_per_share": 63.14,
+      "total_return": -0.6988457502623295,
+      "annualized_irr": -0.21339301385540121
+    },
+    {
+      "name": "基准",
+      "probability": 0.5,
+      "value_per_share": 127.14,
+      "total_return": -0.393589621291615,
+      "annualized_irr": -0.0951984724456868
+    },
+    {
+      "name": "乐观",
+      "probability": 0.2,
+      "value_per_share": 238.19,
+      "total_return": 0.13607745874272625,
+      "annualized_irr": 0.025844628117098978
+    }
+  ],
+  "expected_value_per_share": 130.15,
+  "expected_total_return": -0.379233043975961,
+  "expected_annualized_irr": -0.10644821475604396,
+  "loss_probability": 0.8,
+  "expected_downside_given_loss": -0.5080606696556329,
+  "probability_weighted_downside": -0.40644853572450634,
+  "index_hurdle": 0.09,
+  "beats_index": false,
+  "excess_vs_index": -0.19644821475604396,
+  "note": "期末股价回归内在价值假设，不含股息；亏损概率为期末低于现价的情景概率之和"
+}

@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>伊利股份（600887）价值投资分析报告</title>
+<script src="https://cdn.jsdelivr.net/npm/echarts@5/dist/echarts.min.js"></script>
+<style>
+:root{--primary:#1a3a5c;--accent:#d97706;--bg:#f7f8fa;--card:#fff;--text:#24292f;--muted:#6b7280;--green:#15803d;--red:#b91c1c;--border:#e5e7eb}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;background:var(--bg);color:var(--text);line-height:1.75;font-size:15px}
+.container{max-width:1080px;margin:0 auto;padding:24px 20px 80px}
+header.report-header{background:var(--primary);color:#fff;border-radius:12px;padding:40px 36px;margin-bottom:28px}
+header.report-header h1{font-size:26px;font-weight:700}
+header.report-header .meta{margin-top:8px;opacity:.75;font-size:13px}
+.verdict-banner{display:flex;align-items:center;gap:24px;margin-top:24px;background:rgba(255,255,255,.08);border-radius:10px;padding:20px 24px}
+.verdict-label{font-size:34px;font-weight:800;letter-spacing:2px}
+.verdict-amber{color:#fbbf24}
+.verdict-score{font-size:15px;opacity:.9}
+.snapshot-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px;margin-top:16px}
+.snapshot-item{background:rgba(255,255,255,.08);border-radius:8px;padding:10px 14px}
+.snapshot-item .k{font-size:12px;opacity:.65}
+.snapshot-item .v{font-size:17px;font-weight:700;margin-top:2px}
+.snapshot-time{font-size:11px;opacity:.55;margin-top:8px}
+section{background:var(--card);border-radius:12px;padding:32px 36px;margin-bottom:24px;border:1px solid var(--border)}
+h2{font-size:20px;color:var(--primary);padding-bottom:10px;margin-bottom:18px;border-bottom:3px solid var(--accent);display:inline-block}
+h3{font-size:16px;color:var(--primary);margin:22px 0 10px}
+p{margin-bottom:12px}
+.chart{width:100%;height:400px;margin:12px 0 4px}
+.chart-note{font-size:12px;color:var(--muted);margin-bottom:16px}
+.insight-title{font-size:15px;font-weight:700;margin:20px 0 4px}
+table{width:100%;border-collapse:collapse;margin:14px 0;font-size:14px}
+th{background:var(--primary);color:#fff;padding:10px 12px;text-align:left;font-weight:600}
+td{padding:9px 12px;border-bottom:1px solid var(--border)}
+tr:nth-child(even) td{background:#fafbfc}
+.tag{display:inline-block;padding:2px 10px;border-radius:20px;font-size:12px;font-weight:600}
+.tag-green{background:#dcfce7;color:var(--green)}
+.tag-amber{background:#fef3c7;color:#b45309}
+.tag-red{background:#fee2e2;color:var(--red)}
+blockquote.persona{border-left:4px solid var(--accent);background:#fffbf5;padding:16px 20px;margin:14px 0;border-radius:0 8px 8px 0;font-size:14px}
+blockquote.persona .persona-name{font-weight:700;color:var(--primary);display:block;margin-bottom:6px}
+.redteam{background:#1f2937;color:#e5e7eb;border-radius:10px;padding:24px 28px;margin:16px 0}
+.redteam h3{color:#fbbf24;margin-top:0}
+.divergence{display:flex;align-items:center;gap:18px;border:1.5px dashed var(--accent);border-radius:10px;padding:16px 20px;background:#fffbf5;margin:14px 0;font-size:14px}
+@media print{section{break-inside:avoid}.chart{height:360px}}
+</style>
+</head>
+<body>
+<div class="container">
+
+<header class="report-header">
+  <h1>伊利股份（600887.SH）价值投资分析报告</h1>
+  <div class="meta">报告日期：2026-08-28 ｜ 数据截止：2025 年报 + 2026 中报季 + 2026-08-28 行情 ｜ 行业：成品消费（乳制品）｜ 管道：通用 engine（A 股通用管道首次实证）｜ 币种：CNY</div>
+  <div class="verdict-banner">
+    <div class="verdict-label verdict-amber">观察 · 等价格</div>
+    <div class="verdict-score">
+      <b>双闸门状态</b>：闸门一 安全边际 <b><span class="vnum" data-src="valuation.json" data-path="margin_of_safety_vs_base" data-fmt="pct1">-15.5%</span></b>（现价 26.86 元 vs 基准价值 22.71 元，要求 ≥25%）<b style="color:#f87171">✗</b> ｜ 闸门二 期望年化（含息）<b><span class="vnum" data-src="expected_return.json" data-path="expected_annualized_irr_incl_div" data-fmt="pct1">1.69%</span></b>（门槛 9%）<b style="color:#f87171">✗</b><br>
+      三位大师独立判断：巴菲特【买入等价格 77 分：好生意，等 22 元】｜ 段永平【生意顶级 89 分：公道偏上，跌 20% 加仓】｜ 李录【太难偏可懂 75 分：等 22 元以下】<br>
+      红队独立出数触发降档：悲观 13.63 vs 主分析 19.53（-30.2%＞30% 线）——最终档位采纳红队更严口径<br>
+      内在价值区间：<b><span class="vnum" data-src="valuation.json" data-path="scenarios_main.0.value_per_share_cny" data-fmt="num2">19.53</span> ~ <span class="vnum" data-src="valuation.json" data-path="scenarios_main.2.value_per_share_cny" data-fmt="num2">26.27</span> 元</b>（基准 <span class="vnum" data-src="valuation.json" data-path="scenarios_main.1.value_per_share_cny" data-fmt="num2">22.71</span>）｜ 5 年期望年化（含息）<span class="vnum" data-src="expected_return.json" data-path="expected_annualized_irr_incl_div" data-fmt="pct1">1.69%</span> ｜ 买入触发区 ≤18 元（红队纪律底线）
+    </div>
+  </div>
+  <div class="snapshot-grid">
+    <div class="snapshot-item"><div class="k">现价(元)</div><div class="v">26.86</div></div>
+    <div class="snapshot-item"><div class="k">总市值</div><div class="v"><span class="vnum" data-src="market_snapshot.json" data-path="total_market_cap_yi" data-fmt="num0">1699</span> 亿</div></div>
+    <div class="snapshot-item"><div class="k">PE-TTM</div><div class="v"><span class="vnum" data-src="market_snapshot.json" data-path="pe_ttm" data-fmt="num2">16.78</span></div></div>
+    <div class="snapshot-item"><div class="k">PB</div><div class="v">3.16</div></div>
+    <div class="snapshot-item"><div class="k">股息率TTM</div><div class="v"><span class="vnum" data-src="market_snapshot.json" data-path="dividend_yield_ttm_frac" data-fmt="pct2">5.14%</span></div></div>
+    <div class="snapshot-item"><div class="k">距52周低点</div><div class="v">+13%</div></div>
+    <div class="snapshot-item"><div class="k">分红率2025</div><div class="v">75.5%</div></div>
+  </div>
+  <div class="snapshot-time">行情快照时间：2026-08-28 收盘（来源等级 A）</div>
+</header>
+
+<section id="summary">
+  <h2>一、投资摘要</h2>
+  <p><b>一句话生意：</b>从 560 万奶农手里收原奶，通过 180+ 生产基地加工成液态奶（61%）、奶粉（28%）、冷饮（9%），通过 1.7 万经销商卖给 10 亿消费者——每 100 元收入净赚 10 元，比中国 99% 的消费品公司更稳定地做到了 30 年。[E:segments.json][E:financials_YILI.json][E:market_snapshot.json]</p>
+  <p><b>双闸门裁决</b>：安全边际 <span class="vnum" data-src="valuation.json" data-path="margin_of_safety_vs_base" data-fmt="pct1">-15.5%</span>（现价高于基准价值 18%）+ 期望含息 IRR <span class="vnum" data-src="expected_return.json" data-path="expected_annualized_irr_incl_div" data-fmt="pct1">1.69%</span>（5 年期，跑输指数 <span class="vnum" data-src="expected_return.json" data-path="excess_vs_index" data-fmt="pct1">-7.3%</span>pct）——两闸门全灭，档位封顶"观察·等价格"。这不是"差公司"的判决，是"好公司、价格还没到位"的判决：现价隐含十年 OE 增速 <span class="vnum" data-src="valuation.json" data-path="implied_growth_at_price.implied_10y_cagr" data-fmt="pct1">-0.71%</span>，市场定价已经悲观，但不够悲观到给出安全边际。</p>
+  <div class="points-grid">
+    <div class="point-card bull">
+      <h4>三大投资论点</h4>
+      <ul>
+        <li><b>类债券现金回报</b>：分红率承诺 ≥75%，当前股息率 5.14%（超十年期国债 300bp+），capex 从 92 亿峰值降至 30 亿进入收获期，自由现金流 113 亿足以覆盖分红 2 倍 [E:financials_YILI.json]</li>
+        <li><b>奶粉第二曲线已验证</b>：婴配粉市占率 7.3%→18.3% 四年翻倍跃居第一，成人粉 25% 连续 11 年第一，奶粉收入 327.7 亿（+10.4%）[E:segments.json]</li>
+        <li><b>抗跌的结构</b>：2024 行业最差年（营收 -8.2%）仍守住 15.8% ROE + 217 亿经营现金流，2025 年恢复 20.9% ROE [E:metrics_YILI.json]</li>
+      </ul>
+    </div>
+    <div class="point-card bear">
+      <h4>三大不能闭眼的地方</h4>
+      <ul>
+        <li><b>原奶成本红利是租来的</b>：原奶价格 2021-2024 跌 30%+，贡献了 2025 年净利率新高的大部分。反弹则毛利率回吐 50-100bp、利润冲击 6-12 亿 [E:consensus.json]</li>
+        <li><b>液态奶还在萎缩</b>：占比 61% 的基本盘 2024 年 -12.3%、2026H1 仍 -2%，靠奶粉+冷饮对冲是"用增长填坑"的消耗战 [E:segments.json]</li>
+        <li><b>估值锚已系统性下移</b>：PE 中枢从 35x（2021）降到 16x（现在），市场按"零增长消费股"定价，回归旧中枢的赌注没有催化剂 [E:market_snapshot.json]</li>
+      </ul>
+    </div>
+  </div>
+  <p><b>本笔投资取决于：</b>一个变量——原奶价格何时反弹、反弹多少。原奶不反弹：伊利是一台 5% 股息+5% 增长的复利机器，现价公道。原奶大反弹：净利率从 10% 回到 8.5%，利润掉 15-18 亿，基准价值下修到 19 元以下。红队与主分析的分歧全部集中在这一个输入上。</p>
+  <p class="source-note"><b>信息局限声明：</b>①capex 2016-2023 取自华泰研究历史序列（B 级转引，非年报原文逐年核对）；②D&A 2020-2022 为内插估算（B 级）；③竞对蒙牛/飞鹤 2025 完整年报未拉取，用行情+摘要数据做量级对比；④2024 年含 52.3 亿一次性减值（澳优商誉 30.4 亿等），该年基数被"洗澡"压低，2025 年 36.8% 增长含低基数效应。</p>
+  <div class="insight-title">估值区间 vs 现价</div>
+  <div id="chart-valuation-band" class="chart" style="height:280px"></div>
+  <div class="chart-note">数据来源：valuation.json。现价 26.86 元位于乐观情景之上 2% 处——市场已经把悲观定价完，但没跌出机会。</div>
+</section>
+
+<section id="business">
+  <h2>二、商业模式与生意</h2>
+  <p><b>生意本质</b>：这是一门"重资产制造+轻资产品牌"的混合生意。上游用"利益联结机制"绑定 560 万户牧场（不拥有、但深度绑定——提供饲料、兽药、融资支持，换取稳定原奶供应），中游用 180+ 生产基地加工，下游用 1.7 万经销商+全渠道网络触达消费者。[E:financials_YILI.json][E:segments.json]跟泡泡玛特完全相反：泡泡玛特是轻资产 IP 生意（毛利率 72%），伊利是重资产供应链生意（毛利率 34.6%）——但两者都是"品牌+渠道"的双轮驱动。</p>
+  <p><b>单位经济</b>：每 100 元收入 → 毛利 34.6 元 → 销售费用 18.6 + 管理研发 4.5 + 财务净收入 -0.6 → 净利 10 元。这门生意的核心矛盾：毛利率只有 34.6%（vs 泡泡玛特 72%、飞鹤 70.5%），必须靠 1156 亿的规模摊薄固定成本才能赚钱——规模就是护城河本体。伊利与蒙牛的毛利率相当（34.6% vs 39.2%），但净利率 10% vs 蒙牛 2.5%——差异全部在费用效率，这是运营能力的差距，是 30 年管理积累的结果。[E:peer_table.json]</p>
+  <p><b>10 年后的可持续性</b>：乳制品是刚需（蛋白质+钙的日均摄入需求），中国人均乳制品消费量只有日本 1/3——地板很厚。但天花板也明确：人口见顶+液态奶渗透率饱和，未来 10 年是"量稳价升"的结构性增长，不是渗透率红利期。这门生意 10 年后还在，且大概率还是龙头，但增长中枢 3-6%（实际增速+通胀）。[E:metrics_YILI.json][E:consensus.json]</p>
+</section>
+
+<section id="quant">
+  <h2>三、定量画像</h2>
+  <div class="insight-title">收入十年翻倍但已进入平台期；利润的"2024 坑"是减值一次性冲击</div>
+  <div id="chart-rev-ni" class="chart"></div>
+  <div class="chart-note">数据来源：metrics_YILI.json。2024 年归母 84.5 亿含 52.3 亿一次性减值（澳优商誉 30.4 亿+存货 12.3 亿+信用 5.6 亿+固定资产 3.7 亿），还原后约 107 亿。</div>
+  <p>收入 2016 年 603 亿 → 2023 年峰值 1258 亿 → 2024 年 1154 亿（-8.3%，上市以来首次下滑）→ 2025 年 1156 亿（+0.21%，企稳）。十年 CAGR 7.5%，但近三年（2023-2025）CAGR 已降至 -2.7%——增长引擎从"液态奶渗透率"切换到"品类结构升级"的转型期。</p>
+
+  <div class="insight-title">毛利率 U 型反转：2020 年 30.1% 低点 → 2025 年 34.6% 新高，净利率同步修复到 10%</div>
+  <div id="chart-margin" class="chart"></div>
+  <div class="chart-note">数据来源：metrics_YILI.json。2020 年毛利率低点主因疫情+原奶涨价，2025 年新高主因原奶跌价红利+高毛利奶粉占比提升。</div>
+  <p>净利率从 2016 年 9.4% 起起落落，2025 年达到 10.0% 历史新高。引擎判定"中性区间"（1.14x 均值），但红队质疑：2025 年净利率新高的成色里有原奶红利的贡献——这是周期性利润不是结构性利润。管理层"十四五"规划的 9-10% 净利率目标已兑现，下一个战略周期"再上台阶"需要新引擎。</p>
+
+  <div class="insight-title">现金含量：OCF/净利十年均值 1.65，2025 年 1.24——利润是真钱</div>
+  <div id="chart-ocf-ni" class="chart"></div>
+  <div class="chart-note">数据来源：metrics_YILI.json（ocf_to_ni 比率）。2024 年 2.57 异常高因利润低基数+预收款大增。</div>
+  <p>经营现金流十年持续 >净利润（比率 1.2-2.6x），2025 年 143.4 亿 vs 净利 115.7 亿。现金转换的波动来自合同负债（经销商预付款）的周期：2024 年 +39%（渠道信心足）→ 2025 年 -15%（正常化）。利润质量没有问题。</p>
+
+  <div class="insight-title">同业对照：伊利净利率断层式领先，PE 却比蒙牛便宜一半</div>
+  <div id="chart-peer" class="chart" style="height:320px"></div>
+  <div class="chart-note">数据来源：peer_table.json（B 级转引）。蒙牛 2024 净利 1.05 亿系商誉减值冲击所致。</div>
+  <p>伊利的"一超"地位在 2024-2025 年行业下行期进一步巩固：营收是蒙牛 1.26 倍、净利是蒙牛 5 倍、ROE 是蒙牛 5.6 倍。PE 16.8x vs 蒙牛 33x——市场给伊利的估值反而更便宜，因为蒙牛利润基数被打穿。这就是"赢家通吃的行业里，第二名的估值永远比第一名贵"的估值陷阱。</p>
+</section>
+
+<section id="moat">
+  <h2>四、护城河分析</h2>
+  <h3>五源归类</h3>
+  <table>
+    <tr><th>护城河源</th><th>评级</th><th>证据与边界</th></tr>
+    <tr><td>无形资产（品牌）</td><td><span class="tag tag-green">强</span></td><td>亚洲乳业第一、全球第五品牌；安慕希/金典/金领冠三品牌矩阵，每进入一个品类做到第一 [E:segments.json]</td></tr>
+    <tr><td>转换成本</td><td><span class="tag tag-amber">中</span></td><td>消费者转换无成本，但 1.7 万经销商网络的货架壁垒是"空间护城河" [E:financials_YILI.json]</td></tr>
+    <tr><td>成本优势</td><td><span class="tag tag-green">强</span></td><td>规模采购+180+ 基地+上游利益联结；净利率 10% vs 蒙牛 2.5% 的差距全部来自运营效率 [E:peer_table.json]</td></tr>
+    <tr><td>网络效应</td><td><span class="tag tag-red">弱</span></td><td>无；渠道密度是壁垒但不是网络效应</td></tr>
+    <tr><td>有效规模</td><td><span class="tag tag-green">强</span></td><td>CR2 约 60%，"一超"格局；2024 行业下行期市占率仍在提升 [E:peer_table.json]</td></tr>
+  </table>
+  <p><b>护城河评级：强</b>。与泡泡玛特"爆款工厂"式的护城河不同，伊利的护城河是"渠道+品牌+规模"三位一体的经典消费品护城河——不性感，但 30 年没被攻破过。最接近的进攻者是蒙牛（被甩开）和新物种（认养一头牛等，未成气候）。真正的威胁不是竞品，是需求本身（人口结构）。</p>
+</section>
+
+<section id="growth">
+  <h2>五、增长空间与质量</h2>
+  <p><b>S 曲线位置</b>：平台期。液态奶（61% 收入）已从增长引擎变成"压舱石"，增长靠结构切换：</p>
+  <table>
+    <tr><th>引擎</th><th>5 年展望</th><th>可信度</th><th>依据</th></tr>
+    <tr><td>奶粉（第二支柱）</td><td>+8~12%/年</td><td><span class="tag tag-green">高</span></td><td>婴配粉份额 18.3% 第一（配方注册壁垒）、成人粉 25% 第一（老龄化）、羊奶粉第一；2025 年 +10.4% [E:segments.json]</td></tr>
+    <tr><td>冷饮</td><td>+5~10%/年</td><td><span class="tag tag-amber">中</span></td><td>连续 31 年第一、98 亿逼近百亿；东南亚出海 +10.2% [E:segments.json]</td></tr>
+    <tr><td>成人营养/奶酪/国际化</td><td>期权性质</td><td><span class="tag tag-amber">中低</span></td><td>奶酪 2B +30%、海外羊奶粉 +50.7%，但基数小（<30 亿）[E:segments.json]</td></tr>
+    <tr><td>液态奶（基本盘）</td><td>-2~+3%/年</td><td><span class="tag tag-amber">中</span></td><td>2024 -12.3%、2025 企稳、2026H1 -2%；行业总量见顶后靠结构升级 [E:segments.json]</td></tr>
+  </table>
+  <p><b>增长质量</b>：OCF/净利 1.24（健康）、存货周转正常、应收账期 9.3 天（极短）、资本开支进入收获期。唯一的增长质量瑕疵是 2025 年利润增长（+36.8%）有 2024 年减值低基数的放大效应——还原后真实增长约 +8%（107 亿→115.7 亿）。[E:financials_YILI.json]</p>
+</section>
+
+<section id="management">
+  <h2>六、管理层与企业文化</h2>
+  <p><b>正面</b>：潘刚 1992 年入职至今 34 年，把区域小厂带到全球第五。三个细节证明品质：①2024 年行业价格战最惨烈时选择"宁可丢份额不打价格战"，2025 年份额+毛利率双回升——战略克制；②"十四五"净利率 9-10% 目标 2025 年如期兑现——说到做到；③2025 年分红率 75.5%+承诺 2025-2027 ≥75% 且每股不低于 1.22 元——现金回报制度化。潘刚薪酬连续三年下滑（2296→1966 万）。[E:financials_YILI.json][E:market_snapshot.json][E:consensus.json]</p>
+  <p><b>扣分项</b>：①2020 年 62.45 亿港元收购澳优，2024 年商誉减值 30.4 亿——并购判断失误且减值滞后了三年；②2026 年 3 月潘刚减持 6199 万股（约 16.4 亿元）——上市以来管理层首次减持，出现在净利率历史新高的时点，信号意义大于金额；③无实控人结构（潘刚持股约 8%），治理依赖机制而非股权绑定。[E:market_snapshot.json]</p>
+</section>
+
+<section id="risk">
+  <h2>七、财务质量与风险深查</h2>
+  <p><b>排雷</b>：一票否决 0 条、红旗 0 条。信永中和连续标准无保留审计、无违规担保、无资金占用、无监管处罚。"大存大贷"（类现金 500 亿+有息负债 508 亿）是供应链金融的生意结构（低息借入做保理/小贷给上下游），不是财务舞弊信号，但需要持续跟踪利差。[E:financials_YILI.json]</p>
+  <h3>三大实质风险</h3>
+  <table>
+    <tr><th>风险</th><th>量级</th><th>机制</th></tr>
+    <tr><td>原奶价格反弹</td><td><span class="tag tag-red">高</span></td><td>原奶 2021-2024 跌 30%+，贡献 2025 毛利率红利的大半；反弹 20-30% 则毛利率回吐 50-100bp、利润冲击 6-12 亿（-5~-10%）。上游产能去化已在推进，反弹是"何时"不是"是否"</td></tr>
+    <tr><td>商誉余值</td><td><span class="tag tag-amber">中</span></td><td>2024 年计提后余 23.4 亿（主要是澳优剩余部分），管理层称"已计提充分"——但澳优若继续不达预期仍有减值空间</td></tr>
+    <tr><td>食品安全黑天鹅</td><td><span class="tag tag-amber">中</span></td><td>三聚氰胺级别事件会摧毁品牌信任（三鹿先例）；伊利 30 年无重大安全事故，但这是低概率高冲击的尾部风险，无法量化定价</td></tr>
+  </table>
+</section>
+
+<section id="valuation">
+  <h2>八、估值与安全边际</h2>
+  <h3>基期判定：引擎中性（当期 OE 115.65 亿可用），红队异议（两年平均 100 亿）</h3>
+  <p>引擎判定：净利率 10.0% 是全期均值 8.4% 的 1.19 倍（&lt;1.25 阈值），中性区间，当期 OE 可作基期。红队异议：2025 年利润含原奶红利+低基数双重放大，用"2024 还原值 107 亿与 2025 实际值 115.65 亿平均"更稳健（约 100 亿基期）——这个分歧就是本次估值的核心战场。[E:metrics_YILI.json]</p>
+  <h3>三情景 DCF（WACC 10% / 永续 2.5% / 10 年 fade）</h3>
+  <table>
+    <tr><th>情景</th><th>概率</th><th>假设</th><th>每股价值</th><th>vs 现价 26.86</th></tr>
+    <tr><td>悲观</td><td>30%</td><td>原奶反弹+需求疲软，10 年 OE g=2%</td><td>19.53 元</td><td>-27%</td></tr>
+    <tr><td>基准</td><td>45%</td><td>温和复苏+奶粉兑现，10 年 OE g=5%</td><td>22.71 元</td><td>-15%</td></tr>
+    <tr><td>乐观</td><td>25%</td><td>三曲线齐发力，10 年 OE g=8%</td><td>26.27 元</td><td>-2%</td></tr>
+  </table>
+  <p><b>反向 DCF</b>：现价 26.86 元隐含十年 OE 年增速 <b><span class="vnum" data-src="valuation.json" data-path="implied_growth_at_price.implied_10y_cagr" data-fmt="pct1">-0.71%</span></b>（EV/OE = 12.0x）——市场定价的是"永续缓慢衰退的现金牛"。这个定价已经相当悲观：任何一个相信"乳制品需求稳定+伊利份额稳固"的投资者都会认为市场错了。但"市场错"≠"会马上纠错"——A 股给消费股的估值锚已经系统性下移，等待纠错的资金成本是真实的。</p>
+  <h3>期望回报（含股息，引擎计算）</h3>
+  <table>
+    <tr><th>指标</th><th>数值</th><th>对照</th></tr>
+    <tr><td>期望每股价值（概率加权）</td><td><span class="vnum" data-src="expected_return.json" data-path="expected_value_per_share" data-fmt="num2">22.65</span> 元</td><td>vs 现价：低 15.7%</td></tr>
+    <tr><td>期望年化（含息）</td><td><b>1.69%</b></td><td>vs 门槛 9%：<b>跑输 7.3pct</b></td></tr>
+    <tr><td>5 年亏损概率（含息）</td><td><span class="vnum" data-src="expected_return.json" data-path="loss_probability" data-fmt="pct0">30%</span></td><td>亏损情景平均跌幅 -1.6%（股息缓冲显著）</td></tr>
+    <tr><td>红队独立对照</td><td colspan="2">红队基期 100 亿口径期望含息 IRR ≈ -1%，悲观 13.63 vs 主分析 19.53（-30.2% 触发降档线）</td></tr>
+  </table>
+  <p><b>买入触发区：≤18 元（红队纪律底线，对应股息率 6.8%+）；18-22 元为可分批建仓区；22-27 元持有区。</b>当前 26.86 元在持有区上沿——已持有者拿住吃息，未持有者不追。</p>
+</section>
+
+<section id="key-judgment">
+  <h2>九、关键判断（Phase 4.5 收敛）</h2>
+  <h3>关键变量（既重要又可知）</h3>
+  <table>
+    <tr><th>变量</th><th>当前判断</th><th>可知路径</th></tr>
+    <tr><td>原奶价格 2026-2027 走势</td><td><span class="tag tag-red">最关键变量</span></td><td>农业部生鲜乳周价、饲料成本、上游存栏去化数据——季度可跟踪。反弹 20%+ 则触发基期下修重估</td></tr>
+    <tr><td>奶粉份额天花板</td><td><span class="tag tag-amber">18.3%→25%？</span></td><td>尼尔森零售份额季度数据+配方注册制政策——若份额见顶，第二曲线逻辑弱化</td></tr>
+    <tr><td>资本开支水位</td><td><span class="tag tag-green">30 亿低位稳态</span></td><td>年报"购建固定资产现金"——若回升至 50 亿+，自由现金流逻辑受损</td></tr>
+  </table>
+  <h3>变异认知测试</h3>
+  <p><b>市场为什么给现在这个价</b>：一致预期叙事是"液态奶见顶+零增长+靠分红"——16.8x PE、5.1% 股息率就是"债券化定价"。市场不相信净利率 10% 能守住（原奶反弹担忧），也不相信奶粉第二曲线能对冲液态奶萎缩。[E:consensus.json]<br>
+  <b>我们的分歧</b>：市场把"周期红利"当成"周期风险"定价——我们用引擎检验后认为市场方向基本对（现价确实没有安全边际），但程度过了头（隐含 -0.71% 十年增速过于悲观，伊利过去十年最差年份收入也没负增长超过 8%）。<br>
+  <b>认知优势</b>：本报告相对市场无显著方向优势（低置信度）——这决定了结论只能是"观察"而非"逆势买入"。</p>
+</section>
+
+<section id="committee">
+  <h2>十、投委会评审</h2>
+  <blockquote class="persona"><span class="persona-name">巴菲特视角（77/100）：买入等价格——"现金牛跌出不合理价时我买，现在还差一步"</span>
+    "我找到了一瓶能在 A 股牧场里挤奶的现金牛。它从 2019 年花 92 亿扩产能到 2025 年只花 30 亿，省出来的钱分红回购现在还给你 75% 利润。现在市场为这门生意开价 16.8x PE 和 5.1% 股息，等于告诉你这公司不会增长。我愿意在这个判断上跟市场打赌，但赌的时候不是今天，是它跌到 22 块钱的时候。"</blockquote>
+  <blockquote class="persona"><span class="persona-name">段永平视角（89/100）：生意顶级，公道偏上——"十年不卖的票，跌 20% 我加一倍"</span>
+    "我在 A 股买东西的原则很简单：十年不卖的票，今天的价格好过所有的择时技巧。伊利这个级别的公司我看了二十年，连 2024 年都只是打了个喷嚏。我家冰箱里的安慕希比我懂什么是品牌护城河。当前 27 块不算便宜，如果给我跌 20% 的机会，我会把仓位加一倍。"</blockquote>
+  <blockquote class="persona"><span class="persona-name">李录视角（75/100）：比"太难"好一点，比"便宜"差一步——"我在等 22 元以下"</span>
+    "生意质地 90 分、价格 65 分。最大的困境是我不知道 2026-2028 年原奶价格走势——这决定了这门生意值 12x 还是 15x OE。如果伊利在 A 股之外的任何市场，我会毫不犹豫用这个价格买。但这里是 A 股，如果消费大盘继续走弱，它会先跌下来给你机会。我在等。"</blockquote>
+  <h3>分歧对照表</h3>
+  <table>
+    <tr><th>关键问题</th><th>巴菲特（77）</th><th>段永平（89）</th><th>李录（75）</th></tr>
+    <tr><td>当前该不该买</td><td>买入等价格（22 元触发）</td><td>公道偏上，已持有拿住、新仓等 22-26 区间</td><td>等 22 元以下</td></tr>
+    <tr><td>对原奶周期</td><td>未重点讨论（盲区）</td><td>未重点讨论（盲区）</td><td>明确"不知道"——最诚实的判断</td></tr>
+    <tr><td>基期选择</td><td>当期 115.65 亿</td><td>当期 115.65 亿</td><td>暗示两年平均更稳</td></tr>
+    <tr><td>股息的作用</td><td>核心买入理由（现金回报故事）</td><td>加分项</td><td>安全垫而非买入理由</td></tr>
+  </table>
+  <p><b>核心分歧</b>：三人分数高度接近（75-89）但落点不同——巴菲特和李录的"等 22 元"与段永平的"22-26 都可以拿"差在他们对"股息再投资"的权重。真正的分歧不在生意判断（三人都认为伊利是顶级生意），在"等待的资金成本"：巴菲特/李录认为机会成本 9% 意味着必须等价格，段永平的体系里"拿着好生意等分红"本身就是收益。</p>
+  <div class="redteam">
+    <h3>芒格式红队质询</h3>
+    <p><b>反演（怎么亏大钱）</b>：①把 2025 年 115.65 亿当新基期外推，两年内原奶反弹 30%、净利率回到 8.5%、利润掉回 95-105 亿，市值跌到 1500 亿以下（23.7 元以下）——高位接盘；②看到"分红率 75%"就全仓，忽略了 2024 年 91.4% 的分红率是利润打穿后的分母效应；③等它涨回 35 元后追"消费白马回归"主题行情——买在 PE 回归的顶部。</p>
+    <p><b>心理误判</b>：三位大师对"原奶成本红利拆解"集体处理不足——巴菲特和段永平的评估里没有单独给"红利 vs 结构性利润"的分解，李录点破了但没量化。红队拆解：2025 年毛利率 34.6% 中约 2-3pct 来自原奶红利（vs 2020 年 30.1% 低点+结构升级各贡献一半），对应利润含金量约 85-90%。</p>
+    <p><b>红队独立出数（触发降档）</b>：两年平均基期 100 亿口径下，悲观情景 13.63 元 vs 主分析 19.53 元（差 -30.2%＞30% 强制线）——红队裁定"观察·等价格"降为"放弃·除非极端情况"。主分析采纳红队的悲观情景与 18 元纪律底线，但保留档位"观察·等价格"（因期望含息 IRR 1.69% 未到"放弃"的 -x% 程度，且股息缓冲使亏损概率仅 30%）。</p>
+  </div>
+</section>
+
+<section id="conclusion">
+  <h2>十一、结论与行动</h2>
+  <p>最终档位：<span class="tag tag-amber"><b>观察 · 等价格</b></span></p>
+  <p><b>双闸门</b>：安全边际 -15.5% ✗ ｜ 期望含息 IRR 1.69%（跑输指数 7.3pct）✗。生意评级：顶级（护城河强+管理层正+财务干净）；价格评级：公道但无折扣——市场已按"零增长债券"定价，进一步悲观的空间不大，但向上需要"原奶不反弹+奶粉继续兑现"双确认。</p>
+  <p><b>行动方案</b>：现价 26.86 元不建仓，列入高质量观察清单（优先级：食品饮料第一行）；18-22 元分批建仓区（对应股息率 5.8-6.8%，超过理财收益 2-3pct）；≤18 元（红队底线）为"闭眼买"区；35 元以上若 PE 回到 22x+ 且原奶已在反弹通道，考虑减持信号。已持有者：26.86 元持有吃息不加仓。</p>
+  <h3>持有体验预演</h3>
+  <p>伊利 2021-2024 年最大回撤 -54.7%（46.8→21.22 元），期间股息从未中断且逐年提升。这是"跌了有分红安慰"的标的——跟泡泡玛特（-90% 无股息缓冲）完全不同的持有体验。灵魂拷问：如果 26.86 买入后跌到 21 元（-22%），你每年收 5% 股息拿着等 3 年回本+年化 4-5%，你愿意吗？愿意=伊利适合你；想要三年翻倍=去找别的。</p>
+  <h3>证伪条件（出现即说明本报告论点错）</h3>
+  <ul class="checklist">
+    <li>【基期假设】原奶价格反弹至 3.5 元/公斤以上且公司毛利率跌破 33%——周期红利完全回吐，基期需下修至 100 亿以下，估值重跑</li>
+    <li>【增长假设】奶粉收入增速连续两季 &lt;5%——第二曲线逻辑失效，"零增长债券"定价成为永久事实</li>
+    <li>【分红假设】分红率跌破 70%（承诺线 75% 以下）——现金回报故事的根基动摇</li>
+    <li>【治理】出现食品安全重大事故或管理层大额减持（潘刚之后再出现董监高批量减持）</li>
+  </ul>
+  <h3>季度跟踪清单（每季盯 5 个数）</h3>
+  <table>
+    <tr><th>指标</th><th>当前值</th><th>警戒线</th><th>说明</th></tr>
+    <tr><td>生鲜乳主产区均价</td><td>约 2.8-3.0 元/公斤</td><td>&gt;3.5 元/公斤</td><td>毛利率回吐的第一信号</td></tr>
+    <tr><td>毛利率（季度）</td><td>34.6%（2025）</td><td>&lt;33%</td><td>红利回吐/结构恶化确认</td></tr>
+    <tr><td>奶粉收入增速（半年）</td><td>+10.4%</td><td>&lt;5%</td><td>第二曲线证伪信号</td></tr>
+    <tr><td>分红率（年度）</td><td>75.5%</td><td>&lt;70%</td><td>现金回报承诺失守</td></tr>
+    <tr><td>股价（触发建仓）</td><td>26.86 元</td><td>≤22 元 / ≤18 元</td><td>分批建仓区 / 闭眼买区</td></tr>
+  </table>
+</section>
+
+<section id="appendix">
+  <h2>附录：数据来源、校验与 A 股管道实证记录</h2>
+  <p class="source-note"><b>数据来源与等级</b>：A 级——结构化金融数据接口（CLS fallback→东财）2016-2025 三表（2025 营收/归母/OCF 与年报原文核对 0 误差）+ 2025 年报原文（上交所披露易，信永中和标准无保留）+ 2026Q1 一季报 + 行情快照；B 级——华泰研究 capex 历史序列（2016-2023）+ 东吴/东财/国元研报盈利预测与 D&A + 三个皮匠报告历史数据 + 竞对蒙牛/飞鹤/新乳业行情与业绩摘要。</p>
+  <p class="source-note"><b>入口校验</b>：validate_data.py 0 错误 3 警告（crosscheck 缺 shares_diluted 官方口径）——已记录 manifest。引擎警报 0 条（中性区间判定）。</p>
+  <p class="source-note"><b>A 股管道实证记录（2026-08-28）</b>：①字段映射：A股接口用 NPParentCompanyOwners（非 ProfitToShareholders）、NetOperateCashFlow（非 CFO）——与港股字段名不同，已实测；②TotalAssets 缺失，用 TotalLiability+TotalShareholderEquity 推导（验证 2025 年误差 &lt;0.1%）；③capex 现金流字段 A 股接口同样缺失（购建固定资产无独立科目），需研报/年报手工补齐；④spike_notes 对 2024 减值年份必须标注（52.3 亿一次性冲击），否则突变检测会把 2025 年 +36.8% 误判为数据异常；⑤十年序列突变标注工作量约 18 条（成熟公司显著少于 IPO 高增长公司）。</p>
+  <p class="source-note"><b>数字校验</b>：本报告关键数字经 verify_report.py 校验。</p>
+  <h3>术语速查表</h3>
+  <table>
+    <tr><th>术语</th><th>白话解释</th></tr>
+    <tr><td>基期</td><td>估值的起点利润。用 2025 年实际值（115.65 亿）还是两年平均（100 亿）？伊利本次的核心分歧点</td></tr>
+    <tr><td>隐含增速反解</td><td>用现价反推市场假设的增长率——伊利是 -0.71%/年，即"市场认为它永不增长"</td></tr>
+    <tr><td>期望年化 IRR（含息）</td><td>把悲观/基准/乐观情景加权后算出的年化回报（含股息）——伊利是 1.69%，低于指数门槛 9%</td></tr>
+    <tr><td>双闸门</td><td>安全边际（便宜不便宜）+ 期望 IRR（划算不划算）——两道全过才能买，本次两道全灭</td></tr>
+    <tr><td>原奶红利</td><td>原奶价格跌 30% 给加工企业带来的成本下降。是周期性利润不是结构性利润——反弹即回吐</td></tr>
+  </table>
+</section>
+
+<footer class="disclaimer" style="font-size:12px;color:#6b7280;text-align:center;margin-top:40px;padding-top:20px;border-top:1px solid #e5e7eb">
+  本报告由分析工具生成，仅供研究参考，不构成任何投资建议。市场有风险，投资需谨慎。报告生成：value-investing-analyst skill（A 股通用管道首次实证）。
+</footer>
+</div>
+
+<script>
+const COLOR={primary:'#1a3a5c',accent:'#d97706',green:'#15803d',gray:'#9ca3af',red:'#b91c1c'};
+const charts=[];
+function initChart(id,option){
+  const el=document.getElementById(id);if(!el||typeof echarts==='undefined')return;
+  const c=echarts.init(el);
+  c.setOption(Object.assign({textStyle:{fontFamily:'-apple-system, PingFang SC, Microsoft YaHei'},grid:{left:60,right:30,top:50,bottom:40},tooltip:{trigger:'axis'}},option));
+  charts.push(c);
+}
+window.addEventListener('resize',()=>charts.forEach(c=>c.resize()));
+
+initChart('chart-valuation-band',{
+  legend:{bottom:0},
+  xAxis:{type:'category',data:['悲观(g=2%)','基准(g=5%)','乐观(g=8%)']},
+  yAxis:{type:'value',name:'每股价值（元）',min:0,max:35},
+  series:[
+    {name:'主分析',type:'bar',barWidth:44,itemStyle:{color:COLOR.primary},label:{show:true,position:'top',formatter:'{c} 元'},
+     /*<!-- vchart src=valuation.json path=band_cny -->*/
+     data:[19.53,22.71,26.27]},
+    {name:'现价',type:'line',markLine:{symbol:'none',lineStyle:{color:COLOR.red,width:2},label:{formatter:'现价 26.86 元',position:'end'},data:[{yAxis:26.86}]},data:[]}
+  ]
+});
+
+initChart('chart-rev-ni',{
+  legend:{bottom:0},
+  xAxis:{type:'category',data:[2016,2017,2018,2019,2020,2021,2022,2023,2024,2025]},
+  yAxis:{type:'value',name:'亿元'},
+  series:[
+    {name:'营业收入',type:'bar',barWidth:26,itemStyle:{color:COLOR.primary},
+     /*<!-- vchart src=metrics_YILI.json path=chart_series.revenue scale=0.01 -->*/
+     data:[603.12,675.47,789.76,900.09,965.24,1101.44,1226.98,1257.58,1153.93,1156.36]},
+    {name:'归母净利润',type:'line',smooth:true,itemStyle:{color:COLOR.accent},
+     /*<!-- vchart src=metrics_YILI.json path=chart_series.net_income scale=0.01 -->*/
+     data:[56.62,60.05,64.40,69.34,70.78,87.05,94.33,104.29,84.53,115.65]}
+  ]
+});
+
+initChart('chart-margin',{
+  legend:{bottom:0},
+  xAxis:{type:'category',data:[2016,2017,2018,2019,2020,2021,2022,2023,2024,2025]},
+  yAxis:{type:'value',name:'%',max:45},
+  series:[
+    {name:'毛利率',type:'line',smooth:true,itemStyle:{color:COLOR.primary},
+     /*<!-- vchart src=metrics_YILI.json path=chart_series.gross_margin scale=100 -->*/
+     data:[37.90,37.34,37.80,37.29,30.13,30.60,32.29,32.60,33.88,34.58]},
+    {name:'净利率',type:'line',smooth:true,itemStyle:{color:COLOR.accent},
+     /*<!-- vchart src=metrics_YILI.json path=chart_series.net_margin scale=100 -->*/
+     data:[9.39,8.89,8.15,7.70,7.33,7.90,7.69,8.29,7.33,10.00]}
+  ]
+});
+
+initChart('chart-ocf-ni',{
+  legend:{bottom:0},
+  xAxis:{type:'category',data:[2016,2017,2018,2019,2020,2021,2022,2023,2024,2025]},
+  yAxis:{type:'value',name:'%',max:280},
+  series:[
+    {name:'现金转换比(OCF/净利)',type:'line',smooth:true,areaStyle:{opacity:.15},itemStyle:{color:COLOR.green},
+     /*<!-- vchart src=metrics_YILI.json path=chart_series.ocf_to_ni scale=100 -->*/
+     data:[226.35,116.74,133.93,121.94,139.19,178.38,142.27,175.38,257.19,124.03]},
+    {name:'1.0 水平线',type:'line',markLine:{symbol:'none',lineStyle:{color:COLOR.red,type:'dashed'},label:{formatter:'1.0 提醒线'},data:[{yAxis:100}]},data:[]}
+  ]
+});
+
+initChart('chart-peer',{
+  legend:{bottom:0},
+  xAxis:{type:'category',data:['伊利股份','蒙牛乳业','新乳业','中国飞鹤']},
+  yAxis:{type:'value',name:'%',max:80},
+  series:[
+    {name:'毛利率',type:'bar',barWidth:36,itemStyle:{color:COLOR.primary},label:{show:true,position:'top',formatter:'{c}%'},
+     /*<!-- vchart src=peer_table.json path=gross_margins -->*/
+     data:[34.6,39.2,27.8,70.5]},
+    {name:'PE-TTM',type:'bar',barWidth:36,itemStyle:{color:COLOR.accent},label:{show:true,position:'top',formatter:'{c}x'},
+     /*<!-- vchart src=peer_table.json path=pe_ttms -->*/
+     data:[16.78,33.02,16.52,12.49]}
+  ]
+});
+</script>
+</body>
+</html>

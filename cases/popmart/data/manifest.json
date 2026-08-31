@@ -1,0 +1,95 @@
+{
+ "generated_at": "2026-08-28 15:00",
+ "company": "泡泡玛特 hk09992",
+ "note": "港股链路首次实证。实踩坑并按 SKILL.md 固化至 references/data-sourcing.md：①港股 finance 接口 revenue 字段为空、利润为港币口径需披露值+汇率反推双源（误差<1%）；②D&A 港股接口无科目，需年报业绩公告'重大非现金开支'原文取；③validate_data 突变检测发现残留重复报错块（条件外 append）已修复，42+3回归全过；④shares_diluted 用 EPS 反推近似，已 disclose",
+ "files": [
+  {
+   "file": "financials_POPMART.json",
+   "source": "结构化金融数据接口（A级，港币口径转换已验）+2025年度业绩公告A级原文核对+2018-2023年报披露值",
+   "level": "A/B",
+   "fetched_at": "2026-08-28",
+   "coverage": "2018-2025（8年）",
+   "validated": "pass（0错3警：股本EPS反推，crosscheck股本未核）"
+  },
+  {
+   "file": "raw_finance_ppm.json",
+   "source": "结构化金融数据接口09992 2018-2025 三表",
+   "level": "A",
+   "fetched_at": "2026-08-28",
+   "validated": "源数据"
+  },
+  {
+   "file": "segments.json",
+   "source": "2025年报分部+2026H1中报解读（接口港币分部/汇率核对）",
+   "level": "A/B",
+   "fetched_at": "2026-08-28",
+   "validated": "已结构化"
+  },
+  {
+   "file": "market_snapshot.json",
+   "source": "行情接口09992",
+   "level": "A",
+   "fetched_at": "2026-08-28 收盘",
+   "validated": "n/a"
+  },
+  {
+   "file": "consensus.json",
+   "source": "太平洋证券(08-26)/国盛证券(08-25)/东方财富(08-25)盈利预测",
+   "level": "B",
+   "fetched_at": "2026-08-28",
+   "validated": "一致预期低-中置信度"
+  },
+  {
+   "file": "metrics_POPMART.json",
+   "source": "compute_metrics.py 输出",
+   "level": "derived",
+   "fetched_at": "2026-08-28",
+   "validated": "周期高位alert已响应"
+  },
+  {
+   "file": "report_pacific_0826.json",
+   "source": "太平洋证券研报（2026H1中报解读+盈利预测）",
+   "level": "B",
+   "fetched_at": "2026-08-26",
+   "validated": "n/a"
+  },
+  {
+   "file": "report_gs_0825.json",
+   "source": "国盛证券研报",
+   "level": "B",
+   "fetched_at": "2026-08-25",
+   "validated": "n/a"
+  },
+  {
+   "file": "report_df_0825.json",
+   "source": "东方财富研报",
+   "level": "B",
+   "fetched_at": "2026-08-25",
+   "validated": "n/a"
+  },
+  {
+   "file": "peer_table.json",
+   "source": "布鲁可00325/名创优品MNSO/09896业绩公告+公开披露（量级对比）",
+   "level": "B",
+   "fetched_at": "2026-08-28",
+   "validated": "竞对豁免原文核对，报告脚注披露"
+  },
+  {
+   "file": "valuation.json",
+   "source": "估值底稿（正常化+DCF+交叉验证+红队对照）",
+   "level": "derived",
+   "fetched_at": "2026-08-28",
+   "validated": "n/a"
+  },
+  {
+   "file": "expected_return.json",
+   "source": "reverse_dcf expected-return 引擎输出",
+   "level": "derived",
+   "fetched_at": "2026-08-28",
+   "validated": "引擎计算值"
+  }
+ ],
+ "user_prior": "商业模式已走通，毛利率很高，潮玩长期是好生意，价格适中；动机：看到段永平一直在加仓",
+ "peer_selection_reason": "按业务分部重叠度：布鲁可（IP拼搭玩具直接竞对）、名创优品（IP联名零售+TOP TOY）、奥飞娱乐（A股IP内容+玩具）为真实竞对；卡游（卡牌）产品形态差异较大，作为参照未入表",
+ "peer_skip_note": "竞对财务底稿仅支撑量级对比（ROE/PE/收入规模），未做原文核对，报告脚注披露"
+}

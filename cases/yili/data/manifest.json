@@ -1,0 +1,20 @@
+{
+ "generated_at": "2026-08-28",
+ "company": "伊利股份 sh600887",
+ "note": "A股通用管道首次实证（前次A股仅跑过招商银行金融管道）。关键口径：接口字段 NPParentCompanyOwners/NetOperateCashFlow/OperatingCost 与年报核对 0 误差；TotalAssets 接口缺失，用 TotalLiability+TotalShareholderEquity 推导（误差<0.1%）；capex 接口现金流缺失，用华泰/研报历史序列补齐；D&A 为研报口径（2024-2025 A级、2018-2019 B级、2020-2022 内插）。2024年52.3亿减值已知悉并附注。",
+ "files": [
+  {"file": "financials_YILI.json", "source": "结构化金融数据接口（CLS fallback→东财）2016-2025 + 2025年报交叉核对", "level": "A/B", "fetched_at": "2026-08-28", "validated": "pass（0错3警：crosscheck缺shares_diluted口径）"},
+  {"file": "raw_finance_yili.json", "source": "结构化金融数据接口600887 2016-2025 三表", "level": "A", "fetched_at": "2026-08-28", "validated": "源数据"},
+  {"file": "segments.json", "source": "2025年报分部+2025Q3研报+2026Q1一季报", "level": "A/B", "fetched_at": "2026-08-28", "validated": "结构化"},
+  {"file": "market_snapshot.json", "source": "行情接口600887", "level": "A", "fetched_at": "2026-08-28 收盘", "validated": "n/a"},
+  {"file": "consensus.json", "source": "国元/东吴/华泰/长江研报盈利预测", "level": "B", "fetched_at": "2026-08-27至28", "validated": "n/a"},
+  {"file": "metrics_YILI.json", "source": "compute_metrics.py", "level": "derived", "fetched_at": "2026-08-28", "validated": "中性区间"},
+  {"file": "valuation.json", "source": "估值底稿（三情景+交叉验证+红队）", "level": "derived", "fetched_at": "2026-08-28", "validated": "引擎计算"},
+  {"file": "expected_return.json", "source": "reverse_dcf expected-return", "level": "derived", "fetched_at": "2026-08-28", "validated": "引擎计算"},
+  {"file": "peer_table.json", "source": "蒙牛/新乳业/飞鹤/光明行情+2025年上半年业绩数据", "level": "B", "fetched_at": "2026-08-28", "validated": "竞对豁免原文核对"}
+ ],
+ "user_prior": "用户未提供初始判断，待后续对话补充",
+ "peer_selection_reason": "蒙牛（港股，液奶直接竞对，蒙牛2024年营收下滑10.1%利润降97.8%）、新乳业（区域乳企代表）、飞鹤（奶粉直接竞对）、光明（区域龙头，2024年营收下滑8.3%）",
+ "peer_skip_note": "飞鹤/光明 2025 完整年报数据未在本次拉取，用行情快照+2024年报摘要作量级参考，报告脚注披露",
+ "impairment_note": "2024年计提资产减值52.31亿（澳优商誉30.37/存货12.27/固定3.73/信用5.55亿）——该年份归母净利84.5亿为'洗澡后'基数，引擎判定中性未剔除该年份，用户需知悉该基数含一次性冲击的影响"
+}

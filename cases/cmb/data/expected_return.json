@@ -1,0 +1,42 @@
+{
+  "price": 39.43,
+  "hold_years": 5,
+  "dividend_yield": 0.0511,
+  "scenarios": [
+    {
+      "name": "悲观",
+      "probability": 0.3,
+      "value_per_share": 34.0,
+      "total_return": -0.13771240172457522,
+      "annualized_irr": -0.0291985239217325,
+      "annualized_irr_incl_div": 0.0219014760782675
+    },
+    {
+      "name": "基准",
+      "probability": 0.5,
+      "value_per_share": 47.0,
+      "total_return": 0.1919857976160284,
+      "annualized_irr": 0.035748269044374004,
+      "annualized_irr_incl_div": 0.08684826904437401
+    },
+    {
+      "name": "乐观",
+      "probability": 0.2,
+      "value_per_share": 58.0,
+      "total_return": 0.4709611970580776,
+      "annualized_irr": 0.08023997176331199,
+      "annualized_irr_incl_div": 0.131339971763312
+    }
+  ],
+  "expected_value_per_share": 45.300000000000004,
+  "expected_total_return": 0.1488714177022572,
+  "expected_annualized_irr": 0.025162571698329653,
+  "expected_annualized_irr_incl_div": 0.07626257169832965,
+  "loss_probability": 0.0,
+  "expected_downside_given_loss": null,
+  "probability_weighted_downside": 0.0,
+  "index_hurdle": 0.09,
+  "beats_index": false,
+  "excess_vs_index": -0.013737428301670351,
+  "note": "期末股价回归内在价值假设；含息 IRR = 不含息 IRR + 股息率（线性近似、未复投）；亏损概率按含股息口径判定；与机会成本门槛比较用含息 IRR"
+}

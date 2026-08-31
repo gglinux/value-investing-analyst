@@ -1,0 +1,23 @@
+{
+ "fetched_at": "2026-08-28 收盘",
+ "source": "行情接口（A级）",
+ "price": 26.86,
+ "total_market_cap_yi": 1698.99,
+ "circulating_market_cap_yi": 1690.55,
+ "pe_ttm": 16.78,
+ "pe_fwd": 14.75,
+ "pe_lyr": 14.69,
+ "pb": 3.16,
+ "dividend_yield_ttm": 5.14,
+ "dividend_ttm": 1.38,
+ "high_52w": 28.6,
+ "low_52w": 23.76,
+ "position_52w": 0.64,
+ "chg_ytd": -0.0303,
+ "chg_5d": 0.0575,
+ "total_shares": 6325360667,
+ "float_shares": 6293929721,
+ "drawdown_note": "2021-01-08历史高点49.96（除权后约46.8）→ 2024-09-13低点21.22（-54.7%）；2024-09-24起反弹至28.6（+34.8%），现价26.86距高点-6.1%",
+ "float_note": "日均成交约20亿，流动性充裕；2026-03-16潘刚减持6199.03万股（均价26.51元）因个人资金需求，此前三年无减持记录",
+ "dividend_yield_ttm_frac": 0.0514
+}

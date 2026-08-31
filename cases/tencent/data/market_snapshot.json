@@ -1,0 +1,16 @@
+{
+ "fetched_at": "2026-08-28 港股收盘",
+ "price_hkd": 455.2,
+ "pe_ttm": 15.28,
+ "pb": 3.18,
+ "dividend_yield_ttm": 1.17,
+ "total_market_cap_hkd_亿": 41437.5,
+ "total_shares": 9103146761,
+ "high_52w": 677.7,
+ "low_52w": 411.0,
+ "chg_ytd": -0.2333,
+ "chg_60d": -0.024,
+ "position_52w": 0.166,
+ "note": "市值 4.14 万亿 HKD；股息率 1.17%（2025 末期+中期合计 4.50 HKD）；年初至今 -23.3%（AI 资本开支冲击+港股回调）",
+ "dividend_yield_ttm_frac": 0.0117
+}

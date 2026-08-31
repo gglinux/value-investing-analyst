@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>腾讯控股（00700）价值投资分析报告</title>
+<script src="https://cdn.jsdelivr.net/npm/echarts@5/dist/echarts.min.js"></script>
+<style>
+:root{--primary:#1a3a5c;--accent:#d97706;--bg:#f7f8fa;--card:#fff;--text:#24292f;--muted:#6b7280;--green:#15803d;--red:#b91c1c;--border:#e5e7eb}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;background:var(--bg);color:var(--text);line-height:1.75;font-size:15px}
+.container{max-width:1080px;margin:0 auto;padding:24px 20px 80px}
+header.report-header{background:var(--primary);color:#fff;border-radius:12px;padding:40px 36px;margin-bottom:28px}
+header.report-header h1{font-size:26px;font-weight:700}
+header.report-header .meta{margin-top:8px;opacity:.75;font-size:13px}
+.verdict-banner{display:flex;align-items:center;gap:24px;margin-top:24px;background:rgba(255,255,255,.08);border-radius:10px;padding:20px 24px}
+.verdict-label{font-size:34px;font-weight:800;letter-spacing:2px}
+.verdict-amber{color:#fbbf24}
+.verdict-score{font-size:15px;opacity:.9}
+.snapshot-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px;margin-top:16px}
+.snapshot-item{background:rgba(255,255,255,.08);border-radius:8px;padding:10px 14px}
+.snapshot-item .k{font-size:12px;opacity:.65}
+.snapshot-item .v{font-size:17px;font-weight:700;margin-top:2px}
+.snapshot-time{font-size:11px;opacity:.55;margin-top:8px}
+section{background:var(--card);border-radius:12px;padding:32px 36px;margin-bottom:24px;border:1px solid var(--border)}
+h2{font-size:20px;color:var(--primary);padding-bottom:10px;margin-bottom:18px;border-bottom:3px solid var(--accent);display:inline-block}
+h3{font-size:16px;color:var(--primary);margin:22px 0 10px}
+p{margin-bottom:12px}
+.chart{width:100%;height:400px;margin:12px 0 4px}
+.chart-note{font-size:12px;color:var(--muted);margin-bottom:16px}
+.insight-title{font-size:15px;font-weight:700;margin:20px 0 4px}
+table{width:100%;border-collapse:collapse;margin:14px 0;font-size:14px}
+th{background:var(--primary);color:#fff;padding:10px 12px;text-align:left;font-weight:600}
+td{padding:9px 12px;border-bottom:1px solid var(--border)}
+tr:nth-child(even) td{background:#fafbfc}
+.tag{display:inline-block;padding:2px 10px;border-radius:20px;font-size:12px;font-weight:600}
+.tag-green{background:#dcfce7;color:var(--green)}
+.tag-amber{background:#fef3c7;color:#b45309}
+.tag-red{background:#fee2e2;color:var(--red)}
+blockquote.persona{border-left:4px solid var(--accent);background:#fffbf5;padding:16px 20px;margin:14px 0;border-radius:0 8px 8px 0;font-size:14px}
+blockquote.persona .persona-name{font-weight:700;color:var(--primary);display:block;margin-bottom:6px}
+.redteam{background:#1f2937;color:#e5e7eb;border-radius:10px;padding:24px 28px;margin:16px 0}
+.redteam h3{color:#fbbf24;margin-top:0}
+@media print{section{break-inside:avoid}.chart{height:360px}}
+</style>
+</head>
+<body>
+<div class="container">
+
+<header class="report-header">
+  <h1>腾讯控股（00700.HK）价值投资分析报告</h1>
+  <div class="meta">报告日期：2026-08-28 ｜ 数据截止：2025 年报 + 2026Q2 业绩（2026-08-12）+ 2026-08-28 行情 ｜ 行业：互联网平台 ｜ 管道：通用 engine（港股通用管道第二次实证）｜ 币种：报告统一 CNY，行情 HKD</div>
+  <div class="verdict-banner">
+    <div class="verdict-label verdict-amber">观察 · 等价格</div>
+    <div class="verdict-score">
+      <b>双闸门状态</b>：闸门一 安全边际 <b>+5.7%</b>（现价 455.2 HKD vs 基准价值 <span class="vnum" data-src="valuation.json" data-path="scenarios_main.1.value_per_share_hkd" data-fmt="num1">482.8</span>，要求 ≥25%）<b style="color:#f87171">✗</b> ｜ 闸门二 期望年化（含息）<b><span class="vnum" data-src="expected_return.json" data-path="expected_annualized_irr_incl_div" data-fmt="pct2">3.75%</span></b>（门槛 9%）<b style="color:#f87171">✗</b><br>
+      三位大师独立判断：巴菲特【公用事业价格买平台-80 分，公道偏下可买】｜ 段永平【中国互联网最不需要动脑的公司-93 分，底仓型标的】｜ 李录【确定性最高的复利机器-85 分，仓位上限 5%】<br>
+      内在价值区间：<b><span class="vnum" data-src="valuation.json" data-path="scenarios_main.0.value_per_share_hkd" data-fmt="num1">441.5</span> ~ <span class="vnum" data-src="valuation.json" data-path="scenarios_main.2.value_per_share_hkd" data-fmt="num1">697.6</span> HKD</b>（基准 482.8）｜ 5 年期望年化（含息）3.75% ｜ 买入触发区 380-420 HKD
+    </div>
+  </div>
+  <div class="snapshot-grid">
+    <div class="snapshot-item"><div class="k">现价(HKD)</div><div class="v">455.2</div></div>
+    <div class="snapshot-item"><div class="k">总市值</div><div class="v"><span class="vnum" data-src="market_snapshot.json" data-path="total_market_cap_hkd_亿" data-fmt="num0">41438</span> 亿 HKD</div></div>
+    <div class="snapshot-item"><div class="k">PE-TTM</div><div class="v"><span class="vnum" data-src="market_snapshot.json" data-path="pe_ttm" data-fmt="num2">15.28</span></div></div>
+    <div class="snapshot-item"><div class="k">股息率</div><div class="v"><span class="vnum" data-src="market_snapshot.json" data-path="dividend_yield_ttm_frac" data-fmt="pct2">1.17%</span></div></div>
+    <div class="snapshot-item"><div class="k">投资组合</div><div class="v">8751 亿 CNY</div></div>
+    <div class="snapshot-item"><div class="k">距52周低点</div><div class="v">+10.8%</div></div>
+    <div class="snapshot-item"><div class="k">年初至今</div><div class="v">-23.3%</div></div>
+  </div>
+  <div class="snapshot-time">行情快照时间：2026-08-28 港股收盘（来源等级 A）</div>
+</header>
+
+<section id="summary">
+  <h2>一、投资摘要</h2>
+  <p><b>三句话生意：</b>腾讯是中国最大的互联网平台，核心是微信（14.39 亿月活）这个"数字生活底座"，在底座上生长出四棵摇钱树——游戏（本土 473 亿 +17%）、广告（436 亿 +22%，AI 驱动）、金融科技及企业服务（603 亿 +9%）、以及投资组合（上市 4872 亿+非上市 3879 亿 CNY 的"隐藏资产"）。大白话：它是中国互联网的"水电煤"——你每天用微信聊天、打游戏、扫码支付，腾讯在每一环收一次"过路费"。[E:segments.json][E:financials_TENCENT.json]</p>
+  <p><b>双闸门裁决</b>：安全边际 +5.7%（远低于 25% 门槛）+ 期望含息 IRR 3.75%（低于 9% 门槛）——档位"观察·等价格"。核心矛盾：腾讯是确定性极高的生意（微信护城河+投资组合硬底+持续回购），但现价已经把"AI 资本开支压制利润释放"这个现实充分定价——基准价值只比现价高 6%。不是"市场错了"，是"市场对 AI 投入的态度与我们对它的信心同样谨慎"。[E:valuation.json]</p>
+  <p><b>与 PDD/泡泡玛特的横向差异</b>：腾讯是三个案例里"下行保护最厚、上行弹性最小"的一个——悲观情景年化 -0.6%（几乎不亏，投资组合+回购+股息三重垫），乐观情景 +8.9%（接近但未达门槛）。买腾讯赚的是"确定性"的钱，不是"预期差"的钱；它的重估需要 AI 资本开支放缓或 AI 变现超预期两个催化剂之一。</p>
+  <div class="insight-title">估值区间 vs 现价（含投资组合折价加回）</div>
+  <div id="chart-valuation-band" class="chart" style="height:280px"></div>
+  <div class="chart-note">数据来源：valuation.json。三情景已含投资组合中性折价（6712 亿 CNY）加回。</div>
+</section>
+
+<section id="business">
+  <h2>二、商业模式与生意</h2>
+  <p><b>生意本质</b>：一门"把流量变成钱"的生意。微信是中国最大的流量池（14.39 亿月活、日均打开 40+ 次），腾讯用四条路径变现：①游戏——玩家为快乐付费（增值服务占收入 48%）；②广告——商家为曝光付费（营销服务占 19%，AI 推荐模型+AIM+投放+微信闭环三引擎）；③金融科技及企业服务——用户和企业为便利付费（占 30%，商业支付/理财/消费贷/云）；④投资——用流量和数据优势孵化并持有中国互联网头部公司股权（美团/拼多多/京东等）。[E:segments.json][E:financials_TENCENT.json]</p>
+  <p><b>单位经济</b>：毛利率 58%（2026Q2，连续提升）——增值服务 64%、广告 57%、金融科技 52%。经营利润率 33%（IFRS）/37%（Non-IFRS）。每 100 元收入 → 毛利 58 元 → 费用 25 元 → 经营利润 33 元。这个利润率在互联网大厂里属于第一梯队，且毛利率仍在提升通道（AI 广告效率+高毛利自研游戏占比上升）。[E:segments.json]</p>
+  <p><b>十年后还在吗</b>：微信的社交网络效应+转换成本是"数字世界的护城河天花板"——只要中国人在用微信，腾讯的流量入口就不可动摇。游戏会迭代（长青化战略已把"赌爆款"变成"养矩阵"）、广告会波动（AI 化提升效率）、AI 是新增量（Hy3 全球前三）——但底座不变。腾讯 10 年后大概率还在，且大概率仍是第一梯队。</p>
+</section>
+
+<section id="quant">
+  <h2>三、定量画像</h2>
+  <div class="insight-title">收入 10 年 CAGR 19%，利润 10 年 CAGR 22%——2023 年投资减值低点是唯一的"坑"</div>
+  <div id="chart-rev-ni" class="chart"></div>
+  <div class="chart-note">数据来源：metrics_TENCENT.json。2023 年归母 1152 亿含投资组合公允价值下修（-73 亿）+联营减值，Non-IFRS 口径当年约 1577 亿。</div>
+  <div class="insight-title">净利率稳定在 25-30% 区间，毛利率 2026Q2 提升至 58%</div>
+  <div id="chart-margin" class="chart"></div>
+  <div class="chart-note">数据来源：metrics_TENCENT.json。净利率的波动主要来自投资组合公允价值变动（2020 年 +71% 归母有投资收益贡献）。</div>
+  <div class="insight-title">现金转换比：OCF/净利 1.35，AI 资本开支是 2025-2026 的唯一变量</div>
+  <div id="chart-ocf-ni" class="chart"></div>
+  <div class="chart-note">数据来源：metrics_TENCENT.json。2021-2022 年 OCF/净利 <1 因游戏版号+内容投入；2023 年 1.82 因利润低点；2025 年 1.35 健康。</div>
+</section>
+
+<section id="moat">
+  <h2>四、护城河分析</h2>
+  <h3>五源归类</h3>
+  <table>
+    <tr><th>护城河源</th><th>评级</th><th>证据与边界</th></tr>
+    <tr><td>网络效应</td><td><span class="tag tag-green">极强</span></td><td>微信 14.39 亿月活，社交网络效应是中国互联网最深的护城河——迁移成本近乎无穷 [E:segments.json]</td></tr>
+    <tr><td>转换成本</td><td><span class="tag tag-green">极强</span></td><td>微信支付+小程序+公众号+视频号的生态锁定，用户与商家双重绑定</td></tr>
+    <tr><td>规模效应</td><td><span class="tag tag-green">强</span></td><td>游戏分发（流量入口）、广告（数据+流量）、云（AI 算力）三线规模优势</td></tr>
+    <tr><td>品牌</td><td><span class="tag tag-green">强</span></td><td>腾讯/微信品牌信任度顶级</td></tr>
+    <tr><td>有效规模</td><td><span class="tag tag-amber">中</span></td><td>游戏面临米哈游挑战、广告面临字节竞争、云面临阿里/华为——每条赛道都是第一梯队但非绝对垄断 [E:consensus.json]</td></tr>
+  </table>
+  <p><b>护城河评级：极强</b>。腾讯的护城河是"微信"这一个单品撑起来的——这不是产品力的问题，是"社会基础设施"级别的锁定。与泡泡玛特（赌 IP）、PDD（赌低价）不同，腾讯的护城河不依赖任何单一爆款或政策红利，它本身就是需求。[E:segments.json][E:financials_TENCENT.json]</p>
+</section>
+
+<section id="growth">
+  <h2>五、增长空间与质量</h2>
+  <p><b>S 曲线位置</b>：成熟期二次曲线——主业务（游戏+广告）中速增长，AI 是第二曲线期权。</p>
+  <table>
+    <tr><th>引擎</th><th>5 年展望</th><th>可信度</th><th>关键佐证</th></tr>
+    <tr><td>广告 AI 化</td><td>+15~20%/年</td><td><span class="tag tag-green">高</span></td><td>Q2 +22%；AI 推荐模型+AIM+；视频号时长 +20% 是广告库存长期增量 [E:segments.json]</td></tr>
+    <tr><td>游戏长青化</td><td>+8~12%/年</td><td><span class="tag tag-green">高</span></td><td>本土 +17%，三角洲/无畏契约 DAU 新高、洛克王国世界登顶 [E:segments.json]</td></tr>
+    <tr><td>AI 原生应用</td><td>期权，2-3 年验证</td><td><span class="tag tag-amber">中低</span></td><td>Hy3 全球 token 前三、WorkBuddy/CodeBuddy 中国领先；但 2026H1 capex 847 亿 +82% [E:segments.json]</td></tr>
+    <tr><td>金融科技/云</td><td>+8~12%/年</td><td><span class="tag tag-amber">中</span></td><td>Q2 +9%；商业支付/理财/消费贷+云 AI 需求 [E:segments.json]</td></tr>
+  </table>
+  <p><b>增长质量（本报告最关键拷问）</b>：2025 年 OCF 3355 亿（+22%）很强，但 <b>2026Q2 FCF 转负 -138 亿</b>（资本开支 528 亿 +176%，历史首次）。管理层披露剔除算力预付款后 FCF 仍有 +376 亿——但"自由现金流转负"本身是 2013 年以来的第一次。增长质量的判断：AI 算力是"必要的军备竞赛"（不做就掉队）还是"烧钱无底洞"（做了也白做）——这是本报告所有分歧的根源，需要 2-3 年验证。[E:segments.json]</p>
+</section>
+
+<section id="management">
+  <h2>六、管理层与企业文化</h2>
+  <p><b>正面</b>：马化腾 20 年 CEO 任期是中国互联网最稳健的治理样本——零重大战略失误（唯一遗憾是短视频入场晚，用视频号补课成功）；刘炽平的投资组合（美团/拼多多/京东/快手）增值千亿美元级别；资本配置纪律顶级：2024 年回购 1120 亿 HKD、2025 年约 1300 亿、2026Q2 再 169 亿——持续大额回购注销真金白银回馈股东。[E:valuation.json][E:segments.json]</p>
+  <p><b>扣分项</b>：①AI 战略从"谨慎"到"all-in"的转向（2026 年 capex +176%）——投入节奏是否理性需时间验证；②对游戏未成年保护监管的前瞻不足（2021 年版号冻结教训）；③投资组合市值管理被动（上市投资公允值 2026Q2 单季 -600 亿）。[E:consensus.json][E:segments.json]</p>
+</section>
+
+<section id="risk">
+  <h2>七、财务质量与风险深查</h2>
+  <p>排雷：一票否决 0 条（审计连续标准无保留、无内控缺陷）。红旗 3 条（均为"成长型风险"而非"欺诈型风险"）：</p>
+  <table>
+    <tr><th>风险</th><th>程度</th><th>核心逻辑</th></tr>
+    <tr><td>AI 资本开支高峰</td><td><span class="tag tag-amber">高</span></td><td>2026E capex 1500-1600 亿，FCF 承压；若 AI 变现不及预期，估值中枢下移 [E:consensus.json]</td></tr>
+    <tr><td>投资组合波动</td><td><span class="tag tag-amber">中</span></td><td>上市投资公允值单季可 -600 亿，IFRS 归母与 Non-IFRS 差距大（560 vs 684 亿）[E:segments.json]</td></tr>
+    <tr><td>监管周期</td><td><span class="tag tag-amber">中</span></td><td>游戏版号、未成年人保护、数据安全——中国互联网的长期达摩克利斯之剑 [E:consensus.json]</td></tr>
+  </table>
+</section>
+
+<section id="valuation">
+  <h2>八、估值与安全边际</h2>
+  <h3>基期判定：中性（引擎推荐当期 OE 2994 亿，正常化区间 2190-2569 亿作保守轨）</h3>
+  <p>引擎判定净利率比值 1.2x（中性区间）。推荐基期用当期 OE 2994 亿（OCF/净利 1.35 转化率调整后），正常化区间 2190-2569 亿作为保守轨。2023 年利润异常低点（投资减值）拉低全期均值，normalized 偏保守——故采用双轨。[E:metrics_TENCENT.json]</p>
+  <h3>投资组合与净现金加回</h3>
+  <p>上市投资组合公允值 4872 亿+非上市账面 3879 亿=8751 亿 CNY。中性口径：上市 9 折+非上市 6 折=6712 亿（约 80 HKD/股）；保守口径：5838 亿（约 70 HKD/股）。投资组合占市值 16-18%，构成估值的硬底。[E:valuation.json]</p>
+  <h3>三情景 DCF（主轨当期 OE/保守轨正常化 OE，WACC 10%/永续 2.5%/10 年 fade）+投资组合中性折价</h3>
+  <table>
+    <tr><th>情景</th><th>概率</th><th>假设</th><th>每股价值(HKD)</th><th>vs 现价 455.2</th></tr>
+    <tr><td>悲观</td><td>30%</td><td>正常化 OE + g=3%：AI 长期侵蚀利润</td><td>441.5</td><td>-3%</td></tr>
+    <tr><td>基准</td><td>45%</td><td>正常化 OE + g=5%：广告/游戏兑现但 AI 压制释放</td><td>482.8</td><td>+6%</td></tr>
+    <tr><td>乐观</td><td>25%</td><td>当期 OE + g=8%：AI 变现超预期</td><td>697.6</td><td>+53%</td></tr>
+  </table>
+  <p><b>反向 DCF</b>：现价隐含（正常化 OE 口径）10 年 OE 增速 +3.2%——市场已接受"腾讯从高增长降为中低增长"的叙事。这与 PDD（隐含 -5.8%）形成鲜明对比：市场给 PDD 的是"归零"定价，给腾讯的是"公用事业化"定价。[E:valuation.json]</p>
+  <p><b>期望回报（HKD，含股息 1.17%）：</b></p>
+  <table>
+    <tr><th>指标</th><th>数值</th><th>对照</th></tr>
+    <tr><td>期望每股价值</td><td><span class="vnum" data-src="expected_return.json" data-path="expected_value_per_share" data-fmt="num1">524.1</span> HKD</td><td>vs 现价：高 15%</td></tr>
+    <tr><td>期望含息 IRR</td><td><b><span class="vnum" data-src="expected_return.json" data-path="expected_annualized_irr_incl_div" data-fmt="pct2">3.75%</span></b></td><td>vs 门槛 9%：跑输 <span class="vnum" data-src="expected_return.json" data-path="excess_vs_index" data-fmt="pct2">-5.25%</span></td></tr>
+    <tr><td>5 年亏损概率</td><td><span class="vnum" data-src="expected_return.json" data-path="loss_probability" data-fmt="pct0">0%</span></td><td>悲观情景也有投资组合+股息兜底</td></tr>
+  </table>
+  <p><b>买入触发区：380-420 HKD（红队保守投资组合口径下修）</b></p>
+</section>
+
+<section id="key-judgment">
+  <h2>九、关键判断（Phase 4.5 收敛）</h2>
+  <h3>关键变量（既重要又可知）</h3>
+  <table>
+    <tr><th>变量</th><th>当前判断</th><th>可知路径</th></tr>
+    <tr><td>AI 资本开支节奏</td><td><span class="tag tag-red">最关键变量</span></td><td>2026H2 若放缓至 400 亿/季以下→利润释放提前；若继续 500 亿+/季→利润压制延续 [E:segments.json]</td></tr>
+    <tr><td>广告增速（AI 变现验证）</td><td><span class="tag tag-green">+22% 强劲</span></td><td>是否维持 20%+——AI 变现路径的最直接证据 [E:segments.json]</td></tr>
+    <tr><td>回购持续性与规模</td><td><span class="tag tag-green">持续</span></td><td>AI 资本开支是否挤占回购资金——资本配置纪律的试金石 [E:consensus.json]</td></tr>
+  </table>
+  <h3>变异认知测试</h3>
+  <p><b>市场为什么给现在这个价</b>：一致预期叙事是"AI 资本开支吃掉自由现金流+腾讯从高增长变公用事业"——15.3x PE、隐含 +3.2% 增长就是"公用事业化定价"。<br>
+  <b>我们与市场的分歧</b>：市场把 AI 投入当"纯成本"，我们认为广告 +22% 已经证明 AI 变现路径真实存在——但"变现规模能否覆盖 1500 亿 capex"这个关键问题，我们与市场同样不确定。<br>
+  <b>认知优势</b>：中低。腾讯是"市场没犯明显错误、只是分歧在未知变量"的案例——不构成反向重仓依据，适合"持有等待"。</p>
+</section>
+
+<section id="committee">
+  <h2>十、投委会评审</h2>
+  <blockquote class="persona"><span class="persona-name">巴菲特视角（80/100）：公用事业价格买平台——"微信是数字世界的喜诗糖果"</span>
+    "我花了 60 年寻找'数字世界里的喜诗糖果'——微信就是这个答案。它以公用事业的价格（隐含 +3.2% 增长）卖给你，但增长引擎还在转动（广告 +22%、本土游戏 +17%）。投资组合 80 HKD/股+持续回购构成硬底，AI 是免费期权。公道偏下，可以买，不重仓。"</blockquote>
+  <blockquote class="persona"><span class="persona-name">段永平视角（93/100）：中国互联网最不需要动脑的公司——"AI 是期权，微信是底仓"</span>
+    "我买腾讯不是因为 AI，是因为微信。14 亿人的社交基础设施，游戏+广告+支付的变现路径都是'坐地收钱'。马化腾是本分的 CEO——不做电商不做外卖、持续回购回馈股东。455 HKD 的 PE-TTM 15.3x 是公道价，跌到 380-420 我加仓。这是我的底仓型标的。"</blockquote>
+  <blockquote class="persona"><span class="persona-name">李录视角（85/100）：确定性最高的复利机器——"下行有底、上行有期权，仓位上限 5%"</span>
+    "ROE 21%、OCF/净利 1.35、投资组合 8751 亿、持续回购——腾讯是中国互联网最接近'确定性复利'定义的标的。唯一的未知是 AI 投入回报时点，我用 3-5% 仓位和价格来管理它。现价合理偏低，380-420 是理想的加仓区。"</blockquote>
+  <h3>分歧对照表</h3>
+  <table>
+    <tr><th>关键问题</th><th>巴菲特（80）</th><th>段永平（93）</th><th>李录（85）</th></tr>
+    <tr><td>当前该不该买</td><td>公道偏下可买</td><td>公道价建仓 3-5%</td><td>合理偏低建 3-5%</td></tr>
+    <tr><td>对 AI 资本开支</td><td>"免费期权"</td><td>"期权，微信是底仓"</td><td>"未知，用仓位管理"</td></tr>
+    <tr><td>买入触发区</td><td>380-420</td><td>380-420 加仓</td><td>380-420</td></tr>
+    <tr><td>最大认知贡献</td><td>"公用事业价格买平台"</td><td>"AI 是期权微信是底仓"</td><td>"下行有底上行有期权"</td></tr>
+  </table>
+  <p><b>核心分歧</b>：三人分数（80/93/85）罕见地接近且行动一致——都认为"现价公道偏下、380-420 买入"。分歧仅在仓位：段永平（93）认为腾讯确定性高到值得重仓，巴菲特/李录（80/85）认为 AI 未知+监管风险让仓位应受限。这再次验证：腾讯的问题不是"买不买"，是"买多少"。</p>
+  <div class="redteam">
+    <h3>芒格式红队质询</h3>
+    <p><b>反演（怎么亏大钱）</b>：①把"AI 广告 +22%"当成"AI 整体都赚钱"——广告 AI 化是存量效率提升，与"AI 算力 1500 亿创造新收入"是两回事，若 AI 只是把腾讯变成低利润率算力运营商，利润增速长期受压；②把投资组合 8751 亿当安全垫，忽略上市投资单季可 -600 亿、紧急时只能按 6 折变现（5838 亿而非 6712 亿）；③看到持续回购就放心，忽略 AI 资本开支可能挤占回购资金（2026Q2 已 FCF 转负）。</p>
+    <p><b>红队独立出数</b>：投资组合保守口径（上市 7 折+非上市 4 折=4962 亿）：悲观 394.9 HKD vs 主分析 441.5（差 -10.6%＜30% 线）——<b>不触发强制降档</b>。红队期望含息 IRR（悲观 40%/基准 40%/乐观 20%）约 2.8%。</p>
+    <p><b>红队裁定</b>：维持「观察·等价格」，买入触发区下修至 <b>380-420 HKD</b>（红队基准 423.3 之下）。关键观察点：AI 资本开支 2026H2 是否放缓、广告增速是否维持 20%+、回购是否持续。</p>
+  </div>
+</section>
+
+<section id="conclusion">
+  <h2>十一、结论与行动</h2>
+  <p>最终档位：<span class="tag tag-amber"><b>观察 · 等价格</b></span></p>
+  <p><b>双闸门</b>：安全边际 +5.7% ✗ ｜ 期望含息 IRR 3.75% ✗。生意评级：顶级（护城河极强+管理层优秀+财务干净）；价格评级：公道偏下但未到安全边际——这是"市场没有明显犯错"的案例，买腾讯赚的是"确定性"的钱而非"预期差"的钱。</p>
+  <p><b>行动方案</b>：现价 455.2 不建仓，列入观察清单（核心资产第一行）；380-420 HKD 分批建仓区（红队纪律底线）；已持有者：455.2 持有不加仓（若 AI 资本开支 2026H2 放缓或广告持续 20%+，可提前上调建仓区）。</p>
+  <h3>持有体验预演</h3>
+  <p>腾讯 2021 年高点 775 HKD → 2022 年低点 198 HKD（-74%），然后 2024 年回到 460+——腰斩再腰斩的过山车是中国互联网龙头的历史常态。但腾讯的独特之处：每次大跌都有回购+分红+投资组合托底，2022 年 198 港元时股息率一度超 2%、回购收益率超 3%。灵魂拷问：如果 455 买入后 AI 军备竞赛引发估值杀到 300（-34%），你能靠 1.17% 股息+持续回购拿住 2-3 年等 AI 验证吗？拿得住=腾讯适合你；想要三年翻倍=腾讯不是你的菜。</p>
+  <h3>证伪条件（出现即说明本报告论点错）</h3>
+  <ul class="checklist">
+    <li>【下行】广告增速连续两季 &lt;10%——AI 变现路径证伪</li>
+    <li>【下行】AI 资本开支 2027 年仍维持 1500 亿+ 且无收入兑现迹象——"军备竞赛"坐实</li>
+    <li>【下行】回购规模显著缩减（季度 &lt;100 亿 HKD）——资本配置纪律松动</li>
+    <li>【上行】AI 资本开支放缓 + 广告维持 20%+——重估催化剂，上调至"买入"</li>
+  </ul>
+  <h3>季度跟踪清单（每季盯 5 个数）</h3>
+  <table>
+    <tr><th>指标</th><th>当前值</th><th>警戒线</th><th>说明</th></tr>
+    <tr><td>广告增速</td><td>+22%</td><td>&lt;10%</td><td>AI 变现验证</td></tr>
+    <tr><td>资本开支（单季）</td><td>528 亿</td><td>&gt;500 亿连续两季</td><td>AI 军备节奏</td></tr>
+    <tr><td>Non-IFRS 归母增速</td><td>+9%</td><td>&lt;5%</td><td>利润释放信号</td></tr>
+    <tr><td>回购（单季）</td><td>169 亿 HKD</td><td>&lt;100 亿</td><td>资本配置纪律</td></tr>
+    <tr><td>股价（触发建仓）</td><td>455.2 HKD</td><td>≤420 / ≤380</td><td>分批建仓区/红队底线</td></tr>
+  </table>
+</section>
+
+<section id="appendix">
+  <h2>附录：数据来源、校验与港股管道实证记录</h2>
+  <p class="source-note"><b>数据来源与等级</b>：A 级——结构化金融数据接口（港股接口）2016-2025 三表 + 2026Q2 业绩公告（2026-08-12，营收/毛利/资本开支/回购/投资组合全部原文数字）+ 行情快照 + 历年财报手工补营收；B 级——中金/高盛/大摩/方正研报盈利预测与 capex 展望。</p>
+  <p class="source-note"><b>入口校验</b>：validate_data.py 0 错误 3 警告（shares_diluted 口径）。compute_metrics 警报 0 条（中性区间），warnings 20 条（含 2023 年利润低点标注）。</p>
+  <p class="source-note"><b>港股管道实证记录（2026-08-28）</b>：①港股接口利润/现金流/资产字段完整（ProfitToShareholders/CFO/TotalAssets），但营收字段缺失（OperatingRevenue/Sales 均为空）——需从财报手工补齐（泡泡玛特无此问题，腾讯有，可能因港交所披露格式差异）；②腾讯是"经营+投资"双轮公司，投资组合 8751 亿 CNY 必须单独处理（DCF 只评估经营业务，组合折价加回）；③2023 年利润异常低点（投资减值）会扭曲全期均值——spike_notes 标注+双轨基期是必要修正；④AI 资本开支陡增期（2025-2026）自由现金流失真（2026Q2 转负），报告需披露"剔除算力预付款后的 FCF"双重口径。</p>
+  <p class="source-note"><b>数字校验</b>：本报告关键数字经 verify_report.py 校验。</p>
+  <h3>术语速查表</h3>
+  <table>
+    <tr><th>术语</th><th>白话解释</th></tr>
+    <tr><td>Non-IFRS 归母</td><td>剔除投资组合公允价值变动+股份支付等一次性/非现金项目后的核心利润——腾讯估值都用这个口径而非 IFRS 报表利润</td></tr>
+    <tr><td>投资组合加回</td><td>腾讯持有美团/拼多多/京东等上市公司+大量非上市公司股权，估值时 DCF 只算经营业务，组合价值单独加上</td></tr>
+    <tr><td>长青游戏</td><td>年流水超 40 亿、DAU 手游超 500 万/PC 超 200 万的稳定运营游戏——腾讯从"赌爆款"到"养矩阵"的战略产物</td></tr>
+    <tr><td>FCF 转负</td><td>自由现金流（经营现金流-资本开支）为负——2026Q2 腾讯因 AI 算力采购首次出现</td></tr>
+  </table>
+</section>
+
+<footer class="disclaimer" style="font-size:12px;color:#6b7280;text-align:center;margin-top:40px;padding-top:20px;border-top:1px solid #e5e7eb">
+  本报告由分析工具生成，仅供研究参考，不构成任何投资建议。市场有风险，投资需谨慎。报告生成：value-investing-analyst skill（港股通用管道第二次实证）。
+</footer>
+</div>
+
+<script>
+const COLOR={primary:'#1a3a5c',accent:'#d97706',green:'#15803d',gray:'#9ca3af',red:'#b91c1c'};
+const charts=[];
+function initChart(id,option){
+  const el=document.getElementById(id);if(!el||typeof echarts==='undefined')return;
+  const c=echarts.init(el);
+  c.setOption(Object.assign({textStyle:{fontFamily:'-apple-system, PingFang SC, Microsoft YaHei'},grid:{left:60,right:30,top:50,bottom:40},tooltip:{trigger:'axis'}},option));
+  charts.push(c);
+}
+window.addEventListener('resize',()=>charts.forEach(c=>c.resize()));
+
+initChart('chart-valuation-band',{
+  legend:{bottom:0},
+  xAxis:{type:'category',data:['悲观(g=3%)','基准(g=5%)','乐观(g=8%)']},
+  yAxis:{type:'value',name:'HKD',min:0,max:800},
+  series:[
+    {name:'主分析(含投资组合)',type:'bar',barWidth:44,itemStyle:{color:COLOR.primary},label:{show:true,position:'top',formatter:'{c}'},
+     /*<!-- vchart src=valuation.json path=band_hkd -->*/
+     data:[441.5,482.8,697.6]},
+    {name:'现价',type:'line',markLine:{symbol:'none',lineStyle:{color:COLOR.red,width:2},label:{formatter:'现价 455.2',position:'end'},data:[{yAxis:455.2}]},data:[]}
+  ]
+});
+
+initChart('chart-rev-ni',{
+  legend:{bottom:0},
+  xAxis:{type:'category',data:[2016,2017,2018,2019,2020,2021,2022,2023,2024,2025]},
+  yAxis:{type:'value',name:'亿元'},
+  series:[
+    {name:'营业收入',type:'bar',barWidth:22,itemStyle:{color:COLOR.primary},
+     /*<!-- vchart src=metrics_TENCENT.json path=chart_series.revenue scale=0.01 -->*/
+     data:[1519.4,2377.6,3126.9,3772.9,4820.6,5601.2,5545.5,6090.2,6602.6,7185.6]},
+    {name:'归母净利润',type:'line',smooth:true,itemStyle:{color:COLOR.accent},
+     /*<!-- vchart src=metrics_TENCENT.json path=chart_series.net_income scale=0.01 -->*/
+     data:[410.9,715.1,787.2,933.1,1598.5,2248.2,1882.4,1152.2,1940.7,2489.3]}
+  ]
+});
+
+initChart('chart-margin',{
+  legend:{bottom:0},
+  xAxis:{type:'category',data:[2016,2017,2018,2019,2020,2021,2022,2023,2024,2025]},
+  yAxis:{type:'value',name:'%',max:45},
+  series:[
+    {name:'净利率',type:'line',smooth:true,itemStyle:{color:COLOR.accent},
+     /*<!-- vchart src=metrics_TENCENT.json path=chart_series.net_margin scale=100 -->*/
+     data:[27.05,30.08,25.17,24.73,33.16,40.14,33.95,18.92,29.39,34.64]}
+  ]
+});
+
+initChart('chart-ocf-ni',{
+  legend:{bottom:0},
+  xAxis:{type:'category',data:[2016,2017,2018,2019,2020,2021,2022,2023,2024,2025]},
+  yAxis:{type:'value',name:'倍',max:2.2},
+  series:[
+    {name:'OCF/净利润',type:'line',smooth:true,areaStyle:{opacity:.15},itemStyle:{color:COLOR.green},
+     /*<!-- vchart src=metrics_TENCENT.json path=chart_series.ocf_to_ni -->*/
+     data:[1.5943,1.4843,1.4837,1.5921,1.2145,0.7792,0.7887,1.8247,1.4150,1.3478]},
+    {name:'1.0 提醒线',type:'line',markLine:{symbol:'none',lineStyle:{color:COLOR.red,type:'dashed'},label:{formatter:'1.0'},data:[{yAxis:1}]},data:[]}
+  ]
+});
+</script>
+</body>
+</html>

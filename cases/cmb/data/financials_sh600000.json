@@ -1,0 +1,79 @@
+{
+ "company": "浦发银行",
+ "ticker": "sh600000",
+ "currency": "CNY",
+ "unit": "million",
+ "company_type": "银行",
+ "accounting_standard": "CAS",
+ "fiscal_year_end": "12-31",
+ "annual": [
+  {
+   "year": 2020,
+   "publish_date": "2021-03-27",
+   "operating_income": 196384.0,
+   "net_income": 58325.0,
+   "total_assets": 7958157.0,
+   "total_equity": 645216.0,
+   "gross_loans": 4430228.0,
+   "deposits": 4122407.0
+  },
+  {
+   "year": 2021,
+   "publish_date": "2022-04-28",
+   "operating_income": 190982.0,
+   "net_income": 53003.0,
+   "total_assets": 8136757.0,
+   "total_equity": 678218.0,
+   "gross_loans": 4690954.0,
+   "deposits": 4463608.0
+  },
+  {
+   "year": 2022,
+   "publish_date": "2023-04-19",
+   "operating_income": 188622.0,
+   "net_income": 51171.0,
+   "total_assets": 8704651.0,
+   "total_equity": 706775.0,
+   "gross_loans": 4798350.0,
+   "deposits": 4893812.0
+  },
+  {
+   "year": 2023,
+   "publish_date": "2024-04-30",
+   "operating_income": 173434.0,
+   "net_income": 36702.0,
+   "total_assets": 9007247.0,
+   "total_equity": 732884.0,
+   "gross_loans": 4904696.0,
+   "deposits": 5060344.0
+  },
+  {
+   "year": 2024,
+   "publish_date": "2025-03-29",
+   "operating_income": 170748.0,
+   "net_income": 45257.0,
+   "total_assets": 9461880.0,
+   "total_equity": 744781.0,
+   "gross_loans": 5269160.0,
+   "deposits": 5229282.0
+  },
+  {
+   "year": 2025,
+   "publish_date": "2026-03-31",
+   "operating_income": 173964.0,
+   "net_income": 50017.0,
+   "total_assets": 10081746.0,
+   "total_equity": 824430.0,
+   "gross_loans": 5572502.0,
+   "deposits": 5653358.0,
+   "npl_ratio": 0.0126,
+   "provision_coverage": 1.95,
+   "core_tier1_ratio": 0.092,
+   "nim": 0.015,
+   "roe_reported": 0.0676,
+   "bvps_reported": 22.13,
+   "dividend_per_share": 0.42,
+   "shares_diluted": 29352.0
+  }
+ ]
+}

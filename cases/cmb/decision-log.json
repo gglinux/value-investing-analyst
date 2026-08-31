@@ -1,0 +1,28 @@
+[
+ {
+  "date": "2026-08-28",
+  "ticker": "sh600036",
+  "company": "招商银行",
+  "price": 39.43,
+  "verdict": "观察等价格",
+  "margin_of_safety": 0.161,
+  "expected_irr": 0.0252,
+  "expected_irr_incl_div": 0.0763,
+  "loss_probability": 0.0,
+  "dividend_yield": 0.0511,
+  "band": [34, 47, 58],
+  "buy_zone": [30, 35.3],
+  "key_variables": [
+   {"name": "净息差企稳", "call": "企稳概率略占优", "proxy": "单季NIM", "falsify": "连续两季<1.70%"},
+   {"name": "零售不良软着陆", "call": "可控但尾部未出清", "proxy": "零售不良率", "falsify": ">1.50%"},
+   {"name": "大财富管理持续性", "call": "判断较强", "proxy": "财富管理手续费增速", "falsify": "连续两季负增长"}
+  ],
+  "falsifiers": ["NIM连续两季<1.70%", "零售不良率>1.5%", "财富管理手续费连续两季负增长", "拨备覆盖率<330%", "分红率<30%"],
+  "persona_verdicts": {"buffett": "观察(76)", "duan": "观察(83)", "li_lu": "值得跟踪未懂(79)"},
+  "red_team": {"bear": 28, "expected_irr_incl_div": 0.036, "downgrade": false},
+  "variant_perception": "未通过",
+  "user_prior": "中国体验最好的银行，低成本资金，股息率好，基本能永续经营",
+  "motivation": "趋势有好转了",
+  "pipeline_note": "银行专属管道首次实盘；实证中修复3个引擎缺陷（validate_data银行旁路、ROAE/BVPS披露口径、拨备双口径兼容）"
+ }
+]

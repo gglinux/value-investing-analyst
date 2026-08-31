@@ -101,6 +101,23 @@ def main():
         warns.append(f"前视偏差：最近年度 {missing_pub} 缺 `publish_date`（年报发布日，"
                      "A股接口有 InfoPublDate 现成可用；EDGAR 用 filing date）——"
                      "复盘校准协议依赖该字段按发布日截断信息集")
+
+    # 1.6 信息时效检查：分析日距最新登记的财报发布日超过 100 天时，
+    # 极可能存在未消化的新季报/盈利预告（腾讯 AI capex +176% 是季中爆出的教训）。
+    # 提示分析师核对最新季报，核对结果写入 manifest 的 latest_quarter_checked。
+    pub_dates = [r.get("publish_date") for r in rows if r.get("publish_date")]
+    if pub_dates:
+        try:
+            from datetime import datetime, date
+            latest_pub = max(datetime.strptime(d, "%Y-%m-%d").date() for d in pub_dates)
+            gap = (date.today() - latest_pub).days
+            if gap > 100:
+                warns.append(
+                    f"信息时效：底稿最新发布日 {latest_pub}（距今 {gap} 天 > 100 天）——"
+                    "必须核对期间的季报/盈利预告是否有未消化的剧变，"
+                    "核对结果写入 manifest 的 `latest_quarter_checked` 字段")
+        except ValueError:
+            warns.append("信息时效：publish_date 格式无法解析（应为 YYYY-MM-DD），时效检查跳过")
     if not rows:
         errors.append("annual 为空")
         report(errors, warns, args)

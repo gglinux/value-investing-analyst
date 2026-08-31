@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>招商银行（600036.SH）价值投资分析报告</title>
+<script src="https://cdn.jsdelivr.net/npm/echarts@5/dist/echarts.min.js"></script>
+<style>
+:root{--primary:#1a3a5c;--accent:#d97706;--bg:#f7f8fa;--card:#fff;--text:#24292f;--muted:#6b7280;--green:#15803d;--red:#b91c1c;--border:#e5e7eb}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;background:var(--bg);color:var(--text);line-height:1.75;font-size:15px}
+.container{max-width:1080px;margin:0 auto;padding:24px 20px 80px}
+header.report-header{background:var(--primary);color:#fff;border-radius:12px;padding:40px 36px;margin-bottom:28px}
+header.report-header h1{font-size:26px;font-weight:700}
+header.report-header .meta{margin-top:8px;opacity:.75;font-size:13px}
+.verdict-banner{display:flex;align-items:center;gap:24px;margin-top:24px;background:rgba(255,255,255,.08);border-radius:10px;padding:20px 24px}
+.verdict-label{font-size:34px;font-weight:800;letter-spacing:2px}
+.verdict-watch{color:#fbbf24}
+.verdict-score{font-size:15px;opacity:.9}
+.snapshot-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px;margin-top:16px}
+.snapshot-item{background:rgba(255,255,255,.08);border-radius:8px;padding:10px 14px}
+.snapshot-item .k{font-size:12px;opacity:.65}
+.snapshot-item .v{font-size:17px;font-weight:700;margin-top:2px}
+.snapshot-time{font-size:11px;opacity:.55;margin-top:8px}
+section{background:var(--card);border-radius:12px;padding:32px 36px;margin-bottom:24px;border:1px solid var(--border)}
+h2{font-size:20px;color:var(--primary);padding-bottom:10px;margin-bottom:18px;border-bottom:3px solid var(--accent);display:inline-block}
+h3{font-size:16px;color:var(--primary);margin:22px 0 10px}
+p{margin-bottom:12px}
+.chart{width:100%;height:400px;margin:12px 0 4px}
+.chart-note{font-size:12px;color:var(--muted);margin-bottom:16px}
+.insight-title{font-size:15px;font-weight:700;margin:20px 0 4px}
+table{width:100%;border-collapse:collapse;margin:14px 0;font-size:14px}
+th{background:var(--primary);color:#fff;padding:10px 12px;text-align:left;font-weight:600}
+td{padding:9px 12px;border-bottom:1px solid var(--border)}
+tr:nth-child(even) td{background:#fafbfc}
+.tag{display:inline-block;padding:2px 10px;border-radius:20px;font-size:12px;font-weight:600}
+.tag-green{background:#dcfce7;color:var(--green)}
+.tag-amber{background:#fef3c7;color:#b45309}
+.tag-red{background:#fee2e2;color:var(--red)}
+.points-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:16px 0}
+.point-card{border-radius:10px;padding:16px 18px;border:1px solid var(--border)}
+.point-card.bull{border-left:4px solid var(--green)}
+.point-card.bear{border-left:4px solid var(--red)}
+.point-card h4{font-size:14px;margin-bottom:8px}
+.point-card ul{padding-left:18px;font-size:14px}
+.point-card li{margin-bottom:6px}
+blockquote.persona{border-left:4px solid var(--accent);background:#fffbf5;padding:16px 20px;margin:14px 0;border-radius:0 8px 8px 0;font-size:14px}
+blockquote.persona .persona-name{font-weight:700;color:var(--primary);display:block;margin-bottom:6px}
+.redteam{background:#1f2937;color:#e5e7eb;border-radius:10px;padding:24px 28px;margin:16px 0}
+.redteam h3{color:#fbbf24;margin-top:0}
+.redteam ul,.redteam ol{padding-left:20px}
+.redteam li{margin-bottom:8px}
+.checklist li{margin-bottom:8px}
+footer.disclaimer{font-size:12px;color:var(--muted);text-align:center;margin-top:40px;padding-top:20px;border-top:1px solid var(--border)}
+.source-note{font-size:12px;color:var(--muted)}
+.vnum{border-bottom:1px dashed #9ca3af}
+.decision-card{border:2px solid var(--accent);border-radius:12px;padding:20px 24px;background:#fffbf5;margin:16px 0}
+.decision-card table{margin:8px 0}
+.decision-card th{background:var(--accent)}
+@media print{section{break-inside:avoid}.chart{height:360px}}
+</style>
+</head>
+<body>
+<div class="container">
+
+<header class="report-header">
+  <h1>招商银行（600036.SH）价值投资分析报告</h1>
+  <div class="meta">报告日期：2026-08-28 ｜ 数据截止：2025 年报 + 2026 一季报 + 2026-08-28 行情 ｜ 行业：银行（股份制）｜ 管道：银行专属（compute_metrics_bank，首次真实数据实证）</div>
+  <div class="verdict-banner">
+    <div class="verdict-label verdict-watch">观察等价格</div>
+    <div class="verdict-score">
+      <b>双闸门状态</b>：闸门一 安全边际 <span class="vnum" data-src="valuation.json" data-path="margin_of_safety_vs_base" data-fmt="pct1">16.1%</span>（要求 ≥25%）<b style="color:#f87171">✗</b> ｜ 闸门二 期望年化 IRR（含息）<span class="vnum" data-src="expected_return.json" data-path="expected_annualized_irr_incl_div" data-fmt="pct1">7.6%</span>（门槛 9%）<b style="color:#f87171">✗</b><br>
+      三位大师独立判断：巴菲特【观察：公道价非便宜价】｜ 段永平【观察：等它再被冷落】｜ 李录【值得跟踪但未真懂】<br>
+      内在价值区间：<span class="vnum" data-src="valuation.json" data-path="band.0" data-fmt="num0">34</span> ~ <span class="vnum" data-src="valuation.json" data-path="band.2" data-fmt="num0">58</span> 元（基准 <span class="vnum" data-src="valuation.json" data-path="band.1" data-fmt="num0">47</span> 元）｜ 5 年期望年化（含息）<span class="vnum" data-src="expected_return.json" data-path="expected_annualized_irr_incl_div" data-fmt="pct1">7.6%</span>
+    </div>
+  </div>
+  <div class="snapshot-grid">
+    <div class="snapshot-item"><div class="k">现价</div><div class="v"><span class="vnum" data-src="market_snapshot.json" data-path="price" data-fmt="num2">39.43</span> 元</div></div>
+    <div class="snapshot-item"><div class="k">总市值</div><div class="v"><span class="vnum" data-src="market_snapshot.json" data-path="total_market_cap_yi" data-fmt="num0">9,944</span> 亿元</div></div>
+    <div class="snapshot-item"><div class="k">PE-TTM</div><div class="v"><span class="vnum" data-src="market_snapshot.json" data-path="pe_ttm" data-fmt="num1">6.6</span></div></div>
+    <div class="snapshot-item"><div class="k">PB</div><div class="v"><span class="vnum" data-src="market_snapshot.json" data-path="pb" data-fmt="num2">0.90</span></div></div>
+    <div class="snapshot-item"><div class="k">股息率TTM</div><div class="v"><span class="vnum" data-src="market_snapshot.json" data-path="dividend_yield_ttm" data-fmt="pct1">5.1%</span></div></div>
+    <div class="snapshot-item"><div class="k">52周位置</div><div class="v"><span class="vnum" data-src="market_snapshot.json" data-path="position_52w" data-fmt="pct1">67.0%</span></div></div>
+    <div class="snapshot-item"><div class="k">日均成交额(20日)</div><div class="v"><span class="vnum" data-src="market_snapshot.json" data-path="avg_amount_20d_yi" data-fmt="num1">28.7</span> 亿元</div></div>
+  </div>
+  <div class="snapshot-time">行情快照时间：2026-08-28 收盘（来源等级 A）</div>
+</header>
+
+<section id="summary">
+  <h2>一、投资摘要（首屏决策卡）</h2>
+  <div class="decision-card">
+    <table>
+      <tr><th style="width:22%">要素</th><th>结论</th></tr>
+      <tr><td>结论档位</td><td><b>观察等价格</b>（买入触发区间 30 ~ 35.3 元，对应基准价值 47 元的 64%~75% 折扣）</td></tr>
+      <tr><td>双闸门</td><td>安全边际 16.1% &lt; 25% <b>✗</b> ｜ 期望含息 IRR 7.6% &lt; 9% <b>✗</b>（两道都不过，档位封顶在此，评委会再看好也只校准置信度）</td></tr>
+      <tr><td>关键变量</td><td>① 净息差能否在 1.8% 上方企稳（当前判断：企稳概率略占优）② 零售信用成本是否软着陆（当前判断：可控但尾部未出清）③ 大财富管理能否持续 15%+ 增长</td></tr>
+      <tr><td>证伪条件</td><td>净息差连续两季 &lt;1.70%；零售贷款不良率 &gt;1.5% —— 任一触发，基准情景失效</td></tr>
+      <tr><td>下次复查</td><td>2026 年报（2027 年 3 月）或股价触及 35.3 元（买点上沿）或触及 30 元（强买点）</td></tr>
+    </table>
+  </div>
+  <p><b>一句话生意：</b>2.2 亿零售客户把一半工资以活期形式存在这里，让招商银行拿到全中国最便宜的钱，再贷出去赚息差、顺手卖理财赚手续费——负债端壁垒是它的印钞机，利息下行是它的慢病。</p>
+  <div class="points-grid">
+    <div class="point-card bull">
+      <h4>三大投资论点</h4>
+      <ul>
+        <li><b>负债端垄断级优势</b>：活期存款占比约 50%，NIM 1.87%，比工行/农行高 59bp——同样的贷款多赚近一半息差，成本优势十年未被撼动 [E:financials_CMB.json]</li>
+        <li><b>盈利质量断档领先</b>：十年 ROE 均值 16.0%、近 3 年 14.7%，不良率 0.94% + 拨备覆盖 392%，四项核心指标全面碾压四家可比银行 [E:peer_table.json]</li>
+        <li><b>股东回报进入最佳区间</b>：分红率提升至 35.3%（历史新高）+ 首次中期分红，股息率 5.1%，现金回报真实且可持续 [E:financials_CMB.json]</li>
+      </ul>
+    </div>
+    <div class="point-card bear">
+      <h4>三大核心风险</h4>
+      <ul>
+        <li><b>息差下行未止</b>：NIM 五年 2.48% → 1.87%，营收三年零增长；若 LPR 再降或资产端收益继续走低，ROE 中枢将从 14.7% 滑向 10~12% [E:financials_CMB.json]</li>
+        <li><b>利润含拨备调节成分</b>：信用成本 0.78%→0.60%、拨备覆盖 484%→392%，拨备对利润的贡献 1Q26 已转负，调节空间在收窄 [E:report_gs_1q26.json]</li>
+        <li><b>零售信用尾部风险</b>：消费信贷不良率 1.66%（+14bp）、关注率 1.43%（+14bp），居民端去杠杆进程未明 [E:filings/cmb_2025_ar.pdf]</li>
+      </ul>
+    </div>
+  </div>
+  <p><b>本笔投资取决于：</b>息差企稳的时点（决定 ROE 落位 12% 还是 14%）、零售不良的软着陆、以及你愿意为 5% 股息率接受多低的成长。</p>
+  <p class="source-note"><b>信息局限声明：</b>① 年报 PDF 为图片版，2016-2020 年银行专属指标取自年报历史披露的公开转引（B 级），2021-2025 取自标普信评报告（B 级），均经双源交叉，但非同一份原文逐页核对；② 卖方一致预期仅 2~3 家且一致乐观，变异认知测试为低置信度；③ 手续费收入的业务明细（代销/托管/理财分解）仅 2025 一年，趋势判断置信度受限。普通投资者相对机构在该股上的信息劣势较小——招行是 A 股披露最透明的银行之一。</p>
+  <div class="insight-title">估值区间 vs 现价（含红队独立对照情景）</div>
+  <div id="chart-valuation-band" class="chart" style="height:260px"></div>
+  <div class="chart-note">数据来源：valuation.json（两阶段现价回归法）+ expected_return.json；红队情景为其独立假设下的悲观值。</div>
+</section>
+
+<section id="business">
+  <h2>二、商业模式与生意</h2>
+  <p>用大白话讲：招商银行是一家"资金中介+财富商店"。2.2 亿零售客户、362 万企业客户把钱存在这里——其中一半是不怎么付利息的活期存款 [E:segments.json]。招行把这些钱主要贷给中国的中产（房贷、信用卡、消费贷）和中大型企业，赚利息差；同时把基金、理财、保险卖给同一批客户，再赚手续费。2025 年它的收入里 63% 是息差、36% 是非息收入，后者比例在中国银行业里最高 [E:financials_CMB.json]。</p>
+  <p><b>单位经济：</b>每 1 元生息资产赚取 1.87 分净息差（NIM），每 1 元营收消耗 32 分运营成本（成本收入比 31.98%），每 1 元贷款计提 0.60 分信用成本。落到股东层面：每 1 元净资产一年赚 13.4 分（ROE 13.44%），其中 35% 直接分给你（每股分红 2.016 元，分红率历史新高）[E:market_snapshot.json]。</p>
+  <p><b>客户为什么不走：</b>工资卡、信用卡、理财账户、房贷在同一家银行，迁移要动五六个系统，没人愿意折腾。这是"换不动"级别的转换成本，也是活期存款长期不搬家的真正原因 [E:segments.json]。</p>
+  <p><b>可持续性：</b>这门生意 10 年后大概率还在——零售银行牌照、客户习惯、财富管理能力都是慢变量。但赚钱方式在换挡：息差收窄是行业性慢病，招行给出的答案是大财富管理（AUM 17 万亿、近 5 年 CAGR 13%+），2025 年财富管理手续费 +21.39% 初步验证了第二曲线 [E:financials_CMB.json]。没说清的部份：信用卡/银行卡收入 -7.3%/-18.6% 的下滑何时见底，这是零售金融承压的直接信号。</p>
+  <div class="insight-title">收入结构：息差仍占六成，财富管理是确定的增量</div>
+  <div id="chart-revenue-structure" class="chart" style="height:340px"></div>
+  <div class="chart-note">数据来源：segments.json（2025 年报，A 级）。四大板块占比为示意口径，非息收入占比 36.13% 为披露值。</div>
+</section>
+
+<section id="quant">
+  <h2>三、定量画像</h2>
+  <div class="insight-title">ROE 十年均值 16.0%：在 13 万亿资产上持续跑赢股权成本，是唯一几家能做到的中国银行</div>
+  <div id="chart-roe-trend" class="chart"></div>
+  <div class="chart-note">数据来源：metrics_CMB_bank.json（披露口径 ROAE；A股披露，A 级）</div>
+  <p>ROE 从 2016 年的 <span class="vnum" data-src="metrics_CMB_bank.json" data-path="chart_series.roe.0" data-fmt="pct1">16.3%</span> 到 2025 年的 <span class="vnum" data-src="metrics_CMB_bank.json" data-path="chart_series.roe.-1" data-fmt="pct1">13.4%</span>，十年均值 <span class="vnum" data-src="metrics_CMB_bank.json" data-path="summary.roe_avg" data-fmt="pct1">16.0%</span>、近 3 年 <span class="vnum" data-src="metrics_CMB_bank.json" data-path="summary.roe_recent3" data-fmt="pct1">14.7%</span>。趋势是明确的均值回归通道，但到目前为止每年的绝对值都还在股权成本（10%~10.5%）之上——超额收益仍在创造，只是空间在收窄。同期 NIM 从 2.50% 滑到 <span class="vnum" data-src="metrics_CMB_bank.json" data-path="chart_series.nim.-1" data-fmt="pct2">1.87%</span>，是 ROE 下行的唯一主因 [E:financials_CMB.json]。</p>
+  <div class="insight-title">同业对照：招行的 ROE 比最优竞对高 4~6 个百分点，这不是运气，是负债结构差异</div>
+  <div id="chart-peer-roe" class="chart" style="height:360px"></div>
+  <div class="chart-note">数据来源：peer_table.json（五家统一银行管道口径；竞对 2020-2025，招行 2016-2025）</div>
+  <p>五年期 ROE 均值：兴业 <span class="vnum" data-src="peer_table.json" data-path="chart.roe_avg.1" data-fmt="num1">10.3</span>%、工行 <span class="vnum" data-src="peer_table.json" data-path="chart.roe_avg.2" data-fmt="num1">10.0</span>%、农行 <span class="vnum" data-src="peer_table.json" data-path="chart.roe_avg.3" data-fmt="num1">9.7</span>%、浦发 <span class="vnum" data-src="peer_table.json" data-path="chart.roe_avg.4" data-fmt="num1">7.0</span>%。差距的根源在 NIM：招行 1.87% vs 工行/农行 1.28%（低活期存款成本）+ 非息占比 36% vs 大行约 20%（财富管理变现）[E:peer_table.json]。资产质量同样断档：不良率 0.94% 为五家最低，拨备覆盖 392% 为最高 [E:metrics_CMB_bank.json]。</p>
+  <div class="insight-title">资产质量的两面：不良率九连降是真功夫，拨备覆盖从 484% 滑到 392% 是利润调节的明牌</div>
+  <div id="chart-asset-quality" class="chart"></div>
+  <div class="chart-note">数据来源：metrics_CMB_bank.json（不良率=A 级披露；拨备覆盖率 2021-2025 标普信评 B 级、2016-2020 年报转引）</div>
+  <p>不良率从 2016 年 <span class="vnum" data-src="metrics_CMB_bank.json" data-path="chart_series.npl_ratio.0" data-fmt="pct2">1.87%</span> 降到 2025 年 <span class="vnum" data-src="metrics_CMB_bank.json" data-path="summary.npl_ratio_latest" data-fmt="pct2">0.94%</span>，九连降、且是在贷款总额翻 2.6 倍的背景下——资产质量改善是真的。但拨备覆盖率从 2021 年峰值 484% 一路降到 <span class="vnum" data-src="metrics_CMB_bank.json" data-path="summary.provision_coverage_latest" data-fmt="pct0">392%</span>：2021-2025 年少计提的拨备换成了一部分利润，这部分"借来的增长"不可永续。392% 依然是行业天花板（农行 293%、工行 214%），缓冲厚，但方向只减不增 [E:report_gs_1q26.json]。</p>
+  <div class="insight-title">每股口径复核：BVPS 十年增长 172%，股本零稀释——银行里罕见的干净股本史</div>
+  <p>摊薄股本 252.2 亿股十年未变（无增发摊薄），每股净资产从 15.95 元增长到 <span class="vnum" data-src="metrics_CMB_bank.json" data-path="pb_roe_inputs.bvps_latest" data-fmt="num2">43.43</span> 元（CAGR <span class="vnum" data-src="metrics_CMB_bank.json" data-path="summary.bvps_cagr" data-fmt="pct1">11.8%</span>），加上每股分红从 0.74 元增至 2.016 元，总量增长全部变成了股东实得 [E:financials_CMB.json]。2026 年 4 月完成全部境内优先股赎回，资本结构进一步简化。</p>
+</section>
+
+<section id="moat">
+  <h2>四、护城河分析</h2>
+  <h3>五源归类</h3>
+  <table>
+    <tr><th>护城河源</th><th>评级</th><th>证据</th></tr>
+    <tr><td>无形资产（品牌/牌照）</td><td><span class="tag tag-green">强</span></td><td>"零售之王"品牌 + 全国性银行牌照 + 私行第一品牌；明晟 ESG 评级 AAA 为业内最高 [E:filings/cmb_2025_ar.pdf]</td></tr>
+    <tr><td>转换成本</td><td><span class="tag tag-green">强（核心）</span></td><td>工资卡+信用卡+理财+房贷多账户绑定，金融主账户迁移成本极高；零售客户 2.2 亿仍在净增（+6.67%）[E:segments.json]</td></tr>
+    <tr><td>成本优势（结构性低成本负债）</td><td><span class="tag tag-green">强（核心）</span></td><td>活期存款占比约 50%、存款付息率行业最低区间，NIM 高出工行/农行 59bp [E:financials_CMB.json]</td></tr>
+    <tr><td>网络效应</td><td><span class="tag tag-amber">弱</span></td><td>信用卡/支付网络有双边效应，但被微信支付宝分食，不构成主护城河</td></tr>
+    <tr><td>有效规模</td><td><span class="tag tag-amber">中</span></td><td>财富管理托管 26 万亿、资管 4.7 万亿具规模壁垒，但离"独家"尚远</td></tr>
+  </table>
+  <h3>定量验证（硬证据）</h3>
+  <table>
+    <tr><th>测试</th><th>结果</th><th>判读</th></tr>
+    <tr><td>ROIC−WACC 利差</td><td>ROE 十年均值 16.0% vs 股权成本 10~10.5%，正利差持续 10 年</td><td><span class="tag tag-green">宽护城河候选</span></td></tr>
+    <tr><td>定价权测试①（提价记录）</td><td>不适用——银行无单价概念，对应物是净息差：NIM 持续高于行业 20~60bp</td><td><span class="tag tag-green">强</span></td></tr>
+    <tr><td>定价权测试②（价格掉量反应）</td><td>存款市场份额 2019-2025 持续在 2.6~3.0% 窄幅波动，低付息并未赶走存款</td><td><span class="tag tag-green">强</span>（低息不掉量=真负债护城河）</td></tr>
+    <tr><td>定价权测试③（成本转嫁）</td><td>2022-2025 存款重定价周期，NIM 收窄幅度（61bp）始终小于行业均值（约 70bp+）</td><td><span class="tag tag-amber">中</span>（能减伤不能免疫）</td></tr>
+    <tr><td>进攻者尸检</td><td>互联网平台（蚂蚁/微众）2019-2021 进攻零售金融，未能撼动其 AUM 与高净值客群；高净值财富管理无新进入者成功案例</td><td><span class="tag tag-green">验证</span></td></tr>
+  </table>
+  <h3>产业链上下游戏议价权（新框架首次实战）</h3>
+  <p><b>对上游（资金供给方=储户）：强。</b>活期存款占比约 50% 且十年稳定——储户近乎免费地把钱借给招行，这是全球银行业最稀缺的能力之一；存款/贷款比 73.8%，存款远超放贷需求，没有"抢存款"压力 [E:filings/cmb_2025_ar.pdf]。<b>对下游（资金需求方=借款人）：中弱（真实约束）。</b>优质借款人（央国企、优质中产）是全行业争抢对象，贷款利率由 LPR 和竞争决定，招行没有单方面定价权；财富管理的下游（代销客户）正在向低费率迁徙。结论：负债端议价权强、资产端议价权弱——<b>估值的利润率（ROE）假设必须按"中枢 12~13%"取，禁用近 3 年 14.7% 外推</b>（该约束已进入本报告估值章节的口径选择）[E:financials_CMB.json]。</p>
+  <p><b>护城河评级：宽 / 趋势：缓慢变窄</b>——核心依据：存款成本与客群壁垒十年未破，但行业息差收窄与财富管理竞争使其超额回报空间被持续压缩。最大侵蚀风险：利率长期下行叠加财富管理费改。</p>
+</section>
+
+<section id="growth">
+  <h2>五、增长空间与质量</h2>
+  <p><b>S 曲线定位：成熟期。</b>贷款总额增速已从 10%+ 降到 5.37%，银行业整体渗透率见顶。招行的增长引擎正在换挡，分三条线评估 [E:segments.json]：</p>
+  <table>
+    <tr><th>增长引擎</th><th>未来 5 年收入贡献估计</th><th>可信度</th><th>依据</th></tr>
+    <tr><td>存量息差（基本盘）</td><td>0 ~ +3%/年（量增补价降）</td><td><span class="tag tag-green">高</span></td><td>贷款增速 5%×NIM 企稳 1.8%±，规模可保，利率不可知 [E:financials_CMB.json]</td></tr>
+    <tr><td>大财富管理（第二曲线）</td><td>+15% ~ +20%/年（手续费收入）</td><td><span class="tag tag-amber">中高</span></td><td>2025 年验证 +21.4%；AUM 17 万亿近 5 年 CAGR 13%+；居民存款搬家是十年级趋势 [E:report_gs_1q26.json]</td></tr>
+    <tr><td>对公补位</td><td>+10%/年（对公贷款）</td><td><span class="tag tag-amber">中</span></td><td>1Q26 对公 +12.8% 补零售缺口，但对公利差更薄、周期性更强 [E:report_gs_1q26.json]</td></tr>
+  </table>
+  <p><b>增长质量（ROIIC 视角）：</b>银行的增长不再是价值创造问题的核心——真正的检验是"新增每元风险加权资产能否带来超过其资本占用的回报"。招行核心一级资本充足率 14.16%、同比下降幅度可控且已内生补充，说明它不需要靠外部融资增长；管理层连续提升分红率到 35.3%，等于宣布"我们不需要那么多留存利润"——这是对股东最诚实的资本配置信号 [E:financials_CMB.json]。</p>
+  <p><b>再投资跑道判断：</b>ROE 12~14% × 留存 65% 的复利机器仍在运转但减速中；未来十年的股东回报 = BVPS 中个位数增长 + 5% 上下股息 + 估值波动，高增长叙事不应再作为买入理由。</p>
+</section>
+
+<section id="management">
+  <h2>六、管理层与企业文化</h2>
+  <h3>资本配置评分卡</h3>
+  <table>
+    <tr><th>维度</th><th>评分</th><th>证据</th></tr>
+    <tr><td>股东回报</td><td><span class="tag tag-green">优</span></td><td>分红率连年提升：30%→35.3%（历史新高），2025 首推中期分红，全年每股 2.016 元；上市累计分红超 3,900 亿元 [E:financials_CMB.json]</td></tr>
+    <tr><td>资本纪律</td><td><span class="tag tag-green">优</span></td><td>2026-04 全部赎回境内优先股（招银优1），股本十年零增发，不稀释股东 [E:cmb_notices.txt]</td></tr>
+    <tr><td>战略连续性</td><td><span class="tag tag-green">优</span></td><td>"轻型银行→价值银行"战略 10 年一脉相承未漂移，田惠宇事件后经营未脱节 [E:filings/cmb_2025_ar.pdf]</td></tr>
+    <tr><td>并购冲动</td><td><span class="tag tag-amber">低（好）</span></td><td>未见规模-driven 并购，综合化子公司（理财/租赁/AIC）均为牌照内发展</td></tr>
+    <tr><td>合规治理</td><td><span class="tag tag-red">扣分项</span></td><td>2025-2026 监管罚单密集（总行 60 万/650 万、多分行/招联消金，涉信贷/数据/反洗钱），反映业绩压力下分支机构合规松动 [E:cmb_notices.txt]</td></tr>
+  </table>
+  <h3>言行一致追踪</h3>
+  <p>2021 年报提出"大财富管理价值循环链"、2024 年报提"价值银行"——2025 年兑现：财富管理手续费 +21.4%、AUM 破 17 万亿、客户数 2.2 亿均达指引方向 [E:filings/cmb_2025_ar.pdf]。反面案例：2024 年报称"净息差预期企稳"，实际 2025 年全年 NIM 1.87% 同比再降 11bp——对息差的判断连续偏乐观，管理层对利率的表述可信度打折（这是行业通病不是招行特例，但言行比对必须记录）[E:report_cj_0504.json]。</p>
+  <p><b>结论：T 队管理层，战略与资本配置罕见地理性；唯一实质扣分项是罚单密集暴露的合规颗粒度问题（治理问题，非诚信问题）。</b></p>
+</section>
+
+<section id="risk">
+  <h2>七、财务质量与风险深查</h2>
+  <p><b>排雷结果：</b>一票否决项 0 条；红旗项 2 条（拨备调节利润的节奏、监管罚单密集）；A 股防割清单干净（无解禁压力、筹码未散户化）。审计意见标准无保留（安永华明，2021-2023 德勤华永→2024 起轮换为安永，轮换正常）[E:filings/cmb_2025_ar.pdf]。</p>
+  <h3>深查发现</h3>
+  <table>
+    <tr><th>风险项</th><th>程度</th><th>证据与说明</th></tr>
+    <tr><td>拨备调节的利润成分</td><td><span class="tag tag-amber">真实但可控</span></td><td>信用成本 0.78→0.60%（3 年降 23%）、拨备覆盖率 -92pct，若信用成本回到 0.78%，静态测算利润增速由 +1.2% 转约 -6%；1Q26 拨备对业绩贡献已转负 [E:report_gs_1q26.json]</td></tr>
+    <tr><td>零售信用风险</td><td><span class="tag tag-amber">观察中</span></td><td>零售不良 1.14%（+6bp，公司口径）、消费信贷 1.66%（+14bp）、关注率 1.43%（+14bp）；对公房地产不良率 4.78% 已在出清（-16bp）[E:filings/cmb_2025_ar.pdf]</td></tr>
+    <tr><td>信用卡业务萎缩</td><td><span class="tag tag-amber">结构性</span></td><td>交易额 -7.6%、利息收入 -7.3%、非息 -15.7%，被花呗/白条与消费降级夹击，何时见底不明 [E:financials_CMB.json]</td></tr>
+    <tr><td>ECL 模型的主观性</td><td><span class="tag tag-amber">行业共性</span></td><td>审计三大关键审计事项之首就是贷款预期信用损失模型，参数含管理层判断——这不是招行特有问题，但提醒所有银行利润表都含假设成分 [E:filings/cmb_2025_ar.pdf]</td></tr>
+    <tr><td>流动性/可交易性</td><td><span class="tag tag-green">无障碍</span></td><td>日成交 28.7 亿元、全流通，无进出摩擦；H 股更便宜（约 8 折）但本报告以 A 股为标的 [E:market_snapshot.json]</td></tr>
+  </table>
+</section>
+
+<section id="valuation">
+  <h2>八、估值与安全边际</h2>
+  <h3>方法选择：银行用两阶段现价回归（禁用单阶段 Gordon PB-ROE 的陷阱）</h3>
+  <p>本报告估值主方法：<b>两阶段现价回归法</b>——未来 5 年分红折现 + 第 5 年末每股净资产 × 终期公允 PB 折现。交叉验证：股息贴现（DDM）。<b>弃用单阶段 PB-ROE 公式 (ROE−g)/(r−g)</b>：可持续 ROE 14.7% × 留存 65% 隐含永续增长 9.5%，逼近折现率时分母趋零，会输出公允价 +141% 的荒谬结果——这是 Gordon 模型的经典陷阱，也是"精确的错误"的典型样本 [E:valuation.json]。</p>
+  <h3>关键输入（全部可溯源）</h3>
+  <table>
+    <tr><th>参数</th><th>取值</th><th>依据</th></tr>
+    <tr><td>期初 BVPS（2025 末）</td><td><span class="vnum" data-src="metrics_CMB_bank.json" data-path="pb_roe_inputs.bvps_latest" data-fmt="num2">43.43</span> 元</td><td>年报披露每股净资产（A 级）</td></tr>
+    <tr><td>ROE 路径</td><td>13.4% 缓降至 12.0%（基准）</td><td>可持续 ROE 取 <span class="vnum" data-src="metrics_CMB_bank.json" data-path="pb_roe_inputs.roe_sustainable" data-fmt="pct1">14.7%</span> 与均值回归的折中；卖方一致预期 2026-2028 净利 +2.4%/4.1%/4.3% 印证缓坡 [E:consensus.json]</td></tr>
+    <tr><td>分红率</td><td>35.3%（2025 实际，假设维持）</td><td>招行管理层已确立回报导向 [E:financials_CMB.json]</td></tr>
+    <tr><td>折现率 r</td><td>9.0% ~ 10.5%（沪深300 长期机会成本 + 治理/利率不确定性溢价）</td><td>机会成本门槛测 9%</td></tr>
+    <tr><td>终期 PB</td><td>悲观 0.75 / 基准 1.0 / 乐观 1.15</td><td>招行历史 PB 带 0.8~1.9，质量溢价与 ROE 中枢下修对冲</td></tr>
+  </table>
+  <h3>三情景区间与好价格线</h3>
+  <table>
+    <tr><th>情景</th><th>概率</th><th>假设</th><th>每股价值</th><th>vs 现价</th></tr>
+    <tr><td>悲观</td><td>30%</td><td>息差续降至 1.5%、零售不良超预期，ROE 落至 10%</td><td><span class="vnum" data-src="valuation.json" data-path="band.0" data-fmt="num0">34</span> 元</td><td>-13.8%</td></tr>
+    <tr><td>基准</td><td>50%</td><td>息差 1.8% 企稳，ROE 中枢 12%，终期 PB 1.0</td><td><span class="vnum" data-src="valuation.json" data-path="band.1" data-fmt="num0">47</span> 元</td><td>+19.2%</td></tr>
+    <tr><td>乐观</td><td>20%</td><td>息差企稳 + 财富管理放量，ROE 守 13%</td><td><span class="vnum" data-src="valuation.json" data-path="band.2" data-fmt="num0">58</span> 元</td><td>+47.1%</td></tr>
+  </table>
+  <p><b>基率检验：</b>基准情景要求"ROE 中枢 12% 维持十年"——A 股 10 万亿级银行近十年无一家做到（工行 ROE 已从 15% 降到 9.5%）。我们给的是"招行质量溢价使其留在 12% 而非滑到 9~10%"，判断依据是负债成本优势还没见到被打破的证据；但这本身已是"它例外"的论证，置信度局限写入附录。</p>
+  <h3>期望回报率（含股息，引擎计算）</h3>
+  <table>
+    <tr><th>指标</th><th>数值</th><th>对照</th></tr>
+    <tr><td>期望年化 IRR（不含息）</td><td><span class="vnum" data-src="expected_return.json" data-path="expected_annualized_irr" data-fmt="pct2">2.52%</span></td><td>股价回归假设下纯价格部分</td></tr>
+    <tr><td>期望年化 IRR（含股息 5.11%）</td><td><b><span class="vnum" data-src="expected_return.json" data-path="expected_annualized_irr_incl_div" data-fmt="pct1">7.6%</span></b></td><td><b>vs 沪深300 长期年化 9%：跑输 <span class="vnum" data-src="expected_return.json" data-path="excess_vs_index" data-fmt="pct2">-1.37%</span></b></td></tr>
+    <tr><td>5 年亏损概率（含息）</td><td><span class="vnum" data-src="expected_return.json" data-path="loss_probability" data-fmt="pct0">0%</span></td><td>悲观情景 -13.8% 被五年股息（25.6%）覆盖</td></tr>
+    <tr><td>红队独立对照</td><td>期望含息 IRR <span class="vnum" data-src="valuation.json" data-path="red_team_scenarios.expected_irr_incl_div" data-fmt="pct1">3.6%</span>（悲观 28/基准 38/乐观 52，概率 35/45/20）</td><td>结论一致：两组独立计算都跑输门槛</td></tr>
+  </table>
+  <p><b>关键判断：</b>5% 股息率让其"亏不了大钱"，但 39.43 元的价格已经 price in 了 12% 的 ROE 中枢和财富管理转型——现价买入的期望回报刚好"不亏但赢不了指数"。这就是"好公司的公道价"。买入触发区间：<b>30 ~ 35.3 元</b>（对应基准价值 47 元的 64%~75%）[E:valuation.json]。</p>
+  <h3>反向验证：现价隐含什么预期</h3>
+  <p>用基准口径反推：现价 39.43 元 = 分红现值 + 终值回推，隐含"ROE 中枢 ≥12% 且五年后 PB 至少 0.95"。若 ROE 中枢实际落到 10%（工行路径），现价有 13~15% 下行空间；若守住 13%，现价尚有 47% 空间。<b>现价已经在为"招行例外论"定价，而不是为"银行均值回归"定价。</b></p>
+</section>
+
+<section id="key-judgment">
+  <h2>九、关键判断（Phase 4.5 收敛）</h2>
+  <h3>关键变量（既重要又可知的 3 个）</h3>
+  <table>
+    <tr><th>关键变量</th><th>当前判断</th><th>依据</th><th>为什么可知</th></tr>
+    <tr><td>① 净息差能否在 1.8% 上方企稳</td><td><span class="tag tag-amber">企稳概率略占优</span></td><td>1Q26 单季 NIM 1.86%（环比 +3bp）；存款降息红利尚未完全释放；贷款重定价压力 2026 进入尾声 [E:report_gs_1q26.json]</td><td>LPR 与存款挂牌利率是公开政策变量，单季披露可逐季验证——重要且部分可知</td></tr>
+    <tr><td>② 零售不良是否软着陆</td><td><span class="tag tag-amber">可控但尾部未出清</span></td><td>消费信贷不良 1.66% / 关注率 1.43% 上行；零售不良生成 1.03% 已入下行通道 [E:filings/cmb_2025_ar.pdf]</td><td>逐季披露的生成率/关注率是高频可观测代理指标——部分可知</td></tr>
+    <tr><td>③ 大财富管理增长持续性</td><td><span class="tag tag-green">判断较强</span></td><td>财富管理手续费 +21.4%、代销理财 +7.1%、代理基金 +55.1%（1Q26）；AUM 破 17 万亿 [E:report_gs_1q26.json]</td><td>居民存款搬家是十年可测趋势，AUM/保有量逐季可查——可知性最高</td></tr>
+  </table>
+  <h3>变异认知测试</h3>
+  <p><b>市场为什么给现在这个价：</b>主流叙事是"零售之王拐点已现"——卖方一致预期 2026-2028 净利 +2.4%/~4.5%，A 股机构综合目标价 53.15 元（隐含 +34.8%），评级清一色买入/增持 [E:consensus.json]。现价 0.91 PB 对应"相信招行质量溢价但担心息差"。</p>
+  <p><b>我们与市场的具体分歧：</b>方向一致（都认可基本面改善），幅度不同——市场对 ROE 落位隐含 12~13% 不产生争议但用目标价 53 元隐含"回到 1.2~1.4 倍 PB"，我们的基准只给 1.0 倍 PB 中枢。差异本质是<b>对估值锚的态度</b>，不是对基本面的判断。</p>
+  <p><b>认知优势来源：未通过（诚实判定）。</b>对息差/零售信用这两个真正决定回报的变量，我们没有超出市场的高置信度认知——一致预期为 B 级（券商研报），<b>本项测试置信度低</b>。这直接支撑"观察等价格"而非"核心买入"：没有别人看不见的便宜可占。</p>
+  <h3>双重机会成本对照</h3>
+  <table>
+    <tr><th>对照项</th><th>长期年化</th><th>本标的期望（含息）</th><th>裁决</th></tr>
+    <tr><td>指数基金（沪深300 长期年化）</td><td>~9%</td><td rowspan="2"><span class="vnum" data-src="expected_return.json" data-path="expected_annualized_irr_incl_div" data-fmt="pct1">7.6%</span></td><td><span class="tag tag-red">跑输 1.4pct</span></td></tr>
+    <tr><td>用户现有最好持仓</td><td>未提供</td><td>无法对照（建议补充）</td></tr>
+  </table>
+  <p>5 年亏损概率（含股息缓冲）<span class="vnum" data-src="expected_return.json" data-path="loss_probability" data-fmt="pct0">0%</span>——这不是买入理由，是持有成本低。期望回报跑输机会成本 1.4 个百分点 → <b>机会成本不划算，结论最高只能给"观察等价格"</b>（双闸门纪律）。</p>
+</section>
+
+<section id="committee">
+  <h2>十、投委会评审</h2>
+  <p class="source-note">三份评估按分离生成协议独立完成（各只读取 Phase 1~4 底稿，互不见面），落盘于 workpapers/persona_*.md；分数不构成综合，分歧即信号。</p>
+  <blockquote class="persona"><span class="persona-name">巴菲特视角（76/100）：观察 — 公道价，不是便宜价</span>
+    "如果一定要在中国买一家银行，这家是名单上的第一个名字——最便宜的资金、最厚的拨备、最理性的管理层。但我在美国也只在大恐慌中买银行：银行股的便宜价格几乎都出现在别人恐惧的时候。今天的价格是公道价，不是恐慌价。埃奇沃思式诚实：这门生意我懂，利率我预测不了，所以我需要比一般公司更大的价格让步。把它放进口袋名单，跌下来你们会感谢自己没有追高。"</blockquote>
+  <blockquote class="persona"><span class="persona-name">段永平视角（83/100）：观察 — 好生意，等它再被冷落</span>
+    "招行的生意模式比 90% 的 A 股公司都好，我从来没说它不好，我只是说它现在不便宜。高股息是好事，但 5% 股息率骗不了人——它分 35% 利润给你，留 65% 赚 13% 回报，净资产一年长 9%，这种循环很好，但我更愿意在它被冷落的时候重仓，不在'趋势好转'的时候追。跌进 30~33 元，我敢重仓；现在，观察。"</blockquote>
+  <blockquote class="persona"><span class="persona-name">李录视角（79/100）：值得跟踪但未真懂重仓级</span>
+    "招商银行是我想拥有中国银行业敞口时的第一选择——证据充分、管理层理性、时代红利在背后。但买入价格必须补偿我无法预测的三个变量：利率走向、零售信用周期、监管让利方向。0.91 PB 没给我足够补偿，0.75 PB（约 33 元）以下才谈得上安全边际。写在跟踪清单最上面，钱包留在口袋里。"</blockquote>
+  <h3>分歧对照表（三人在 4 个关键问题上的不同回答）</h3>
+  <table>
+    <tr><th>关键问题</th><th>巴菲特</th><th>段永平</th><th>李录</th></tr>
+    <tr><td>当前该不该买</td><td>观察：公道价，等恐慌</td><td>观察：好生意，等冷落</td><td>跟踪：0.75 PB 以下再谈</td></tr>
+    <tr><td>对利率的态度</td><td>承认无法预测，要求价格补偿</td><td>把利率当"生意外的天气"，只看生意质地和价格</td><td>视为三大不可预测变量之一，据此压价</td></tr>
+    <tr><td>动手的价格</td><td>未明说，隐含 ≤0.8 PB（约 28~30 元）</td><td>30~33 元（"敢重仓"）</td><td>约 33 元（0.75 PB）</td></tr>
+    <tr><td>对拨备调节</td><td>高度警惕（"自己批考卷"）</td><td>能看穿，但认为是暂时现象</td><td>视为"真懂"名单的实质性排除项</td></tr>
+  </table>
+  <p><b>共识点（罕见一致）：</b>① 生意质量是中国银行业最优秀之一；② 现在不是买入的价格。三人分数不合成——共识不存在于分数，存在于这两个判断上。</p>
+  <div class="redteam">
+    <h3>芒格式红队质询</h3>
+    <p><b>反演：怎样确保这笔投资亏大钱？</b>① 在"拐点叙事"最热时追高，把五年的回撤提前领走；② 把"永续经营"当"永续高 ROE"，忽略利率结构性下行；③ 拿"5% 股息率"当债券替代，遇到降息周期分红随利润下修时才发现它不是债。</p>
+    <p><b>心理误判自检：</b>用户初判"趋势有好转了"——典型的近期表现外推（recency bias）。红队要求正面回应：1Q26 的 NIM 环比 +3bp 是企稳信号还是反弹噪音？真实答案：样本只有一个季度，无法区分，这正是置信度低的原因。记录：本报告不排除"基本面确实在改善"的可能，但《道氏理论》级别的"趋势变好"不构成价值投资的买入依据。</p>
+    <p><b>最强空头逻辑：</b>利率进入长期下行通道（日本化），NIM 直奔 1.4%；零售信用成本上台阶（居民去杠杆未到半程）；监管引导"合理让利"压缩 ROE 至 8~10%。此情景下基准价值中枢约 30 元，现价仍有 -24%。这不是故事，是过去五年工行/农行走过的真实路径。</p>
+    <p><b>Pre-mortem（5 年后浮亏 40%，最可能的原因）：</b>不是资产质量爆雷（拨备 392% 兜得住），而是——买入时点太贵：在"拐点叙事"顶部接了一个均值回归中的高杠杆金融机构。亏的是估值，不是基本面。</p>
+    <p><b>红队独立出数（强制）：</b>悲观情景价值 28 元（vs 主分析 34，差距 17.6% &lt; 30% 重做线，主分析悲观情景通过检验但确认偏乐观）；红队期望含息 IRR <span class="vnum" data-src="valuation.json" data-path="red_team_scenarios.expected_irr_incl_div" data-fmt="pct1">3.6%</span>（vs 主分析 7.6%）。两组独立计算同向跑输门槛，<b>"机会成本不划算"的判定稳健，不因假设扰动翻转</b>。</p>
+    <p><b>关键判断质询：</b>"NIM 企稳"的证据链只有 1 个季度的环比 +3bp，是不够的；但单维度证据不足只能压低置信度，不足以推翻方向。<b>红队裁定：不强制降档</b>——双闸门已把档位封死在"观察等价格"，红队的意义是确认这个封顶的稳健性，并否决任何"因为公司太优秀所以放宽闸门"的提议。</p>
+  </div>
+</section>
+
+<section id="conclusion">
+  <h2>十一、结论与行动</h2>
+  <p>最终档位：<span class="tag tag-amber"><b>观察等价格</b></span></p>
+  <p>双闸门全部未过：安全边际 16.1%（要求 ≥25%，宽护城河标准）✗；期望含息 IRR 7.6%（门槛 9%）✗。三位大师无一给"买"、无一给"拒绝"——这份三"观察"在道理上自洽：<b>这是一门值得拥有的生意，但不值得在 39.43 元的价格拥有。</b></p>
+  <p><b>买入触发线与行动方案：</b></p>
+  <ul>
+    <li><b>关注/学习价</b>：现价 ~39.4 元（公允），可建仓观察仓，但明确知道期望跑不赢指数</li>
+    <li><b>合理买点</b>：≤ 35.3 元（基准价值 47 × 0.75）——对应股息率约 5.8%、PB ~0.81</li>
+    <li><b>强买点（恐慌价）</b>：≤ 30 元（接近悲观情景价值 34 元的九折）——对应巴菲特/李录的"敢买"区间</li>
+  </ul>
+  <h3>持有体验预演（必看）</h3>
+  <p>招商银行 A 股历史最大回撤 <b>-60.5%</b>（2021-10 高点 57.5 元 → 2024 低点 18.57 元，不复权口径），历时约 2 年半，至今价格仍高于前低 112% 但距前高 -31%。这是"中国最优秀的银行股"的真实波动——<b>优秀公司也会给你 -60% 的持有体验</b>。同类商业模式（A 股银行）在 2015、2018、2022 三轮系统性回调中，板块回撤区间 35%~55%。</p>
+  <p><b>灵魂拷问：</b>若 39.43 元买入后跌到 26 元（-34%）而基本面（息差、拨备、财富管理）没变，你敢不敢加仓？如果第一反应是"招行出事了"，说明你对它的理解还支持不了一笔 10 年的持有——那现在的观察期正是建立理解的时间。段永平的标准答案是："看得懂的人跌 40% 是送礼物。"</p>
+  <h3>证伪条件（出现即说明投资论点错误，挂关键变量）</h3>
+  <ul class="checklist">
+    <li>【息差】净息差连续两个季度 &lt; 1.70%（基准情景"1.8% 企稳"失效，基准价值下修至约 38 元）</li>
+    <li>【零售信用】零售贷款不良率 &gt; 1.5% 或消费信贷不良率突破 2.0%（零售风险软着陆判断失效）</li>
+    <li>【第二曲线】财富管理手续费连续两个季度负增长（大财富管理增长叙事失效）</li>
+    <li>【安全垫】拨备覆盖率跌破 300%（利润真实性与风险缓冲同时受损的信号）</li>
+    <li>【股东回报】分红率下调至 30% 以下（资本配置转向，股东实得逻辑破坏）</li>
+  </ul>
+  <h3>季度跟踪清单（每季盯 5 个数，触线即复核）</h3>
+  <table>
+    <tr><th>指标</th><th>当前值</th><th>警戒线</th><th>说明</th></tr>
+    <tr><td>净息差（单季/累计）</td><td>1.86%（1Q26）</td><td>&lt; 1.70%</td><td>关键变量①的直接验证，连续两季触线降级</td></tr>
+    <tr><td>零售贷款不良率（公司口径）</td><td>1.14%</td><td>&gt; 1.50%</td><td>关键变量②，配合关注率（警 1.8%）与不良生成率（警 1.3%）联动看</td></tr>
+    <tr><td>拨备覆盖率</td><td>391.79%（FY25）/387.76%（1Q26）</td><td>&lt; 330%</td><td>安全垫厚度，下行快于每季 8pct 需警惕</td></tr>
+    <tr><td>财富管理手续费增速</td><td>+21.4%（FY25）</td><td>&lt; 0%（连续两季）</td><td>第二曲线的唯一硬指标</td></tr>
+    <tr><td>分红率</td><td>35.34%</td><td>&lt; 30%</td><td>资本配置态度的底线承诺</td></tr>
+  </table>
+  <h3>你的初判 vs 本报告结论</h3>
+  <p><b>你的初判</b>：① "招行是中国体验最好的银行，有大量低成本资金，股息率好，基本能永续经营"；② 关注动机："趋势有好转了"。</p>
+  <p><b>本报告的评价</b>：第①条三点中两点被数据证实——"体验最好的银行"映射到负债成本与客群壁垒的定量证据是成立的（NIM/活期占比/客群规模），5.1% 股息率也是真的且可持续；"基本能永续经营"大体成立但要修正为"能永续，但 ROE 在从 16% 向 11~12% 回归，永续的是生意不是盈利水平"。<b>第②条必须直说：用"趋势好转"作为关注理由是近期表现外推，1Q26 的 +3bp 息差环比是信号不是趋势。</b>本报告与初判的核心分歧不在公司好不好（结论一致：好），在"现在这个价格该不该伸手"（我们的答案：不该）。这正是把判断程序化防止立场漂移的价值——你的公司判断对了，价格判断被纪律挡回了。</p>
+  <h3>与上次分析对比</h3>
+  <p>首次分析（招商银行_analysis 无历史 decision-log），已按协议创建 6 个月复盘提醒（2027-02-28），届时对照本报告关键变量判断与实际走势。</p>
+</section>
+
+<section id="appendix">
+  <h2>附录：数据来源与校验</h2>
+  <p class="source-note"><b>数据来源与等级</b>：A 级——结构化金融数据接口三表接口（招商银行 sh600036，2015-2025，采集时间 2026-08-28）、招商银行 2025 年度审计报告（安永标准无保留，披露易存档 filings/cmb_2025_ar.pdf）、2025 年报摘要（巨潮）、招行官网股本与分红页、行情快照（2026-08-28 收盘）；B 级——标普信评 2026-06 债券通评级报告（2021-2025 银行专属指标：NIM/不良/拨备/关注率/核心一级）、2016-2020 年专属指标的年报历史公开转引（拨备/资本充足率双重核对）、国盛/长江/太平洋证券研报（盈利预测与行业判断，<b>不借用其评级</b>）；C 级——财经媒体报道（中证网/证券时报/财联社等交叉验证）。</p>
+  <p class="source-note"><b>入口校验（Phase 1 出口关卡）</b>：validate_data.py 银行专属旁路校验——结果：通过（错误 0 / 警告 1：已启用银行专属校验提示）；竞对兴业/浦发/工行/农行按竞对豁免声明未做原文核对，指标取自各行 2025 年报/业绩快报的公开转引。</p>
+  <p class="source-note"><b>引擎回归</b>：compute_metrics 通用引擎 + reverse_dcf 期望回报引擎 + compute_metrics_bank 银行引擎全套 45 项回归测试在报告生成时点通过（含本次实证新增的银行校验负向用例）。本次实证期间发现并修复 3 个引擎/校验器真实缺陷（银行旁路缺失、ROE/BVPS 官方口径、拨备覆盖率双口径兼容），已固化进脚本与 references/data-sourcing.md（银行实证要点）。</p>
+  <p class="source-note"><b>数字校验</b>：本报告关键数字经 verify_report.py 校验——通过（vnum vchart 及 [E:] 证据指针全数命中）。</p>
+  <p class="source-note"><b>信息局限声明</b>：① 银行专属指标 2021-2025 主源为标普信评报告（B 级），与年报摘要关键数据点（2021 拨备 483.87%、2025 391.79%）双重核对一致；② 卖方一致预期仅 2~3 家，且全部看多，变异认知测试低置信度；③ "AUM 5 年 CAGR 13%+" 为公司披露口径引用，未独立复算。</p>
+  <h3>术语速查表</h3>
+  <table>
+    <tr><th>术语</th><th>白话解释</th></tr>
+    <tr><td>NIM（净息差）</td><td>银行放贷赚的钱减去存款付的利息后，每 1 元生息资产净赚几分钱。好比"进销差价率"，招行 1.87%</td></tr>
+    <tr><td>不良率 / 拨备覆盖率</td><td>不良率=放出去的贷款里变成坏账的比例；拨备覆盖率=银行为坏账准备了几倍的安全垫，392% 就是每 1 元坏账备了 3.92 元</td></tr>
+    <tr><td>ROE / ROAE（披露口径）</td><td>每 1 元股东的钱一年赚几毛利息以外的净利润，13.4% 就是 1 元净赚 1 毛 3 分 4</td></tr>
+    <tr><td>核心一级资本充足率</td><td>银行的"本钱厚度"，越高越抗风险。监管红线约 7.5%，招行 14.16% 接近两倍于红线</td></tr>
+    <tr><td>两阶段现价回归估值</td><td>把未来 5 年的分红一笔笔折算回今天，再加上 5 年后把净资产按合理市净率卖出折算回今天——就是这家银行今天该值多少钱</td></tr>
+    <tr><td>期望年化 IRR（含息）</td><td>把"涨/跌/走平的三种结局各乘概率"再算上 5.1% 股息，得出"这笔钱放这里一年期望赚几个点"</td></tr>
+    <tr><td>双闸门</td><td>这套方法论的纪律：既要看"贵不贵"（安全边际），又要看"划不划算"（期望回报比不比你放指数强），两道都过才谈得上"买"</td></tr>
+  </table>
+</section>
+
+<footer class="disclaimer">
+  本报告由分析工具生成，仅供研究参考，不构成任何投资建议。市场有风险，投资需谨慎。报告生成：value-investing-analyst skill v2.3 + 银行管道首次实证。
+</footer>
+</div>
+
+<script>
+const COLOR={primary:'#1a3a5c',accent:'#d97706',green:'#15803d',gray:'#9ca3af',red:'#b91c1c'};
+const charts=[];
+function initChart(id,option){
+  const el=document.getElementById(id);
+  if(!el||typeof echarts==='undefined')return;
+  const c=echarts.init(el);
+  c.setOption(Object.assign({textStyle:{fontFamily:'-apple-system, PingFang SC, Microsoft YaHei'},grid:{left:60,right:30,top:50,bottom:40},tooltip:{trigger:'axis'}},option));
+  charts.push(c);
+}
+window.addEventListener('resize',()=>charts.forEach(c=>c.resize()));
+if(typeof echarts==='undefined'){document.querySelectorAll('.chart').forEach(el=>{el.innerHTML='<p style="color:#b91c1c;padding:20px">图表需联网加载 ECharts 后显示</p>';});}
+
+// 图1：估值三情景 vs 现价（主分析34/47/58，红队28/38/52）
+initChart('chart-valuation-band',{
+  legend:{bottom:0},
+  xAxis:{type:'category',data:['悲观（概率30%）','基准（概率50%）','乐观（概率20%）']},
+  yAxis:{type:'value',name:'每股价值（元）',min:0,max:70},
+  grid:{left:60,right:40,top:50,bottom:40},
+  series:[
+    {name:'主分析',type:'line',symbolSize:14,lineStyle:{width:3},itemStyle:{color:COLOR.primary},label:{show:true,formatter:'{c}元'},
+     /*<!-- vchart src=valuation.json path=band -->*/
+     data:[34,47,58]},
+    {name:'红队对照',type:'line',symbolSize:12,lineStyle:{width:2,type:'dashed'},itemStyle:{color:COLOR.accent},label:{show:true,formatter:'{c}元',color:COLOR.accent},
+     /*<!-- vchart src=valuation.json path=red_band -->*/
+     data:[28,38,52]},
+    {name:'现价 39.43',type:'line',markLine:{symbol:'none',lineStyle:{color:COLOR.red,width:2},label:{formatter:'现价 39.43 元',position:'end'},data:[{yAxis:39.43}]},data:[]}
+  ]
+});
+
+// 图2：ROE 与 NIM 十年趋势
+const years=[2016,2017,2018,2019,2020,2021,2022,2023,2024,2025];
+initChart('chart-roe-trend',{
+  legend:{bottom:0},
+  xAxis:{type:'category',data:years},
+  yAxis:[{type:'value',name:'%',min:0,max:20}],
+  series:[
+    {name:'ROE（披露口径）',type:'bar',barWidth:38,itemStyle:{color:COLOR.primary},
+     /*<!-- vchart src=metrics_CMB_bank.json path=chart_series.roe scale=100 -->*/
+     data:[16.27,16.54,16.57,16.84,15.73,16.96,17.06,16.22,14.49,13.44]},
+    {name:'净息差 NIM',type:'line',smooth:true,itemStyle:{color:COLOR.accent},
+     /*<!-- vchart src=metrics_CMB_bank.json path=chart_series.nim scale=100 -->*/
+     data:[2.50,2.43,2.57,2.59,2.49,2.48,2.40,2.15,1.98,1.87]}
+  ]
+});
+
+// 图3：同业 ROE 对比
+initChart('chart-peer-roe',{
+  legend:{bottom:0},
+  xAxis:{type:'category',data:['招商银行','兴业银行','工商银行','农业银行','浦发银行']},
+  yAxis:{type:'value',name:'ROE %',min:0,max:18},
+  series:[
+    {name:'十年/五年均值',type:'bar',barWidth:26,itemStyle:{color:COLOR.primary},
+     /*<!-- vchart src=peer_table.json path=chart.roe_avg -->*/
+     data:[16.0,10.3,10.0,9.7,7.0]},
+    {name:'近3年均值',type:'bar',barWidth:26,itemStyle:{color:COLOR.accent},
+     /*<!-- vchart src=peer_table.json path=chart.roe3 -->*/
+     data:[14.7,9.1,9.4,9.5,5.9]}
+  ]
+});
+
+// 图4：不良率 × 拨备覆盖率
+initChart('chart-asset-quality',{
+  legend:{bottom:0},
+  xAxis:{type:'category',data:years},
+  yAxis:[{type:'value',name:'不良率 %',max:2.5},{type:'value',name:'拨备 %',max:520}],
+  series:[
+    {name:'不良贷款率（左）',type:'line',smooth:true,itemStyle:{color:COLOR.red},areaStyle:{opacity:.12},
+     /*<!-- vchart src=metrics_CMB_bank.json path=chart_series.npl_ratio scale=100 -->*/
+     data:[1.87,1.61,1.36,1.16,1.07,0.91,0.96,0.95,0.95,0.94]},
+    {name:'拨备覆盖率（右）',type:'bar',yAxisIndex:1,barWidth:30,itemStyle:{color:'#60a5fa'},
+     /*<!-- vchart src=metrics_CMB_bank.json path=chart_series.provision_coverage scale=100 -->*/
+     data:[180.02,262.11,358.18,426.78,437.68,483.87,450.79,437.70,411.98,391.79]}
+  ]
+});
+
+// 图5：收入结构
+initChart('chart-revenue-structure',{
+  legend:{bottom:0},
+  tooltip:{trigger:'item'},
+  series:[{
+    type:'pie',radius:['35%','65%'],
+    label:{formatter:'{b}\n{d}%'},
+    data:[
+      {value:63,name:'净利息收入（息差基本盘）',itemStyle:{color:COLOR.primary}},
+      {value:22,name:'手续费及佣金（财富管理/资管/托管）',itemStyle:{color:COLOR.accent}},
+      {value:14,name:'其他非息（投资收益/汇兑等）',itemStyle:{color:'#60a5fa'}},
+      {value:1,name:'其他',itemStyle:{color:'#d1d5db'}}
+    ]
+  }]
+});
+</script>
+</body>
+</html>
