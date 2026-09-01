@@ -1,0 +1,71 @@
+#!/bin/bash
+# value-investing-analyst pre-commit 闸门
+# 由 scripts/install-hooks.sh 安装。纪律不靠记性 —— SKILL.md 要求的自动化闸。
+# 绕过（仅限紧急）：git commit --no-verify
+
+set -u
+REPO_ROOT="$(git rev-parse --show-toplevel)"
+FAIL=0
+
+echo "── pre-commit 闸门 ──"
+
+# 闸 1：测试套件必须全绿
+if [ -f "$REPO_ROOT/tests/run_tests.py" ]; then
+  echo "▶ 运行测试套件…"
+  if OUT=$(cd "$REPO_ROOT" && python3 tests/run_tests.py 2>&1); then
+    echo "  ✓ 测试全部通过"
+  else
+    echo "  ✗ 测试失败，提交已中断："
+    echo "$OUT" | grep -E "\[FAIL\]|结果：" | head -20
+    FAIL=1
+  fi
+else
+  echo "  ! 未找到 tests/run_tests.py，跳过"
+fi
+
+# 闸 2：提交信息乱码/噪声检测（历史 61666b1 曾混入"叔叔""香肠"等生成噪声，
+#        且本仓库以公开身份 gglinux 对外发布，提交信息属对外内容）
+MSG_FILE="$REPO_ROOT/.git/COMMIT_EDITMSG"
+if [ -f "$MSG_FILE" ]; then
+  NOISE=$(grep -oE "叔叔|香肠|art commit|lorem ipsum|TODO牛|▌|�" "$MSG_FILE" 2>/dev/null | sort -u)
+  if [ -n "$NOISE" ]; then
+    echo "  ✗ 提交信息含疑似乱码/噪声：$(echo "$NOISE" | tr '\n' ' ')"
+    echo "    公开仓库的提交信息属对外内容，请重写。"
+    FAIL=1
+  fi
+fi
+
+# 闸 3：暂存区隐私与临时文件扫描（公开仓库：持仓/加仓价位/个人标识不得入库）
+STAGED=$(git diff --cached --name-only --diff-filter=ACM)
+if [ -n "$STAGED" ]; then
+  # 3a. 临时审查脚本不应入库
+  TMPF=$(echo "$STAGED" | grep -E "^audit_.*\.py$|^tmp_|\.DS_Store$" || true)
+  if [ -n "$TMPF" ]; then
+    echo "  ✗ 临时/调试文件进入暂存区：$(echo "$TMPF" | tr '\n' ' ')"
+    FAIL=1
+  fi
+  # 3b. 个人与内部标识（对外发布规范）
+  #     注意：跳过钩子自身与规则说明文档 —— 它们必须"提到"这些模式才能定义规则，
+  #     把"规则定义"当成"违规内容"是自指假阳性（本钩子首次提交即踩到）。
+  for f in $STAGED; do
+    [ -f "$REPO_ROOT/$f" ] || continue
+    case "$f" in
+      .git/*|*.png|*.jpg|*.pdf) continue ;;
+      scripts/hooks/*|scripts/install-hooks.sh) continue ;;
+      SKILL.md|README.md) continue ;;
+    esac
+    HIT=$(grep -nEo "/Users/[a-zA-Z0-9_.-]+|@tencent\.com|持仓成本|我的持仓|加仓价位" \
+          "$REPO_ROOT/$f" 2>/dev/null | head -3 || true)
+    if [ -n "$HIT" ]; then
+      echo "  ✗ $f 含个人/内部/持仓标识：$(echo "$HIT" | tr '\n' ' ')"
+      FAIL=1
+    fi
+  done
+fi
+
+if [ "$FAIL" -ne 0 ]; then
+  echo "── 提交被拦截（如确需绕过：git commit --no-verify）──"
+  exit 1
+fi
+echo "── 全部闸门通过 ──"
+exit 0

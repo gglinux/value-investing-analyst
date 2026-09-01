@@ -1,0 +1,74 @@
+{
+  "price": 26.86,
+  "hold_years": 5,
+  "discount_rate": 0.1,
+  "dividend_yield": 0.0514,
+  "dividend_share_of_return": 0.514,
+  "scenarios": [
+    {
+      "name": "悲观",
+      "probability": 0.3,
+      "value_per_share": 19.53,
+      "value_per_share_terminal": 31.453260300000014,
+      "value_is_non_positive": false,
+      "total_return": 0.17100745718540633,
+      "annualized_irr": 0.03207660149855074
+    },
+    {
+      "name": "基准",
+      "probability": 0.45,
+      "value_per_share": 22.71,
+      "value_per_share_terminal": 36.57468210000001,
+      "value_is_non_positive": false,
+      "total_return": 0.36167841027550307,
+      "annualized_irr": 0.06368959337739688
+    },
+    {
+      "name": "乐观",
+      "probability": 0.25,
+      "value_per_share": 26.27,
+      "value_per_share_terminal": 42.30809770000001,
+      "value_is_non_positive": false,
+      "total_return": 0.5751339426656743,
+      "annualized_irr": 0.09512450754474466
+    }
+  ],
+  "expected_value_per_share": 22.645999999999997,
+  "expected_value_per_share_terminal": 36.47160946000001,
+  "expected_total_return": 0.35784100744601677,
+  "expected_annualized_irr": 0.06206442435557999,
+  "expected_annualized_irr_basis": "probability_weighted_of_per_scenario_irr",
+  "expected_total_return_basis": "on_expected_value_do_not_annualize_for_gate2",
+  "gate2_decision_field": "expected_annualized_irr",
+  "jensen_gap_vs_annualized_total": 0.0010249664390854785,
+  "expected_annualized_irr_incl_div": 0.06206442435557999,
+  "pessimistic_irr": 0.03207660149855074,
+  "pessimistic_value_per_share": 19.53,
+  "pessimistic_equity_wiped_out": false,
+  "has_non_positive_scenario": false,
+  "loss_probability": 0.0,
+  "expected_downside_given_loss": null,
+  "probability_weighted_downside": 0.0,
+  "index_hurdle": 0.13,
+  "beats_index": false,
+  "excess_vs_index": -0.06793557564442002,
+  "hurdle_above_discount_rate": true,
+  "note": "IRR=(1+r)×(V0/P)^(1/H)−1：内在价值随时间以折现率增值，已隐含分红+留存增值全部股东回报，股息不再叠加（叠加即重复计算）；折现率 r=10.0% 是 IRR 的下限（P=V0 时 IRR=r），门槛须设在 r 之上才构成有效约束；下行指标（悲观 IRR/亏损概率/亏损跌幅）不可由安全边际单调推出，是闸门二独立信息来源",
+  "v210_rerun_meta": {
+    "label": "伊利股份 600887",
+    "purpose": "补齐勘误表可追溯性（闸门结论未翻转，故不更新现价、不重做决策）",
+    "engine_version": "v2.10",
+    "formula": "IRR=(1+r)*(V0/P)^(1/H)-1",
+    "price_basis": "沿用存档 expected_return.json 现价（未更新）",
+    "current_price": 26.86,
+    "gate_check": {
+      "gate1_mos": -0.18273888154997797,
+      "gate1_pass": false,
+      "gate2_exp_irr": 0.06206442435557999,
+      "gate2_hurdle": 0.13,
+      "gate2_pass": false,
+      "pess_irr": 0.03207660149855074,
+      "downside_pass": true
+    }
+  }
+}

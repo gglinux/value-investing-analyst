@@ -1,0 +1,74 @@
+{
+  "price": 145.7,
+  "hold_years": 5,
+  "discount_rate": 0.1,
+  "dividend_yield": 0.0173,
+  "dividend_share_of_return": 0.173,
+  "scenarios": [
+    {
+      "name": "悲观",
+      "probability": 0.35,
+      "value_per_share": 72.09,
+      "value_per_share_terminal": 116.10166590000004,
+      "value_is_non_positive": false,
+      "total_return": -0.2031457385037745,
+      "annualized_irr": -0.044400794697773915
+    },
+    {
+      "name": "基准",
+      "probability": 0.45,
+      "value_per_share": 87.93,
+      "value_per_share_terminal": 141.61214430000007,
+      "value_is_non_positive": false,
+      "total_return": -0.028056662319834724,
+      "annualized_irr": -0.005675387948186561
+    },
+    {
+      "name": "乐观",
+      "probability": 0.2,
+      "value_per_share": 106.92,
+      "value_per_share_terminal": 172.19572920000007,
+      "value_is_non_positive": false,
+      "total_return": 0.1818512642415928,
+      "annualized_irr": 0.03398101524357422
+    }
+  ],
+  "expected_value_per_share": 86.18400000000001,
+  "expected_value_per_share_terminal": 138.80019384000008,
+  "expected_total_return": -0.04735625367192797,
+  "expected_annualized_irr": -0.011297999672189977,
+  "expected_annualized_irr_basis": "probability_weighted_of_per_scenario_irr",
+  "expected_total_return_basis": "on_expected_value_do_not_annualize_for_gate2",
+  "gate2_decision_field": "expected_annualized_irr",
+  "jensen_gap_vs_annualized_total": 0.0016420667619247466,
+  "expected_annualized_irr_incl_div": -0.011297999672189977,
+  "pessimistic_irr": -0.044400794697773915,
+  "pessimistic_value_per_share": 72.09,
+  "pessimistic_equity_wiped_out": false,
+  "has_non_positive_scenario": false,
+  "loss_probability": 0.8,
+  "expected_downside_given_loss": -0.10465813315030835,
+  "probability_weighted_downside": -0.08372650652024669,
+  "index_hurdle": 0.13,
+  "beats_index": false,
+  "excess_vs_index": -0.14129799967218998,
+  "hurdle_above_discount_rate": true,
+  "note": "IRR=(1+r)×(V0/P)^(1/H)−1：内在价值随时间以折现率增值，已隐含分红+留存增值全部股东回报，股息不再叠加（叠加即重复计算）；折现率 r=10.0% 是 IRR 的下限（P=V0 时 IRR=r），门槛须设在 r 之上才构成有效约束；下行指标（悲观 IRR/亏损概率/亏损跌幅）不可由安全边际单调推出，是闸门二独立信息来源",
+  "v210_rerun_meta": {
+    "label": "泡泡玛特 09992",
+    "purpose": "补齐勘误表可追溯性（闸门结论未翻转，故不更新现价、不重做决策）",
+    "engine_version": "v2.10",
+    "formula": "IRR=(1+r)*(V0/P)^(1/H)-1",
+    "price_basis": "沿用存档 expected_return.json 现价（未更新）",
+    "current_price": 145.7,
+    "gate_check": {
+      "gate1_mos": -0.6569998862731716,
+      "gate1_pass": false,
+      "gate2_exp_irr": -0.011297999672189977,
+      "gate2_hurdle": 0.13,
+      "gate2_pass": false,
+      "pess_irr": -0.044400794697773915,
+      "downside_pass": false
+    }
+  }
+}
