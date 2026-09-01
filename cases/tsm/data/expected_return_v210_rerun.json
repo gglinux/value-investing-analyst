@@ -1,0 +1,74 @@
+{
+  "price": 417.52,
+  "hold_years": 5,
+  "discount_rate": 0.1,
+  "dividend_yield": 0.008,
+  "dividend_share_of_return": 0.08,
+  "scenarios": [
+    {
+      "name": "悲观",
+      "probability": 0.3,
+      "value_per_share": 261.4,
+      "value_per_share_terminal": 420.9873140000001,
+      "value_is_non_positive": false,
+      "total_return": 0.0083045458900175,
+      "annualized_irr": 0.0016554192714974825
+    },
+    {
+      "name": "基准",
+      "probability": 0.5,
+      "value_per_share": 343.2,
+      "value_per_share_terminal": 552.7270320000001,
+      "value_is_non_positive": false,
+      "total_return": 0.3238336654531524,
+      "annualized_irr": 0.05771017989129512
+    },
+    {
+      "name": "乐观",
+      "probability": 0.2,
+      "value_per_share": 415.5,
+      "value_per_share_terminal": 669.1669050000003,
+      "value_is_non_positive": false,
+      "total_return": 0.6027182051159232,
+      "annualized_irr": 0.09893355402338178
+    }
+  ],
+  "expected_value_per_share": 333.12,
+  "expected_value_per_share_terminal": 536.4930912000002,
+  "expected_total_return": 0.2849518375167661,
+  "expected_annualized_irr": 0.049138426531773166,
+  "expected_annualized_irr_basis": "probability_weighted_of_per_scenario_irr",
+  "expected_total_return_basis": "on_expected_value_do_not_annualize_for_gate2",
+  "gate2_decision_field": "expected_annualized_irr",
+  "jensen_gap_vs_annualized_total": 0.0022843239279643768,
+  "expected_annualized_irr_incl_div": 0.049138426531773166,
+  "pessimistic_irr": 0.0016554192714974825,
+  "pessimistic_value_per_share": 261.4,
+  "pessimistic_equity_wiped_out": false,
+  "has_non_positive_scenario": false,
+  "loss_probability": 0.0,
+  "expected_downside_given_loss": null,
+  "probability_weighted_downside": 0.0,
+  "index_hurdle": 0.13,
+  "beats_index": false,
+  "excess_vs_index": -0.08086157346822684,
+  "hurdle_above_discount_rate": true,
+  "note": "IRR=(1+r)×(V0/P)^(1/H)−1：内在价值随时间以折现率增值，已隐含分红+留存增值全部股东回报，股息不再叠加（叠加即重复计算）；折现率 r=10.0% 是 IRR 的下限（P=V0 时 IRR=r），门槛须设在 r 之上才构成有效约束；下行指标（悲观 IRR/亏损概率/亏损跌幅）不可由安全边际单调推出，是闸门二独立信息来源",
+  "v210_rerun_meta": {
+    "label": "台积电 TSM",
+    "purpose": "补齐勘误表可追溯性（闸门结论未翻转，故不更新现价、不重做决策）",
+    "engine_version": "v2.10",
+    "formula": "IRR=(1+r)*(V0/P)^(1/H)-1",
+    "price_basis": "沿用存档 expected_return.json 现价（未更新）",
+    "current_price": 417.52,
+    "gate_check": {
+      "gate1_mos": -0.21655011655011647,
+      "gate1_pass": false,
+      "gate2_exp_irr": 0.049138426531773166,
+      "gate2_hurdle": 0.13,
+      "gate2_pass": false,
+      "pess_irr": 0.0016554192714974825,
+      "downside_pass": true
+    }
+  }
+}

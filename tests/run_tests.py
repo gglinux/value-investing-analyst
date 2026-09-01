@@ -532,6 +532,97 @@ with tempfile.TemporaryDirectory() as td:
     check("概念切换年份逐年回退（2025 由 Revenues 补位）", ok,
           (r.stderr or r.stdout)[-200:])
 
+print("== 9.7 引擎边界护栏（v2.10：hold_years/非正价值/负估值/口径标记） ==")
+import reverse_dcf as rdx  # noqa: E402
+
+# --- A. hold_years 边界校验（旧版：0 抛未捕获 ZeroDivisionError、-1 静默出错数）---
+for bad_hy in [0, -1, 2.5]:
+    raised = False
+    try:
+        rdx.expected_return(100, [{"name": "基准", "value_per_share": 150.0,
+                                   "probability": 1.0}], bad_hy)
+    except SystemExit:
+        raised = True
+    except ZeroDivisionError:
+        raised = False
+    check(f"hold_years={bad_hy} 被显式拦截", raised)
+check("hold_years=1 合法", isinstance(
+    rdx.expected_return(100, [{"name": "基准", "value_per_share": 150.0,
+                               "probability": 1.0}], 1)["expected_annualized_irr"], float))
+
+# --- B. 非正内在价值：irr 与 total_return 口径必须一致（旧版 -1.0 vs -1.16 矛盾）---
+rneg = rdx.expected_return(100, [
+    {"name": "悲观", "value_per_share": -10.0, "probability": 0.3},
+    {"name": "基准", "value_per_share": 150.0, "probability": 0.5},
+    {"name": "乐观", "value_per_share": 200.0, "probability": 0.2}], 5)
+s_neg = rneg["scenarios"][0]
+check("负价值情景 irr = -100%", abs(s_neg["annualized_irr"] + 1.0) < 1e-12)
+check("负价值情景 total_return 同为 -100%（口径一致，不再 <-100%）",
+      abs(s_neg["total_return"] + 1.0) < 1e-12, str(s_neg["total_return"]))
+check("负价值情景 V_H 归零", abs(s_neg["value_per_share_terminal"]) < 1e-12)
+check("负价值情景打标 value_is_non_positive", s_neg["value_is_non_positive"] is True)
+check("穿透标志 pessimistic_equity_wiped_out",
+      rneg["pessimistic_equity_wiped_out"] is True)
+check("保留悲观原始价值供区分归零/穿透",
+      abs(rneg["pessimistic_value_per_share"] + 10.0) < 1e-12)
+check("has_non_positive_scenario 置位", rneg["has_non_positive_scenario"] is True)
+rpos = rdx.expected_return(100, [{"name": "悲观", "value_per_share": 80.0,
+                                  "probability": 0.3},
+                                 {"name": "基准", "value_per_share": 150.0,
+                                  "probability": 0.5},
+                                 {"name": "乐观", "value_per_share": 200.0,
+                                  "probability": 0.2}], 5)
+check("全正情景不误报穿透",
+      rpos["pessimistic_equity_wiped_out"] is False
+      and rpos["has_non_positive_scenario"] is False)
+
+# --- C. 口径标记与 Jensen 间隙（防下游拿 total_return 年化当闸门二）---
+check("gate2 判定字段被显式指定",
+      rpos["gate2_decision_field"] == "expected_annualized_irr")
+check("两个回报字段均带 _basis 标记",
+      "expected_annualized_irr_basis" in rpos and "expected_total_return_basis" in rpos)
+gap_expected = ((1 + rpos["expected_total_return"]) ** (1 / 5) - 1) \
+    - rpos["expected_annualized_irr"]
+check("jensen_gap 计算正确且为正（凹性）",
+      abs(rpos["jensen_gap_vs_annualized_total"] - gap_expected) < 1e-12
+      and rpos["jensen_gap_vs_annualized_total"] > 0,
+      str(rpos["jensen_gap_vs_annualized_total"]))
+check("闸门二仍以主 IRR 字段比门槛",
+      rpos["beats_index"] == (rpos["expected_annualized_irr"] > rpos["index_hurdle"]))
+
+# --- D. implied-growth 三态区分（旧版负市值与超区间同为一句"无解"+exit 0）---
+g_ok, st_ok = rdx.solve_implied_growth(30000, 2000, 0.10, 0.025, 10)
+check("正常市值 status=ok", st_ok == "ok" and g_ok is not None)
+g_neg, st_neg = rdx.solve_implied_growth(-5000, 2000, 0.10, 0.025, 10)
+check("负经营市值 status=negative_operating_value",
+      st_neg == "negative_operating_value" and g_neg is None)
+g_zero, st_zero = rdx.solve_implied_growth(0, 2000, 0.10, 0.025, 10)
+check("零经营市值同归负估值分支", st_zero == "negative_operating_value")
+g_oor, st_oor = rdx.solve_implied_growth(1e12, 2000, 0.10, 0.025, 10)
+check("超增速区间 status=out_of_range",
+      st_oor == "out_of_range" and g_oor is None)
+pneg = run(["implied-growth", "--market-cap", "10000", "--base-oe", "2000",
+            "--deduct", "15000"])
+check("CLI 负估值以非零退出码中断（不再静默 exit 0）", pneg.returncode == 2,
+      f"rc={pneg.returncode}")
+check("CLI 负估值输出重大信号提示", "重大信号" in pneg.stdout)
+poor = run(["implied-growth", "--market-cap", "1000000000", "--base-oe", "1"])
+check("CLI 超区间仍为 exit 0（性质不同）", poor.returncode == 0)
+
+# --- E. 回归：P=V0 铁律与已归档 4 案例数字不受本次改动影响 ---
+riron = rdx.expected_return(100, [{"name": "基准", "value_per_share": 100.0,
+                                   "probability": 1.0}], 5, discount_rate=0.10)
+check("回归：P=V0 时 IRR 恒等于折现率",
+      abs(riron["expected_annualized_irr"] - 0.10) < 1e-9)
+_ARCHIVED = {"招行": (40.53, [(34.0, 0.3), (47.0, 0.5), (58.0, 0.2)], 0.121490),
+             "平安": (56.81, [(41.54, 0.3), (66.68, 0.5), (88.90, 0.2)], 0.118491)}
+for nm, (pr, sc_, expect) in _ARCHIVED.items():
+    rr = rdx.expected_return(pr, [{"name": str(i), "value_per_share": v,
+                                   "probability": p} for i, (v, p) in enumerate(sc_)], 5)
+    check(f"回归：{nm} 期望 IRR 与归档一致",
+          abs(rr["expected_annualized_irr"] - expect) < 1e-5,
+          f"{rr['expected_annualized_irr']:.6f} vs {expect}")
+
 print()
 if FAILED:
     print(f"结果：{len(FAILED)} 项失败 → {FAILED}")
