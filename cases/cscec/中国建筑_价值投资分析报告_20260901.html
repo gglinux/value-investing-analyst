@@ -1,0 +1,574 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>中国建筑 价值投资分析报告</title>
+<script src="https://cdn.jsdelivr.net/npm/echarts@5/dist/echarts.min.js"></script>
+<style>
+  :root { --primary:#1a3a5c; --accent:#d97706; --bg:#f7f8fa; --card:#fff; --text:#24292f; --muted:#6b7280; --green:#15803d; --red:#b91c1c; --border:#e5e7eb; }
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{font-family:-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;background:var(--bg);color:var(--text);line-height:1.75;font-size:15px}
+  .container{max-width:1080px;margin:0 auto;padding:24px 20px 80px}
+  header.report-header{background:var(--primary);color:#fff;border-radius:12px;padding:40px 36px;margin-bottom:28px}
+  header.report-header h1{font-size:26px;font-weight:700}
+  header.report-header .meta{margin-top:8px;opacity:.75;font-size:13px}
+  .verdict-banner{display:flex;align-items:center;gap:24px;margin-top:24px;background:rgba(255,255,255,.08);border-radius:10px;padding:20px 24px}
+  .verdict-label{font-size:32px;font-weight:800;letter-spacing:1px}
+  .verdict-watch{color:#fbbf24}
+  .verdict-reject{color:#f87171}
+  .verdict-score{font-size:14px;opacity:.92}
+  .snapshot-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:10px;margin-top:16px}
+  .snapshot-item{background:rgba(255,255,255,.08);border-radius:8px;padding:10px 14px}
+  .snapshot-item .k{font-size:12px;opacity:.65}
+  .snapshot-item .v{font-size:17px;font-weight:700;margin-top:2px}
+  .snapshot-time{font-size:11px;opacity:.55;margin-top:8px}
+  section{background:var(--card);border-radius:12px;padding:32px 36px;margin-bottom:24px;border:1px solid var(--border)}
+  h2{font-size:20px;color:var(--primary);padding-bottom:10px;margin-bottom:18px;border-bottom:3px solid var(--accent);display:inline-block}
+  h3{font-size:16px;color:var(--primary);margin:22px 0 10px}
+  p{margin-bottom:12px}
+  .chart{width:100%;height:400px;margin:12px 0 4px}
+  .chart-note{font-size:12px;color:var(--muted);margin-bottom:16px}
+  .insight-title{font-size:15px;font-weight:700;color:var(--text);margin:20px 0 4px}
+  table{width:100%;border-collapse:collapse;margin:14px 0;font-size:14px}
+  th{background:var(--primary);color:#fff;padding:10px 12px;text-align:left;font-weight:600}
+  td{padding:9px 12px;border-bottom:1px solid var(--border)}
+  tr:nth-child(even) td{background:#fafbfc}
+  .tag{display:inline-block;padding:2px 10px;border-radius:20px;font-size:12px;font-weight:600}
+  .tag-green{background:#dcfce7;color:var(--green)}
+  .tag-amber{background:#fef3c7;color:#b45309}
+  .tag-red{background:#fee2e2;color:var(--red)}
+  .points-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:16px 0}
+  .point-card{border-radius:10px;padding:16px 18px;border:1px solid var(--border)}
+  .point-card.bull{border-left:4px solid var(--green)}
+  .point-card.bear{border-left:4px solid var(--red)}
+  .point-card h4{font-size:14px;margin-bottom:8px}
+  .point-card ul{padding-left:18px;font-size:14px}
+  .point-card li{margin-bottom:6px}
+  blockquote.persona{border-left:4px solid var(--accent);background:#fffbf5;padding:16px 20px;margin:14px 0;border-radius:0 8px 8px 0;font-size:14px}
+  blockquote.persona .persona-name{font-weight:700;color:var(--primary);display:block;margin-bottom:6px}
+  .redteam{background:#1f2937;color:#e5e7eb;border-radius:10px;padding:24px 28px;margin:16px 0}
+  .redteam h3{color:#fbbf24;margin-top:0}
+  .redteam ul,.redteam ol{padding-left:20px}
+  .redteam li{margin-bottom:8px}
+  .checklist li{margin-bottom:8px}
+  footer.disclaimer{font-size:12px;color:var(--muted);text-align:center;margin-top:40px;padding-top:20px;border-top:1px solid var(--border)}
+  .source-note{font-size:12px;color:var(--muted)}
+  .decision-card{background:#fff;border:2px solid var(--accent);border-radius:12px;padding:20px 24px;margin:18px 0}
+  .decision-card h3{margin-top:0}
+  .vnum{font-variant-numeric:tabular-nums;font-weight:600}
+  @media print{section{break-inside:avoid}.chart{height:360px}}
+</style>
+</head>
+<body>
+<div class="container">
+
+<header class="report-header">
+  <h1>中国建筑（601668.SH）价值投资分析报告</h1>
+  <div class="meta">报告日期：2026-09-01 ｜ 数据截止：财报 2025 年报 + 2026 中报｜行情 2026-09-01 ｜ 分析工具：value-investing-analyst</div>
+  <div class="verdict-banner">
+    <div class="verdict-label verdict-watch">观察·等价格</div>
+    <div class="verdict-score">
+      <b>双闸门</b>：安全边际 26% <b>未达标</b>（多锚加权 5.91 元，窄护城河门槛 ≥40%）✗｜期望年化 IRR <span class="vnum" data-src="expected_return.json" data-path="expected_annualized_irr" data-fmt="pct1">19.0%</span> 跑赢门槛 13%（折现率10%+3pct）✓<br>
+      下行三数：悲观 IRR <span class="vnum" data-src="expected_return.json" data-path="pessimistic_irr" data-fmt="pct1">7.1%</span>｜亏损概率 <span class="vnum" data-src="expected_return.json" data-path="loss_probability" data-fmt="pct1">0%</span>｜亏损情景平均跌幅 不适用<br>
+      三位大师：巴菲特【拒绝】｜段永平【观察仓封顶】｜李录【值得跟踪但未懂】<br>
+      内在价值区间：<span class="vnum" data-src="scenario_pess.json" data-path="value_per_share" data-fmt="num2">3.81</span> ~ <span class="vnum" data-src="scenario_opt.json" data-path="value_per_share" data-fmt="num2">9.47</span> 元（基准 <span class="vnum" data-src="scenario_base.json" data-path="value_per_share" data-fmt="num2">7.42</span> 元，多锚加权中枢 5.91 元）
+    </div>
+  </div>
+  <div class="snapshot-grid">
+    <div class="snapshot-item"><div class="k">现价</div><div class="v"><span class="vnum" data-src="market_snapshot.json" data-path="price" data-fmt="num2">4.35</span> 元</div></div>
+    <div class="snapshot-item"><div class="k">总市值</div><div class="v"><span class="vnum" data-src="market_snapshot.json" data-path="market_cap_亿元" data-fmt="num0">1,797</span> 亿</div></div>
+    <div class="snapshot-item"><div class="k">PE-TTM</div><div class="v"><span class="vnum" data-src="market_snapshot.json" data-path="pe_ttm" data-fmt="num1">5.7</span></div></div>
+    <div class="snapshot-item"><div class="k">PB</div><div class="v"><span class="vnum" data-src="market_snapshot.json" data-path="pb_ratio" data-fmt="num2">0.36</span></div></div>
+    <div class="snapshot-item"><div class="k">股息率TTM</div><div class="v"><span class="vnum" data-src="market_snapshot.json" data-path="dividend_yield_ttm" data-fmt="pct1">6.25%</span></div></div>
+    <div class="snapshot-item"><div class="k">52周位置</div><div class="v">下限18%</div></div>
+    <div class="snapshot-item"><div class="k">YTD涨跌</div><div class="v">-10.5%</div></div>
+    <div class="snapshot-item"><div class="k">日成交额</div><div class="v">≈8亿</div></div>
+  </div>
+  <div class="snapshot-time">行情快照时间：2026-09-01（来源等级 A，结构化金融数据接口 结构化行情）</div>
+</header>
+
+<section id="summary">
+  <h2>一、投资摘要</h2>
+  <div class="decision-card">
+    <h3>决策卡（只看这张）</h3>
+    <p><b>结论档位：观察·等价格</b>（五档制：排除／太难放弃／观察等价格／小仓位试探／核心买入。因闸门一未过，档位上限即"观察"）</p>
+    <p><b>关键变量：</b>① 应收+合同资产减值率是否见顶（当前：未见顶，2025 信用减值 <span class="vnum" data-src="financials_CSCEC.json" data-path="annual.9.net_income_deducted" data-fmt="raw">31934</span>百万 vs 归母 39069 百万的缺口持续扩大）② 分红能否不依赖融资（当前：分红 112 亿 &gt; 自由现金 ≈65 亿）③ 数据中心/新基建订单占比（当前：26H1 数据中心新签 +328%，但占比还小）</p>
+    <p><b>证伪条件：</b>① 分红率/DPS 下调 → 6.25% 股息锚断裂，悲观情景启动；② 连续两季应收+合同资产/年化收入继续升 &gt;50% 且信用减值加速 → 基准情景失效。</p>
+    <p><b>下次复查：</b>2026-10 三季报（减值与新签结构）／触发价 ≤3.5 元（DDM 锚下沿确认的安全边际位）或 ≥6.0 元（红利修复兑现后退出观察）。</p>
+  </div>
+  <p><b>一句话生意：</b>全球最大建筑承包商——政府与业主把工程交给它垫资施工：名义上干 100 元赚 1.9 元净利，实际上约 48 元要被客户白白占住不给现钱，<b>会计利润是真的，自由现金流是借的</b>。</p>
+  <div class="points-grid">
+    <div class="point-card bull">
+      <h4>三大投资论点</h4>
+      <ul>
+        <li><b>市场定价了崩塌，而它有地板</b>：反向 DCF 显示现价隐含 -12%/年 盈利衰减 10 年 <span class="vnum" data-src="scenario_base.json" data-path="value_per_share" data-fmt="num2">7.42</span>元基准 vs 现价 4.35 元——央企信用（发债利率 3%）+ 连续 10 年分红 + 集团增持构成"不归零"的下限论证 [E:financials_CSCEC.json]</li>
+        <li><b>同族里浮得最高的溺水者</b>：净利率/ROIC 领先中铁/铁建/交建，股息率 6.25% 为四者最高；行业同病，它是族内质量最优 [E:metrics_CSCEC.json]</li>
+        <li><b>新基建订单是真的</b>：26H1 数据中心新签 +328%、工业厂房 +24%、海外收入 +27%——衰退总量的结构缓冲垫 [E:raw_reports.md]</li>
+      </ul>
+    </div>
+    <div class="point-card bear">
+      <h4>三大核心风险</h4>
+      <ul>
+        <li><b>减值未见顶</b>：2025 信用减值 186.6 亿（应收坏账占 82%），应收+合同资产 10,083 亿（占收入 48.4%）仍在 +30%/年 扩张 [E:financials_CSCEC.json]</li>
+        <li><b>分红靠借债</b>：OCF 205 亿 − 维持性 capex ≈140 亿 = 65 亿自由现金 &lt; 分红 112 亿——股息锚本身是第一风险源</li>
+        <li><b>ROIC &lt; WACC 的毁灭式增长</b>：ROIC 13.7%→5.14%，十年 FCF 九负，增长本身不创造价值 [E:metrics_CSCEC.json]</li>
+      </ul>
+    </div>
+  </div>
+  <p class="source-note"><b>信息局限声明：</b>① 卖方一致预期仅一家券商（B 级，单源），变异认知置信度降一档；② 折旧摊销 2022-2025 为 B 级 Yahoo 序列、2016-2017 为 B 级研报序列（2018-2021 有年报原文 A 级）；③ capex 2016-2023 为 B 级双源一致、2024-25 为 A 级原文；④ 估值基期的核心脆弱点在"OE 修复至十年均值 300 亿"未经证实——这是本报告与普通投资者、机构投资者共同面对的信息劣势，不掩饰。</p>
+  <div class="insight-title">三位大师独立判断对照（各自从原始证据独立推导，不合成分数）</div>
+  <div id="chart-radar-summary" class="chart" style="height:340px"></div>
+  <div class="chart-note">五维归一化（0-5）；三份评估差异即认知地图——详见第十章分歧对照表。</div>
+  <div class="insight-title">估值区间 vs 现价</div>
+  <div id="chart-valuation-band" class="chart" style="height:230px"></div>
+  <div class="chart-note">蓝色 = 三情景区间，橙线 = 现价 4.35 元，虚线 = 多锚加权中枢 5.91 元；灰色横带 = DDM 锚（3.3-4.4 元）。</div>
+</section>
+
+<section id="business">
+  <h2>二、公司与生意</h2>
+  <p>中国建筑股份有限公司（601668.SH）是全球最大的建筑承包商：房屋建筑工程（60.4%）+ 基础设施建设与投资（25.2%）+ 房地产开发与投资（14.0%，含中海地产、中建地产）+ 勘察设计（0.5%）。2025 年营收 <span class="vnum" data-src="financials_CSCEC.json" data-path="annual.9.revenue" data-fmt="num0">2,082,142</span> 百万（2.08 万亿）、归母净利润 <span class="vnum" data-src="financials_CSCEC.json" data-path="annual.9.net_income" data-fmt="num0">39,069</span> 百万（390.7 亿）、新签合同额 4.55 万亿。<b>钱最终从三类人口袋来</b>：房建业主（政府/企业）、基建业主（财政）、买房人。付钱的人得到了"建好的楼和城"，但没按时把钱付清。</p>
+  <div class="insight-title">收入结构长期稳定：房建六成的世界里没有惊喜，也没有惊吓</div>
+  <div id="chart-revenue-structure" class="chart"></div>
+  <div class="chart-note">数据来源：2024 年报英文版 MD&amp;A p.30 分部收入表（A 级，manifest filings/cscec_2024_annual_en.pdf）。会计准则 CAS。海外收入占总营收 5.4%（毛利率仅 5.0%）。</div>
+  <p><b>单位经济：</b>每接 100 元工程——毛利 9.9 元、净利 1.9 元、垫出去（应收+合同资产）48.4 元。规模扩大不会改善单位经济：收入 9 年 CAGR <span class="vnum" data-src="metrics_CSCEC.json" data-path="summary.cagr_total.revenue" data-fmt="pct1">9.0%</span>，净利率却从 3.11% 降到 1.88%，规模与盈利互为负相关（接得越急，垫得越多）。</p>
+</section>
+
+<section id="quant">
+  <h2>三、定量画像</h2>
+  <div class="insight-title">收入翻一倍、利润原地躺平：9 年收入 +118%、净利 +31%</div>
+  <div id="chart-q-revni" class="chart"></div>
+  <div class="chart-note">数据来源：metrics_CSCEC.json（A/B 级底稿，勾稽覆盖率 100%）。单位：百万 CNY。</div>
+  <p>2016 年营收 9,598 亿 → 2025 年 20,821 亿（+117%）；同期归母净利 298.7 → 390.7 亿（+31%）。<b>规模上去了，利润没跟着走</b>——增收不增利是这家公司的第一款底色。</p>
+  <div class="insight-title">净利率与 ROE 单边下行 9 年：这不是周期波形，是阶梯下移</div>
+  <div id="chart-q-margin" class="chart"></div>
+  <div class="chart-note">同期中国中铁净利率 2.10%、铁建 1.78%、交建 2.02%——行业内收敛，中国建筑从"族内最高"收敛到"族内平均"。单位：%。</div>
+  <p>净利率 3.11% → <span class="vnum" data-src="metrics_CSCEC.json" data-path="series.9.net_margin" data-fmt="pct2">1.88%</span>（9 年下行无一次全年回升）。<b>ROE 口径提示</b>：图中 ROE 为总权益口径（2025 年 4.9%）；<b>归母口径 ROE 为 16.3%（2017）→ <span class="vnum" data-src="financials_CSCEC.json" data-path="annual.9.roe_parent" data-fmt="pct1">8.2%</span>（2025）</b>，同样腰斩——两个口径趋势一致，但涉及估值时只认归母口径；引擎判"周期低位"并建议向上正常化，但单向下行 9 年的证据不能按"周期"处理——本报告基期采用对账后的保守口径（见第八章）。</p>
+  <div class="insight-title">ROIC 从 13.7% 到 5.1%：低于任何口径的 WACC，增长在毁灭价值</div>
+  <div id="chart-q-roic" class="chart"></div>
+  <div class="chart-note">A 公司主色，竞对灰色。中国建筑仍领先同行 2-3.6 个百分点——它是同族里"浮得最高的溺水者"。</div>
+  <p>近 5 年 ROIC 均值 7.5% 并仍在下行；近 3 年 ROIIC（增量资本回报）<8%（引擎警报）。以稀缺资本视角看，这家公司每再投入 1 元只换回 0.5-0.7 元价值——<b>不加杠杆增长，才是股东之福</b>。</p>
+  <div class="insight-title">自由现金流十年九负：利润是真的，现金是借的</div>
+  <div id="chart-q-fcf" class="chart"></div>
+  <div class="chart-note">OCF = 经营现金流；FCF = OCF − 资本开支。蓝柱（FCF）几乎年年为负；2021-2025 累计 FCF <span class="vnum" data-src="metrics_CSCEC.json" data-path="series.9.fcf" data-fmt="raw">-5690</span>百万上下、近五年合计约 -722 亿。</div>
+  <p>十年里只有 2016 年 FCF 为正。2025 年 OCF 205 亿看似改善至六年连正，但减去维持性资本开支 ≈140 亿后只剩 ≈65 亿——<b>覆盖不了 112 亿分红，缺口靠借款</b>。</p>
+  <div class="insight-title">每股口径复核：摊薄并不可怕，盈利消失才可怕</div>
+  <div id="chart-q-per-share" class="chart"></div>
+  <div class="chart-note">EPS 1.00 元 → 0.95 元（9 年 CAGR <span class="vnum" data-src="metrics_CSCEC.json" data-path="summary.cagr_per_share.eps" data-fmt="pct1">-0.6%</span>）；OE/股从 0.99 元 → 0.08 元。股本膨胀 1.38 倍集中在 2017-2018 两次增发后停止。</div>
+  <p>总量收入增长 9.0%/年，每股净利 CAGR 5.2%（被摊薄吃掉一半），EPS 9 年 CAGR 为负——<b>股东得到的不是增长，是规模的幻觉</b>。</p>
+</section>
+
+<section id="moat">
+  <h2>四、护城河分析</h2>
+  <p><b>评级：窄护城河，趋势变窄。</b>核心定量证据：ROIC − WACC 利差 2017 年 +3.7pct → 2025 年 <b>−4.9pct</b>（连续三年为负且加深）[E:metrics_CSCEC.json]。</p>
+  <h3>Morningstar 五源归类</h3>
+  <table>
+    <tr><th>护城河来源</th><th>有无</th><th>证据</th></tr>
+    <tr><td>成本优势（规模/信用）</td><td><span class="tag tag-amber">有，但非独占</span></td><td>全球最大承包商，债券利率 3.0-3.3%；中铁/铁建同体量，成本差异不构成利润率保护</td></tr>
+    <tr><td>无形资产（牌照/业绩门槛）</td><td><span class="tag tag-amber">有，对弱对手</span></td><td>特级资质+超高层业绩库（ENR 第 1），挡民企/外资有效，挡不住三家央企</td></tr>
+    <tr><td>转换成本</td><td><span class="tag tag-red">无</span></td><td>业主换承包商零成本，招投标成本加成模式</td></tr>
+    <tr><td>网络效应</td><td><span class="tag tag-red">无</span></td><td>—</td></tr>
+    <tr><td>有效规模</td><td><span class="tag tag-red">无</span></td><td>行业供给过剩，六家央企+各地国企同场竞标</td></tr>
+  </table>
+  <h3>定价权三项硬测试（全败）</h3>
+  <table>
+    <tr><th>测试</th><th>结果</th><th>证据</th></tr>
+    <tr><td>① 过去10年提价记录</td><td>0 次自主提价</td><td>工程计价=招投标成本加成，无提价机制 （行业通用事实，无单独证据文件）</td></tr>
+    <tr><td>② 提价后销量反应</td><td>不适用</td><td>无定价权可测试</td></tr>
+    <tr><td>③ 成本冲击传导</td><td>自己硬扛</td><td>2024 毛利率 9.9% 十年低位；2025 信用减值 186.6 亿（应收坏账 82%）说明连"约定价格"都收不全 [E:financials_CSCEC.json]</td></tr>
+  </table>
+  <h3>产业链议价权（对估值的硬约束）</h3>
+  <table>
+    <tr><th>方向</th><th>评级</th><th>数据</th></tr>
+    <tr><td>上游（分包/建材）</td><td><span class="tag tag-green">强</span></td><td>应付 1,009,135 百万 + 合同负债 377,779 百万（10 万亿级占款能力）[E:financials_CSCEC.json]</td></tr>
+    <tr><td>下游（业主/政府）</td><td><span class="tag tag-red">弱且恶化</span></td><td>应收+合同资产 100.8 亿×100 = 10,083 亿，占收入 <b>48.4%</b>（2021 年 21.9% → 2025 年 48.4%）[E:financials_CSCEC.json]</td></tr>
+  </table>
+  <p><b>对估值的约束</b>：净占款 10 年全为负且 2025 年达 -4,373 亿（-21% 收入）→ 正常化毛利率假设不得超过 10.5%，净利率正常化上限 2.6%（全期均值），<b>禁止按历史高点外推</b>。该约束已写入第八章假设对账。</p>
+</section>
+
+<section id="growth">
+  <h2>五、增长空间与质量</h2>
+  <p><b>判断：总量 S 曲线右端，靠结构不靠总量；ROIIC &lt; 8% 证明增长不再创造价值。</b></p>
+  <p><b>TAM 与份额</b>：全国建筑业总产值增速已降至低个位数，房地产新开工较高点缩水过半；公司营收 2.08 万亿已占行业约 6%，渗透率天花板临近 [E:metrics_CSCEC.json]（营收九年 CAGR 9.0%，同期行业总产值低个位数）反面缓冲来自数据中心/算力（26H1 新签 +328%）、工业厂房（+24%）、水利能源、城市更新、海外（收入 +27% 但毛利率仅 5.0%） [E:raw_reports.md]。</p>
+  <p><b>结构性增量的体量审计</b>：战略性新兴产业 2025 年营收 2,629 亿，占比仅 12.6%——是缓冲垫，不是第二曲线 [E:segments.json]（分部结构十年未变，房建稳定 60%+）</p>
+  <p><b>ROIIC 判读</b>：近 3 年增量资本回报 &lt;8%（引擎警报）[E:metrics_CSCEC.json]，2017-2020 扩张期 OE 反而崩塌（-174 亿，2020）——历史上"大干快上"年份越多，股东越穷。<b>估值假设据此归零化：永续增速 0~0.5%</b>。</p>
+</section>
+
+<section id="management">
+  <h2>六、管理层与企业文化</h2>
+  <p><b>判断：正派的央企执行器，言行一致性良好，但天花板是体制。</b></p>
+  <h3>承诺 vs 兑现对照（言行一致追踪，基于年报原文）</h3>
+  <table>
+    <tr><th>承诺（出处）</th><th>兑现结果</th><th>判定</th></tr>
+    <tr><td>2020 经营目标：新签 &gt;3.10 万亿、营收 &gt;1.52 万亿（2019 年报致辞）</td><td>新签 3.20 万亿、营收 1.615 万亿</td><td><span class="tag tag-green">兑现</span></td></tr>
+    <tr><td>2022 经营目标：营收 &gt;2.01 万亿（2021 年报致辞）</td><td>营收 2.055 万亿</td><td><span class="tag tag-green">兑现</span></td></tr>
+    <tr><td>"现金分红比例连续三年提升"（2019 年报）</td><td>分红率 18.5%→28.75%（连续 6 年）</td><td><span class="tag tag-green">兑现</span></td></tr>
+    <tr><td>估值提升计划（2025-04，连续 12 月破净触发）</td><td>2026-07 集团增持 5-10 亿</td><td><span class="tag tag-amber">进行中（金额偏小）</span></td></tr>
+  </table>
+  <h3>资本配置评分卡</h3>
+  <table>
+    <tr><th>项目</th><th>评价</th></tr>
+    <tr><td>分红</td><td><span class="tag tag-green">+</span> 连续 10 年、金额连增、分红率提价轨迹清晰（18.5%→28.75%）[E:financials_CSCEC.json]</td></tr>
+    <tr><td>回购</td><td><span class="tag tag-red">−</span> 从未回购注销</td></tr>
+    <tr><td>股权融资</td><td><span class="tag tag-red">−</span> 2017 转增 + 2018 增发 119.85 亿股（补血垫资），此后 8 年未再定增</td></tr>
+    <tr><td>资本开支纪律</td><td><span class="tag tag-amber">中性</span> 2020 capex +142% 的顺周期冲动；2024 投资净额收窄至 -25 亿证明有收缩能力</td></tr>
+    <tr><td>资产盘活</td><td><span class="tag tag-green">+</span> REITs/无增信 ABS 推进，存量资产盘活在途 [E:raw_reports.md]</td></tr>
+  </table>
+  <p><b>文化与激励</b>：限制性股票激励覆盖骨干（考核 ROE/分红），但规模相对 2 万亿营收是象征性；真正的行为约束来自国资委"一利五率"考核 [E:metrics_CSCEC.json]（股本膨胀史与分红连续十年记录交叉印证）——它管理的是"考核机器"而非"股东价值机器" [E:financials_CSCEC.json]。</p>
+</section>
+
+<section id="risk">
+  <h2>七、财务质量与风险</h2>
+  <h3>排雷结果</h3>
+  <p>检索做空报告/财务造假/监管处罚/集体诉讼/审计意见：<b>无一票否决</b>。2024/2025 安永华明均出标准无保留意见；历史瑕疵（2011 审计署对集团 2009 年合并报表多计 1.54 亿已整改、2015 副总裁短线交易监管关注、2019 扬州项目安全事故）均不涉财报真实性 [E:manifest.json]。</p>
+  <h3>关键审计事项（安永）= 本案命门</h3>
+  <p>① 工程承包收入确认（投入法，依赖管理层对预计总成本/收入的估计）② 应收账款与合同资产减值准备。<b>两事项恰好对应本公司最大的估计弹性空间</b>：收入可以被"估计"提前，减值可以被"估计"延后。</p>
+  <h3>深查发现</h3>
+  <ul class="checklist">
+    <li><b>利润质量在恶化</b>：扣非/归母 96% → <span class="vnum" data-src="financials_CSCEC.json" data-path="annual.9.net_income_deducted" data-fmt="raw">31934</span>/39069 = 81.7%（2025），2025 Q4 扣非单季上市以来首次亏损 -32.7 亿</li>
+    <li><b>减值源</b>：2025 信用减值 186.6 亿，其中应收账款坏账 152.4 亿（82%）——地产/城投业主资金链直接传导</li>
+    <li><b>债务结构</b>：有息负债 9,405 亿（10 年 2.7 倍），净债务 5,288 亿 vs 市值 1,797 亿——EV 的主体是债不是股 [E:financials_CSCEC.json]</li>
+    <li><b>A 股防割附加清单</b>：无商誉暴雷（商誉 21 亿可忽略）、无频繁资本运作、大股东无质押、无财务造假史；异常项 = 财务公司关联交易（集团内资金池，常规央企结构）</li>
+  </ul>
+  <p class="source-note"><b>可及性与摩擦</b>：A 股主板，T+1 交收，无汇率敞口；流动性充裕（日均成交 ≈8 亿）；无港股通替代（A/H 同权仅 A 股上市主体）。</p>
+</section>
+
+<section id="valuation">
+  <h2>八、估值与安全边际</h2>
+  <h3>基期正常化对账（前置关卡）</h3>
+  <p>compute_metrics 判"周期低位"（净利率为全期均值 0.70 倍），推荐正常化 OE 基期 <span class="vnum" data-src="metrics_CSCEC.json" data-path="normalization.oe_normalized" data-fmt="num0">38,277</span> 百万。<b>本报告拒绝它作为基准</b>：单向净利率 9 年下行 + OE 序列方差极大（-174~+648 亿），引擎的"均值回归"假设缺少周期证据支撑。基期重设：悲观 OE 180 亿 ／ 基准 OE 300 亿（十年均值偏保守） ／ 乐观 OE 383 亿（机器正常化上限）。</p>
+  <h3>方法树的选择</h3>
+  <p>项目制重资产+现金流失真 → OE-DCF 三情景为主，反向 DCF 解现价隐含预期，DDM（股息贴现）与 PB-ROE 作交叉锚——估值不靠单一方法定论。</p>
+  <h3>四锚估值汇总</h3>
+  <table>
+    <tr><th>方法</th><th>关键假设</th><th>每股价值</th><th>说明</th></tr>
+    <tr><td>OE-DCF 悲观</td><td>OE 180 亿，g=-2%，r=10%，永续 0%</td><td><span class="vnum" data-src="scenario_pess.json" data-path="value_per_share" data-fmt="num2">3.81</span></td><td>终值占比 36%</td></tr>
+    <tr><td>OE-DCF 基准</td><td>OE 300 亿，g=0%，r=10%，永续 0.5%</td><td><span class="vnum" data-src="scenario_base.json" data-path="value_per_share" data-fmt="num2">7.42</span></td><td>终值占比 40%</td></tr>
+    <tr><td>OE-DCF 乐观</td><td>OE 383 亿，g=0%，r=10%，永续 0.5%</td><td><span class="vnum" data-src="scenario_opt.json" data-path="value_per_share" data-fmt="num2">9.47</span></td><td>引擎正常化上限</td></tr>
+    <tr><td>DDM 交叉锚</td><td>DPS 0.272-0.30 元，r=8-9%，g=0-1%</td><td>3.3 ~ 4.4</td><td>股东唯一确定可得的现金流</td></tr>
+    <tr><td>PB-ROE 交叉锚</td><td>可持续 ROE <span class="vnum" data-src="financials_CSCEC.json" data-path="annual.9.roe_parent" data-fmt="pct1">8.2%</span>（归母口径），BVPS <span class="vnum" data-src="financials_CSCEC.json" data-path="annual.9.bvps_parent" data-fmt="num2">11.90</span> 元（归母口径）</td><td>≈6.3（PB 0.53）</td><td>破净修复路径。<b>口径纪律：必须用归母净资产</b>——总权益含少数股东权益 3,310 亿（占 40%，主要为中海地产等子公司），计入即高估 67%</td></tr>
+    <tr><td><b>反向 DCF（市场隐含）</b></td><td>现价 4.35 元 = 隐含 OE 年增速 <b>-12.0%/年×10 年</b></td><td>—</td><td>市场定价的是崩塌，不是周期</td></tr>
+  </table>
+  <div class="insight-title">三情景 vs 现价</div>
+  <div id="chart-scenarios" class="chart" style="height:280px"></div>
+  <p><b>安全边际结论（闸门一）</b>：对基准情景 7.42 的表观安全边际 41% 看似达标，但 300 亿 OE 基期本身依赖"占款止血"这个未证实条件——用多锚加权得<b>内在价值加权中枢 5.91 元，安全边际 26%（&lt;40%）→ 闸门一未过</b>。<b>加权口径（可复现）</b>：OE-DCF 概率加权 6.75 元 ×50% ＋ DDM 中值 3.85 元 ×25% ＋ PB-ROE 6.31 元 ×25% ＝ 5.91 元；安全边际 =（5.91−4.35）÷5.91 ＝ 26.4%。OE-DCF 取半权因其为主锚，两个交叉锚各占四分之一以抑制单一方法偏差。</p>
+  <p><b>期望回报（闸门二）</b>：三情景 30/50/20 概率加权期望年化 <span class="vnum" data-src="expected_return.json" data-path="expected_annualized_irr" data-fmt="pct1">19.0%</span>（含分红+留存增值，修正式口径）&gt; 门槛 13%，悲观 IRR <span class="vnum" data-src="expected_return.json" data-path="pessimistic_irr" data-fmt="pct1">7.1%</span> ≥0、亏损概率 <span class="vnum" data-src="expected_return.json" data-path="loss_probability" data-fmt="pct1">0%</span> → <b>闸门二通过</b>。</p>
+  <p><b>期望值的脆弱性揭示</b>：红队概率（45/40/15）重算期望 IRR = 14.1%，跑赢门槛仅 +1.1pct——19% 的高度一半来自"基准情景 7.42"的基期假设。</p>
+  <h3>敏感性</h3>
+  <table>
+    <tr><th>变量</th><th>对每股价值的影响</th></tr>
+    <tr><td>永续增速 ±1pct</td><td>±15-20%（引擎提示，超过安全边际分辨率）</td></tr>
+    <tr><td>基期 OE 300→150 亿（红队档）</td><td>基准 7.42 → 悲观 3.81（-49%）</td></tr>
+    <tr><td>折现率 10%→11%</td><td>基准 7.42 → ≈6.0（-19%）</td></tr>
+  </table>
+</section>
+
+<section id="key-judgment">
+  <h2>九、关键判断（Phase 4.5 收敛）</h2>
+  <h3>关键变量（既重要又可知）</h3>
+  <table>
+    <tr><th>变量</th><th>当前判断</th><th>依据</th><th>为什么可知</th></tr>
+    <tr><td>① 应收+合同资产减值率是否见顶</td><td><b>未见顶</b></td><td>2025 信用减值 186.6 亿；应收+合同资产原值仍 +30%/年扩张至 10,083 亿</td><td>季报逐季披露减值与应收余额，地产销售/城投化债公开可跟踪</td></tr>
+    <tr><td>② 分红的融资依赖能否收敛</td><td><b>依赖扩大</b></td><td>分红 112.3 亿 &gt; OCF−维持 capex ≈65 亿</td><td>季报 OCF/投资现金流公开；REITs 盘活节奏可跟踪</td></tr>
+    <tr><td>③ 新签合同结构性转型速度</td><td><b>真实但体量小</b></td><td>26H1 数据中心 +328%、工业厂房 +24%；新兴业务营收占比 12.6%</td><td>月度经营公告披露新签结构</td></tr>
+  </table>
+  <h3>变异认知测试</h3>
+  <p><b>市场为什么给现在这个价（A 级锚）</b>：反向 DCF 显示现价隐含 OE 以 -12%/年衰减 10 年——市场定价的是"盈利崩塌"，不是"周期低谷"。卖方一致预期（B 级旁证，国盛）：2026-2028 归母 353/336/337 亿（-10%/-5%/0%，L 型底）——市场比卖方更悲观。</p>
+  <p><b>我们与市场的分歧</b>：不在方向（双方都认为下台阶），在台阶深度——市场隐含 10 年后 OE 只剩 ≈115 亿，我方基准判断台阶止于 180-300 亿区间（央企信用地板 + 连续 10 年分红 + 集团增持 + 市值管理约束托底）。</p>
+  <p><b>认知优势来源</b>：不是更乐观，而是更精确地定价下限。市场按民企地产链的崩塌逻辑给央企建筑商定价，存在板块性错杀。<b>置信度声明：一致预期为单家券商 B 级数据，分歧判定为中低置信度。</b></p>
+  <h3>双重机会成本对照</h3>
+  <table>
+    <tr><th>对照项</th><th>长期年化</th><th>本标的期望年化</th><th>结论</th></tr>
+    <tr><td>沪深300 全收益（机会成本基准）</td><td>≈8-9%</td><td rowspan="2"><span class="vnum" data-src="expected_return.json" data-path="expected_annualized_irr" data-fmt="pct1">19.0%</span>（红队档 14.1%）</td><td>跑赢</td></tr>
+    <tr><td>用户最好持仓</td><td>未提供</td><td>缺省跳过</td></tr>
+  </table>
+  <p class="source-note">门槛 = max(指数长期年化, 折现率 + 3pct) = 13%。警示：机会成本判断成立的前提是基准情景 7.42 元可信；DDM 锚（3.3-4.4 元）提示价值兑现路径不确定——本报告选择从严呈报。</p>
+</section>
+
+<section id="committee">
+  <h2>十、投委会评审</h2>
+  <p class="source-note">三份评估各自从 Phase 1-4 原始证据独立推导，互不参考；分歧即产出。全文见 workpapers/persona_*.md。</p>
+  <blockquote class="persona">
+    <span class="persona-name">巴菲特（35/100 · 拒绝）</span>
+    "这家公司让我想起纺织厂时代的伯克希尔：管理层勤奋、市场第一、价格便宜——但每一美元再投资都换不回一美元价值。ROIC 5.1% 低于资本成本、十年 FCF 九负、2025 年 112 亿分红是借来的。我无法预测 10 年后它干 100 元工程能留下几毛钱——连这个都预测不了，不在我的能力圈。价格维度 8/20，破净与分红是真的；但便宜救不了一台毁灭价值的机器。拒绝。"
+  </blockquote>
+  <blockquote class="persona">
+    <span class="persona-name">段永平（40/100 封顶 · 观察仓）</span>
+    "这是差生意里的好公司：生意模式（净利率 1.9%、零定价权、垫资）35 分里只给 12 分，按规则总分封顶。但管理层正派（承诺兑现 100%）、央企信用地板硬、十年后一定还在。它不是重仓对象，但我愿意拿一点点钱买它的'不死'作为保险——止损线是'分红下调'。"
+  </blockquote>
+  <blockquote class="persona">
+    <span class="persona-name">李录（61/100 · 值得跟踪但未懂）</span>
+    "事实清楚：-12%/年的市场定价 + 央企信用地板 + 数据中心订单转型 = 不对称的下限。但'减值见顶'是三环推断，我不够懂中国地方政府支付能力的演化。把它放观察名单，跟踪三个变量：减值率、分红现金来源、数据中心订单占比——两个兑现，重新谈。"
+  </blockquote>
+  <h3>分歧对照表（认知地图：分歧即最诚实的注脚）</h3>
+  <table>
+    <tr><th>关键问题</th><th>巴菲特</th><th>段永平</th><th>李录</th></tr>
+    <tr><td>这生意本身值得持有 10 年吗</td><td>拒绝——ROIC &lt; WACC</td><td>不值得——商业模式封顶</td><td>不是复利机器</td></tr>
+    <tr><td>0.36 PB 是机会还是陷阱</td><td>陷阱（便宜买烂生意）</td><td>机会（当保险买"不死"）</td><td>待验证（不对称但不懂拐点）</td></tr>
+    <tr><td>分红能力真实吗</td><td>借来的，拒绝</td><td>真实但脆弱，设止损线</td><td>作为关键变量跟踪</td></tr>
+    <tr><td>市值管理新规能推动重估吗</td><td>不关心（政策不是商业模式）</td><td>不是它体系内的变量</td><td>概率判断，不是认知</td></tr>
+    <tr><td>最大风险</td><td>ROIC 毁灭价值的结构问题</td><td>分红下调 = 保险失效</td><td>减值未见顶 + 推断链条太长</td></tr>
+  </table>
+  <p><b>共识点（稀有，比分歧更能支撑行动）</b>：① 三人都承认"央企信用地板 + 连续分红"构成不归零下限；② 三人都拒绝给"核心买入"；③ 三人一致认为分红/减值是可验证的关键变量。</p>
+  <p><b>本次裁决</b>：采纳李录框架（"值得跟踪但未懂"）作为行动锚点，叠加巴菲特对 OE 真实性的否决——最终档位"观察·等价格"，买入触发条件数字化（见结论）。张力提示：双闸门若仅以表观 41% 安全边际判，本可进核心买入；三大师一致提醒"基期即幻"，故从未能以表观数据放行。</p>
+  <div class="redteam">
+    <h3>芒格式红队质询（含独立数字验证）</h3>
+    <p><b>红队悲观情景</b>：r=11%、OE=150 亿、g=-3% → <b>每股 2.72 元</b>，与主分析悲观 3.81 差距 28.6%（紧贴 30% 警戒线）——主分析悲观"基本够悲观但偏体面"。</p>
+    <p><b>红队概率 45/40/15</b>：期望 IRR 14.1%，跑赢门槛仅 +1.1pct——19% 的期望值一半来自基期假设。</p>
+    <p><b>最强空头逻辑</b>：6.25% 股息率建立在"分红 112 亿 &gt; 自由现金 65 亿"的缺口上；若 DPS 下调 30%，以股息定价的资金按 8% 重定价 = 2.4 元。<b>最大风险不是公司变坏，是"股息锚"断裂。</b></p>
+    <p><b>心理误判自检</b>：锚定 2021 年 ROE 15.9%（周期顶）、**"央企不会出事"的权威偏见**（不违约 ≠ 股东不亏）、6.25% 股息率的禀赋效应。</p>
+    <p><b>Pre-mortem（2028 亏 30% 的路径）</b>：① 分红下调 + ② 减值未停 + ③ 市值管理无实质，股价从股息定价切换到资产折价定价（PB 0.36→0.25）。三件只要一件就够。</p>
+    <p><b>对三份评估的盲点开火</b>：巴菲特拒绝一切分红靠借债的公司，但其体系在中国红利框架下会错过 3-5 年租金回报；段永平的"不死的保险"低估了红利指数被动买家的定价机制；李录的跟踪框架没指出三变量相关（减值与分红同源、数据中心与减值负相关）。</p>
+    <p><b>红队裁定</b>：采纳"观察·等价格"，且要求从严——买入触发条件数字化，禁止"跌多了就买"。</p>
+  </div>
+</section>
+
+<section id="conclusion">
+  <h2>十一、结论与行动</h2>
+  <p>最终档位：<span class="tag tag-amber">观察·等价格</span>（理由：闸门一安全边际 26% &lt; 40%；闸门二 19.0% &gt; 13% 通过——任一闸门不过即到此）</p>
+  <h3>持有体验预演（若现在买入）</h3>
+  <p>真实回撤记录（月 K 前复权口径，A 级行情接口，已剔除 2018 年 10 转 4 的除权影响）：<b>第一段 -47.8%</b>（2017-07 峰 5.79 元 → 2018-10 谷 3.02 元），修复用时约 4 年 7 个月（2022-04 才重回 5.0 元上方）；<b>第二段 -40.6%</b>（2023-05 峰 6.28 元 → 2024-01 谷 3.73 元），至今<b>未修复</b>——现价 4.35 元仍低于 2023 峰值 30.7%。结论：<b>这只股票在 10 年里有两次腰斩级回撤，且修复期以年计</b>。同族（中铁/铁建/交建）同期回撤区间相近。</p>
+  <p><b>灵魂拷问：若买入后下跌 40% 而基本面未变，你敢不敢加仓？</b>对这个标的，40% 的下跌大概率不是"市场犯错"而是"股息锚断裂"的先兆——到那时"基本面未变"本身存疑。<b>不敢加仓就去观察仓，不要骗自己。</b></p>
+  <h3>证伪条件（出现即说明论点错误）</h3>
+  <ul class="checklist">
+    <li>【变量一·减值】连续两季信用减值绝对额同比再增 &gt;20% → 基准情景失效，估值下移至悲观（-30% 空间）</li>
+    <li>【变量二·分红】分红率下调或 DPS 绝对额下降 → 股息锚断裂，按 8% 要求收益率重定价（隐含 -45%）</li>
+    <li>【变量三·订单】数据中心/水利/能源新签占比连续两年未有实质提升（&lt;15%）→ 转型缓冲垫证伪，增长假设归零</li>
+  </ul>
+  <h3>季度跟踪清单</h3>
+  <table>
+    <tr><th>指标</th><th>当前值</th><th>警戒线</th><th>说明</th></tr>
+    <tr><td>应收+合同资产/年化收入</td><td>48.4%</td><td>&gt;52%</td><td>占款继续恶化即降级至排除</td></tr>
+    <tr><td>信用减值（TTM）</td><td>186.6 亿/年</td><td>&gt;220 亿</td><td>减值失控即下调基期 OE</td></tr>
+    <tr><td>DPS 总额/分红率</td><td>112.3 亿 / 28.75%</td><td>下调即证伪</td><td>股息锚断裂，悲观启动</td></tr>
+    <tr><td>OCF − 维持性 capex</td><td>≈65 亿</td><td>连续 2 年为负</td><td>分红可持续性核心</td></tr>
+    <tr><td>数据中心+工业厂房新签占比</td><td>≈12.6%</td><td>&lt;10%</td><td>结构转型速度</td></tr>
+  </table>
+  <h3>用户初判 vs 本报告结论</h3>
+  <p>用户未提供初判（IM 远程下达任务，未要求给立场）。复分析时若用户补述立场，按 Phase 0 惯例记入决策日志并对照。</p>
+  <h3>与上次分析对比</h3>
+  <p>首次分析，无历史决策日志。本次结论与三大师结论组合已写入 decision-log。</p>
+</section>
+
+<section id="appendix">
+  <h2>附录：数据来源与校验</h2>
+  <h3>数据底稿与等级</h3>
+  <table>
+    <tr><th>文件</th><th>来源</th><th>等级</th><th>说明</th></tr>
+    <tr><td>financials_CSCEC.json</td><td>结构化金融数据接口 + 官方交叉核对</td><td>A/B</td><td>10 年年报主表，勾稽覆盖 100%；最近 3 年四命门科目与巨潮年报摘要核对一致</td></tr>
+    <tr><td>filings/cscec_2025_audited_cashflow_p.pdf</td><td>SSE 官方</td><td>A</td><td>2025 已审财务报表现金流量表（capex 官方值 262.27 亿）</td></tr>
+    <tr><td>filings/cscec_2024_annual_en.pdf</td><td>公司官网英文年报</td><td>A</td><td>分部收入表（p.30）</td></tr>
+    <tr><td>filings/cscec_2021_annual.pdf / cscec_2019_annual.pdf</td><td>巨潮</td><td>A</td><td>折旧摊销官方值（补充资料）</td></tr>
+    <tr><td>metrics_CSCEC.json 等 4 份</td><td>compute_metrics 引擎输出</td><td>—</td><td>A 公司 + 3 竞对统一口径</td></tr>
+    <tr><td>market_snapshot.json</td><td>结构化金融数据接口（行情域）</td><td>A</td><td>2026-09-01 行情快照</td></tr>
+    <tr><td>consensus.json</td><td>国盛证券研报</td><td>B</td><td>单源，变异认知置信度降一档</td></tr>
+    <tr><td>raw_reports.md / raw_news.md</td><td>结构化金融数据接口（研报/新闻域）</td><td>B/C</td><td>研报列表 9999 条首 8 条</td></tr>
+    <tr><td>segments.json</td><td>2024 年报英文版 p.30 分部表</td><td>A</td><td>2024/2023/2022 分部结构</td></tr>
+  </table>
+  <h3>口径纪律（本案关键，务必先读）</h3>
+  <p class="source-note"><b>少数股东权益占比 40% 的合并报表陷阱</b>：中国建筑 2025 年全口径权益 8,225 亿，其中<b>少数股东权益 <span class="vnum" data-src="financials_CSCEC.json" data-path="annual.9.minority_interest" data-fmt="num0">330,953</span> 百万（3,310 亿，占 40%）</b>，主要为中海地产等非全资子公司——这部分净资产股东无权主张。因此：① 三表勾稽用全口径权益（`total_equity`，因 total_assets 由负债+全口径权益推导）；② <b>一切回报率与估值判断只认归母口径</b>（底稿 `roe_parent` / `bvps_parent`）：2025 年归母 ROE 8.2%（全口径 4.9%）、归母 BVPS 11.90 元（全口径 19.91 元）。误用全口径 BVPS 会把 PB-ROE 锚高估 67%（10.5 元 vs 正确 6.3 元）——本报告初稿曾犯此错，已于交付前自审修正并记入决策日志。</p>
+  <h3>数据校验摘要</h3>
+  <p class="source-note">① <b>入口校验（validate_data）</b>：A 公司 0 错误 1 警告（信息时效 136 天，已核对 2026H1 中报并在 manifest 登记 latest_quarter_checked）；三表勾稽覆盖率 100%（10/10 年）。竞对 601390/601186/601800 各 0 错误 2 警告（含 --skip-crosscheck，报告脚注披露：竞对未做原文双源核对，命门科目与公开摘要核对一致）。② <b>搬运完整性</b>：本案未使用抽取脚本直导底稿，年度 capex/D&A 以 A 级官方原文+ B 级双源核对补齐。③ <b>数字校验（verify_report）</b>：vnum/vchart/E 指针见报告内标签，最终运行结果：47/47 全部通过（2026-09-01）——正文 vnum 28 项、图表 vchart 14 组、证据指针 5 项，证据指针五维章节均 ≥3 条。④ <b>证据指针抽查</b>：红队抽查 [E:financials_CSCEC.json]（减值结构、扣非/归母、占款）、[E:metrics_CSCEC.json]（ROIC/FCF）、[E:raw_reports.md]（26H1 分部与订单）均可在底稿定位到原值。</p>
+  <h3>术语速查</h3>
+  <table>
+    <tr><th>术语</th><th>白话</th></tr>
+    <tr><td>Owner Earnings（业主收益）</td><td>股东真正可自由支配的现金：净利 + 折旧 − 维持性资本开支 − 营运资本增量</td></tr>
+    <tr><td>ROIC / ROIIC</td><td>投入一块钱赚几毛钱的真实回报（近 10 年 / 增量）——&lt; 资金成本即毁灭价值</td></tr>
+    <tr><td>反向 DCF</td><td>用现价反推市场隐含的增长/衰减预期，回答"市场在赌什么"</td></tr>
+    <tr><td>合同资产</td><td>活干了但还没结算，先记资产——建筑业最大的"虚"之所在</td></tr>
+    <tr><td>安全边际</td><td>内在价值与你的买入价的差（保险垫），越差的生意要求越厚</td></tr>
+    <tr><td>周期低位正常化</td><td>认为"现在是最差时刻"，用历史均值把利润拉高作为估值基期——本案引擎这样建议，本报告拒绝作为基准</td></tr>
+    <tr><td>双闸门</td><td>① 安全边际达标（贵不贵）② 期望年化 IRR 跑赢机会成本（划不划算）；都过才可能进"核心买入"</td></tr>
+  </table>
+</section>
+
+<footer class="disclaimer">
+  本报告由分析工具生成，仅供研究参考，不构成任何投资建议。市场有风险，投资需谨慎。<br>
+  数据截止：财务 2025 年报 + 2026H1；行情 2026-09-01。生成：value-investing-analyst v2.11（cases/zhongjian_analysis 工作区）。
+</footer>
+</div>
+
+<script>
+const COLOR = { primary:'#1a3a5c', accent:'#d97706', grays:['#9ca3af','#6b7280','#d1d5db','#4b5563'] };
+const charts = [];
+function initChart(id, option){
+  const el=document.getElementById(id);
+  if(!el||typeof echarts==='undefined') return;
+  const c=echarts.init(el);
+  c.setOption(Object.assign({
+    textStyle:{fontFamily:'-apple-system, PingFang SC, Microsoft YaHei'},
+    grid:{left:70,right:30,top:56,bottom:44},
+    tooltip:{trigger:'axis'}
+  }, option));
+  charts.push(c);
+}
+window.addEventListener('resize',()=>charts.forEach(c=>c.resize()));
+if (typeof echarts==='undefined'){
+  document.querySelectorAll('.chart').forEach(el=>{el.innerHTML='<p style="color:#b91c1c;padding:20px">图表需联网加载 ECharts 后显示</p>';});
+}
+
+/* 1. 三人评估雷达（归一化 0-5） */
+initChart('chart-radar-summary', {
+  tooltip:{}, legend:{bottom:0},
+  radar:{indicator:[
+    {name:'商业模式',max:5},{name:'护城河',max:5},{name:'成长/跑道',max:5},
+    {name:'管理层/治理',max:5},{name:'价格/安全边际',max:5}], splitArea:{areaStyle:{color:['rgba(26,58,92,.04)']}}},
+  series:[{type:'radar',
+    data:[
+      {value:[1.3,1.2,0.8,2.0,3.0],name:'巴菲特 35/100（拒绝）',itemStyle:{color:COLOR.primary}},
+      {value:[1.2,1.5,1.0,3.0,3.4],name:'段永平 40/100 封顶（观察仓）',itemStyle:{color:COLOR.accent}},
+      {value:[2.2,1.6,2.2,3.0,3.6],name:'李录 61/100（跟踪未懂）',itemStyle:{color:'#15803d'}}
+    ]}]
+});
+
+/* 2. 估值区间横条 */
+initChart('chart-valuation-band', {
+  grid:{left:90,right:60,top:30,bottom:30},
+  xAxis:{type:'value',name:'每股价值（元）',max:12},
+  yAxis:{type:'category',data:['OE-DCF 三情景','DDM 锚','PB-ROE 锚']},
+  series:[
+    {type:'bar',stack:'v',itemStyle:{color:'transparent'},data:[3.81,3.3,4.8]},
+    {type:'bar',stack:'v',barWidth:26,data:[
+      {value:9.47-3.81,itemStyle:{color:'#93c5fd'}},
+      {value:4.4-3.3,itemStyle:{color:'#d1d5db'}},
+      {value:7.9-4.8,itemStyle:{color:'#e5e7eb'}}
+    ]},
+    {type:'scatter',symbolSize:12,itemStyle:{color:COLOR.accent},
+      data:[4.35,4.35,4.35],symbol:'path://M0,10 L10,0 L10,20 Z',
+      markLine:{symbol:'none',lineStyle:{color:COLOR.accent,width:2,type:'solid'},label:{formatter:'现价 4.35 元',position:'insideEndTop'},
+        data:[{xAxis:4.35}]}, z:10},
+    {type:'line',data:[],markLine:{symbol:'none',lineStyle:{color:'#6b7280',width:1.5,type:'dashed'},label:{formatter:'加权中枢 5.91'},
+      data:[{xAxis:5.91}]}}
+  ]
+});
+
+/* 3. 分部收入结构（2024 vs 2023 堆叠，百万 CNY） */
+initChart('chart-revenue-structure', {
+  tooltip:{trigger:'axis',axisPointer:{type:'shadow'}}, legend:{bottom:0},
+  grid:{left:110,right:40,top:30,bottom:44},
+  xAxis:{type:'category',data:['2023','2024']},
+  yAxis:{type:'value',name:'百万 CNY'},
+  series:[
+    {name:'房屋建筑工程',type:'bar',stack:'t',itemStyle:{color:COLOR.primary},
+/*<!-- vchart src=segments.json path=chart_arrays.housing_revenue -->*/
+      data:[1383744,1321801]},
+    {name:'基础设施建设与投资',type:'bar',stack:'t',itemStyle:{color:'#2c5d8f'},
+      data:[556561,550903]},
+    {name:'房地产开发与投资',type:'bar',stack:'t',itemStyle:{color:'#4c86c6'},
+      data:[308808,306234]},
+    {name:'勘察设计',type:'bar',stack:'t',itemStyle:{color:'#7ea8d8'},
+      data:[11747,10822]},
+    {name:'其他及抵消',type:'bar',stack:'t',itemStyle:{color:COLOR.grays[2]},
+      data:[16941,-2613]}
+  ]
+});
+
+/* 4. 收入 vs 净利（9 年） */
+initChart('chart-q-revni', {
+  tooltip:{trigger:'axis'}, legend:{bottom:0},
+  xAxis:{type:'category',name:'年',
+/*<!-- vchart src=metrics_CSCEC.json path=chart_series.years -->*/
+    data:[2016,2017,2018,2019,2020,2021,2022,2023,2024,2025]},
+  yAxis:[{type:'value',name:'营收（百万 CNY）'},{type:'value',name:'净利（百万 CNY）'}],
+  series:[
+    {name:'营业收入',type:'bar',itemStyle:{color:COLOR.primary},
+/*<!-- vchart src=metrics_CSCEC.json path=chart_series.revenue -->*/
+      data:[959765,1054107,1199325,1419837,1615051,1892706,2055052,2265529,2187334,2082142]},
+    {name:'归母净利',type:'line',yAxisIndex:1,itemStyle:{color:COLOR.accent},lineStyle:{width:3},
+/*<!-- vchart src=metrics_CSCEC.json path=chart_series.net_income -->*/
+      data:[29870,32942,38241,41881,44925,51550,50950,54264,46194,39069]}
+  ]
+});
+
+/* 5. 净利率 + ROE 波动带 */
+initChart('chart-q-margin', {
+  tooltip:{trigger:'axis'}, legend:{bottom:0},
+  xAxis:{type:'category',
+    data:[2016,2017,2018,2019,2020,2021,2022,2023,2024,2025]},
+  yAxis:{type:'value',name:'%'},
+  series:[
+    {name:'净利率（中国建筑）',type:'line',itemStyle:{color:COLOR.primary},lineStyle:{width:3},
+/*<!-- vchart src=metrics_CSCEC.json path=chart_series.net_margin scale=100 -->*/
+      data:[3.11,3.13,3.19,2.95,2.78,2.72,2.48,2.40,2.11,1.88]},
+    {name:'净利率（中国中铁）',type:'line',itemStyle:{color:COLOR.grays[1]},lineStyle:{type:'dashed'},
+/*<!-- vchart src=metrics_601390.json path=chart_series.net_margin scale=100 -->*/
+      data:[1.96,2.33,2.33,2.79,2.59,2.58,2.72,2.66,2.41,2.1]},
+    {name:'ROE（总权益口径，含少数股东）',type:'line',itemStyle:{color:COLOR.accent},lineStyle:{type:'dashed',width:2},
+/*<!-- vchart src=metrics_CSCEC.json path=chart_series.roe scale=100 -->*/
+      data:[4.9,10.4,9.9,9.0,8.3,8.5,7.7,7.7,6.1,4.9]}
+  ]
+});
+
+/* 6. ROIC vs 竞对 */
+initChart('chart-q-roic', {
+  tooltip:{trigger:'axis'}, legend:{bottom:0},
+  xAxis:{type:'category',
+    data:[2016,2017,2018,2019,2020,2021,2022,2023,2024,2025]},
+  yAxis:{type:'value',name:'%'},
+  series:[
+    {name:'中国建筑',type:'line',itemStyle:{color:COLOR.primary},lineStyle:{width:3},connectNulls:false,
+/*<!-- vchart src=metrics_CSCEC.json path=chart_series.roic scale=100 -->*/
+      data:[0,13.67,13.25,11.08,10.52,10.04,8.36,7.51,6.24,5.14]},
+    {name:'中国中铁',type:'line',itemStyle:{color:COLOR.grays[1]},connectNulls:false,
+/*<!-- vchart src=metrics_601390.json path=chart_series.roic scale=100 -->*/
+      data:[0,8.02,7.15,8.14,7.26,6.41,5.91,5.44,3.89,2.76]},
+    {name:'中国铁建',type:'line',itemStyle:{color:COLOR.grays[2]},connectNulls:false,
+/*<!-- vchart src=metrics_601186.json path=chart_series.roic scale=100 -->*/
+      data:[0,8.68,7.8,7.07,6.87,6.16,5.65,4.83,3.35,2.28]},
+    {name:'中国交建',type:'line',itemStyle:{color:COLOR.grays[3]},connectNulls:false,
+/*<!-- vchart src=metrics_601800.json path=chart_series.roic scale=100 -->*/
+      data:[0,6.09,5.32,4.34,2.79,2.63,2.55,2.89,2.61,1.51]},
+    {name:'WACC 下限（8%）',type:'line',itemStyle:{color:'#b91c1c'},lineStyle:{type:'dotted'},data:[8,8,8,8,8,8,8,8,8,8]}
+  ]
+});
+
+/* 7. FCF 十年九负 */
+initChart('chart-q-fcf', {
+  tooltip:{trigger:'axis'}, legend:{bottom:0},
+  xAxis:{type:'category',
+    data:[2016,2017,2018,2019,2020,2021,2022,2023,2024,2025]},
+  yAxis:{type:'value',name:'百万 CNY'},
+  series:[
+    {name:'自由现金流 FCF',type:'bar',
+/*<!-- vchart src=metrics_CSCEC.json path=chart_series.fcf -->*/
+      data:[93914,-60875,-8313,-54657,-29225,-17380,-22120,-23026,-3999,-5690],
+      itemStyle:{color:function(p){return p.value>=0?COLOR.primary:'#b91c1c';}}},
+    {name:'归母净利',type:'line',itemStyle:{color:COLOR.accent},lineStyle:{width:2.5},
+      data:[29870,32942,38241,41881,44925,51550,50950,54264,46194,39069]}
+  ]
+});
+
+/* 8. EPS vs OE/股 */
+initChart('chart-q-per-share', {
+  tooltip:{trigger:'axis'}, legend:{bottom:0},
+  xAxis:{type:'category',
+    data:[2016,2017,2018,2019,2020,2021,2022,2023,2024,2025]},
+  yAxis:{type:'value',name:'元/股'},
+  series:[
+    {name:'EPS',type:'line',itemStyle:{color:COLOR.primary},lineStyle:{width:3},
+/*<!-- vchart src=metrics_CSCEC.json path=chart_series.eps -->*/data:[1.0,1.1,0.91,1.0,1.07,1.23,1.22,1.29,1.11,0.95]},
+    {name:'OE/股',type:'line',itemStyle:{color:COLOR.accent},lineStyle:{width:2.5,type:'dashed'},
+/*<!-- vchart src=metrics_CSCEC.json path=chart_series.oe_ps -->*/
+      data:[1.0,1.4,0.77,0.12,-0.41,0.61,1.25,1.54,1.27,0.08]}
+  ]
+});
+
+/* 9. 三情景柱状图 */
+initChart('chart-scenarios', {
+  tooltip:{},
+  grid:{left:70,right:30,top:40,bottom:30},
+  xAxis:{type:'category',data:['悲观 (OE 180 亿)','基准 (OE 300 亿)','乐观 (OE 383 亿)','现价']},
+  yAxis:{type:'value',name:'元/股'},
+  series:[{type:'bar',barWidth:44,
+    data:[
+      {value:3.81,itemStyle:{color:'#b91c1c'}},
+      {value:7.42,itemStyle:{color:COLOR.primary}},
+      {value:9.47,itemStyle:{color:'#15803d'}},
+      {value:4.35,itemStyle:{color:COLOR.accent}}
+    ],
+    label:{show:true,position:'top'}
+  }]
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,67 @@
+{
+  "date": "2026-09-01",
+  "price": 4.35,
+  "verdict": "观察·等价格",
+  "margin_of_safety": {
+    "weighted": 0.264,
+    "weighted_center_per_share": 5.91,
+    "weighting": "OE-DCF概率加权6.75×50% + DDM中值3.85×25% + PB-ROE 6.31×25%",
+    "vs_base_scenario": 0.414,
+    "gate1_pass": false,
+    "rule": "窄护城河门槛≥40%"
+  },
+  "expected_irr": 0.19,
+  "expected_irr_redteam": 0.141,
+  "loss_probability": 0.0,
+  "pessimistic_irr": 0.071,
+  "index_hurdle": 0.13,
+  "discount_rate": 0.1,
+  "key_variables": [
+    {
+      "var": "应收+合同资产减值率",
+      "current": "未见顶（2025 信用减值 186.6 亿，应收+合同资产 10,083 亿）",
+      "falsified_by": "连续两季占款/年化收入停止上升且减值下降 → 基准情景坐实"
+    },
+    {
+      "var": "分红融资依赖",
+      "current": "依赖扩大（分红 112 亿 > 自由现金 ≈65 亿）",
+      "falsified_by": "分红率下调或 DPS 绝对额下降 → 悲观情景启动"
+    },
+    {
+      "var": "新基建订单结构占比",
+      "current": "真实但体量小（26H1 数据中心新签 +328%）",
+      "falsified_by": "占比两年无实质提升 → 转型缓冲垫证伪"
+    }
+  ],
+  "falsifiers": [
+    "分红率/DPS 下调",
+    "应收+合同资产/年化收入 >52% 且减值加速",
+    "OCF−维持capex 连续2年为负"
+  ],
+  "persona_verdicts": {
+    "buffett": "拒绝（35/100）",
+    "duan": "观察仓，商业模式封顶（40/100）",
+    "li_lu": "值得跟踪但未懂（61/100）"
+  },
+  "persona_independence": {
+    "generation": "分离生成，未交叉参考",
+    "consistency_check": "结论分化（拒绝/观察仓/跟踪），独立性未被污染"
+  },
+  "user_prior": null,
+  "motivation": "未提供，按例行价值筛选处理",
+  "next_review": "2026-10 三季报 / 触发价 ≤3.5 元或 ≥6.0 元",
+  "data_validation": {
+    "validate_data": "0 错误 1 警告（信息时效已核对) ",
+    "verify_report": "47/47 全部通过"
+  },
+  "audit_2026-09-01": {
+    "reviewer": "self-audit",
+    "findings": [
+      "PB-ROE锚口径错误：报告曾用总权益BVPS 19.91元得10.5元，已修正为归母BVPS 11.90元得6.3元（少数股东权益3,310亿占总权益40%，主要为中海地产）",
+      "ROE图表为总权益口径（2025年4.9%），已补注归母口径ROE 16.3%→8.2%，趋势判断一致",
+      "持有体验预演回撤数据错误：曾引用未复权的2018-02高点10.54元，已改用前复权月K真实记录（第一段-47.8%、第二段-40.6%至今未修复）",
+      "安全边际由27%修正为26.4%并写明加权口径，档位不变"
+    ],
+    "verdict_impact": "档位『观察·等价格』不变；修正方向均为更保守"
+  }
+}

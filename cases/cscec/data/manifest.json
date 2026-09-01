@@ -1,0 +1,260 @@
+{
+  "company": "中国建筑股份有限公司",
+  "ticker": "sh601668",
+  "built_at": "2026-09-01",
+  "analysis_date": "2026-09-01",
+  "adversarial_check": {
+    "date": "2026-09-01",
+    "result": "已检索（做空报告/财务造假/监管处罚/集体诉讼/审计意见），无财报类一票否决发现",
+    "hits": [
+      "2011 审计署对母公司集团 2009 年度审计：子公司合并报表核算不准确（多计资产 1.54 亿/0.05%），已整改——历史久远且金额占比微小",
+      "2015 副总裁短线交易监管关注（个人违规，非财报问题）",
+      "2015/2017 上交所问询函（激励计划剔除标准）——治理细节",
+      "2019 扬州项目脚手架坠落较大安全事故（子公司施工安全，非财务问题，当时立案调查为事故责任调查而非财务立案）",
+      "2024/2025 安永华明均出具标准无保留意见"
+    ],
+    "kams": "2025 年报关键审计事项：① 工程承包合同收入确认（投入法估计，管理层重大判断）② 应收账款及合同资产减值准备——两事项与本案核心风险直接对应，已纳入五维财务质量深查"
+  },
+  "latest_quarter_checked": {
+    "date": "2026-09-01",
+    "period": "2026H1（2026-08-29 披露）",
+    "result": "已核对：26H1 营收 -12%、归母 -24%、扣非 -27.5%；Q2 降幅扩大（归母 -41%）；但毛利率 +0.9pct、现金流净流出减半、盾牌工程订单改善（1-7 月新签 -0.7% 收窄）。已写入 financials interim 区块。无未消化剧变"
+  },
+  "files": [
+    {
+      "name": "raw_income.md",
+      "source": "结构化金融数据接口（CLS/东财）",
+      "grade": "B",
+      "fetched": "2026-09-01",
+      "period": "2016Q3-2026Q2",
+      "file": "raw_income.md"
+    },
+    {
+      "name": "raw_balance.md",
+      "source": "结构化金融数据接口",
+      "grade": "B",
+      "fetched": "2026-09-01",
+      "period": "2016Q3-2026Q2",
+      "file": "raw_balance.md"
+    },
+    {
+      "name": "raw_cashflow.md",
+      "source": "结构化金融数据接口",
+      "grade": "B",
+      "fetched": "2026-09-01",
+      "period": "2016Q3-2026Q2",
+      "file": "raw_cashflow.md"
+    },
+    {
+      "name": "financials_CSCEC.json",
+      "source": "接口建稿+双源核对",
+      "grade": "A/B",
+      "fetched": "2026-09-01",
+      "period": "2016-2025",
+      "validated": "validate_data 通过（0错误2警告，勾稽覆盖率100%）",
+      "file": "financials_CSCEC.json"
+    },
+    {
+      "name": "filings/cscec_2025_audited_financials.pdf",
+      "source": "巨潮cninfo 1225123336.PDF",
+      "grade": "A",
+      "fetched": "2026-09-01",
+      "note": "图片版无文本，作为原件存档",
+      "file": "filings/cscec_2025_audited_financials.pdf"
+    },
+    {
+      "name": "filings/cscec_2025_audited_cashflow_p.pdf",
+      "source": "SSE big5 镜像 601668_20260418_4BAL.pdf",
+      "grade": "A",
+      "fetched": "2026-09-01",
+      "note": "现金流量表+capex官方凭证",
+      "file": "filings/cscec_2025_audited_cashflow_p.pdf"
+    },
+    {
+      "name": "filings/cscec_2025_annual_summary.pdf",
+      "source": "巨潮cninfo 1225123343.PDF",
+      "grade": "A",
+      "fetched": "2026-09-01",
+      "note": "2025年报摘要（文字版）",
+      "file": "filings/cscec_2025_annual_summary.pdf"
+    },
+    {
+      "name": "market_snapshot.json",
+      "source": "结构化金融数据接口（行情域）",
+      "grade": "A",
+      "fetched": "2026-09-01",
+      "note": "行情快照，分析日",
+      "file": "market_snapshot.json"
+    },
+    {
+      "name": "raw_peers_*.md",
+      "source": "结构化金融数据接口",
+      "grade": "B",
+      "fetched": "2026-09-01",
+      "note": "中国中铁/中国铁建/中国交建三表与行情",
+      "file": "raw_peers_*.md"
+    },
+    {
+      "name": "raw_reports.md",
+      "source": "结构化金融数据接口（研报域）",
+      "grade": "B",
+      "fetched": "2026-09-01",
+      "file": "raw_reports.md"
+    },
+    {
+      "name": "raw_news.md",
+      "source": "结构化金融数据接口 新闻列表",
+      "grade": "C",
+      "fetched": "2026-09-01",
+      "file": "raw_news.md"
+    },
+    {
+      "name": "metrics_CSCEC.json",
+      "file": "metrics_CSCEC.json",
+      "source": "分析产出/官方年报",
+      "grade": "A/B",
+      "fetched": "2026-09-01"
+    },
+    {
+      "name": "metrics_601390.json",
+      "file": "metrics_601390.json",
+      "source": "分析产出/官方年报",
+      "grade": "A/B",
+      "fetched": "2026-09-01"
+    },
+    {
+      "name": "metrics_601186.json",
+      "file": "metrics_601186.json",
+      "source": "分析产出/官方年报",
+      "grade": "A/B",
+      "fetched": "2026-09-01"
+    },
+    {
+      "name": "metrics_601800.json",
+      "file": "metrics_601800.json",
+      "source": "分析产出/官方年报",
+      "grade": "A/B",
+      "fetched": "2026-09-01"
+    },
+    {
+      "name": "segments.json",
+      "file": "segments.json",
+      "source": "分析产出/官方年报",
+      "grade": "A/B",
+      "fetched": "2026-09-01"
+    },
+    {
+      "name": "consensus.json",
+      "file": "consensus.json",
+      "source": "分析产出/官方年报",
+      "grade": "A/B",
+      "fetched": "2026-09-01"
+    },
+    {
+      "name": "expected_return.json",
+      "file": "expected_return.json",
+      "source": "分析产出/官方年报",
+      "grade": "A/B",
+      "fetched": "2026-09-01"
+    },
+    {
+      "name": "scenario_base.json",
+      "file": "scenario_base.json",
+      "source": "分析产出/官方年报",
+      "grade": "A/B",
+      "fetched": "2026-09-01"
+    },
+    {
+      "name": "scenario_pess.json",
+      "file": "scenario_pess.json",
+      "source": "分析产出/官方年报",
+      "grade": "A/B",
+      "fetched": "2026-09-01"
+    },
+    {
+      "name": "scenario_opt.json",
+      "file": "scenario_opt.json",
+      "source": "分析产出/官方年报",
+      "grade": "A/B",
+      "fetched": "2026-09-01"
+    },
+    {
+      "name": "financials_601390.json",
+      "file": "financials_601390.json",
+      "source": "分析产出/官方年报",
+      "grade": "A/B",
+      "fetched": "2026-09-01"
+    },
+    {
+      "name": "financials_601186.json",
+      "file": "financials_601186.json",
+      "source": "分析产出/官方年报",
+      "grade": "A/B",
+      "fetched": "2026-09-01"
+    },
+    {
+      "name": "financials_601800.json",
+      "file": "financials_601800.json",
+      "source": "分析产出/官方年报",
+      "grade": "A/B",
+      "fetched": "2026-09-01"
+    },
+    {
+      "name": "filings/cscec_2024_annual_en.pdf",
+      "file": "filings/cscec_2024_annual_en.pdf",
+      "source": "分析产出/官方年报",
+      "grade": "A/B",
+      "fetched": "2026-09-01"
+    },
+    {
+      "name": "filings/cscec_2021_annual.pdf",
+      "file": "filings/cscec_2021_annual.pdf",
+      "source": "分析产出/官方年报",
+      "grade": "A/B",
+      "fetched": "2026-09-01"
+    },
+    {
+      "name": "filings/cscec_2019_annual.pdf",
+      "file": "filings/cscec_2019_annual.pdf",
+      "source": "分析产出/官方年报",
+      "grade": "A/B",
+      "fetched": "2026-09-01"
+    },
+    {
+      "name": "raw_peers_income.md",
+      "file": "raw_peers_income.md",
+      "source": "分析产出/官方年报",
+      "grade": "A/B",
+      "fetched": "2026-09-01"
+    },
+    {
+      "name": "raw_peers_balance.md",
+      "file": "raw_peers_balance.md",
+      "source": "分析产出/官方年报",
+      "grade": "A/B",
+      "fetched": "2026-09-01"
+    },
+    {
+      "name": "raw_peers_cashflow.md",
+      "file": "raw_peers_cashflow.md",
+      "source": "分析产出/官方年报",
+      "grade": "A/B",
+      "fetched": "2026-09-01"
+    },
+    {
+      "name": "raw_peers_quote.md",
+      "file": "raw_peers_quote.md",
+      "source": "分析产出/官方年报",
+      "grade": "A/B",
+      "fetched": "2026-09-01"
+    },
+    {
+      "name": "manifest.json",
+      "file": "manifest.json",
+      "source": "本清单",
+      "grade": "A",
+      "fetched": "2026-09-01"
+    }
+  ],
+  "notes": "capex 序列：2024/2025 取 SSE 已审财务报表原文（A级），2016-2023 与 Yahoo 及网搜双源一致（B级）。d_and_a 由 compute_metrics 兜底。"
+}

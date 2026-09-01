@@ -1,0 +1,136 @@
+{
+  "company": "中国建筑",
+  "source": "2024年年度报告（英文版，官网 cscec.com.cn P020251030560337094825.pdf）SECTION III MD&A p.30 分部收入表（A级）；2025H1 分部国盛证券点评（B级旁证）",
+  "unit": "million CNY",
+  "segments": [
+    {
+      "name": "房屋建筑工程",
+      "key": "housing",
+      "2024": {
+        "revenue": 1321801.2,
+        "yoy": -0.045,
+        "gross_margin": 0.074
+      },
+      "2023": {
+        "revenue": 1383744.0
+      },
+      "2022": {
+        "revenue": 1265081.5
+      },
+      "share_2024": 0.604
+    },
+    {
+      "name": "基础设施建设与投资",
+      "key": "infrastructure",
+      "2024": {
+        "revenue": 550903.1,
+        "yoy": -0.01,
+        "gross_margin": 0.1
+      },
+      "2023": {
+        "revenue": 556561.5
+      },
+      "2022": {
+        "revenue": 493498.4
+      },
+      "share_2024": 0.252
+    },
+    {
+      "name": "房地产开发与投资",
+      "key": "real_estate",
+      "2024": {
+        "revenue": 306234.2,
+        "yoy": -0.008,
+        "gross_margin": 0.173
+      },
+      "2023": {
+        "revenue": 308807.7
+      },
+      "2022": {
+        "revenue": 282044.6
+      },
+      "share_2024": 0.14
+    },
+    {
+      "name": "勘察设计",
+      "key": "design",
+      "2024": {
+        "revenue": 10821.9,
+        "yoy": -0.079,
+        "gross_margin": 0.21
+      },
+      "2023": {
+        "revenue": 11747.0
+      },
+      "share_2024": 0.005
+    },
+    {
+      "name": "其他（含新兴业务/装备制造）",
+      "key": "others",
+      "2024": {
+        "revenue": 33881.2,
+        "yoy": -0.231,
+        "gross_margin": 0.243
+      },
+      "share_2024": 0.015
+    },
+    {
+      "name": "分部间抵消",
+      "key": "elimination",
+      "2024": {
+        "revenue": -36493.8
+      }
+    },
+    {
+      "name": "海外业务（地区口径）",
+      "key": "overseas",
+      "2024": {
+        "revenue": 118633.7,
+        "yoy": 0.025,
+        "gross_margin": 0.05
+      }
+    }
+  ],
+  "h1_2026": {
+    "source": "国盛证券2026中报点评（B级）",
+    "housing_rev_亿元": 5713,
+    "infra_rev_亿元": 2465,
+    "realestate_rev_亿元": 1520,
+    "yoy": {
+      "housing": -0.18,
+      "infrastructure": -0.1,
+      "real_estate": 0.15
+    },
+    "overseas_rev_亿元": 760,
+    "overseas_yoy": 0.27
+  },
+  "notes": [
+    "分部结构稳定：房建长期占60-61%、基建24-25%、地产13-15%、设计<1%",
+    "毛利率梯队：地产(17-19%)>基建(10%)>房建(7.4%)>海外(5.0%)——地产分部是高毛利少数派，地产下行同时抽走高毛利业务与现金流",
+    "海外毛利率仅5.0%且规模5.4%，海外故事是收入增长但利润贡献有限",
+    "26H1地产收入+15%（低基数反弹），但地产毛利率同比-1pct——毛利率仍在下行通道"
+  ],
+  "chart_arrays": {
+    "years_2": [
+      "2023",
+      "2024"
+    ],
+    "housing_revenue": [
+      1383744.0,
+      1321801.2
+    ],
+    "infra_revenue": [
+      556561.5,
+      550903.1
+    ],
+    "realestate_revenue": [
+      308807.7,
+      306234.2
+    ],
+    "design_revenue": [
+      11747.0,
+      10821.9
+    ],
+    "notes": "与 segments[].2023/2024.revenue 同源的平坦化数组，供报告 vchart 锚点校验"
+  }
+}

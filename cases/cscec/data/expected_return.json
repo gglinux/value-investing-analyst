@@ -1,0 +1,57 @@
+{
+  "price": 4.35,
+  "hold_years": 5,
+  "discount_rate": 0.1,
+  "dividend_yield": 0.0,
+  "dividend_share_of_return": 0.0,
+  "scenarios": [
+    {
+      "name": "悲观",
+      "probability": 0.3,
+      "value_per_share": 3.81,
+      "value_per_share_terminal": 6.136043100000002,
+      "value_is_non_positive": false,
+      "total_return": 0.41058462068965573,
+      "annualized_irr": 0.07122285238591686
+    },
+    {
+      "name": "基准",
+      "probability": 0.5,
+      "value_per_share": 7.42,
+      "value_per_share_terminal": 11.949984200000005,
+      "value_is_non_positive": false,
+      "total_return": 1.7471228045977023,
+      "annualized_irr": 0.2239836451802999
+    },
+    {
+      "name": "乐观",
+      "probability": 0.2,
+      "value_per_share": 9.47,
+      "value_per_share_terminal": 15.251529700000006,
+      "value_is_non_positive": false,
+      "total_return": 2.506098781609197,
+      "annualized_irr": 0.2851825779009256
+    }
+  ],
+  "expected_value_per_share": 6.747,
+  "expected_value_per_share_terminal": 10.866110970000003,
+  "expected_total_return": 1.4979565448275869,
+  "expected_annualized_irr": 0.19039519388611015,
+  "expected_annualized_irr_basis": "probability_weighted_of_per_scenario_irr",
+  "expected_total_return_basis": "on_expected_value_do_not_annualize_for_gate2",
+  "gate2_decision_field": "expected_annualized_irr",
+  "jensen_gap_vs_annualized_total": 0.01053282034984071,
+  "expected_annualized_irr_incl_div": 0.19039519388611015,
+  "pessimistic_irr": 0.07122285238591686,
+  "pessimistic_value_per_share": 3.81,
+  "pessimistic_equity_wiped_out": false,
+  "has_non_positive_scenario": false,
+  "loss_probability": 0.0,
+  "expected_downside_given_loss": null,
+  "probability_weighted_downside": 0.0,
+  "index_hurdle": 0.13,
+  "beats_index": true,
+  "excess_vs_index": 0.06039519388611014,
+  "hurdle_above_discount_rate": true,
+  "note": "IRR=(1+r)×(V0/P)^(1/H)−1：内在价值随时间以折现率增值，已隐含分红+留存增值全部股东回报，股息不再叠加（叠加即重复计算）；折现率 r=10.0% 是 IRR 的下限（P=V0 时 IRR=r），门槛须设在 r 之上才构成有效约束；下行指标（悲观 IRR/亏损概率/亏损跌幅）不可由安全边际单调推出，是闸门二独立信息来源"
+}
