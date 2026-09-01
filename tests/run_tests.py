@@ -435,12 +435,15 @@ with tempfile.TemporaryDirectory() as td:
         "annual": [
             {"year": _cur - 4, "publish_date": f"{_cur-3}-02-01", "revenue": 820.0,
              "net_income": 164.0, "ocf": 200.0, "capex": 45.0, "d_and_a": 36.0,
+             "total_assets": 1430.0, "total_liabilities": 700.0,
              "total_equity": 730.0, "total_debt": 110.0, "cash": 140.0, "shares_diluted": 101.0},
             {"year": _cur - 3, "publish_date": f"{_cur-2}-02-01", "revenue": 900.0,
              "net_income": 180.0, "ocf": 220.0, "capex": 50.0, "d_and_a": 40.0,
+             "total_assets": 1480.0, "total_liabilities": 680.0,
              "total_equity": 800.0, "total_debt": 100.0, "cash": 150.0, "shares_diluted": 100.0},
             {"year": _cur - 2, "publish_date": f"{_cur-1}-02-01", "revenue": 990.0,
              "net_income": 198.0, "ocf": 240.0, "capex": 60.0, "d_and_a": 44.0,
+             "total_assets": 1540.0, "total_liabilities": 660.0,
              "total_equity": 880.0, "total_debt": 90.0, "cash": 160.0, "shares_diluted": 99.0},
         ],
         "crosscheck": [
@@ -726,6 +729,167 @@ for nm, boe, g_, r_, tg_, yr_ in _ARCHIVED_DCF:
     except SystemExit:
         okv = False
     check(f"回归：{nm} 常规假设未被误伤", okv)
+
+print("== 9.9 数据链路门禁（v2.11：静默崩溃/来源误报/覆盖率/搬运完整性） ==")
+
+
+def run_validate(path, extra=None):
+    return subprocess.run(
+        [sys.executable, os.path.join(SCRIPTS, "validate_data.py"), path] + (extra or []),
+        capture_output=True, text=True)
+
+
+def run_transcription(raw, draft, extra=None):
+    return subprocess.run(
+        [sys.executable, os.path.join(SCRIPTS, "check_transcription.py"),
+         "--raw", raw, "--draft", draft] + (extra or []),
+        capture_output=True, text=True)
+
+
+import copy as _c9
+from datetime import date as _d9
+
+_y = _d9.today().year
+
+
+def _draft(nyears=5, with_bs=True, with_pub=True):
+    rows = []
+    for i in range(nyears):
+        yr = _y - nyears + i
+        r = {"year": yr, "revenue": 1000.0 + i * 50, "net_income": 150.0 + i * 5,
+             "ocf": 180.0 + i * 5, "capex": 40.0, "d_and_a": 30.0,
+             "total_equity": 800.0, "total_debt": 100.0, "cash": 150.0,
+             "shares_diluted": 100.0, "gross_profit": 400.0}
+        if with_bs:
+            r["total_assets"] = 1500.0
+            r["total_liabilities"] = 700.0
+        if with_pub:
+            r["publish_date"] = f"{yr + 1}-02-01"
+        rows.append(r)
+    d = {"company": "链路测试", "ticker": "DL", "currency": "USD", "unit": "million",
+         "company_type": "平台/网络效应型", "accounting_standard": "US-GAAP",
+         "fiscal_year_end": "12-31", "annual": rows, "crosscheck": []}
+    for r in rows[-3:]:
+        d["crosscheck"].append({
+            "year": r["year"], "source": f"10-K {r['year']} (EDGAR)",
+            "revenue": r["revenue"], "net_income": r["net_income"],
+            "ocf": r["ocf"], "shares_diluted": r["shares_diluted"]})
+    return d
+
+
+# --- A. 静默崩溃：无 publish_date 时旧版因 date 变量遮蔽裸崩（0错0警+rc=1）---
+with tempfile.TemporaryDirectory() as td:
+    p = os.path.join(td, "financials_nopub.json")
+    json.dump(_draft(with_pub=False), open(p, "w"), ensure_ascii=False)
+    r = run_validate(p)
+    check("无 publish_date 不再静默崩溃（旧版 UnboundLocalError）",
+          "UnboundLocalError" not in (r.stdout + r.stderr), (r.stdout + r.stderr)[-160:])
+    check("无 publish_date 仍能正常产出校验结论",
+          "入口校验" in r.stdout and r.returncode in (0, 1), f"rc={r.returncode}")
+    check("崩溃兜底：内部异常用退出码 3 与数据不合格(1)区分",
+          "退出码 3" in open(os.path.join(SCRIPTS, "validate_data.py"),
+                            encoding="utf-8").read())
+
+# --- B. 来源判定顺序：官方原文 + 降级措辞并存时不得误报 ---
+with tempfile.TemporaryDirectory() as td:
+    d = _draft()
+    d["crosscheck"][-1]["source"] = "20-F 2025 披露接口值（Q4 业绩公告交叉）"
+    p = os.path.join(td, "financials_src.json")
+    json.dump(d, open(p, "w"), ensure_ascii=False)
+    r = run_validate(p)
+    check("含『20-F』的来源不因含『接口』被判非官方（PDD 误报修复）",
+          "非官方披露原文" not in r.stdout, r.stdout[-200:])
+    check("但会提示措辞混用（仅警告不阻断）",
+          "来源措辞含降级词" in r.stdout, r.stdout[-200:])
+    import importlib.util as _ilu
+    _spec = _ilu.spec_from_file_location("vd", os.path.join(SCRIPTS, "validate_data.py"))
+    _vd = _ilu.module_from_spec(_spec)
+    _spec.loader.exec_module(_vd)
+    check("is_official_source: 纯降级来源仍判非官方",
+          _vd.is_official_source("四季度加总估算") is False)
+    check("is_official_source: 官方标识优先命中",
+          _vd.is_official_source("20-F 披露接口值") is True)
+
+# --- C. 覆盖率哨兵：缺资产负债表致勾稽大面积未执行时必须阻断 ---
+with tempfile.TemporaryDirectory() as td:
+    p = os.path.join(td, "financials_nobs.json")
+    json.dump(_draft(with_bs=False), open(p, "w"), ensure_ascii=False)
+    r = run_validate(p)
+    check("勾稽覆盖率 0% 时阻断（旧版仅 WARN 后判通过）",
+          r.returncode == 1 and "覆盖率哨兵" in r.stdout, f"rc={r.returncode}")
+    r2 = run_validate(p, ["--skip-crosscheck"])
+    check("竞对底稿降级为警告不阻断",
+          "覆盖率哨兵" in r2.stdout and r2.returncode == 0, f"rc={r2.returncode}")
+    mp = os.path.join(td, "manifest.json")
+    json.dump({"reconciliation_coverage_waiver": {"reason": "早年未披露"},
+               "files": [{"name": "x", "source": "EDGAR", "grade": "A级"}],
+               "adversarial_check": "已检索无发现"},
+              open(mp, "w"), ensure_ascii=False)
+    r3 = run_validate(p)
+    check("manifest 登记豁免后放行（显式承担而非静默）",
+          r3.returncode == 0 and "已登记豁免" in r3.stdout, f"rc={r3.returncode}")
+    with tempfile.TemporaryDirectory() as td2:
+        p4 = os.path.join(td2, "financials_ok.json")
+        json.dump(_draft(with_bs=True), open(p4, "w"), ensure_ascii=False)
+        r4 = run_validate(p4)
+        check("勾稽 100% 覆盖不触发哨兵（不误伤合格底稿）",
+              "覆盖率哨兵" not in r4.stdout and r4.returncode == 0, f"rc={r4.returncode}")
+
+# --- D. 信息广度：对立面检索未留痕须提示 ---
+with tempfile.TemporaryDirectory() as td:
+    p = os.path.join(td, "financials_adv.json")
+    json.dump(_draft(), open(p, "w"), ensure_ascii=False)
+    json.dump({"files": [{"name": "a", "source": "EDGAR", "grade": "A级"}]},
+              open(os.path.join(td, "manifest.json"), "w"), ensure_ascii=False)
+    r = run_validate(p)
+    check("manifest 无对立面检索留痕时告警（10 案例仅 1 个登记）",
+          "对立面检索" in r.stdout, r.stdout[-200:])
+    json.dump({"files": [{"name": "a", "source": "EDGAR", "grade": "A级"}],
+               "adversarial_check": {"date": "2026-09-01", "result": "无发现"}},
+              open(os.path.join(td, "manifest.json"), "w"), ensure_ascii=False)
+    r2 = run_validate(p)
+    check("登记后不再告警", "对立面检索" not in r2.stdout, r2.stdout[-200:])
+
+# --- E. 搬运完整性：抽取有值→底稿为空必须报错（GOOG/TSM 实证事故）---
+with tempfile.TemporaryDirectory() as td:
+    raw = {str(_y - 3): {"revenue": 1000e6, "net_income": 150e6, "ocf": 180e6,
+                         "assets": 1500e6, "liabilities": 700e6, "equity": 800e6},
+           str(_y - 2): {"revenue": 1050e6, "net_income": 155e6, "ocf": 185e6,
+                         "assets": 1600e6, "liabilities": 750e6, "equity": 850e6}}
+    rp = os.path.join(td, "raw.json")
+    json.dump(raw, open(rp, "w"))
+    d = {"company": "T", "currency": "USD", "unit": "million", "annual": [
+        {"year": _y - 3, "revenue": 1000.0, "net_income": 150.0, "ocf": 180.0},
+        {"year": _y - 2, "revenue": 1050.0, "net_income": 155.0, "ocf": 185.0}]}
+    dp = os.path.join(td, "draft.json")
+    json.dump(d, open(dp, "w"))
+    r = run_transcription(rp, dp)
+    check("搬运丢失资产负债表科目被判 ERROR", r.returncode == 1, f"rc={r.returncode}")
+    check("报错指明丢失字段与年份", "total_assets" in r.stdout and "搬运丢失" in r.stdout)
+    for row in d["annual"]:
+        yy = str(row["year"])
+        row["total_assets"] = raw[yy]["assets"] / 1e6
+        row["total_liabilities"] = raw[yy]["liabilities"] / 1e6
+        row["total_equity"] = raw[yy]["equity"] / 1e6
+    json.dump(d, open(dp, "w"))
+    r2 = run_transcription(rp, dp)
+    check("补齐后搬运校验通过", r2.returncode == 0, r2.stdout[-200:])
+    d["annual"][0]["revenue"] = 1200.0
+    json.dump(d, open(dp, "w"))
+    r3 = run_transcription(rp, dp)
+    check("数值搬错（1000→1200）被捕获",
+          r3.returncode == 1 and "搬运不一致" in r3.stdout, r3.stdout[-200:])
+
+# --- F. 口径合法差异豁免：cash 用 cash_sti 口径不得误报 ---
+with tempfile.TemporaryDirectory() as td:
+    raw = {str(_y - 2): {"revenue": 1000e6, "cash": 12e6, "cash_sti": 86e6}}
+    rp, dp = os.path.join(td, "r.json"), os.path.join(td, "d.json")
+    json.dump(raw, open(rp, "w"))
+    json.dump({"company": "T", "unit": "million", "annual": [
+        {"year": _y - 2, "revenue": 1000.0, "cash": 86.0}]}, open(dp, "w"))
+    r = run_transcription(rp, dp)
+    check("底稿 cash 取 cash_sti 口径不误报（GOOG 真实形态）",
+          "cash" not in r.stdout.replace("cash_sti", ""), r.stdout[-200:])
 
 print()
 if FAILED:

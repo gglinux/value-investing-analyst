@@ -62,6 +62,11 @@ description: 价值投资深度公司分析。输入一家上市公司（A股/�
 7. **数据底稿（唯一事实源）**：所有数据存入 `<公司名>_analysis/data/`，优先 JSON（便于校验脚本读取），注明来源、来源等级（A/B/C）与截止日。财务底稿头部必须填写口径注册表字段：`accounting_standard`（CAS/IFRS/US-GAAP）、`fiscal_year_end`、`currency`、`fx_basis`（涉及换算时）——财年错位（如苹果 9 月财年）与币种差异必须在竞对图表脚注注明。**annual 各行须带 `publish_date`（年报发布日，A股接口 InfoPublDate / EDGAR filing date），至少覆盖最近 3 年**——复盘校准按发布日截断"当时市场知道什么"，防前视偏差（validate_data 会检查）。**分部收入必须结构化落盘 `data/segments.json`**（分部名/收入/占比/同比，至少最近 2 年），且取值只认年报/20-F 分部报告附注（A 级，登记 filings 文件名+页码），接口主营构成与新闻转述只作交叉验证——竞对判定的"业务分部重叠度"与估值对账的"TAM×份额"都以它为输入，不允许只在正文引用而底稿缺失。**后续所有阶段引用的数字必须出自底稿**，底稿没有的数字先补采再引用。
 8. **数据清单 manifest**：维护 `data/manifest.json`，逐文件记录：来源、来源等级、抓取时间、覆盖期间、是否已通过入口校验。复分析时据此判断哪些底稿可复用、哪些必须重拉（行情/估值分位/一致预期强制重拉）。
 9. **入口校验（Phase 1 出口关卡）**：每份财务底稿运行 `python3 scripts/validate_data.py data/financials_<公司>.json`（竞对可加 `--skip-crosscheck`）。脚本做四类确定性检查：三表勾稽、单位一致性（百万/亿混淆检测）、核心科目同比突变 ±50% 必须标注原因、crosscheck 双源核对比对。**错误清零才允许进入 Phase 2**；警告写入 manifest 与报告附录。
+   - **退出码语义**：`0` 通过（可含警告）、`1` 数据不合格、`3` 校验器自身异常。**`3` 绝不可当作"已校验"或"数据不合格"** —— 那是脚本 bug，修脚本后重跑。
+   - **覆盖率纪律**：三表勾稽只在 `total_assets`/`total_liabilities`/`total_equity` 三者齐备的年份才会执行，缺科目的年份是**跳过**而非通过。主体公司勾稽覆盖率须 ≥60%，否则阻断；确实无法补齐时在 `manifest.json` 登记 `reconciliation_coverage_waiver`（写明原因）显式承担。**"0 错误"必须连同覆盖率一起读**：GOOG/TSM 曾以 18% 覆盖率通过校验，等于 11 年里只有 2 年真做了勾稽。
+9.5. **搬运完整性校验（抽取 → 底稿，Phase 1 强制）**：凡使用抽取脚本（如 `extract_edgar_annual.py`）产出中间产物的，必须运行
+   `python3 scripts/check_transcription.py --raw data/raw_edgar_annual.json --draft data/financials_<公司>.json`。
+   数据链路是**采集 → 建稿 → 计算**三段，`validate_data` 守"底稿 ≈ 事实"、`verify_report` 守"报告 = 底稿"，而**中间"抽取产物 → 底稿"的搬运曾无人看守**。实证事故：GOOG/TSM 的 EDGAR 抽取产物 9 年都拿到了 `assets`/`liabilities`/`equity`，但建稿时只搬进 1 年，其余为 `null` —— 数据不是拿不到，是**有却没搬进去且无人知晓**，导致核心取证检查静默失效。该脚本逐年逐字段比对，抽取有值而底稿为空即报错（`assets`/`liabilities`/`equity`/`revenue`/`net_income`/`ocf` 属关键字段）。
 
 ### Phase 2：定量画像与图表
 
