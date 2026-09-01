@@ -1,125 +1,131 @@
 {
- "company": "台积电",
- "ticker": "TSM",
- "built_at": "2026-08-31",
- "latest_quarter_checked": "2026Q2 (2026-08-14 6-K 半年度审计审阅报表, TW-IFRS; 1H26 收入 +40%, 无未消化剧变)",
- "files": [
-  {
-   "file": "financials_TSM.json",
-   "source": "EDGAR companyfacts + 20-F 审计报表组装",
-   "grade": "A",
-   "validated": true,
-   "period": "2015-2025"
+  "company": "台积电",
+  "ticker": "TSM",
+  "built_at": "2026-08-31",
+  "latest_quarter_checked": "2026Q2 (2026-08-14 6-K 半年度审计审阅报表, TW-IFRS; 1H26 收入 +40%, 无未消化剧变)",
+  "files": [
+    {
+      "file": "financials_TSM.json",
+      "source": "EDGAR companyfacts + 20-F 审计报表组装",
+      "grade": "A",
+      "validated": true,
+      "period": "2015-2025"
+    },
+    {
+      "file": "metrics_TSM.json",
+      "source": "compute_metrics.py 输出",
+      "grade": "A",
+      "validated": true
+    },
+    {
+      "file": "market_snapshot.json",
+      "source": "行情接口 quote",
+      "grade": "A",
+      "date": "2026-08-28"
+    },
+    {
+      "file": "segments.json",
+      "source": "法说会披露+季报转引",
+      "grade": "B",
+      "date": "4Q25/FY2025"
+    },
+    {
+      "file": "consensus.json",
+      "source": "Yahoo/MarketWatch/FactSet 汇总",
+      "grade": "C",
+      "note": "旁证",
+      "date": "2026-08-31"
+    },
+    {
+      "file": "valuation.json",
+      "source": "reverse_dcf.py 输出手工整合",
+      "grade": "A",
+      "validated": true
+    },
+    {
+      "file": "expected_return.json",
+      "source": "reverse_dcf.py expected-return 输出",
+      "grade": "A",
+      "validated": true
+    },
+    {
+      "file": "raw_finance_income.txt",
+      "source": "结构化金融数据接口（季度, USD）",
+      "grade": "A"
+    },
+    {
+      "file": "raw_finance_balance.txt",
+      "source": "结构化金融数据接口（季度, USD）",
+      "grade": "A"
+    },
+    {
+      "file": "raw_finance_cashflow.txt",
+      "source": "结构化金融数据接口（季度, USD）",
+      "grade": "A"
+    },
+    {
+      "file": "filings/tsm_fy2025_consolidated_report.htm",
+      "source": "SEC 6-K 2026-02-26 审计合并报表(英文)",
+      "grade": "A",
+      "note": "FY2025+FY2024比较期"
+    },
+    {
+      "file": "filings/tsm-2025-20f.htm",
+      "source": "SEC 20-F 2026-04-16",
+      "grade": "A"
+    },
+    {
+      "file": "filings/tsm-2024-20f.htm",
+      "source": "SEC 20-F 2025-04-17",
+      "grade": "A",
+      "note": "FY2024+FY2023比较期"
+    },
+    {
+      "file": "filings/tsm-2023-20f.htm",
+      "source": "SEC 20-F 2024-04-18",
+      "grade": "A"
+    },
+    {
+      "file": "filings/tsm-2021-20f.htm",
+      "source": "SEC 20-F 2022-04-14",
+      "grade": "A"
+    },
+    {
+      "file": "filings/tsm-2019-20f.htm",
+      "source": "SEC 20-F 2020-04-15",
+      "grade": "A"
+    },
+    {
+      "file": "filings/tsm-2017-20f.htm",
+      "source": "SEC 20-F 2018-04-19",
+      "grade": "A"
+    },
+    {
+      "file": "filings/tsm_companyfacts.json",
+      "source": "SEC XBRL companyfacts",
+      "grade": "A",
+      "note": "BS 行有已知错位风险, 仅 PL/CF 参考"
+    },
+    {
+      "file": "manifest.json",
+      "source": "数据清单与排雷检索记录",
+      "grade": "A"
+    }
+  ],
+  "adversarial_check": {
+    "query": "TSMC/台积电 + 做空/造假/处罚/诉讼/审计意见",
+    "result": "无造假前科、无做空报告; Deloitte 持续无保留意见; 美国厂员工歧视集体诉讼(进行中, 量级小)+Tokyo Electron 商业秘密案(台积为受害方)+前SVP竞业诉讼(主动起诉方); 不触发排雷清单",
+    "date": "2026-08-31"
   },
-  {
-   "file": "metrics_TSM.json",
-   "source": "compute_metrics.py 输出",
-   "grade": "A",
-   "validated": true
-  },
-  {
-   "file": "market_snapshot.json",
-   "source": "行情接口 quote",
-   "grade": "A",
-   "date": "2026-08-28"
-  },
-  {
-   "file": "segments.json",
-   "source": "法说会披露+季报转引",
-   "grade": "B",
-   "date": "4Q25/FY2025"
-  },
-  {
-   "file": "consensus.json",
-   "source": "Yahoo/MarketWatch/FactSet 汇总",
-   "grade": "C",
-   "note": "旁证",
-   "date": "2026-08-31"
-  },
-  {
-   "file": "valuation.json",
-   "source": "reverse_dcf.py 输出手工整合",
-   "grade": "A",
-   "validated": true
-  },
-  {
-   "file": "expected_return.json",
-   "source": "reverse_dcf.py expected-return 输出",
-   "grade": "A",
-   "validated": true
-  },
-  {
-   "file": "raw_finance_income.txt",
-   "source": "结构化金融数据接口（季度, USD）",
-   "grade": "A"
-  },
-  {
-   "file": "raw_finance_balance.txt",
-   "source": "结构化金融数据接口（季度, USD）",
-   "grade": "A"
-  },
-  {
-   "file": "raw_finance_cashflow.txt",
-   "source": "结构化金融数据接口（季度, USD）",
-   "grade": "A"
-  },
-  {
-   "file": "filings/tsm_fy2025_consolidated_report.htm",
-   "source": "SEC 6-K 2026-02-26 审计合并报表(英文)",
-   "grade": "A",
-   "note": "FY2025+FY2024比较期"
-  },
-  {
-   "file": "filings/tsm-2025-20f.htm",
-   "source": "SEC 20-F 2026-04-16",
-   "grade": "A"
-  },
-  {
-   "file": "filings/tsm-2024-20f.htm",
-   "source": "SEC 20-F 2025-04-17",
-   "grade": "A",
-   "note": "FY2024+FY2023比较期"
-  },
-  {
-   "file": "filings/tsm-2023-20f.htm",
-   "source": "SEC 20-F 2024-04-18",
-   "grade": "A"
-  },
-  {
-   "file": "filings/tsm-2021-20f.htm",
-   "source": "SEC 20-F 2022-04-14",
-   "grade": "A"
-  },
-  {
-   "file": "filings/tsm-2019-20f.htm",
-   "source": "SEC 20-F 2020-04-15",
-   "grade": "A"
-  },
-  {
-   "file": "filings/tsm-2017-20f.htm",
-   "source": "SEC 20-F 2018-04-19",
-   "grade": "A"
-  },
-  {
-   "file": "filings/tsm_companyfacts.json",
-   "source": "SEC XBRL companyfacts",
-   "grade": "A",
-   "note": "BS 行有已知错位风险, 仅 PL/CF 参考"
-  },
-  {
-   "file": "manifest.json",
-   "source": "数据清单与排雷检索记录",
-   "grade": "A"
+  "notes": [
+    "结构化金融数据接口TSM 年度利润表行实为 Q4 单季 USD 值（非全年），解析时已识别，未误用",
+    "EDGAR companyfacts 的 FPI 资产负债表行存在一年错位（BS 与 FY 标签错位），已用 20-F 审计原文锁定 2022-2025",
+    "FY2024 净利有 +1.3% IFRS 重述（1,158.4B→1,173.3B），底稿采用 FY2025 审计报表的重述后口径"
+  ],
+  "reconciliation_coverage_waiver": {
+    "reason": "底稿为 Taiwan-IFRS 口径，而 raw_edgar_annual.json 为 SEC IASB-IFRS 口径，两套准则数值不同（台积电 6-K 2025-04-17 披露差异源于 ROC 未分配盈余税确认时点），不可跨准则回填；且 2016/2017 total_equity 与两套官方口径均不匹配（存在年度错位），需按单一准则重建整份底稿。已在 cases/README.md 数据完整性勘误中登记为『待重建』。",
+    "registered_at": "2026-09-01",
+    "impact": "ROE/BVPS 类指标不可引用；估值结论走 DCF/FCF 路径，不依赖权益科目，档位结论不受影响",
+    "todo": "按 Taiwan-IFRS 单一准则重建 financials_TSM.json（数据源：台积电年报合并报表，非 SEC XBRL）"
   }
- ],
- "adversarial_check": {
-  "query": "TSMC/台积电 + 做空/造假/处罚/诉讼/审计意见",
-  "result": "无造假前科、无做空报告; Deloitte 持续无保留意见; 美国厂员工歧视集体诉讼(进行中, 量级小)+Tokyo Electron 商业秘密案(台积为受害方)+前SVP竞业诉讼(主动起诉方); 不触发排雷清单",
-  "date": "2026-08-31"
- },
- "notes": [
-  "结构化金融数据接口TSM 年度利润表行实为 Q4 单季 USD 值（非全年），解析时已识别，未误用",
-  "EDGAR companyfacts 的 FPI 资产负债表行存在一年错位（BS 与 FY 标签错位），已用 20-F 审计原文锁定 2022-2025",
-  "FY2024 净利有 +1.3% IFRS 重述（1,158.4B→1,173.3B），底稿采用 FY2025 审计报表的重述后口径"
- ]
 }

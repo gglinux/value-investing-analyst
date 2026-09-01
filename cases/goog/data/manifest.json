@@ -1,87 +1,95 @@
 {
- "company": "谷歌 (Alphabet)",
- "ticker": "GOOG",
- "built_at": "2026-08-31",
- "latest_quarter_checked": "已核对 2026Q1/Q2（4/29、7/22 财报，含 capex 上修至 $195-205B、Q2 负 FCF $5.9B、Gemini 3.5 Pro 延期报道）；无未消化剧变，Q2'26 一次性收益已作通用化处理",
- "files": [
-  {
-   "file": "financials_GOOG.json",
-   "source": "EDGAR companyfacts + 结构化金融数据接口四季加总",
-   "grade": "A",
-   "validated": true,
-   "period": "2015-2025"
+  "company": "谷歌 (Alphabet)",
+  "ticker": "GOOG",
+  "built_at": "2026-08-31",
+  "latest_quarter_checked": "已核对 2026Q1/Q2（4/29、7/22 财报，含 capex 上修至 $195-205B、Q2 负 FCF $5.9B、Gemini 3.5 Pro 延期报道）；无未消化剧变，Q2'26 一次性收益已作通用化处理",
+  "files": [
+    {
+      "file": "financials_GOOG.json",
+      "source": "EDGAR companyfacts + 结构化金融数据接口四季加总",
+      "grade": "A",
+      "validated": true,
+      "period": "2015-2025"
+    },
+    {
+      "file": "metrics_GOOG.json",
+      "source": "compute_metrics.py 输出",
+      "grade": "A",
+      "validated": true,
+      "note": "周期高位+爬坡期扭曲年双触发；引擎推荐正常化 94.1B，本报告按双轨+FY2026E 通用化主轨 165B"
+    },
+    {
+      "file": "market_snapshot.json",
+      "source": "结构化行情接口",
+      "grade": "A",
+      "date": "2026-08-31"
+    },
+    {
+      "file": "segments.json",
+      "source": "10-K 分部披露+StatCounter",
+      "grade": "A/B"
+    },
+    {
+      "file": "consensus.json",
+      "source": "Yahoo/MarketWatch/S&P Global 汇总",
+      "grade": "C",
+      "note": "旁证；FY2027 EPS 回落为关键证据"
+    },
+    {
+      "file": "valuation.json",
+      "source": "reverse_dcf.py 输出整合",
+      "grade": "A",
+      "validated": true
+    },
+    {
+      "file": "expected_return.json",
+      "source": "reverse_dcf.py expected-return 输出",
+      "grade": "A",
+      "validated": true
+    },
+    {
+      "file": "raw_finance_income.txt",
+      "source": "结构化金融数据接口（季度，USD）",
+      "grade": "A"
+    },
+    {
+      "file": "raw_finance_balance.txt",
+      "source": "结构化金融数据接口（季度，USD）",
+      "grade": "A"
+    },
+    {
+      "file": "raw_finance_cashflow.txt",
+      "source": "结构化金融数据接口（季度，USD）",
+      "grade": "A"
+    },
+    {
+      "file": "filings/goog_companyfacts.json",
+      "source": "SEC XBRL companyfacts",
+      "grade": "A"
+    },
+    {
+      "file": "manifest.json",
+      "source": "数据清单与排雷检索记录",
+      "grade": "A"
+    }
+  ],
+  "adversarial_check": {
+    "query": "Alphabet/Google + fraud/造假/诉讼/审计意见",
+    "result": "无财务造假前科，审计师 EY 稳定。命中：①多家律所股价下跌集体征集（2026Q2 财报后 -6.9% 触发，属市场常规扰动非实质指控）；②Gemini 3.5 Pro 延期报道；③历史欧盟反垄断罚款（一次性合规成本，非财务造假）；④DOJ 反垄断案（2024 败诉，Chrome/搜索分发协议审查中，中期尾部风险）。记红旗 1 条（监管与披露透明度争议），不构成否决。",
+    "date": "2026-08-31"
   },
-  {
-   "file": "metrics_GOOG.json",
-   "source": "compute_metrics.py 输出",
-   "grade": "A",
-   "validated": true,
-   "note": "周期高位+爬坡期扭曲年双触发；引擎推荐正常化 94.1B，本报告按双轨+FY2026E 通用化主轨 165B"
-  },
-  {
-   "file": "market_snapshot.json",
-   "source": "结构化行情接口",
-   "grade": "A",
-   "date": "2026-08-31"
-  },
-  {
-   "file": "segments.json",
-   "source": "10-K 分部披露+StatCounter",
-   "grade": "A/B"
-  },
-  {
-   "file": "consensus.json",
-   "source": "Yahoo/MarketWatch/S&P Global 汇总",
-   "grade": "C",
-   "note": "旁证；FY2027 EPS 回落为关键证据"
-  },
-  {
-   "file": "valuation.json",
-   "source": "reverse_dcf.py 输出整合",
-   "grade": "A",
-   "validated": true
-  },
-  {
-   "file": "expected_return.json",
-   "source": "reverse_dcf.py expected-return 输出",
-   "grade": "A",
-   "validated": true
-  },
-  {
-   "file": "raw_finance_income.txt",
-   "source": "结构化金融数据接口（季度，USD）",
-   "grade": "A"
-  },
-  {
-   "file": "raw_finance_balance.txt",
-   "source": "结构化金融数据接口（季度，USD）",
-   "grade": "A"
-  },
-  {
-   "file": "raw_finance_cashflow.txt",
-   "source": "结构化金融数据接口（季度，USD）",
-   "grade": "A"
-  },
-  {
-   "file": "filings/goog_companyfacts.json",
-   "source": "SEC XBRL companyfacts",
-   "grade": "A"
-  },
-  {
-   "file": "manifest.json",
-   "source": "数据清单与排雷检索记录",
-   "grade": "A"
+  "notes": [
+    "FY2025 已全部锁定 SEC 10-K XBRL（filed 2026-02-05）[E:filings/goog-2025-10k.htm]：净利/OCF/capex/折旧与此前四季度加总分毫不差，收入低 0.16%；首轮'10-K 未入库'判断为错误认知，根因是抽取脚本概念优先级静默丢弃 FY2025（Revenues 标签切换），已固化为 validate_data.py A1 门禁 + extract_edgar_annual.py 逐年回退",
+    "股本序列曾在首轮手填低估约一半（5620/6044 系列，单位口径错误）；已修正：2022-2025 用 XBRL 加权摊薄 [13160/12720/12450/12230]，2015-2021 按 2022-07 拆股 20:1 调整估算（±1%）",
+    "FY2025 回购 45.7B（首轮估 70B）、长期债 49.1B（首轮估 28B；2025 发债支持 AI capex）已按 10-K 修正",
+    "结构化金融数据接口年度行实为 Q4 单季值（TSM 同款口径已识别），历史序列按季度加总处理"
+  ],
+  "data_backfill_20260901": {
+    "date": "2026-09-01",
+    "action": "从 raw_edgar_annual.json 回填底稿缺失科目（建稿时搬运丢失）",
+    "fields": "total_assets/total_liabilities/total_equity/op_income/dividends/da，2016-2023 共 34 处",
+    "source": "SEC EDGAR XBRL companyfacts（us-gaap Assets/Liabilities/StockholdersEquity），A 级",
+    "effect": "三表勾稽覆盖率 18%(2/11) → 91%(10/11)，回填年度逐年零偏差通过",
+    "verified_by": "scripts/check_transcription.py（0 错 0 警）+ scripts/validate_data.py（0 错）"
   }
- ],
- "adversarial_check": {
-  "query": "Alphabet/Google + fraud/造假/诉讼/审计意见",
-  "result": "无财务造假前科，审计师 EY 稳定。命中：①多家律所股价下跌集体征集（2026Q2 财报后 -6.9% 触发，属市场常规扰动非实质指控）；②Gemini 3.5 Pro 延期报道；③历史欧盟反垄断罚款（一次性合规成本，非财务造假）；④DOJ 反垄断案（2024 败诉，Chrome/搜索分发协议审查中，中期尾部风险）。记红旗 1 条（监管与披露透明度争议），不构成否决。",
-  "date": "2026-08-31"
- },
- "notes": [
-  "FY2025 已全部锁定 SEC 10-K XBRL（filed 2026-02-05）[E:filings/goog-2025-10k.htm]：净利/OCF/capex/折旧与此前四季度加总分毫不差，收入低 0.16%；首轮'10-K 未入库'判断为错误认知，根因是抽取脚本概念优先级静默丢弃 FY2025（Revenues 标签切换），已固化为 validate_data.py A1 门禁 + extract_edgar_annual.py 逐年回退",
-  "股本序列曾在首轮手填低估约一半（5620/6044 系列，单位口径错误）；已修正：2022-2025 用 XBRL 加权摊薄 [13160/12720/12450/12230]，2015-2021 按 2022-07 拆股 20:1 调整估算（±1%）",
-  "FY2025 回购 45.7B（首轮估 70B）、长期债 49.1B（首轮估 28B；2025 发债支持 AI capex）已按 10-K 修正",
-  "结构化金融数据接口年度行实为 Q4 单季值（TSM 同款口径已识别），历史序列按季度加总处理"
- ]
 }

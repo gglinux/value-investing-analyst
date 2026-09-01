@@ -59,7 +59,7 @@ import argparse
 import json
 import os
 import sys
-from datetime import date, timedelta
+from datetime import date, datetime, timedelta
 
 SPIKE_KEYS = ["revenue", "net_income", "ocf", "capex", "total_equity", "shares_diluted"]
 SPIKE_THRESHOLD = 0.5
@@ -100,10 +100,35 @@ def load_manifest(dirname):
 
 
 def is_official_source(src):
+    """判定 crosscheck.source 是否指向官方披露原文。
+
+    ⚠️ 顺序敏感（v2.11 修正）：旧实现先扫降级词再扫官方词，只要出现
+    "接口/加总/估算"任一字样就直接判降级——导致 “20-F 2025 披露接口值
+    （Q4 业绩公告交叉）” 这类**确实引用了 20-F 原文**、只是措辞里带了
+    "接口" 的来源被误判为降级，PDD 归档底稿因此 A2 报错。
+
+    正确语义：官方原文标识（10-K/20-F/年报/EDGAR/巨潮…）是**强证据**，
+    一旦命中即认定为官方；降级词只在**没有任何官方标识**时才作为判定依据。
+    否则会出现"越写清楚数据怎么来的、越容易被门禁误杀"的反向激励——
+    这会逼分析师把来源写得含糊，直接摧毁溯源纪律本身。
+    """
     s = str(src or "")
-    if any(h in s for h in DOWNGRADE_SOURCE_HINTS):
-        return False
-    return any(h in s for h in OFFICIAL_SOURCE_HINTS)
+    has_official = any(h in s for h in OFFICIAL_SOURCE_HINTS)
+    if has_official:
+        return True
+    return False
+
+
+def source_wording_note(src):
+    """官方来源但措辞混入降级词时，返回提示语（仅警告，不阻断）。"""
+    s = str(src or "")
+    if not any(h in s for h in OFFICIAL_SOURCE_HINTS):
+        return None
+    hit = [h for h in DOWNGRADE_SOURCE_HINTS if h in s]
+    if hit:
+        return (f"来源措辞含降级词 {hit}，但已标明官方原文——"
+                "请明确该科目究竟取自原文还是接口，避免口径混淆")
+    return None
 
 
 def rel_diff(a, b):
@@ -167,7 +192,12 @@ def main():
     pub_dates = [r.get("publish_date") for r in rows if r.get("publish_date")]
     if pub_dates:
         try:
-            from datetime import datetime, date
+            # 注意：严禁在此处写 `from datetime import date` ——
+            # 函数内的局部 import 会把 `date` 变成整个函数的局部名，
+            # 遮蔽模块级 import；当底稿没有任何 publish_date 时该语句不执行，
+            # 后续 A1 哨兵的 date.today() 即抛 UnboundLocalError，
+            # 且因裸崩在 report() 之前，表现为「0 错误 0 警告 + 退出码 1」的
+            # 静默失败（NVDA 底稿正是此形态）。模块级已 import，直接用。
             latest_pub = max(datetime.strptime(d, "%Y-%m-%d").date() for d in pub_dates)
             gap = (date.today() - latest_pub).days
             if gap > 100:
@@ -387,6 +417,10 @@ def main():
                     errors.append(a2msg)
                 else:
                     warns.append(a2msg)
+            else:
+                note = source_wording_note(src)
+                if note:
+                    warns.append(f"双源核对 {y}: {note}")
             row = by_year.get(y)
             if row is None:
                 errors.append(f"双源核对 {y}: annual 中无该年度数据")
@@ -404,11 +438,91 @@ def main():
                     errors.append(f"双源核对 {y}: `{k}` 底稿({dv}) vs 官方({ov}) 偏差 {d:.1%}，"
                                   "以官方披露为准修正底稿并在 spike_notes 记录差异原因")
 
+    # 5.5 校验覆盖率哨兵（v2.11 新增）——最危险的失效形态：
+    # "0 错误"可能意味着"检查全通过"，也可能意味着"因为缺数据，检查根本没跑"。
+    # 二者在旧输出里完全无法区分：缺 total_assets 只给一条 WARN，
+    # 而三表勾稽是最核心的取证检查，缺科目即整年跳过。
+    # 实证：GOOG 11 年仅 2 年可勾稽、TSM 11 年仅 2 年，两者都以 "0 错误/通过" 收尾，
+    # 勾稽覆盖率 18% —— 报告却据此宣称"数据已通过入口校验"。
+    # 现按覆盖率分级：主体公司核心检查覆盖率过低即阻断，逼数据补齐或显式豁免。
+    if not is_bank and not is_insurance:
+        n = len(rows)
+        tie_ok = sum(1 for r in rows
+                     if r.get("total_assets") is not None
+                     and r.get("total_liabilities") is not None
+                     and r.get("total_equity") is not None)
+        cov = tie_ok / n if n else 0.0
+        cov_msg = (f"校验覆盖率哨兵：三表勾稽仅覆盖 {tie_ok}/{n} 年（{cov:.0%}）——"
+                   "缺 total_assets/total_liabilities 的年份直接跳过勾稽，"
+                   "『0 错误』在这些年份不代表数据可信，只代表没检查。")
+        exempt = (manifest or {}).get("reconciliation_coverage_waiver") or {}
+        if cov < 0.6:
+            if args.skip_crosscheck:
+                warns.append(cov_msg + "（竞对底稿降级为警告）")
+            elif exempt.get("reason"):
+                warns.append(cov_msg + f"（manifest 已登记豁免: {exempt.get('reason')}）")
+            else:
+                errors.append(
+                    cov_msg + " 主体公司要求 ≥60%：请补齐资产负债表科目"
+                    "（EDGAR XBRL 的 Assets/Liabilities/StockholdersEquity 概念，"
+                    "注意含 NCI 口径），或在 manifest.json 登记 "
+                    "`reconciliation_coverage_waiver`（reason 写明为何无法补齐）")
+        elif cov < 1.0:
+            warns.append(cov_msg + " 已达 60% 门槛，但仍建议补全。")
+
+    # 5.6 信息广度与溯源元数据哨兵（v2.11 新增）
+    # 数据质量不只是"数字对不对"，还包括"该看的信息有没有看"。
+    # SKILL.md/data-sourcing.md 明确要求：对立面检索（做空报告/造假/处罚/诉讼）
+    # 必须执行且未命中也要在 manifest 登记；manifest 须逐文件记录来源等级。
+    # 实证：10 个归档案例中登记了 adversarial_check 的只有 1 个（GOOG），
+    # weibo 的 manifest 只有 files 一个键 —— 纯文档纪律没有执行力。
+    # 信息流里全是公司自己说的话，是最贵的错误的起点，故升级为可机器校验的关卡。
+    if not args.skip_crosscheck:
+        mf = manifest or {}
+        mf_s = json.dumps(mf, ensure_ascii=False)
+        if not manifest:
+            warns.append("信息广度哨兵：data/ 下无 manifest.json——"
+                         "无法核验数据来源等级、对立面检索、季报核对等过程留痕")
+        else:
+            ADV_HINTS = ["adversarial", "对立面", "做空", "short_seller",
+                         "做空报告", "财务造假", "监管处罚", "集体诉讼"]
+            if not any(h in mf_s for h in ADV_HINTS):
+                warns.append(
+                    "信息广度哨兵：manifest 未见对立面检索留痕（Phase 0 强制步）——"
+                    "须检索『公司名 + 做空报告/财务造假/监管处罚/集体诉讼/审计意见』，"
+                    "命中进排雷清单，未命中也要登记 `adversarial_check`"
+                    "（含检索日期与结论）。信息流里全是公司自己说的话")
+            if "files" not in mf:
+                warns.append("溯源元数据：manifest 缺 `files` 清单（逐文件记录来源/等级/"
+                             "抓取时间/覆盖期间/是否过入口校验）")
+            else:
+                files = mf.get("files")
+                graded = 0
+                total_f = 0
+                if isinstance(files, dict):
+                    items = files.values()
+                elif isinstance(files, list):
+                    items = files
+                else:
+                    items = []
+                for it in items:
+                    total_f += 1
+                    s = json.dumps(it, ensure_ascii=False) if not isinstance(it, str) else it
+                    if any(g in s for g in ["A级", "B级", "C级", "A 级", "B 级", "C 级",
+                                            "grade", "等级", "source"]):
+                        graded += 1
+                if total_f and graded / total_f < 0.5:
+                    warns.append(
+                        f"溯源元数据：manifest.files 中仅 {graded}/{total_f} 条登记了"
+                        "来源/等级——数据分级是降级协议的前提，未分级等于无法判断"
+                        "哪些结论建立在 B/C 级数据上")
+
     report(errors, warns, args)
 
 
 def report(errors, warns, args):
     print(f"入口校验：{'失败' if errors else '通过'}（错误 {len(errors)} / 警告 {len(warns)}）")
+
     for e in errors:
         print("  [ERROR]", e)
     for w in warns:
@@ -421,4 +535,20 @@ def report(errors, warns, args):
 
 
 if __name__ == "__main__":
-    main()
+    # 崩溃兜底：数据门禁最危险的失效不是"报错"，而是"以退出码 1 静默退出"——
+    # 与"数据不合格被拒"完全无法区分，调用方（人或 CI）会当作正常拒绝处理，
+    # 而真实原因是校验器自身有 bug、一条检查都没跑完。
+    # NVDA 底稿曾因 date 变量遮蔽在此形态下崩了，stdout 全空、退出码 1。
+    # 故内部异常统一转成退出码 3 + 显式标注，与 1（数据不合格）彻底分开。
+    try:
+        main()
+    except SystemExit:
+        raise
+    except Exception as exc:
+        import traceback
+        print("入口校验：校验器内部异常（非数据不合格）——退出码 3")
+        print(f"  [FATAL] {type(exc).__name__}: {exc}")
+        traceback.print_exc()
+        print("→ 这是脚本 bug，不是底稿问题。修脚本后重跑；"
+              "严禁把本次退出当作『数据已校验』或『数据不合格』。")
+        sys.exit(3)
