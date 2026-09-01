@@ -29,15 +29,69 @@ import json
 import sys
 
 
-def dcf_value(base_oe, growth, discount, terminal_g, years, fade=False, split=False):
+def dcf_value(base_oe, growth, discount, terminal_g, years, fade=False, split=False,
+              _solver_mode=False, terminal_g_cap=0.05, min_spread=0.02):
     """两阶段 DCF：预测期 + Gordon 永续。fade=True 时增速线性衰减至 terminal_g。
 
-    split=True 时返回 (总值, 预测期PV, 终值PV)——用于终值占比诊断：
+    split=True 时返回 (总值, 预测期PV, 终值PV, 诊断dict)——用于终值占比诊断：
     终值占比越高，估值越依赖"第 N+1 年以后"这个看不见的假设，安全边际的
     有效分辨率越低。占比 >75% 时，"安全边际 25%" 这个数字本身就是虚假精确。
+
+    ★ P0 静默错误护栏（v2.11）★
+    以下四类情形此前均"算得出数、不报错、无痕迹"，属最危险的一类缺陷——
+    输出一个看起来很精确的错数。现全部改为显式拒绝或结构化告警：
+
+    1. 永续增速上限（terminal_g_cap，默认 5%）：永续增速高于长期名义 GDP
+       等于假设公司永远快于整体经济增长，数学上不可持续。本纪律文档早已写明
+       （"永续增长率 ≤ 长期名义 GDP"），但此前只在文档里、代码完全不校验。
+    2. 折现率与永续增速的安全间距（min_spread，默认 2pct）：Gordon 分母为
+       (r-g)，间距趋零时价值爆炸 —— r=10%/g=9.99% 得出 6915× OE 的荒谬估值
+       且不报错。只挡 g>=r 远远不够，多打一个 9 就能污染整份报告。
+    3. fade 静默失效与语义反转：years<=1 时线性插值无法定义，此前被
+       `years > 1` 条件静默跳过（传了 fade 却按恒定增速算）；growth <
+       terminal_g 时线性插值让增速逐年"爬升"，fade 从保守化变成乐观化。
+    4. 负基期拒绝：亏损公司（base_oe <= 0）套 DCF 静默产出负内在价值，而负
+       价值在 DCF 语境下无意义。方法树要求这类公司走"反向 DCF + 单位经济
+       外推"，故直接拒绝、迫使换方法而非给一个错数。
+
+    _solver_mode: 仅供 solve_implied_growth 内部使用。二分法需在 -50%~+60%
+      区间自由试探 growth，其中包含 growth < terminal_g 的区段，那属数值搜索
+      过程而非用户假设，故该模式下豁免 fade 语义检查；其余护栏仍然生效，
+      因为它们校验的是调用者传入的固定假设。
     """
+    if base_oe is None or base_oe <= 0:
+        raise SystemExit(
+            f"错误：基期 Owner Earnings 必须为正，收到 {base_oe}。"
+            "亏损公司套 DCF 会产出无意义的负内在价值 —— 按估值方法树，"
+            "『高增长未盈利』类应走『反向 DCF 为主 + 单位经济外推』："
+            "先用单位经济学论证盈利路径，再对成熟期利润做 DCF。")
+    if terminal_g > terminal_g_cap:
+        raise SystemExit(
+            f"错误：永续增速 {terminal_g:.2%} 超过上限 {terminal_g_cap:.2%}。"
+            "永续增速高于长期名义 GDP，等于假设公司永远快于整体经济增长，"
+            "数学上不可持续（终值会吞掉全部估值）。若确有理由"
+            "（如更高的长期通胀假设），显式传 terminal_g_cap 并在报告中论证。")
     if discount <= terminal_g:
         raise SystemExit("错误：折现率必须大于永续增长率")
+    if discount - terminal_g < min_spread:
+        raise SystemExit(
+            f"错误：折现率 {discount:.2%} 与永续增速 {terminal_g:.2%} 间距仅 "
+            f"{(discount - terminal_g):.2%}，小于安全间距 {min_spread:.2%}。"
+            "Gordon 永续公式分母为 (r-g)，间距趋零时价值爆炸："
+            "r=10%/g=9.99% 会得出 6915× OE 的荒谬估值。"
+            "这是『精确的错误』最典型的温床 —— 请调整假设，或显式传 min_spread。")
+    if fade and years <= 1:
+        raise SystemExit(
+            f"错误：--fade 需要 years >= 2 才能定义线性衰减路径，当前 years={years}。"
+            "此前该情形被静默忽略（传了 fade 却按恒定增速计算），属静默失效。"
+            "请去掉 --fade，或增加预测期年数。")
+    if fade and not _solver_mode and growth < terminal_g:
+        raise SystemExit(
+            f"错误：--fade 模式下期初增速 {growth:.2%} 低于永续增速 {terminal_g:.2%}，"
+            "线性插值会让增速逐年『爬升』到永续 —— fade 本意是保守化（衰减），"
+            "此处语义反转为乐观化。衰退型公司请改用恒定增速（去掉 --fade），"
+            "或把永续增速下调到期初增速之下。")
+
     pv = 0.0
     oe = base_oe
     for t in range(1, years + 1):
@@ -46,12 +100,40 @@ def dcf_value(base_oe, growth, discount, terminal_g, years, fade=False, split=Fa
         pv += oe / ((1 + discount) ** t)
     terminal = oe * (1 + terminal_g) / (discount - terminal_g)
     term_pv = terminal / ((1 + discount) ** years)
+    total = pv + term_pv
     if split:
-        return pv + term_pv, pv, term_pv
-    return pv + term_pv
+        # 诊断随返回值给出，使 verify_report 等下游可机器校验
+        # "终值占比 >=75% 却以安全边际单独支撑买入" 这类违规。
+        # 此前占比判定只在 CLI print，程序化调用完全拿不到。
+        ratio = term_pv / total if total else 0.0
+        if ratio >= 0.75:
+            level = "critical"
+            action = ("估值主体来自预测期之后的永续假设，本质是信仰不是估值；"
+                      "必须改用倍数法/资产法交叉验证，"
+                      "且禁止以『安全边际达标』单独支撑买入结论")
+        elif ratio >= 0.60:
+            level = "warning"
+            action = "显著依赖永续假设：建议加 fade 重跑，并在报告披露该占比"
+        else:
+            level = "ok"
+            action = "估值主体由可见的预测期现金流支撑"
+        diag = {
+            "terminal_value_ratio": ratio,
+            "forecast_pv": pv,
+            "terminal_pv": term_pv,
+            "level": level,
+            "action_required": action,
+            "blocks_margin_of_safety_only_buy": ratio >= 0.75,
+            "terminal_growth": terminal_g,
+            "discount_rate": discount,
+            "spread": discount - terminal_g,
+        }
+        return total, pv, term_pv, diag
+    return total
 
 
-def solve_implied_growth(market_cap, base_oe, discount, terminal_g, years, fade=False):
+def solve_implied_growth(market_cap, base_oe, discount, terminal_g, years, fade=False,
+                         terminal_g_cap=0.05, min_spread=0.02):
     """二分法反解隐含增速 g ∈ (-50%, +60%)
 
     返回 (g, status)：status 为 'ok' | 'negative_operating_value' | 'out_of_range'
@@ -60,17 +142,26 @@ def solve_implied_growth(market_cap, base_oe, discount, terminal_g, years, fade=
         负估值。这是价值投资里最强的信号之一（净现金 > 市值），必须显著提示并
         以非零退出码中断，绝不能降级成"超出区间"后 exit 0 静默通过。
       out_of_range：现价确实无法用 -50%~+60% 增速解释，属假设区间问题。
+
+    求解过程会试探 growth < terminal_g 的区段（属数值搜索而非用户假设），
+    故内部调用带 _solver_mode=True 豁免 fade 语义检查（v2.11）。
     """
     if market_cap <= 0:
         return None, "negative_operating_value"
+
+    def _f(g):
+        return dcf_value(base_oe, g, discount, terminal_g, years, fade,
+                         _solver_mode=True, terminal_g_cap=terminal_g_cap,
+                         min_spread=min_spread) - market_cap
+
     lo, hi = -0.5, 0.6
-    f_lo = dcf_value(base_oe, lo, discount, terminal_g, years, fade) - market_cap
-    f_hi = dcf_value(base_oe, hi, discount, terminal_g, years, fade) - market_cap
+    f_lo = _f(lo)
+    f_hi = _f(hi)
     if f_lo * f_hi > 0:
         return None, "out_of_range"  # 现价超出该假设区间能解释的范围
     for _ in range(100):
         mid = (lo + hi) / 2
-        f_mid = dcf_value(base_oe, mid, discount, terminal_g, years, fade) - market_cap
+        f_mid = _f(mid)
         if abs(f_mid) < 1e-6 * market_cap:
             return mid, "ok"
         if f_lo * f_mid < 0:
@@ -233,6 +324,12 @@ def main():
     p1.add_argument("--deduct", type=float, default=0.0,
                     help="从市值中剔除的非经营资产（净现金/投资组合折价可回收值，"
                          "与 market-cap 同币种同单位）——反解的是经营业务隐含增速")
+    p1.add_argument("--terminal-growth-cap", type=float, default=0.05,
+                    help="永续增速上限（默认 5%%，约当长期名义 GDP）。"
+                         "超限即拒绝——永续快于经济增长在数学上不可持续")
+    p1.add_argument("--min-spread", type=float, default=0.02,
+                    help="折现率与永续增速的最小安全间距（默认 2pct）。"
+                         "Gordon 分母 (r-g) 趋零时价值爆炸，须挡在源头")
 
     p2 = sub.add_parser("forward-value", help="给定假设正向估值")
     p2.add_argument("--base-oe", type=float, required=True)
@@ -250,6 +347,16 @@ def main():
     p2.add_argument("--fx", type=float, default=1.0,
                     help="每股价值的币种换算系数（报告币→行情币），如 CNY→HKD 用 1.087。"
                          "默认 1.0 不换算")
+    p2.add_argument("--terminal-growth-cap", type=float, default=0.05,
+                    help="永续增速上限（默认 5%%，约当长期名义 GDP）。"
+                         "超限即拒绝——永续快于经济增长在数学上不可持续。"
+                         "如确有理由须显式放宽并在报告论证")
+    p2.add_argument("--min-spread", type=float, default=0.02,
+                    help="折现率与永续增速的最小安全间距（默认 2pct）。"
+                         "r=10%%/g=9.99%% 会得出 6915× OE 的荒谬估值，故挡在源头")
+    p2.add_argument("-o", "--output",
+                    help="输出 JSON 路径（含估值结果与终值占比结构化诊断，"
+                         "供报告校验器机器读取）")
 
     p3 = sub.add_parser("expected-return",
                         help="三情景转期望年化回报率（Phase 4.5 机会成本对照强制使用）")
@@ -330,7 +437,9 @@ def main():
             print(f"市值 {args.market_cap:,.0f} 剔除非经营资产 {args.deduct:,.0f}"
                   f" → 经营业务隐含市值 {mc:,.0f}")
         g, status = solve_implied_growth(mc, args.base_oe, args.discount_rate,
-                                        args.terminal_growth, args.years, args.fade)
+                                        args.terminal_growth, args.years, args.fade,
+                                        terminal_g_cap=args.terminal_growth_cap,
+                                        min_spread=args.min_spread)
         if status == "negative_operating_value":
             print(f"\n🔴 重大信号：剔除非经营资产后，经营业务隐含市值为 {mc:,.0f}（≤0）。")
             print("   市场给经营业务的定价为负 —— 即净现金/投资组合价值已超过总市值。")
@@ -349,35 +458,60 @@ def main():
         print(f"假设：折现率 {args.discount_rate:.1%}，永续增速 {args.terminal_growth:.1%}")
         print("下一步：将该隐含增速与 Phase 3 基准情景增速对照，回答『市场预期苛刻还是宽松』。")
     else:
-        v, fcst_pv, term_pv = dcf_value(args.base_oe, args.growth, args.discount_rate,
-                                       args.terminal_growth, args.years, args.fade,
-                                       split=True)
+        v, fcst_pv, term_pv, diag = dcf_value(
+            args.base_oe, args.growth, args.discount_rate,
+            args.terminal_growth, args.years, args.fade, split=True,
+            terminal_g_cap=args.terminal_growth_cap, min_spread=args.min_spread)
         print(f"经营业务价值（Owner Earnings 口径 DCF）: {v:,.0f}")
-        # 终值占比诊断：估值可靠性的第一指标
-        ratio = term_pv / v if v else 0.0
+        # 终值占比诊断：估值可靠性的第一指标。
+        # 判定口径统一取自引擎返回的 diag，CLI 不再自行重算阈值
+        # （避免"引擎与展示层两套阈值"日后漂移）。
+        ratio = diag["terminal_value_ratio"]
         print(f"\n--- 估值可靠性诊断（终值占比）---")
         print(f"预测期 {args.years} 年现值: {fcst_pv:,.0f}（{1 - ratio:.0%}）")
         print(f"永续终值现值      : {term_pv:,.0f}（{ratio:.0%}）")
-        if ratio >= 0.75:
+        if diag["level"] == "critical":
             print(f"⚠️  终值占比 {ratio:.0%} ≥ 75%：估值主要来自第 {args.years + 1} 年以后的"
                   f"永续假设，本质是信仰不是估值。安全边际的有效分辨率低于假设误差——"
-                  f"报告必须改用倍数法/资产法交叉验证，且禁止以「安全边际达标」单独支撑买入。")
-        elif ratio >= 0.60:
-            print(f"⚠️  终值占比 {ratio:.0%} ≥ 60%：估值显著依赖永续假设，"
-                  f"建议加 --fade（增速衰减）并在报告披露该占比。")
+                  f"{diag['action_required']}。")
+        elif diag["level"] == "warning":
+            print(f"⚠️  终值占比 {ratio:.0%} ≥ 60%：{diag['action_required']}。")
         else:
-            print(f"✓ 终值占比 {ratio:.0%} < 60%，估值主体由可见的预测期现金流支撑。")
+            print(f"✓ 终值占比 {ratio:.0%} < 60%，{diag['action_required']}。")
+        print(f"假设间距：折现率 {args.discount_rate:.2%} − 永续增速 "
+              f"{args.terminal_growth:.2%} = {diag['spread']:.2%}")
         print(f"提示：永续增速 ±1pct 通常引起价值 ±15~20% 波动，"
               f"远超安全边际的分辨率——报告须给出永续增速敏感性。\n")
         total = v + args.add_back
         if args.add_back:
             print(f"非经营资产加回: {args.add_back:,.0f} → 股权价值合计: {total:,.0f}")
+        ps = None
         if args.shares:
             ps = total / args.shares
             if args.fx != 1.0:
                 print(f"每股价值: {ps:,.2f}（报告币） = {ps * args.fx:,.2f}（行情币，fx={args.fx}）")
             else:
                 print(f"每股价值: {ps:,.2f}")
+        if args.output:
+            out = {
+                "operating_value": v,
+                "add_back": args.add_back,
+                "equity_value": total,
+                "shares": args.shares,
+                "value_per_share": ps,
+                "fx": args.fx,
+                "value_per_share_quote_ccy": (ps * args.fx) if ps is not None else None,
+                "assumptions": {
+                    "base_oe": args.base_oe, "growth": args.growth,
+                    "discount_rate": args.discount_rate,
+                    "terminal_growth": args.terminal_growth,
+                    "years": args.years, "fade": args.fade,
+                },
+                "terminal_diagnostics": diag,
+            }
+            with open(args.output, "w", encoding="utf-8") as f:
+                json.dump(out, f, ensure_ascii=False, indent=2)
+            print(f"已写入 {args.output}")
 
 
 if __name__ == "__main__":
