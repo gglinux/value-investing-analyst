@@ -18,7 +18,7 @@ verify_report.py — 报告数字校验脚本（Phase 5 交付前强制运行）
 
 图表校验（防止 ECharts series 手抄漂移）：图表 series 上方必须紧跟注释锚点
     <!-- vchart src=metrics_X.json path=series scale=100 -->
-校验脚本会读取该锚点后最近的 data:[...] 数组，与底稿 path 所指数组逐项比对。
+校验脚本会读取该锚点后最近的 data:[...] 或 value:[...] 数组（radar 用 value），与底稿 path 所指数组逐项比对。
 - path: 底稿内的取值路径（点号分隔，支持负数索引，如 summary.roic_series）
 - scale: 底稿存小数、图表显示百分数时设为 100
 
@@ -177,11 +177,14 @@ def main():
     # 机制：图表 series 上方紧跟一个 HTML 注释锚点，格式：
     #   <!-- vchart src=metrics_X.json path=series scale=100 -->
     #   {name:'净利率%',type:'line',data:[12.3,24.1,...]}
-    # 校验规则：取该锚点后 400 字符内第一个 data:[...] 数组，
+    # 校验规则：取该锚点后 400 字符内第一个 data:[...] 或 value:[...] 数组，
     # 解析为数字数组，与底稿 path 指向的数组（乘以 scale，底稿小数→报告百分数时用 100）逐项比对。
+    # 注意：ECharts radar 类型的数据项键名是 value 而非 data（bar/line 用 data）。
+    # 若此处只匹配 data，radar 图的锚点会「跳过」自己的数组、误绑到后面无关图表上，
+    # 表现为莫名其妙的解析失败或静默通过 —— 必须同时接受两种键名。
     chart_pattern = re.compile(
         r"<!--\s*vchart\s+src=([^\s>]+)\s+path=([^\s>]+)(?:\s+scale=([\d.]+))?\s*-->"
-        r"(.{0,400}?)data\s*:\s*\[([^\]]*)\]",
+        r"(.{0,400}?)(?:data|value)\s*:\s*\[([^\]]*)\]",
         re.S,
     )
     chart_matches = chart_pattern.findall(html)
@@ -275,6 +278,18 @@ def main():
     for cid in sorted(chart_inits - chart_divs):
         failed.append(("report", f"chart:{cid}",
                        "initChart 调用存在但无对应容器 div（图表不会显示）", ""))
+
+    # ---- radar 键名校验（防"轴与图例都在、数据点全塌到圆心"的空图）----
+    # 实证教训（微博报告，2026-09-01 用户截图发现）：ECharts radar 的数据项键名
+    # 必须是 value，写成 data 时不报错、坐标轴与图例照常渲染，但所有点塌缩到中心，
+    # 看起来像"数据是空的"。bar/line 恰好相反（用 data），极易混淆。
+    for m in re.finditer(r"type:\s*'radar'(.{0,900}?)(?=\n\s*\}\);|initChart\()", html, re.S):
+        block = m.group(1)
+        bad = re.findall(r"\n\s+data\s*:\s*\[\s*[\d.-]", block)
+        if bad:
+            failed.append(("report", "radar:data-key",
+                           f"radar 系列内有 {len(bad)} 个数据项误用 data 键（必须用 value，"
+                           f"否则数据点塌缩到圆心、图表看似空白）", ""))
 
     # ---- 文本完整性校验（乱码/损坏字符防护）----
     # 实证教训（腾讯/PDD 报告）：长文本生成偶发乱码段落，肉眼难查。

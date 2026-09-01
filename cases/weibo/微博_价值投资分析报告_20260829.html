@@ -413,16 +413,16 @@ initChart('chart-radar-summary', {
     { name: '护城河', max: 5 }, { name: '商业模式', max: 5 }, { name: '增长质量', max: 5 },
     { name: '管理层', max: 5 }, { name: '估值/安全边际', max: 5 } ] },
   legend: { bottom: 0 },
-  series: [{ type: 'radar', data: [
+  series: [{ type: 'radar', areaStyle: { opacity: 0.08 }, data: [
     { name: '巴菲特（观察 70）', itemStyle: { color: COLOR.primary },
       /*<!-- vchart src=persona_scores.json path=buffett -->*/
-      data: [2.4, 3.5, 1.5, 3.0, 4.9] },
+      value: [2.4, 3.5, 1.5, 3.0, 4.9] },
     { name: '段永平（观察 62）', itemStyle: { color: COLOR.accent },
       /*<!-- vchart src=persona_scores.json path=duan -->*/
-      data: [2.5, 3.6, 1.5, 2.5, 4.5] },
+      value: [2.5, 3.6, 1.5, 2.5, 4.5] },
     { name: '李录（值得跟踪但未懂 64）', itemStyle: { color: '#15803d' },
       /*<!-- vchart src=persona_scores.json path=lilu -->*/
-      data: [2.5, 3.5, 1.2, 3.0, 4.8] }
+      value: [2.5, 3.5, 1.2, 3.0, 4.8] }
   ] }]
 });
 
@@ -556,9 +556,9 @@ initChart('chart-capalloc', {
   radar: { indicator: [
     { name: '再投资纪律', max: 5 }, { name: '并购记录', max: 5 }, { name: '回购时机', max: 5 },
     { name: '增发克制', max: 5 }, { name: '分红理性', max: 5 } ] },
-  series: [{ type: 'radar', data: [{ name: '资本配置 17/25', itemStyle: { color: COLOR.primary },
+  series: [{ type: 'radar', areaStyle: { opacity: 0.12 }, data: [{ name: '资本配置 17/25', itemStyle: { color: COLOR.primary },
     /*<!-- vchart src=capital_allocation.json path=scores -->*/
-    data: [4, 3, 3, 3, 4] }] }]
+    value: [4, 3, 3, 3, 4] }] }]
 });
 </script>
 </body>
