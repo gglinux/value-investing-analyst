@@ -1,0 +1,31 @@
+#!/bin/bash
+# commit-msg 钩子：提交信息乱码/噪声检测
+#
+# 为什么在 commit-msg 而不是 pre-commit：
+#   pre-commit 运行时 .git/COMMIT_EDITMSG 还没写入本次信息，读到的是上一次
+#   提交的陈旧内容 —— 会把"上次的信息"当成"本次的违规"，产生结构性误报。
+#   commit-msg 阶段 git 会把本次信息文件路径作为 $1 传入，这才是唯一可靠时点。
+#
+# 背景：历史提交 61666b1 混入过"叔叔""香肠"等生成噪声。本仓库以公开身份
+# 对外发布，提交信息属对外内容，需要一道自动闸。
+#
+# 紧急绕过：git commit --no-verify
+
+set -u
+MSG_FILE="$1"
+[ -f "$MSG_FILE" ] || exit 0
+
+# 去掉注释行（# 开头）后再扫描，避免 git 模板注释干扰
+BODY=$(grep -v '^#' "$MSG_FILE" 2>/dev/null || true)
+
+NOISE=$(printf '%s' "$BODY" \
+  | grep -oE "叔叔|香肠|art commit|lorem ipsum|�" 2>/dev/null | sort -u || true)
+
+if [ -n "$NOISE" ]; then
+  echo "── commit-msg 闸门 ──"
+  echo "  ✗ 提交信息含疑似乱码/噪声：$(printf '%s' "$NOISE" | tr '\n' ' ')"
+  echo "    公开仓库的提交信息属对外内容，请重写。"
+  echo "── 提交被拦截（如确需绕过：git commit --no-verify）──"
+  exit 1
+fi
+exit 0

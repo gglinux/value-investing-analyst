@@ -23,19 +23,11 @@ else
   echo "  ! 未找到 tests/run_tests.py，跳过"
 fi
 
-# 闸 2：提交信息乱码/噪声检测（历史 61666b1 曾混入"叔叔""香肠"等生成噪声，
-#        且本仓库以公开身份 gglinux 对外发布，提交信息属对外内容）
-MSG_FILE="$REPO_ROOT/.git/COMMIT_EDITMSG"
-if [ -f "$MSG_FILE" ]; then
-  NOISE=$(grep -oE "叔叔|香肠|art commit|lorem ipsum|TODO牛|▌|�" "$MSG_FILE" 2>/dev/null | sort -u)
-  if [ -n "$NOISE" ]; then
-    echo "  ✗ 提交信息含疑似乱码/噪声：$(echo "$NOISE" | tr '\n' ' ')"
-    echo "    公开仓库的提交信息属对外内容，请重写。"
-    FAIL=1
-  fi
-fi
-
-# 闸 3：暂存区隐私与临时文件扫描（公开仓库：持仓/加仓价位/个人标识不得入库）
+# 闸 2：暂存区隐私与临时文件扫描（公开仓库：持仓/加仓价位/个人标识不得入库）
+# 注：提交信息的乱码/噪声检查不在此阶段做 —— pre-commit 运行时
+# .git/COMMIT_EDITMSG 尚未写入本次信息，读到的是上一次提交的陈旧内容，
+# 会产生结构性误报（本钩子上线后即被此误报拦下一次正常提交）。
+# 该检查已移至 commit-msg 钩子，那里才能拿到本次真实信息。
 STAGED=$(git diff --cached --name-only --diff-filter=ACM)
 if [ -n "$STAGED" ]; then
   # 3a. 临时审查脚本不应入库

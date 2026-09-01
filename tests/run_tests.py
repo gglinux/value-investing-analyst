@@ -205,12 +205,16 @@ with tempfile.TemporaryDirectory() as td:
 print("== 7.55 终值占比诊断（估值可靠性关卡） ==")
 with tempfile.TemporaryDirectory() as td:
     import reverse_dcf as rd  # noqa: E402
-    tot, fpv, tpv = rd.dcf_value(100, 0.0, 0.10, 0.025, 10, split=True)
+    tot, fpv, tpv, diag = rd.dcf_value(100, 0.0, 0.10, 0.025, 10, split=True)
     check("split 拆分求和等于总值", abs(tot - (fpv + tpv)) < 1e-9)
     check("零增长终值占比约 46%", 0.44 < tpv / tot < 0.48, f"{tpv/tot:.3f}")
-    t2, f2, p2 = rd.dcf_value(100, 0.20, 0.10, 0.025, 10, split=True)
+    check("split 返回结构化诊断（供下游机器校验）",
+          isinstance(diag, dict) and abs(diag["terminal_value_ratio"] - tpv / tot) < 1e-12
+          and diag["level"] == "ok"
+          and diag["blocks_margin_of_safety_only_buy"] is False)
+    t2, f2, p2, d2 = rd.dcf_value(100, 0.20, 0.10, 0.025, 10, split=True)
     check("高增长终值占比更高", p2 / t2 > tpv / tot, f"{p2/t2:.3f} vs {tpv/tot:.3f}")
-    t3, f3, p3_ = rd.dcf_value(100, 0.20, 0.10, 0.025, 10, fade=True, split=True)
+    t3, f3, p3_, d3 = rd.dcf_value(100, 0.20, 0.10, 0.025, 10, fade=True, split=True)
     check("fade 降低终值占比", p3_ / t3 < p2 / t2, f"{p3_/t3:.3f} vs {p2/t2:.3f}")
     out = run(["forward-value", "--base-oe", "100", "--growth", "0.20",
                "--discount-rate", "0.10", "--years", "10"])
@@ -622,6 +626,106 @@ for nm, (pr, sc_, expect) in _ARCHIVED.items():
     check(f"回归：{nm} 期望 IRR 与归档一致",
           abs(rr["expected_annualized_irr"] - expect) < 1e-5,
           f"{rr['expected_annualized_irr']:.6f} vs {expect}")
+
+print("== 9.8 P0 静默错误护栏（v2.11：永续上限/间距/fade语义/负基期/诊断结构化） ==")
+import reverse_dcf as rdp  # noqa: E402
+
+
+def _rejects(fn, *a, **kw):
+    """返回 True 表示按预期以 SystemExit 拒绝。"""
+    try:
+        fn(*a, **kw)
+        return False
+    except SystemExit:
+        return True
+
+
+# --- A. 永续增速上限（此前文档写了纪律、代码零校验）---
+check("永续增速 8% 超上限被拒（此前静默照算）",
+      _rejects(rdp.dcf_value, 100, 0.10, 0.10, 0.08, 10))
+check("永续增速 5% 在默认上限内放行",
+      isinstance(rdp.dcf_value(100, 0.05, 0.10, 0.05, 10, min_spread=0.01), float))
+check("显式放宽 terminal_g_cap 后放行（须报告论证）",
+      isinstance(rdp.dcf_value(100, 0.10, 0.12, 0.06, 10,
+                               terminal_g_cap=0.07), float))
+
+# --- B. r 与 g 的安全间距（Gordon 分母趋零导致价值爆炸）---
+check("r=10%/g=9.99% 被拒（此前得出 6915× OE 且不报错）",
+      _rejects(rdp.dcf_value, 100, 0.05, 0.10, 0.0999, 10))
+check("r=10%/g=9% 间距 1pct < 2pct 被拒",
+      _rejects(rdp.dcf_value, 100, 0.05, 0.10, 0.09, 10))
+check("r=10%/g=2.5% 间距充足放行",
+      isinstance(rdp.dcf_value(100, 0.05, 0.10, 0.025, 10), float))
+check("g>=r 仍被拒（原有校验未回退）",
+      _rejects(rdp.dcf_value, 100, 0.05, 0.10, 0.10, 10))
+
+# --- C. fade 静默失效与语义反转 ---
+check("years=1 且 fade 被拒（此前静默忽略 fade）",
+      _rejects(rdp.dcf_value, 100, 0.30, 0.10, 0.025, 1, fade=True))
+check("years=1 不带 fade 正常放行",
+      isinstance(rdp.dcf_value(100, 0.30, 0.10, 0.025, 1), float))
+check("growth<terminal_g 且 fade 被拒（语义反转：衰减变爬升）",
+      _rejects(rdp.dcf_value, 100, 0.01, 0.10, 0.025, 10, fade=True))
+check("growth<terminal_g 但不带 fade 放行（衰退型公司的正当用法）",
+      isinstance(rdp.dcf_value(100, 0.01, 0.10, 0.025, 10), float))
+
+# --- D. 负/零基期拒绝（亏损公司应改走反向DCF+单位经济）---
+for bad in [-50, 0]:
+    check(f"base_oe={bad} 被拒（此前静默产出负内在价值）",
+          _rejects(rdp.dcf_value, bad, 0.10, 0.10, 0.025, 10))
+
+# --- E. 求解器豁免：二分法需试探 growth<terminal_g，不得被 fade 检查打断 ---
+g_ok, st_ok = rdp.solve_implied_growth(30000, 2000, 0.10, 0.025, 10, fade=True)
+check("solve_implied_growth 在 fade 下仍能求解（_solver_mode 豁免生效）",
+      st_ok == "ok" and g_ok is not None, f"{st_ok} {g_ok}")
+check("求解器仍受永续上限约束（护栏未被豁免掉）",
+      _rejects(rdp.solve_implied_growth, 30000, 2000, 0.10, 0.08, 10))
+
+# --- F. 终值占比诊断结构化（此前只在 CLI print，下游拿不到）---
+_, _, _, dc = rdp.dcf_value(100, 0.35, 0.10, 0.03, 10, split=True)
+check("高增长触发 critical 且置买入阻断标志",
+      dc["level"] == "critical" and dc["blocks_margin_of_safety_only_buy"] is True,
+      f"{dc['level']} ratio={dc['terminal_value_ratio']:.3f}")
+_, _, _, dw = rdp.dcf_value(100, 0.20, 0.10, 0.025, 10, split=True)
+check("中档占比触发 warning 且不阻断",
+      dw["level"] == "warning" and dw["blocks_margin_of_safety_only_buy"] is False,
+      f"{dw['level']} ratio={dw['terminal_value_ratio']:.3f}")
+check("诊断含 spread 供下游核对假设间距",
+      abs(dw["spread"] - (0.10 - 0.025)) < 1e-12)
+
+# --- G. CLI 层：拒绝须为非零退出码 + JSON 落盘含诊断 ---
+pbad = run(["forward-value", "--base-oe", "100", "--growth", "0.05",
+            "--discount-rate", "0.10", "--terminal-growth", "0.099"])
+check("CLI 间距不足以非零退出码中断", pbad.returncode != 0, f"rc={pbad.returncode}")
+with tempfile.TemporaryDirectory() as td:
+    fv = os.path.join(td, "fv.json")
+    pgood = run(["forward-value", "--base-oe", "1000", "--growth", "0.08",
+                 "--discount-rate", "0.10", "--terminal-growth", "0.025",
+                 "--years", "10", "--shares", "100", "-o", fv])
+    ok_json = False
+    if pgood.returncode == 0 and os.path.exists(fv):
+        d = json.load(open(fv))
+        ok_json = ("terminal_diagnostics" in d
+                   and "value_per_share" in d
+                   and abs(d["terminal_diagnostics"]["terminal_value_ratio"]
+                           - d["terminal_diagnostics"]["terminal_pv"]
+                           / d["operating_value"]) < 1e-9)
+    check("forward-value -o 落盘含结构化终值诊断", ok_json,
+          (pgood.stderr or pgood.stdout)[-200:])
+
+# --- H. 回归：归档案例的常规假设不得被新护栏误伤 ---
+_ARCHIVED_DCF = [
+    ("NVDA 正常化基期", 72800, 0.10, 0.10, 0.025, 10),
+    ("腾讯保守轨", 219000, 0.05, 0.10, 0.025, 10),
+    ("伊利", 9000, 0.04, 0.09, 0.025, 10),
+]
+for nm, boe, g_, r_, tg_, yr_ in _ARCHIVED_DCF:
+    try:
+        v_ = rdp.dcf_value(boe, g_, r_, tg_, yr_)
+        okv = v_ > 0
+    except SystemExit:
+        okv = False
+    check(f"回归：{nm} 常规假设未被误伤", okv)
 
 print()
 if FAILED:

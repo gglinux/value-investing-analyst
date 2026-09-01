@@ -17,5 +17,8 @@ for h in "$SRC"/*; do
   echo "✓ 已安装钩子: $name → .git/hooks/$name"
 done
 echo
-echo "验证：git commit 时将自动运行测试套件 + 提交信息噪声检测 + 隐私扫描。"
+echo "已安装的闸门："
+echo "  pre-commit  — 测试套件全绿 + 暂存区隐私/临时文件扫描"
+echo "  commit-msg  — 提交信息乱码/噪声检测（须在此阶段做：pre-commit 时"
+echo "                本次提交信息尚未写入，读到的是上一次的陈旧内容）"
 echo "紧急绕过：git commit --no-verify"
