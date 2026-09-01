@@ -1,0 +1,77 @@
+{
+  "price": 84.0,
+  "hold_years": 5,
+  "discount_rate": 0.1,
+  "dividend_yield": 0.0,
+  "dividend_share_of_return": 0.0,
+  "scenarios": [
+    {
+      "name": "悲观",
+      "probability": 0.3,
+      "value_per_share": 96.44,
+      "value_per_share_terminal": 155.31758440000004,
+      "total_return": 0.8490188619047625,
+      "annualized_irr": 0.13080642732823744
+    },
+    {
+      "name": "基准",
+      "probability": 0.45,
+      "value_per_share": 107.21,
+      "value_per_share_terminal": 172.66277710000006,
+      "total_return": 1.0555092511904767,
+      "annualized_irr": 0.15500506080013032
+    },
+    {
+      "name": "乐观",
+      "probability": 0.25,
+      "value_per_share": 114.69,
+      "value_per_share_terminal": 184.70939190000007,
+      "total_return": 1.198921332142858,
+      "annualized_irr": 0.17069008047551715
+    }
+  ],
+  "expected_value_per_share": 105.84899999999999,
+  "expected_value_per_share_terminal": 170.47087299000003,
+  "expected_total_return": 1.0294151546428574,
+  "expected_annualized_irr": 0.15166672567740916,
+  "expected_annualized_irr_incl_div": 0.15166672567740916,
+  "pessimistic_irr": 0.13080642732823744,
+  "loss_probability": 0.0,
+  "expected_downside_given_loss": null,
+  "probability_weighted_downside": 0.0,
+  "index_hurdle": 0.13,
+  "beats_index": true,
+  "excess_vs_index": 0.021666725677409154,
+  "hurdle_above_discount_rate": true,
+  "note": "IRR=(1+r)×(V0/P)^(1/H)−1：内在价值随时间以折现率增值，已隐含分红+留存增值全部股东回报，股息不再叠加（叠加即重复计算）；折现率 r=10.0% 是 IRR 的下限（P=V0 时 IRR=r），门槛须设在 r 之上才构成有效约束；下行指标（悲观 IRR/亏损概率/亏损跌幅）不可由安全边际单调推出，是闸门二独立信息来源",
+  "v29_rerun_meta": {
+    "date": "2026-09-01",
+    "label": "拼多多 PDD",
+    "engine": "v2.9 expected-return: IRR=(1+r)*(V0/P)^(1/H)-1",
+    "discount_rate": 0.1,
+    "index_hurdle": 0.13,
+    "mos_requirement": 0.25,
+    "archived_price": 84.69,
+    "archived_price_exp_irr": 0.14978397094063411,
+    "archived_price_pess_irr": 0.12895777518785745,
+    "current_price": 84.0,
+    "gate_check": {
+      "gate1_mos": 0.21649099897397628,
+      "gate1_pass": false,
+      "gate2_exp_irr": 0.15166672567740916,
+      "gate2_pass": true,
+      "pess_irr": 0.13080642732823744,
+      "pess_pass": true,
+      "loss_prob": 0,
+      "loss_pass": true
+    },
+    "wait_price_all_gates_pass": 80.4075,
+    "wait_price_breakdown": {
+      "gate1_mos25": 80.4075,
+      "gate2_irr13": 92.36792018098907,
+      "pess_irr0": 155.31758440000004
+    },
+    "binding_constraint": "闸门一(25%安全边际)",
+    "note": "三情景价值/概率沿用存档案例假设（未复核）；现价为2026-09-01行情（PDD为08-31收盘）。完整流程重跑（含估值假设复核）是正式改档前置条件。"
+  }
+}
