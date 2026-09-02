@@ -891,6 +891,74 @@ with tempfile.TemporaryDirectory() as td:
     check("底稿 cash 取 cash_sti 口径不误报（GOOG 真实形态）",
           "cash" not in r.stdout.replace("cash_sti", ""), r.stdout[-200:])
 
+print("== 9.10 所有者视角指标（v2.12：分红幻觉/字段别名/每股兜底） ==")
+with tempfile.TemporaryDirectory() as td:
+    def _cm(draft):
+        pth = os.path.join(td, "f.json")
+        json.dump(draft, open(pth, "w"), ensure_ascii=False)
+        out = os.path.join(td, "m.json")
+        r = subprocess.run([sys.executable, os.path.join(SCRIPTS, "compute_metrics.py"),
+                            pth, "-o", out], capture_output=True, text=True)
+        return (json.load(open(out)) if os.path.exists(out) else None), r
+
+    def _base(**kw):
+        rows = []
+        for i in range(6):
+            r = {"year": 2020 + i, "revenue": 1000.0, "net_income": 100.0,
+                 "ocf": 120.0, "capex": 40.0, "d_and_a": 40.0,
+                 "total_equity": 800.0, "total_debt": 100.0, "cash": 100.0,
+                 "shares_diluted": 100.0}
+            r.update(kw)
+            rows.append(r)
+        return {"company": "OT", "ticker": "OT", "currency": "CNY", "unit": "million",
+                "company_type": "品牌消费品", "annual": rows}
+
+    # A. 字段别名：底稿写 dividends（非 dividends_paid）也要读到
+    d, _ = _cm(_base(dividends=30.0))
+    ca = d["capital_allocation"]
+    check("字段别名：底稿 `dividends` 被正确累计（中国建筑静默 null 的根因）",
+          ca["cum_dividends"] == 180.0, str(ca["cum_dividends"]))
+    check("分红口径标记为披露值", ca.get("dividends_basis") == "dividends_paid")
+
+    # B. 分红幻觉：股东回报 > 累计 FCF
+    d, _ = _cm(_base(ocf=50.0, capex=60.0, dividends=30.0))
+    ca = d["capital_allocation"]
+    check("累计 FCF 为负时覆盖倍数为负", ca["fcf_cover_shareholder_return"] < 0)
+    check("分红幻觉警报触发（回报靠融资而非经营）",
+          any("分红幻觉" in a for a in d["alerts"]), str(d["alerts"])[:120])
+    check("shareholder_return_funded_by_fcf 标记为 False",
+          ca["shareholder_return_funded_by_fcf"] is False)
+
+    # C. 判别力：真金白银分红不得误报
+    d, _ = _cm(_base(ocf=200.0, capex=40.0, dividends=30.0))
+    check("充沛 FCF 覆盖分红不触发幻觉警报",
+          not any("分红幻觉" in a for a in d["alerts"]),
+          str(d["capital_allocation"]["fcf_cover_shareholder_return"]))
+    check("覆盖倍数 >1.5x 时连'偏薄'也不报",
+          not any("覆盖偏薄" in a for a in d["alerts"]))
+
+    # D. 覆盖偏薄档（1.0~1.5x）
+    d, _ = _cm(_base(ocf=120.0, capex=40.0, dividends=64.0))
+    cov = d["capital_allocation"]["fcf_cover_shareholder_return"]
+    check("1.0~1.5x 触发覆盖偏薄提示（非幻觉）",
+          1.0 <= cov < 1.5 and any("覆盖偏薄" in a for a in d["alerts"]), f"cov={cov:.2f}")
+
+    # E. 每股分红兜底（港股/A股底稿常只有 dividend_per_share）
+    d, _ = _cm(_base(dividend_per_share=0.3))
+    ca = d["capital_allocation"]
+    check("仅有 dividend_per_share 时用×股本兜底推算",
+          ca["cum_dividends"] == 180.0, str(ca["cum_dividends"]))
+    check("推算口径被显式标记（与披露值可区分）",
+          "estimated" in str(ca.get("dividends_basis")), str(ca.get("dividends_basis")))
+
+    # F. 完全无分红回购：给 warning 而非静默
+    d, _ = _cm(_base())
+    check("无分红回购数据时提示所有者口径缺口",
+          any("所有者口径缺口" in w for w in d.get("warnings", [])),
+          str(d.get("warnings"))[:120])
+    check("无回报数据时覆盖倍数为 None（不伪造）",
+          d["capital_allocation"]["fcf_cover_shareholder_return"] is None)
+
 print()
 if FAILED:
     print(f"结果：{len(FAILED)} 项失败 → {FAILED}")
