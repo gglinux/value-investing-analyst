@@ -433,11 +433,67 @@ def compute(data):
     def total(key):
         vals = [get(r, key) for r in rows if get(r, key) is not None]
         return sum(vals) if vals else None
+
+    def total_alias(*keys):
+        """按别名依次尝试。
+
+        ⚠️ 字段名不匹配是最隐蔽的一类静默失效（v2.12 实证）：
+        中国建筑底稿写的是 `dividends`，引擎只读 `dividends_paid`，
+        于是 cum_dividends 静默为 null —— 而这家公司的投资论点恰恰
+        压在"6%+ 股息率能不能持续"上。同一行的 `buyback` 读到了，
+        所以输出看起来正常，没有任何报错。
+        """
+        for k in keys:
+            v = total(k)
+            if v is not None:
+                return v
+        return None
+
+    cum_div = total_alias("dividends_paid", "dividends", "dividend_paid")
+    # 兜底：底稿只登记了每股分红时，用 每股分红 × 当年股本 反算总额。
+    # 港股/A股底稿常只有 dividend_per_share（伊利/腾讯/泡泡玛特均如此），
+    # 若不兜底，这些真金白银分红的公司会因"缺字段"而算不出覆盖倍数，
+    # 所有者最关心的问题反而在最典型的分红股上失效。
+    div_basis = "dividends_paid" if cum_div is not None else None
+    if cum_div is None:
+        est = []
+        for r in rows:
+            dps = get(r, "dividend_per_share")
+            sh = get(r, "shares_diluted")
+            if dps is not None and sh:
+                est.append(dps * sh)
+        if est:
+            cum_div = sum(est)
+            div_basis = "estimated_from_dividend_per_share×shares"
+    cum_bb = total_alias("buyback", "repurchase", "share_repurchase")
+    cum_ocf_v = total("ocf")
+    cum_capex_v = total("capex")
     alloc = {
-        "cum_ocf": total("ocf"), "cum_capex": total("capex"),
-        "cum_dividends": total("dividends_paid"), "cum_buyback": total("buyback"),
-        "cum_equity_raised": total("equity_raised"),
+        "cum_ocf": cum_ocf_v, "cum_capex": cum_capex_v,
+        "cum_dividends": cum_div, "cum_buyback": cum_bb,
+        "cum_equity_raised": total_alias("equity_raised", "equity_issued"),
+        "dividends_basis": div_basis,
     }
+
+    # ---- 所有者视角：分红到底是"挣出来的"还是"借出来的"（v2.12 新增）----
+    # 买股票就是买公司：所有者最终关心的不是"公司赚了多少"，而是
+    # "属于我的那部分现金，有多少真正到手、这份到手能不能持续"。
+    # 判据是自由现金流对股东回报的覆盖倍数——分红率（占净利润）会骗人，
+    # 因为净利润可以是应计的；而分红必须用真金白银付。
+    # 实证原型（中国建筑）：连续 10 年分红、股息率 6%+，看起来是"A股难得的红利股"，
+    # 但十年 FCF 累计为负，分红实际靠融资维持——这是"分红幻觉"，
+    # 对所有者的意义与茅台的分红完全不同，必须在指标层就分开。
+    cum_fcf_v = None
+    if cum_ocf_v is not None and cum_capex_v is not None:
+        cum_fcf_v = cum_ocf_v - cum_capex_v
+    cum_ret = (cum_div or 0.0) + (cum_bb or 0.0)
+    alloc["cum_shareholder_return"] = cum_ret if (cum_div is not None or cum_bb) else None
+    alloc["cum_fcf"] = cum_fcf_v
+    alloc["fcf_cover_shareholder_return"] = (
+        cum_fcf_v / cum_ret if (cum_fcf_v is not None and cum_ret > 0) else None)
+    alloc["shareholder_return_funded_by_fcf"] = (
+        None if alloc["fcf_cover_shareholder_return"] is None
+        else alloc["fcf_cover_shareholder_return"] >= 1.0)
 
     # 自动警报
     alerts = []
@@ -447,6 +503,29 @@ def compute(data):
     scc = summary["share_count_change"]
     if scc is not None and scc > 1.3:
         alerts.append(f"股本膨胀警报：期间股本增至 {scc:.2f} 倍")
+
+    # 分红幻觉警报（v2.12，所有者视角核心）：股东回报未被自由现金流覆盖
+    cov = alloc.get("fcf_cover_shareholder_return")
+    if cov is not None and cov < 1.0:
+        _fcf = alloc.get("cum_fcf")
+        _ret = alloc.get("cum_shareholder_return")
+        alerts.append(
+            f"分红幻觉警报：全期股东回报（分红+回购）{_ret:,.0f} 超过累计自由现金流 "
+            f"{_fcf:,.0f}（覆盖 {cov:.2f}x < 1.0）——这份回报不是经营挣出来的，"
+            "而是靠融资/举债/消耗存量现金维持。高股息率在此情形下是幻觉，"
+            "对所有者的意义与自由现金流充沛公司的同等股息率完全不同，"
+            "报告必须明确区分并质询可持续性")
+    elif cov is not None and cov < 1.5:
+        alerts.append(
+            f"股东回报覆盖偏薄：累计自由现金流仅覆盖股东回报 {cov:.2f}x（<1.5x），"
+            "分红/回购的安全垫较薄，经营现金流波动即可能迫使削减")
+    if alloc.get("cum_dividends") is None and alloc.get("cum_buyback") in (None, 0.0):
+        warnings.append(
+            "所有者口径缺口：底稿缺分红与回购数据（字段 `dividends_paid`/`dividends`、"
+            "`buyback`），无法计算股东回报率与自由现金流覆盖倍数。"
+            "买股票就是买公司，'属于我的现金有多少真到手'是所有者的核心问题，"
+            "请从现金流量表『分配股利、利润或偿付利息支付的现金』与"
+            "『购买子公司少数股权/回购股份』补齐")
     bad_fcf_years = [s["year"] for s in series[-5:] if s["fcf_to_ni"] is not None and s["fcf_to_ni"] < 0.6]
     if len(bad_fcf_years) >= 3:
         alerts.append(f"利润含金量警报：近5年中 {bad_fcf_years} 年 FCF/净利润 < 0.6")
