@@ -72,8 +72,10 @@ description: 价值投资深度公司分析。输入一家上市公司（A股/�
 
 1. 判定商业模式类型，按 [references/metric-playbook.md](references/metric-playbook.md) 选定该类型的关键指标集。
 2. **统一口径计算（强制）**：将底稿整理成 `scripts/compute_metrics.py` 要求的标准 JSON（格式见脚本头注释），运行 `python3 scripts/compute_metrics.py data/financials_<公司>.json -o data/metrics_<公司>.json`，A 公司与每家竞对各跑一次。ROIC/ROIIC/Owner Earnings/每股口径/FCF 含金量等指标**只能取自脚本输出**，禁止对话中心算；脚本输出的 alerts（稀释/含金量/增长质量警报）必须逐条回应，写入定量画像小结。
-3. 计算并整理标准图表数据（vs 竞对）：
+3. **生意驱动因子落盘（强制，先于图表）**：收入是**会计结果**，不是生意本身——所有者看的是"卖了多少个 × 每个赚多少"。按类型把量与价（出货量/ASP、MAU/ARPU、门店数/单店收入…）连来源落盘 `data/business_drivers_<公司>.json`，跑 `python3 scripts/check_business_drivers.py data/business_drivers_<公司>.json --metrics data/metrics_<公司>.json`（做量×价≈收入勾稽，金融类自动跳过），**错误清零才进下一步**。收入增速必须能拆成量增与价增——靠涨价、靠铺货、靠开店，可持续性与所需资本完全不同。口径与实证背景见 [metric-playbook.md](references/metric-playbook.md) 生意视角第零问。
+4. 计算并整理标准图表数据（vs 竞对）：
    - 收入/归母净利润 10 年趋势（含增速）
+   - **量价分解图**（量增 vs 价增对收入增长的贡献拆分，数据取自 business_drivers 底稿）
    - 毛利率/净利率/ROE 波动带对比
    - ROIC vs WACC 利差（护城河的定量底片）
    - 自由现金流 vs 净利润（利润含金量）
@@ -81,8 +83,8 @@ description: 价值投资深度公司分析。输入一家上市公司（A股/�
    - 总股本变动（稀释追踪）+ **每股口径复核**（每股收入/每股 Owner Earnings/每股净资产 10 年 CAGR vs 总量 CAGR，增长被摊薄吃掉即重大警报）
    - 估值历史分位（PE/PB/EV-EBIT 十年分位带）
    - 商业模式专属指标图（按 playbook）
-4. **所有者三问（强制，写入定量画像小结）**：买股票就是买公司——专属指标回答"生意做得好不好"，还必须回答"**这门生意的好有多少属于我**"。逐条用底稿数字答：① 每年为所有者产出多少现金（Owner Earnings 与 FCF 含金量，非净利润）；② 这些现金归谁、怎么分配（现金去向 + 股东回报率 + **自由现金流对股东回报的覆盖倍数** `capital_allocation.fcf_cover_shareholder_return`）；③ 我这一份会不会被稀释（每股 CAGR vs 总量 CAGR）。**覆盖倍数 <1.0x 时脚本发"分红幻觉警报"**——该回报靠融资而非经营支撑，高股息率是幻觉（中国建筑实证：十年分红 915 亿、累计 FCF −1314 亿、覆盖 −1.43x），报告必须与"真金白银分红"显式区分。三问答不上来说明还没站在所有者位置，护城河与估值都是悬空的。详见 [metric-playbook.md](references/metric-playbook.md) 所有者三问节。
-5. 写出定量画像小结：这家公司的数字讲了一个什么故事，与竞对最大的三个差异。
+5. **所有者三问（强制，写入定量画像小结）**：专属指标答"生意做得好不好"，还须答"**这门生意的好有多少属于我**"：① 每年产出多少可分配现金（Owner Earnings 与 FCF 含金量，非净利润）；② 归谁、怎么分配（现金去向 + 股东回报率 + `capital_allocation.fcf_cover_shareholder_return`，<1.0x 触发"分红幻觉警报"＝回报靠融资而非经营）；③ 我这份会不会被稀释（每股 CAGR vs 总量 CAGR）。**④ 整体买下愿不愿意**：传 `--market-cap` 得 `owner_yield`（OE/市值＝每年拿几个点、回本年数），`cash_backed=False` 时该收益率不可落袋（中国建筑实证 21.3%＋回本 4.7 年，但累计 FCF −1314 亿）。详见 [metric-playbook.md](references/metric-playbook.md) 所有者三问节。
+6. 写出定量画像小结：数字讲了什么故事、与竞对最大的三个差异，**并明确"这门生意的增长引擎是量、价还是新业务"**（须与量价分解图一致）。
 
 ### Phase 3：五维定性分析
 
