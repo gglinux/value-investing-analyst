@@ -91,5 +91,24 @@
     "source": "SEC EDGAR XBRL companyfacts（us-gaap Assets/Liabilities/StockholdersEquity），A 级",
     "effect": "三表勾稽覆盖率 18%(2/11) → 91%(10/11)，回填年度逐年零偏差通过",
     "verified_by": "scripts/check_transcription.py（0 错 0 警）+ scripts/validate_data.py（0 错）"
-  }
+  },
+  "data_sources": [
+    {
+      "source": "westock-data",
+      "version": "1.0.4",
+      "level": "A",
+      "used_for": [
+        "行情",
+        "一致预期"
+      ]
+    },
+    {
+      "source": "SEC EDGAR",
+      "level": "A",
+      "used_for": [
+        "10-K原文",
+        "XBRL companyfacts"
+      ]
+    }
+  ]
 }

@@ -19,6 +19,7 @@ run_tests.py — 脚本引擎回归测试（任何人改 scripts/ 前后必须�
 用法：python3 tests/run_tests.py   （在 skill 根目录运行）
 退出码：0 全过；1 有失败。
 """
+import glob
 import json
 import os
 import subprocess
@@ -1049,6 +1050,66 @@ with tempfile.TemporaryDirectory() as td:
                         pth, "--metrics", m_pth], capture_output=True, text=True)
     check("量×价与收入量纲不同(1000 vs 1000)仍能勾稽通过",
           r.returncode == 0 and "偏差" not in r.stdout, r.stdout[-160:])
+
+print("== 9.12 数据源探测与登记（v2.14：源可插拔 + 缺源不静默） ==")
+with tempfile.TemporaryDirectory() as td:
+    CDS = os.path.join(SCRIPTS, "check_data_sources.py")
+
+    r = subprocess.run([sys.executable, CDS], capture_output=True, text=True)
+    check("探测器可运行且退出码 0（本机装有推荐源）", r.returncode == 0, r.stdout[-120:])
+    check("报告中写出数据源真名 westock-data", "westock-data" in r.stdout)
+    check("标注 ifind 为付费可选（不得成为硬依赖）",
+          "付费" in r.stdout and ("可选" in r.stdout or "非必需" in r.stdout))
+    check("列出已知缺口与降级成本（缺源不静默）",
+          "已知缺口" in r.stdout and "capex" in r.stdout, r.stdout[-100:])
+    check("声明源可插拔（唯一契约是底稿）",
+          "不绑定" in r.stdout and "底稿" in r.stdout)
+
+    # manifest 未登记 data_sources → 拒绝
+    mf = os.path.join(td, "m1.json")
+    json.dump({"files": []}, open(mf, "w"))
+    r = subprocess.run([sys.executable, CDS, "--manifest", mf],
+                       capture_output=True, text=True)
+    check("manifest 未登记 data_sources 时退出码 1", r.returncode == 1, r.stdout[-100:])
+    check("未登记时说明可追溯性理由", "追溯" in r.stdout)
+
+    # manifest 已登记 → 通过
+    mf2 = os.path.join(td, "m2.json")
+    json.dump({"files": [], "data_sources": [
+        {"source": "westock-data", "version": "1.0.4",
+         "used_for": ["三表"], "level": "A"}]}, open(mf2, "w"))
+    r = subprocess.run([sys.executable, CDS, "--manifest", mf2],
+                       capture_output=True, text=True)
+    check("manifest 已登记 data_sources 时通过", r.returncode == 0, r.stdout[-100:])
+
+    # manifest 不存在 → 拒绝（不静默跳过）
+    r = subprocess.run([sys.executable, CDS, "--manifest",
+                        os.path.join(td, "nope.json")], capture_output=True, text=True)
+    check("manifest 路径不存在时拒绝而非静默跳过", r.returncode == 1)
+
+    # 版本比较工具的边界
+    sys.path.insert(0, SCRIPTS)
+    import importlib
+    cds = importlib.import_module("check_data_sources")
+    check("版本比较：1.0.4 < 1.0.6",
+          cds._ver_tuple("1.0.4") < cds._ver_tuple("1.0.6"))
+    check("版本比较：非数字段不崩溃",
+          cds._ver_tuple("1.0.6-beta") == (1, 0, 6))
+    sys.path.remove(SCRIPTS)
+
+# 归档案例必须全部登记数据源（可追溯性回归）
+_root = os.path.dirname(SCRIPTS)
+_cases = sorted(glob.glob(os.path.join(_root, "cases", "*", "data", "manifest.json")))
+_missing = []
+for _p in _cases:
+    try:
+        _m = json.load(open(_p, encoding="utf-8"))
+        if not (isinstance(_m, dict) and _m.get("data_sources")):
+            _missing.append(os.path.basename(os.path.dirname(os.path.dirname(_p))))
+    except Exception:  # noqa: BLE001
+        _missing.append(os.path.basename(os.path.dirname(os.path.dirname(_p))))
+check(f"全部 {len(_cases)} 个归档案例均登记 data_sources",
+      not _missing, f"缺失：{_missing}")
 
 print()
 if FAILED:
