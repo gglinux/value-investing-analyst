@@ -250,14 +250,18 @@
       "source": "[E:filings/goog_companyfacts.json] EDGAR",
       "revenue": 307394,
       "net_income": 73795,
-      "ocf": 101746
+      "ocf": 101746,
+      "shares_diluted": 12720,
+      "shares_note": "股本取自同一年报原文股本页/封面股本数据"
     },
     {
       "year": 2024,
       "source": "[E:filings/goog_companyfacts.json] EDGAR",
       "revenue": 350018,
       "net_income": 100118,
-      "ocf": 125299
+      "ocf": 125299,
+      "shares_diluted": 12450,
+      "shares_note": "股本取自同一年报原文股本页/封面股本数据"
     },
     {
       "year": 2025,
@@ -265,7 +269,9 @@
       "revenue": 402836,
       "net_income": 132170,
       "ocf": 164713,
-      "note": "命门数与 10-K XBRL 逐项一致; 收入较此前四季度加总低 0.16%（加总口径含少量更正项）"
+      "note": "命门数与 10-K XBRL 逐项一致; 收入较此前四季度加总低 0.16%（加总口径含少量更正项）",
+      "shares_diluted": 12230,
+      "shares_note": "股本取自同一年报原文股本页/封面股本数据"
     }
   ],
   "spike_notes": {
