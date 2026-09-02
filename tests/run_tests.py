@@ -7,6 +7,8 @@ run_tests.py — 脚本引擎回归测试（任何人改 scripts/ 前后必须�
   1. 正常公司：指标齐全，基期=当期
   2. 周期高位：强制正常化基期 + alert
   3. 周期低位：向上正常化基期 + alert
+  3.5 利润率形状检验：同水平比值、不同曲线形状必须分流（结构性改善/恶化 vs 周期波动），
+      含负向用例（真周期低谷、平稳序列不得被误报为结构性趋势）
   4. 当期亏损：正常化不适用，基期为 None
   5. 金融股门控：compute_metrics 必须拒绝执行
   6. capex 拆分：披露口径优先于启发式
@@ -92,6 +94,65 @@ check("判定低位", n["cyclicality"] == "周期低位", n["cyclicality"])
 check("向上正常化基期>当期", n["base_oe_recommended"] is not None
       and n["base_oe_recommended"] > n["oe_current"])
 check("发出低位 alert", any("周期低位" in a for a in r["alerts"]))
+
+print("== 3.5 利润率形状检验（v2.14 补形状盲区）==")
+# 反例核心：A/B 两条序列的最新值、全期均值、比值完全相同（都是 16% / 11% / 1.45），
+# 旧引擎只看水平比较，对两者给出完全相同的判定与基期。而 A 该正常化、B 不该。
+ZIG = [0.08, 0.14, 0.06, 0.16, 0.07, 0.15, 0.05, 0.13, 0.09, 0.12, 0.16]   # 真周期
+MONO = [0.06, 0.07, 0.08, 0.09, 0.10, 0.11, 0.12, 0.13, 0.14, 0.15, 0.16]  # 结构性改善
+rz = cm.compute(base(mk_rows(ZIG)))
+rm = cm.compute(base(mk_rows(MONO)))
+nz, nmn = rz["normalization"], rm["normalization"]
+check("A/B 水平判定确实相同（旧引擎的盲区前提）",
+      nz["cyclicality"] == nmn["cyclicality"] == "周期高位"
+      and abs(nz["margin_ratio_latest_vs_avg"] - nmn["margin_ratio_latest_vs_avg"]) < 0.02,
+      f"{nz['margin_ratio_latest_vs_avg']:.3f} vs {nmn['margin_ratio_latest_vs_avg']:.3f}")
+check("锯齿序列判为周期波动", nz["margin_trend"]["pattern"] == "周期波动",
+      nz["margin_trend"]["pattern"])
+check("单调上行判为结构性改善", nmn["margin_trend"]["pattern"] == "结构性改善",
+      nmn["margin_trend"]["pattern"])
+check("单调上行 rho ≈ +1", nmn["margin_trend"]["spearman_rho"] > 0.99)
+check("单调上行穿越均值 ≤1 次", nmn["margin_trend"]["mean_crossings"] <= 1)
+check("锯齿穿越均值 ≥3 次", nz["margin_trend"]["mean_crossings"] >= 3)
+check("结构性改善置信度=高（末端连续同侧≥3年）",
+      nmn["margin_trend"]["confidence"] == "高")
+# 关键回归点：旧版双轨触发条件是"亏损年/±50%突变"，对单调改善型公司完全不触发
+# （安全网装反）。修补后必须由趋势检验独立触发。
+check("单调上行触发双轨基期（旧版漏网）",
+      nmn.get("base_oe_dual_track") is not None
+      and nmn["base_oe_dual_track"]["trigger"] == "structural_improvement",
+      str(nmn.get("base_oe_dual_track") and nmn["base_oe_dual_track"]["trigger"]))
+check("双轨主轨仍为正常化（纪律不放松，不是直接放行）",
+      nmn["base_oe_dual_track"]["main"]["value"] == nmn["base_oe_recommended"]
+      and nmn["base_oe_recommended"] < nmn["oe_current"])
+check("双轨交叉轨为当期",
+      abs(nmn["base_oe_dual_track"]["cross"]["value"] - nmn["oe_current"]) < 1e-6)
+check("发出形状检验 alert", any("形状检验" in a for a in rm["alerts"]))
+check("双轨 alert 说明触发原因", any("结构性改善" in a and "双轨" in a for a in rm["alerts"]))
+
+# 对称的另一半：结构性衰退被当成周期低谷 → 向上正常化会系统性高估（价值陷阱入口）
+rd = cm.compute(base(mk_rows([0.20, 0.22, 0.20, 0.18, 0.20, 0.22, 0.18, 0.16, 0.12, 0.10, 0.08])))
+nd = rd["normalization"]
+check("单调下行判为结构性恶化", nd["margin_trend"]["pattern"] == "结构性恶化",
+      nd["margin_trend"]["pattern"])
+check("结构性恶化触发双轨（防价值陷阱）",
+      nd.get("base_oe_dual_track") is not None
+      and nd["base_oe_dual_track"]["trigger"] == "structural_deterioration")
+check("发出结构性衰退警报", any("结构性衰退警报" in a for a in rd["alerts"]))
+# 负向用例：真正的周期低谷（锯齿收尾在低位）不得被误报为结构性衰退
+rt = cm.compute(base(mk_rows([0.20, 0.08, 0.22, 0.10, 0.19, 0.09, 0.21, 0.11, 0.20, 0.10, 0.09])))
+nt = rt["normalization"]
+check("真周期低谷仍判周期低位", nt["cyclicality"] == "周期低位", nt["cyclicality"])
+check("真周期低谷不误报结构性恶化", nt["margin_trend"]["pattern"] == "周期波动",
+      nt["margin_trend"]["pattern"])
+check("真周期低谷不触发衰退双轨", nt.get("base_oe_dual_track") is None)
+check("真周期低谷仍向上正常化", nt["base_oe_recommended"] > nt["oe_current"])
+# 负向用例：平稳序列不得被判出任何趋势
+rf = cm.compute(base(mk_rows([0.15, 0.16, 0.15, 0.14, 0.16, 0.15, 0.16, 0.15, 0.16, 0.15, 0.16])))
+check("平稳序列不判结构性趋势",
+      rf["normalization"]["margin_trend"]["pattern"] in ("周期波动", "趋势不明确"),
+      rf["normalization"]["margin_trend"]["pattern"])
+check("秩相关在样本<5时返回 None", cm.spearman_rho([0.1, 0.2, 0.3]) is None)
 
 print("== 4. 当期亏损 ==")
 r = cm.compute(base(mk_rows([0.10, 0.12, 0.10, 0.11, 0.10, 0.12, 0.10, 0.11, 0.10, 0.05, -0.08])))
