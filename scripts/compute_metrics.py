@@ -63,7 +63,13 @@ DEFINITIONS = {
     "NormalizedEarnings": "正常化盈利 = 全期平均利润率 × 最新一期收入。用于消除周期位置对基期的扭曲；"
                           "另给中位数口径（mid-cycle）作交叉验证。周期性判定见 normalization.cyclicality",
     "周期位置": "最新一期利润率 ÷ 全期平均利润率。>1.25 判为周期高位（当期利润不可直接外推），"
-                "<0.75 判为周期低位（当期利润低估长期能力）",
+                "<0.75 判为周期低位（当期利润低估长期能力）。这是**水平**维度，"
+                "必须与 margin_trend 的**形状**维度合读",
+    "利润率形状检验": "margin_trend：利润率序列对时间的秩相关（单调性）+ 穿越全期均值次数"
+                      "（均值回复证据）+ 末端连续同侧年数（确认年数）。"
+                      "单向漂移（|rho|≥0.7 且穿越≤1）判结构性改善/恶化，穿越≥3 判周期波动。"
+                      "作用：防止把'利润率结构性改善'误判为'周期高位'而强制下调基期，"
+                      "以及把'结构性衰退'误判为'周期低谷'而向上正常化",
     "Capex拆分": "维持性 vs 扩张性资本开支。底稿可给 maintenance_capex（披露口径）或 growth_capex（扩张性）；"
                  "两者都给则 capex_split 输出确定性拆分。缺省时按收入增速启发式估算并标注 capex_split_basis",
     "真实FCF区间": "fcf_true_range = [ocf−全部capex（悲观，视同全是保命钱）, ocf−维持性capex（乐观，扩张性是可裁量再投资）]。"
@@ -98,6 +104,138 @@ def median(vals):
     return s[n // 2] if n % 2 else (s[n // 2 - 1] + s[n // 2]) / 2.0
 
 
+def _avg_ranks(vals):
+    """并列取平均秩（Spearman 的标准处理）。"""
+    order = sorted(range(len(vals)), key=lambda i: vals[i])
+    ranks = [0.0] * len(vals)
+    i = 0
+    while i < len(order):
+        j = i
+        while j + 1 < len(order) and vals[order[j + 1]] == vals[order[i]]:
+            j += 1
+        avg = (i + j) / 2.0 + 1.0
+        for k in range(i, j + 1):
+            ranks[order[k]] = avg
+        i = j + 1
+    return ranks
+
+
+def spearman_rho(vals):
+    """序列与时间顺序的秩相关系数 ∈ [-1, 1]。+1 = 严格单调上行，0 = 无方向。
+
+    用途：区分"利润率在均值上下摆动（周期）"与"利润率单向漂移（结构性变化）"。
+    自实现而不引三方库，保持 skill 零依赖。
+    """
+    n = len(vals)
+    if n < 5:
+        return None
+    x = list(range(1, n + 1))          # 时间序（无并列）
+    y = _avg_ranks(vals)
+    mx, my = sum(x) / n, sum(y) / n
+    cov = sum((a - mx) * (b - my) for a, b in zip(x, y))
+    vx = sum((a - mx) ** 2 for a in x) ** 0.5
+    vy = sum((b - my) ** 2 for b in y) ** 0.5
+    if vx == 0 or vy == 0:
+        return None
+    return cov / (vx * vy)
+
+
+# 趋势检验判定阈值（形状盲区补丁 v2.14）
+TREND_RHO = 0.7          # 单调性门槛：|rho| ≥ 0.7 视为单向漂移
+TREND_MAX_CROSSINGS = 1  # 单向漂移的序列最多穿越均值一次
+TREND_MIN_CONFIRM = 3    # 末端连续同侧年数 ≥3 才算高置信
+
+
+def compute_margin_trend(margins, mean_value):
+    """利润率序列的**形状**检验：单向漂移（结构性）还是均值回复（周期性）。
+
+    ★ 为什么必须有这一步（本次修补的起因）★
+    原判定只有一个维度——`最新利润率 ÷ 全期均值 > 1.25` 判周期高位。这是**水平**
+    比较，完全不看曲线**形状**。反例实测：
+      A = [8,14,6,16,7,15,5,13,9,12,16]  真周期，穿越均值 9 次
+      B = [6,7,8,9,10,11,12,13,14,15,16] 结构性改善，从未跌回均值
+    两者最新值 16%、全期均值 11%、比值 1.45 完全相同 → 旧引擎判定完全相同
+    （都判周期高位、基期都强制下调 31.2%）。但对 A 用均值当基期是**对的**
+    （峰值会退回去），对 B 用均值当基期等于**拿五年前的盈利能力估今天的公司**。
+    且旧的防误杀双轨触发条件是"有亏损年 / 净利同比 ±50%"——那是**波动大的真周期
+    公司**的特征，实测 A 触发、B 不触发，安全网正好装反。
+
+    偏差方向是单一的：只会把"利润率在改善"的公司判贵，绝不会把在恶化的公司判便宜
+    ——所以这是系统性偏差而非随机噪声，且经营杠杆型复利机器正是本 skill 引用的
+    三位大师最想买的那类公司。
+
+    三个可机器判定、无需主观解读的量：
+      spearman_rho        利润率对时间的秩相关（单调性强度）
+      mean_crossings      序列穿越全期均值的次数（均值回复的直接证据）
+      trailing_same_side  末端连续位于均值同侧的年数（结构性变化的确认年数）
+
+    pattern 取值与后续处理：
+      结构性改善  rho ≥ +0.7 且穿越 ≤1  → 周期高位判定存疑，走双轨基期（须论证）
+      结构性恶化  rho ≤ −0.7 且穿越 ≤1  → 周期低位的"向上正常化"存疑，走双轨基期
+      周期波动    穿越 ≥3               → 均值确为周期中枢，正常化判定成立
+      趋势不明确  其余                   → 不改变原判定，仅披露指标
+    """
+    n = len(margins)
+    if n < 5 or mean_value is None:
+        return None
+    rho = spearman_rho(margins)
+    dev = [m - mean_value for m in margins]
+    crossings = 0
+    prev = None
+    for d in dev:
+        if d == 0:
+            continue                    # 恰等于均值不算穿越，也不打断同侧计数
+        s = 1 if d > 0 else -1
+        if prev is not None and s != prev:
+            crossings += 1
+        prev = s
+    last_side = None
+    trailing = 0
+    for d in reversed(dev):
+        if d == 0:
+            continue
+        s = 1 if d > 0 else -1
+        if last_side is None:
+            last_side = s
+        if s != last_side:
+            break
+        trailing += 1
+
+    if rho is None:
+        pattern = "趋势不明确"
+    elif crossings >= 3:
+        pattern = "周期波动"
+    elif rho >= TREND_RHO and crossings <= TREND_MAX_CROSSINGS:
+        pattern = "结构性改善"
+    elif rho <= -TREND_RHO and crossings <= TREND_MAX_CROSSINGS:
+        pattern = "结构性恶化"
+    else:
+        pattern = "趋势不明确"
+
+    confidence = ("高" if trailing >= TREND_MIN_CONFIRM else "低") \
+        if pattern.startswith("结构性") else "不适用"
+    notes = {
+        "结构性改善": "利润率单向上行且未回归均值——全期均值不是周期中枢，而是"
+                      "公司几年前的盈利能力。强制正常化到均值会系统性低估内在价值",
+        "结构性恶化": "利润率单向下行且未回归均值——向上正常化等于假设均值回复，"
+                      "对结构性衰退的生意会系统性高估内在价值（价值陷阱的典型入口）",
+        "周期波动": "利润率反复穿越均值，均值可作周期中枢，正常化判定成立",
+        "趋势不明确": "既非明确单向漂移也非典型均值回复，维持原判定并披露指标",
+    }
+    return {
+        "spearman_rho": rho,
+        "mean_crossings": crossings,
+        "trailing_same_side_years": trailing,
+        "trailing_side": ("高于均值" if last_side == 1 else
+                          "低于均值" if last_side == -1 else None),
+        "pattern": pattern,
+        "confidence": confidence,
+        "note": notes[pattern],
+        "thresholds": {"rho": TREND_RHO, "max_crossings": TREND_MAX_CROSSINGS,
+                       "min_confirm_years": TREND_MIN_CONFIRM},
+    }
+
+
 def compute_normalization(series):
     """正常化盈利：消除周期位置对估值基期的扭曲。
 
@@ -106,6 +244,9 @@ def compute_normalization(series):
       current      当期实际（周期高位时会系统性高估内在价值）
       normalized   全期平均利润率 × 最新收入（主口径）
       mid_cycle    全期中位数利润率 × 最新收入（抗极端值交叉验证）
+
+    判定为**两维**（v2.14）：水平（最新 ÷ 均值）+ 形状（margin_trend 趋势检验）。
+    只看水平会把"利润率结构性改善"误判为"周期高位"，见 compute_margin_trend 文档。
     """
     latest = series[-1]
     rev_latest = latest.get("revenue")
@@ -162,6 +303,9 @@ def compute_normalization(series):
     else:
         cyc = "中性区间"
 
+    # 形状检验（v2.14）：水平比较之外的第二维，区分单向漂移与均值回复
+    trend = compute_margin_trend(net_margins, avg_nm)
+
     shares = latest.get("shares_diluted")
     out = {
         "status": "ok",
@@ -180,6 +324,7 @@ def compute_normalization(series):
         "oe_normalized": avg_oem * rev_latest if avg_oem is not None else None,
         "oe_mid_cycle": med_oem * rev_latest if med_oem is not None else None,
         "shares_diluted": shares,
+        "margin_trend": trend,
         "mean_distortion": {
             "distorted": mean_distorted,
             "years": distortion_years,
@@ -214,19 +359,37 @@ def compute_normalization(series):
                 if len(cands) == 2 else
                 "正常化（当期处周期高位；另一口径为非正值已剔除，说明历史盈利能力薄弱，须在报告说明）"
             )
-            if mean_distorted:
-                # 爬坡期公司防误判（实证教训：PDD 早年亏损把均值拉到 10.4%，
-                # "周期高位"判定实为"商业模式换挡"，强制正常化会过度保守）。
-                # 双轨输出：主轨仍为正常化（纪律不放松），交叉轨当期基期，
-                # 由分析师在报告中论证当期利润率是"周期顶"还是"新常态"。
+            structural_up = bool(trend and trend["pattern"] == "结构性改善")
+            if mean_distorted or structural_up:
+                # 双轨触发有两个独立来源（v2.14 补齐第二个）：
+                #   ① mean_distorted：序列含亏损年/±50% 突变，均值被历史事故污染
+                #      （实证：PDD 早年亏损把均值拉到 10.4%，"周期高位"实为商业模式换挡）
+                #   ② structural_up：利润率单向上行、从未回归均值——均值根本不是周期
+                #      中枢，而是公司几年前的盈利能力。旧版仅有 ①，而 ① 的触发条件
+                #      （波动大）恰好是真周期公司的特征，实测对单调改善型公司完全不触发，
+                #      安全网装反（详见 compute_margin_trend 文档的 A/B 反例）。
+                # 双轨输出：主轨仍为正常化（纪律不放松，避免"一发现改善就放行"），
+                # 交叉轨当期基期，由分析师在报告中论证利润率的**来源**。
+                reasons = []
+                if structural_up:
+                    reasons.append(
+                        f"趋势检验判为结构性改善（秩相关 {trend['spearman_rho']:+.2f}、"
+                        f"穿越均值 {trend['mean_crossings']} 次、"
+                        f"末端连续高于均值 {trend['trailing_same_side_years']} 年，"
+                        f"置信度{trend['confidence']}）")
+                if mean_distorted:
+                    reasons.append("序列含均值扭曲年（亏损/±50% 突变）")
                 out["base_oe_dual_track"] = {
+                    "trigger": "structural_improvement" if structural_up and not mean_distorted
+                               else ("both" if structural_up else "mean_distortion"),
+                    "trigger_reasons": reasons,
                     "main": {"basis": "正常化（纪律主轨）", "value": out["base_oe_recommended"]},
-                    "cross": {"basis": "当期（爬坡期交叉轨）", "value": cur_oe},
+                    "cross": {"basis": "当期（交叉轨）", "value": cur_oe},
                     "adjudication": (
-                        "均值扭曲年存在，'周期高位'判定可能是'商业模式换挡'的误报。"
+                        "'周期高位'判定存疑，可能是结构性变化/商业模式换挡的误报。"
                         "报告必须并列两轨估值并论证：当期利润率是周期顶（用主轨）"
                         "还是结构性新常态（可向交叉轨靠拢）；证据看利润率来源"
-                        "（提价/份额/结构 vs 景气/一次性）"),
+                        "（提价权/份额/收入结构升级 = 结构性，行业景气/补贴/一次性 = 周期性）"),
                 }
         else:
             out["base_oe_recommended"] = None
@@ -253,6 +416,27 @@ def compute_normalization(series):
             out["base_oe_recommended_basis"] = (
                 "正常化混合口径（当期处周期低位，向上正常化；区间下界为历史OE利润率均值口径）"
             )
+            # 对称的另一半错误（v2.14）：结构性衰退被当成周期低谷 → 向上正常化
+            # 等于假设均值回复，会系统性**高估**内在价值。这是价值陷阱最常见的入口
+            # （报表越便宜、正常化抬得越高、安全边际看起来越大）。主轨不变（避免
+            # 漏掉真正底部的周期股），但必须强制论证均值回复的证据。
+            if trend and trend["pattern"] == "结构性恶化":
+                out["base_oe_dual_track"] = {
+                    "trigger": "structural_deterioration",
+                    "trigger_reasons": [
+                        f"趋势检验判为结构性恶化（秩相关 {trend['spearman_rho']:+.2f}、"
+                        f"穿越均值 {trend['mean_crossings']} 次、"
+                        f"末端连续低于均值 {trend['trailing_same_side_years']} 年，"
+                        f"置信度{trend['confidence']}）"],
+                    "main": {"basis": "正常化（向上，纪律主轨）",
+                             "value": out["base_oe_recommended"]},
+                    "cross": {"basis": "当期（结构性衰退交叉轨，更保守）", "value": cur_oe},
+                    "adjudication": (
+                        "'周期低位'判定存疑：利润率单向下行且未回归均值，可能是结构性衰退"
+                        "而非周期低谷。报告必须并列两轨并给出均值回复的具体证据"
+                        "（产能出清/价格触底/份额稳住）；给不出证据则改用交叉轨当期基期，"
+                        "禁止用向上正常化后的基期支撑安全边际结论"),
+                }
         else:
             out["base_oe_recommended"] = cur_oe
             out["base_oe_range"] = None
@@ -555,11 +739,10 @@ def compute(data, market_cap=None):
             if normalization.get("base_oe_dual_track"):
                 dt = normalization["base_oe_dual_track"]
                 alerts.append(
-                    f"双轨基期提示：序列含均值扭曲年"
-                    f"（{'；'.join(y['reason'] + str(y['year']) for y in normalization['mean_distortion']['years'][:3])}"
-                    f"{'…' if len(normalization['mean_distortion']['years']) > 3 else ''}），"
-                    f"'周期高位'可能是商业模式换挡的误报——主轨正常化 {dt['main']['value']:,.0f}"
+                    f"双轨基期提示（{'；'.join(dt['trigger_reasons'])}）："
+                    f"'周期高位'可能是结构性变化的误报——主轨正常化 {dt['main']['value']:,.0f}"
                     f" / 交叉轨当期 {dt['cross']['value']:,.0f}，报告须并列两轨估值并论证利润率来源"
+                    f"（提价权/份额/结构升级 = 结构性，景气/补贴/一次性 = 周期性）"
                 )
         elif cyc == "周期低位":
             rec = normalization.get("base_oe_recommended")
@@ -568,11 +751,30 @@ def compute(data, market_cap=None):
                 f"周期低位提示：最新净利率仅为全期均值的 {normalization['margin_ratio_latest_vs_avg']:.2f} 倍，"
                 f"当期利润低估长期盈利能力，用当期基期会低估内在价值{rec_txt}"
             )
+            dt = normalization.get("base_oe_dual_track")
+            if dt and dt.get("trigger") == "structural_deterioration":
+                alerts.append(
+                    f"结构性衰退警报（{'；'.join(dt['trigger_reasons'])}）："
+                    f"利润率单向下行且未回归均值，'周期低位'可能是结构性衰退而非周期低谷。"
+                    f"向上正常化基期 {dt['main']['value']:,.0f} 会系统性高估内在价值"
+                    f"（交叉轨当期 {dt['cross']['value']:,.0f}）——须给出均值回复的具体证据，"
+                    f"给不出则用交叉轨。这是价值陷阱最常见的入口"
+                )
         elif "亏损" in cyc:
             alerts.append(
                 f"基期不可用警报：{cyc}（当期净利率 "
                 f"{normalization['net_margin_latest']:.1%}，全期均值 {normalization['net_margin_avg']:.1%}），"
                 f"周期正常化不适用，禁止直接用当期数据做 DCF 基期，须单独论证正常化盈利路径"
+            )
+        # 形状检验独立披露（v2.14）：不论水平判定落在哪一档都要报，
+        # 因为"中性区间 + 结构性改善/恶化"同样影响基期是否可外推。
+        mtrend = normalization.get("margin_trend")
+        if mtrend and mtrend["pattern"] != "趋势不明确":
+            alerts.append(
+                f"利润率形状检验：{mtrend['pattern']}（秩相关 {mtrend['spearman_rho']:+.2f}、"
+                f"穿越均值 {mtrend['mean_crossings']} 次、末端连续{mtrend['trailing_side']} "
+                f"{mtrend['trailing_same_side_years']} 年，置信度{mtrend['confidence']}）"
+                f"——{mtrend['note']}"
             )
 
     # chart_series：报告 ECharts 图直接从本区块引用数据（并由 verify_report.py 的
