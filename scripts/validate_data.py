@@ -429,7 +429,19 @@ def main():
                 ov = entry.get(k)
                 dv = row.get(k)
                 if ov is None:
-                    warns.append(f"双源核对 {y}: 官方值缺 `{k}`")
+                    # A4：强制科目的官方值缺失＝该科目实际未被交叉核对。
+                    # 此前仅告警，导致 11 个归档案例中 6 个从未核对 shares_diluted——
+                    # 而它是 eps/oe_ps/每股内在价值的分母，错了会线性缩放整个估值
+                    # 与安全边际。缺口必须显式豁免，不能靠告警被忽略。
+                    exempt = (data.get("crosscheck_exempt") or {}).get(k)
+                    if exempt:
+                        warns.append(f"双源核对 {y}: `{k}` 官方值缺失，已豁免（{exempt}）；"
+                                     "报告脚注须披露该科目未经原文核对")
+                    else:
+                        errors.append(
+                            f"双源核对(A4) {y}: 强制科目 `{k}` 缺官方值——该科目实际未被"
+                            f"交叉核对。请从年报原文补录；确无法取得时在底稿写 "
+                            f'`"crosscheck_exempt": {{"{k}": "<原因与替代验证方式>"}}` 显式豁免')
                     continue
                 d = rel_diff(float(ov), float(dv) if dv is not None else None)
                 if d is None:

@@ -1111,6 +1111,142 @@ for _p in _cases:
 check(f"全部 {len(_cases)} 个归档案例均登记 data_sources",
       not _missing, f"缺失：{_missing}")
 
+print("== 9.13 命门科目交叉核对（v2.15：A4 强制科目缺核对即报错 + EDGAR 机器核对） ==")
+with tempfile.TemporaryDirectory() as td:
+    CCO = os.path.join(SCRIPTS, "crosscheck_official.py")
+
+    def _fin(**kw):
+        base = {"company": "T", "unit": "million",
+                "annual": [{"year": y, "revenue": 1000.0 + (y - 2000), "net_income": 150.0,
+                            "ocf": 180.0, "shares_diluted": 100.0,
+                            "total_assets": 1500.0, "total_liabilities": 700.0,
+                            "total_equity": 800.0} for y in (2023, 2024, 2025)]}
+        base.update(kw)
+        return base
+
+    def _cc(over=None):
+        over = over or {}
+        out = []
+        for y in (2023, 2024, 2025):
+            e = {"year": y, "source": f"{y}年报（巨潮）", "revenue": 1000.0 + (y - 2000),
+                 "net_income": 150.0, "ocf": 180.0, "shares_diluted": 100.0}
+            e.update(over.get(y, {}))
+            out.append(e)
+        return out
+
+    # A4：强制科目官方值缺失 → 必须是错误，不能只告警
+    f1 = os.path.join(td, "f1.json")
+    json.dump(_fin(crosscheck=_cc({y: {"shares_diluted": None}
+                                   for y in (2023, 2024, 2025)})),
+              open(f1, "w"))
+    r = subprocess.run([sys.executable, os.path.join(SCRIPTS, "validate_data.py"), f1],
+                       capture_output=True, text=True)
+    check("A4 强制科目 shares_diluted 缺官方值 → 入口校验报错",
+          r.returncode == 1 and "A4" in r.stdout, r.stdout[-160:])
+    check("A4 报错文案给出 crosscheck_exempt 豁免出路",
+          "crosscheck_exempt" in r.stdout)
+
+    # crosscheck_exempt 显式豁免 → 降级为警告并要求报告披露
+    f2 = os.path.join(td, "f2.json")
+    json.dump(_fin(crosscheck=_cc({y: {"shares_diluted": None}
+                                   for y in (2023, 2024, 2025)}),
+                   crosscheck_exempt={"shares_diluted": "库存股口径不可比，另用市值反推校验"}),
+              open(f2, "w"))
+    r = subprocess.run([sys.executable, os.path.join(SCRIPTS, "validate_data.py"), f2],
+                       capture_output=True, text=True)
+    check("显式豁免后 A4 不再报错且标注已豁免",
+          "已豁免" in r.stdout and "双源核对(A4)" not in r.stdout, r.stdout[-200:])
+
+    # 体检模式：缺核对年份 → 报错
+    f3 = os.path.join(td, "f3.json")
+    json.dump(_fin(), open(f3, "w"))
+    r = subprocess.run([sys.executable, CCO, "--financials", f3, "--audit"],
+                       capture_output=True, text=True)
+    check("体检模式：无 crosscheck 区块 → 退出码 1", r.returncode == 1)
+    check("体检模式提示竞对可标 is_peer", "is_peer" in r.stdout)
+
+    # 竞对底稿豁免
+    f4 = os.path.join(td, "f4.json")
+    json.dump(_fin(is_peer=True), open(f4, "w"))
+    r = subprocess.run([sys.executable, CCO, "--financials", f4, "--audit"],
+                       capture_output=True, text=True)
+    check("竞对底稿(is_peer) 跳过命门核对并通过", r.returncode == 0, r.stdout[-120:])
+
+    # EDGAR 机器核对：概念中途切换必须逐年回退取到（GOOG 失效模式）
+    def _pt(s, e, v, form="10-K"):
+        return {"start": s, "end": e, "val": v, "form": form, "fp": "FY"}
+    cf = {"facts": {"us-gaap": {
+        "Revenues": {"units": {"USD": [_pt("2023-01-01", "2023-12-31", 1023e6)]}},
+        "RevenueFromContractWithCustomerExcludingAssessedTax": {"units": {"USD": [
+            _pt("2024-01-01", "2024-12-31", 1024e6),
+            _pt("2025-01-01", "2025-12-31", 1025e6)]}},
+        "NetIncomeLoss": {"units": {"USD": [
+            _pt(f"{y}-01-01", f"{y}-12-31", 150e6) for y in (2023, 2024, 2025)]}},
+        "NetCashProvidedByUsedInOperatingActivities": {"units": {"USD": [
+            _pt(f"{y}-01-01", f"{y}-12-31", 180e6) for y in (2023, 2024, 2025)]}},
+        "WeightedAverageNumberOfDilutedSharesOutstanding": {"units": {"shares": [
+            _pt("2023-01-01", "2023-12-31", 100e6),
+            _pt("2024-01-01", "2024-12-31", 100e6),
+            _pt("2025-01-01", "2025-12-31", 93e6)]}},  # 2025 故意与底稿不符
+    }}}
+    cfp = os.path.join(td, "cf.json")
+    json.dump(cf, open(cfp, "w"))
+    f5 = os.path.join(td, "f5.json")
+    json.dump(_fin(), open(f5, "w"))
+    r = subprocess.run([sys.executable, CCO, "--financials", f5,
+                        "--companyfacts", cfp], capture_output=True, text=True)
+    check("EDGAR 机器核对：概念中途切换仍逐年取到收入",
+          "2023 revenue" in r.stdout and "❌ 2023 revenue" not in r.stdout,
+          r.stdout[-200:])
+    check("EDGAR 机器核对：股本单位正确缩放（不误报 100% 偏差）",
+          "偏差 100.0%" not in r.stdout, r.stdout[-200:])
+    check("EDGAR 机器核对：逮出真实不一致的那一年（2025 股本）",
+          r.returncode == 1 and "❌ 2025 shares_diluted" in r.stdout,
+          r.stdout[-200:])
+
+    # 极端值反推体检：底稿与官方完全一致时必须 0 错误
+    f6 = os.path.join(td, "f6.json")
+    fin6 = _fin()
+    fin6["annual"][2]["shares_diluted"] = 93.0
+    json.dump(fin6, open(f6, "w"))
+    r = subprocess.run([sys.executable, CCO, "--financials", f6,
+                        "--companyfacts", cfp], capture_output=True, text=True)
+    check("极端值体检：底稿与官方逐项一致 → 0 错误",
+          r.returncode == 0, r.stdout[-200:])
+
+# 归档主底稿必须全部通过命门核对体检（可追溯性回归）
+_PRIMARY = {"cscec": "financials_CSCEC.json", "nvidia": "financials_NVDA.json",
+            "weibo": "financials_WB.json", "yili": "financials_yili.json",
+            "tencent": "financials_tencent.json", "popmart": "financials_popmart.json",
+            "pdd": "financials_pdd.json", "goog": "financials_goog.json",
+            "tsm": "financials_tsm.json", "cmb": "financials_cmb.json",
+            "pingan_china": "financials_pingan_insurance.json"}
+_root = os.path.dirname(SCRIPTS)
+_bad = []
+for _c, _fn in _PRIMARY.items():
+    _p = os.path.join(_root, "cases", _c, "data", _fn)
+    if not os.path.exists(_p):
+        continue
+    _r = subprocess.run([sys.executable, os.path.join(SCRIPTS, "crosscheck_official.py"),
+                         "--financials", _p, "--audit"],
+                        capture_output=True, text=True)
+    if _r.returncode != 0:
+        _bad.append(_c)
+check("全部归档主底稿通过命门科目核对体检", not _bad, f"未通过：{_bad}")
+
+# 平安股本口径断裂修正回归：evps 序列不得再出现机械腰斩
+_pa = os.path.join(_root, "cases", "pingan_china", "data",
+                   "financials_pingan_insurance.json")
+if os.path.exists(_pa):
+    _d = json.load(open(_pa, encoding="utf-8"))
+    _sh = {r["year"]: r.get("shares_diluted") for r in _d["annual"]}
+    check("平安股本全期统一为总股本口径（不再混入 H 股 8890）",
+          8890 not in _sh.values(), f"仍含 8890：{_sh}")
+    _ev = [r.get("evps") for r in _d["annual"] if r.get("evps")]
+    _drop = [i for i in range(1, len(_ev)) if _ev[i] < _ev[i - 1] * 0.7]
+    check("平安 evps 序列无机械腰斩（口径断裂已修）", not _drop,
+          f"仍有断点 idx={_drop}: {_ev}")
+
 print()
 if FAILED:
     print(f"结果：{len(FAILED)} 项失败 → {FAILED}")
