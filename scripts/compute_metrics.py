@@ -270,7 +270,7 @@ def compute_normalization(series):
 FINANCIAL_TYPES = {"bank", "银行", "insurance", "保险", "broker", "券商",
                    "securities", "金融", "financial"}
 
-def compute(data):
+def compute(data, market_cap=None):
     ctype = str(data.get("company_type", "")).strip().lower()
     if ctype in FINANCIAL_TYPES:
         raise SystemExit(
@@ -599,6 +599,45 @@ def compute(data):
         "shares_diluted": col("shares_diluted"),
     }
 
+    # ---- 所有者收益率（v2.13）：把"整家买下来划不划算"变成数字 ----
+    # 所有者视角下最直观的收益率不是 PE 的倒数（净利润含应计），
+    # 而是 Owner Earnings / 市值——相当于"把公司整体买下，每年能拿到几个点"。
+    # 同时给正常化口径：周期高位时当期 OE 收益率会系统性偏乐观。
+    owner_yield = None
+    if market_cap and market_cap > 0:
+        latest_oe = series[-1].get("owner_earnings") if series else None
+        base_oe = (normalization or {}).get("base_oe_recommended")
+        owner_yield = {
+            "market_cap": market_cap,
+            "owner_earnings_latest": latest_oe,
+            "owner_yield_current": (latest_oe / market_cap
+                                    if latest_oe not in (None, 0) else None),
+            "owner_earnings_normalized": base_oe,
+            "owner_yield_normalized": (base_oe / market_cap
+                                       if base_oe not in (None, 0) else None),
+        }
+        oy = owner_yield["owner_yield_normalized"] or owner_yield["owner_yield_current"]
+        owner_yield["payback_years"] = (1 / oy if oy and oy > 0 else None)
+        owner_yield["basis"] = ("normalized"
+                                if owner_yield["owner_yield_normalized"] else "current")
+        # 含金量守卫：Owner Earnings 是"理论上可分配的现金"，但若这家公司
+        # 的股东回报长期靠融资支撑（覆盖倍数 <1），那么这个收益率
+        # **不代表所有者真能落袋**。中国建筑实证：正常化 OE 收益率算出 21.3%
+        # 看似极度低估，但同期累计 FCF −1314 亿——所谓"所有者收益"从未变成
+        # 真实可分配现金。不加这道标注，该数字会被读成"4.7 年回本"的天赐良机。
+        cov_ = alloc.get("fcf_cover_shareholder_return")
+        owner_yield["cash_backed"] = (None if cov_ is None else cov_ >= 1.0)
+        if cov_ is not None and cov_ < 1.0:
+            owner_yield["caveat"] = (
+                f"所有者收益率不可落袋：累计自由现金流对股东回报覆盖仅 {cov_:.2f}x"
+                f"（<1.0），Owner Earnings 未转化为可分配现金，"
+                f"该收益率与回本年数仅为账面推算，禁止据此判断低估")
+            alerts.append(
+                f"所有者收益率含金量警报：OE 收益率 {oy:.1%}（回本 "
+                f"{owner_yield['payback_years']:.1f} 年）看似可观，但股东回报的"
+                f"自由现金流覆盖仅 {cov_:.2f}x——这份'所有者收益'并未变成"
+                f"可落袋现金，不得据此判断低估")
+
     return {
         "company": data.get("company"), "ticker": data.get("ticker"),
         "currency": data.get("currency"), "unit": data.get("unit"),
@@ -606,6 +645,7 @@ def compute(data):
         "series": series, "summary": summary,
         "normalization": normalization,
         "capital_allocation": alloc,
+        "owner_yield": owner_yield,
         "chart_series": chart_series,
         "alerts": alerts,
         "warnings": sorted(set(warnings)),
@@ -616,11 +656,15 @@ def main():
     ap = argparse.ArgumentParser(description="统一口径指标计算器")
     ap.add_argument("input", help="标准格式财务数据 JSON（数据底稿）")
     ap.add_argument("-o", "--output", help="输出 JSON 路径；缺省打印到 stdout")
+    ap.add_argument("--market-cap", type=float, default=None,
+                    help="总市值（与底稿同单位同币种），用于计算所有者收益率"
+                         "（Owner Earnings/市值 = 整体买下每年拿几个点）；"
+                         "取自 data/market_snapshot.json")
     args = ap.parse_args()
 
     with open(args.input, "r", encoding="utf-8") as f:
         data = json.load(f)
-    result = compute(data)
+    result = compute(data, market_cap=args.market_cap)
     out = json.dumps(result, ensure_ascii=False, indent=2)
     if args.output:
         with open(args.output, "w", encoding="utf-8") as f:

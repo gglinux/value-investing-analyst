@@ -959,6 +959,97 @@ with tempfile.TemporaryDirectory() as td:
     check("无回报数据时覆盖倍数为 None（不伪造）",
           d["capital_allocation"]["fcf_cover_shareholder_return"] is None)
 
+print("== 9.11 生意视角：所有者收益率 + 驱动因子校验（v2.13） ==")
+with tempfile.TemporaryDirectory() as td:
+    def _mk(**kw):
+        rows = []
+        for i in range(6):
+            r = {"year": 2020 + i, "revenue": 1000.0, "net_income": 100.0,
+                 "ocf": 150.0, "capex": 40.0, "d_and_a": 40.0,
+                 "total_equity": 800.0, "total_debt": 100.0, "cash": 100.0,
+                 "shares_diluted": 100.0}
+            r.update(kw)
+            rows.append(r)
+        return {"company": "OY", "ticker": "OY", "currency": "CNY",
+                "unit": "million", "company_type": "品牌消费品", "annual": rows}
+
+    def _run(draft, mc=None):
+        pth = os.path.join(td, "f.json")
+        json.dump(draft, open(pth, "w"), ensure_ascii=False)
+        out = os.path.join(td, "m.json")
+        cmd = [sys.executable, os.path.join(SCRIPTS, "compute_metrics.py"), pth, "-o", out]
+        if mc is not None:
+            cmd += ["--market-cap", str(mc)]
+        subprocess.run(cmd, capture_output=True, text=True)
+        return json.load(open(out)) if os.path.exists(out) else None
+
+    # A. 未传市值时 owner_yield 为 None（不伪造）
+    d = _run(_mk(dividends=30.0))
+    check("未传 --market-cap 时 owner_yield 为 None", d["owner_yield"] is None)
+
+    # B. 传市值：OE 收益率与回本年数
+    d = _run(_mk(dividends=30.0), mc=1000.0)
+    oy = d["owner_yield"]
+    check("传市值后算出所有者收益率", oy is not None and oy["owner_yield_current"] is not None,
+          str(oy)[:80] if oy else "None")
+    check("回本年数 = 1/收益率",
+          abs(oy["payback_years"] - 1 / (oy["owner_yield_normalized"]
+              or oy["owner_yield_current"])) < 1e-6)
+    check("现金充沛时标记 cash_backed=True", oy["cash_backed"] is True, str(oy["cash_backed"]))
+    check("现金充沛时无含金量警报",
+          not any("所有者收益率含金量" in a for a in d["alerts"]))
+
+    # C. 含金量守卫：OE 收益率漂亮但回报靠融资（中国建筑形态）
+    d = _run(_mk(ocf=50.0, capex=60.0, dividends=30.0), mc=1000.0)
+    oy = d["owner_yield"]
+    check("回报未被 FCF 覆盖时 cash_backed=False", oy["cash_backed"] is False)
+    check("附带 caveat 说明不可落袋", "不可落袋" in (oy.get("caveat") or ""))
+    check("触发所有者收益率含金量警报（防21%假低估被误读）",
+          any("所有者收益率含金量" in a for a in d["alerts"]), str(d["alerts"])[:100])
+
+    # D. 驱动因子校验器：正向/负向
+    bd_ok = {"company": "T", "ticker": "T", "company_type": "制造业",
+             "drivers": [{"year": 2020 + i, "volume": 100.0, "price": 10.0,
+                          "volume_label": "出货量(万件)", "price_label": "ASP(元)",
+                          "source": "年报 p.1", "source_level": "A"} for i in range(5)],
+             "unit_economics": {"metric": "单件毛利", "value": 3.0, "source": "年报"}}
+    pth = os.path.join(td, "bd.json")
+    json.dump(bd_ok, open(pth, "w"), ensure_ascii=False)
+    r = subprocess.run([sys.executable, os.path.join(SCRIPTS, "check_business_drivers.py"), pth],
+                       capture_output=True, text=True)
+    check("驱动因子底稿合规时通过", r.returncode == 0, r.stdout[-160:])
+
+    bd_bad = {"company": "T", "ticker": "T", "company_type": "制造业",
+              "drivers": [{"year": 2024, "volume": 100.0}]}
+    json.dump(bd_bad, open(pth, "w"), ensure_ascii=False)
+    r = subprocess.run([sys.executable, os.path.join(SCRIPTS, "check_business_drivers.py"), pth],
+                       capture_output=True, text=True)
+    check("驱动因子缺 source 时拒绝（底稿是唯一事实源）", r.returncode == 1, r.stdout[-160:])
+
+    bd_empty = {"company": "T", "ticker": "T", "company_type": "互联网平台", "drivers": []}
+    json.dump(bd_empty, open(pth, "w"), ensure_ascii=False)
+    r = subprocess.run([sys.executable, os.path.join(SCRIPTS, "check_business_drivers.py"), pth],
+                       capture_output=True, text=True)
+    check("drivers 为空时拒绝（收入是会计结果，量价才是生意）", r.returncode == 1)
+    check("空 drivers 提示该类型建议口径（MAU/ARPU）",
+          "MAU" in r.stdout or "ARPU" in r.stdout, r.stdout[-120:])
+
+    bd_bank = {"company": "B", "ticker": "B", "company_type": "银行", "drivers": []}
+    json.dump(bd_bank, open(pth, "w"), ensure_ascii=False)
+    r = subprocess.run([sys.executable, os.path.join(SCRIPTS, "check_business_drivers.py"), pth],
+                       capture_output=True, text=True)
+    check("金融类自动跳过驱动因子校验", r.returncode == 0 and "跳过" in r.stdout, r.stdout[-100:])
+
+    # E. 量纲对齐：单位不同不应误报为口径不一致
+    m_pth = os.path.join(td, "mm.json")
+    json.dump({"series": [{"year": 2020 + i, "revenue": 1000.0} for i in range(5)]},
+              open(m_pth, "w"))
+    json.dump(bd_ok, open(pth, "w"), ensure_ascii=False)
+    r = subprocess.run([sys.executable, os.path.join(SCRIPTS, "check_business_drivers.py"),
+                        pth, "--metrics", m_pth], capture_output=True, text=True)
+    check("量×价与收入量纲不同(1000 vs 1000)仍能勾稽通过",
+          r.returncode == 0 and "偏差" not in r.stdout, r.stdout[-160:])
+
 print()
 if FAILED:
     print(f"结果：{len(FAILED)} 项失败 → {FAILED}")
