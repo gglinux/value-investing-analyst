@@ -1419,6 +1419,46 @@ HEALTHY = {"chart_series": {"years": list(range(2016, 2027)),
 _, _, _, info = _run_cs(GOOD, HEALTHY)
 check("收入持续增长的标的不触发价值陷阱", info["value_trap_triggered"] is False)
 
+print("== 10.55 股息率量纲哨兵（S9，闸门二不收敛下限的输入防护）==")
+# 归档实测：同名字段 dividend_yield_ttm 单位不统一——招行 0.0511（小数）、
+# 腾讯 1.17 / 伊利 5.14（百分数）、英伟达 _pct 后缀但值 0.13（=0.13%）。
+# 「不收敛下限 = 股息率 + 内在价值增速」把股息率当加数，错 100× 会让闸门自动过闸。
+check("_pct 后缀按百分数解释",
+      abs(cs.normalize_yield("dividend_yield_ttm_pct", 0.13)[0] - 0.0013) < 1e-9)
+check("_frac 后缀按小数解释",
+      cs.normalize_yield("dividend_yield_ttm_frac", 0.0514)[0] == 0.0514)
+check("裸字段小数值原样", cs.normalize_yield("dividend_yield_ttm", 0.0511)[0] == 0.0511)
+_v, _b, _amb = cs.normalize_yield("dividend_yield_ttm", 5.14)
+check("裸字段 >0.20 判为百分数误填并标记歧义",
+      abs(_v - 0.0514) < 1e-9 and _amb is True, f"{_v} {_amb}")
+check("带后缀字段不标歧义", cs.normalize_yield("dividend_yield_ttm_pct", 13.0)[2] is False)
+# 快照取值优先带后缀字段（腾讯真实形态：裸字段 1.17 + _frac 0.0117）
+_sv, _sk, _sb, _sa = cs.snapshot_dividend_yield(
+    {"dividend_yield_ttm": 1.17, "dividend_yield_ttm_frac": 0.0117})
+check("快照优先取 _frac 字段消歧", _sk == "dividend_yield_ttm_frac"
+      and abs(_sv - 0.0117) < 1e-9 and _sa is False, f"{_sk} {_sv}")
+_, errs, _, _ = _run_cs(_scen(dividend_yield=5.14, scenarios=GOOD["scenarios"]))
+check("S9 股息率 5.14 被拒（百分数误填成小数）",
+      any(e.startswith("S9") and "20%" in e for e in errs), " ".join(errs)[:150])
+
+
+def _run_cs_snap(d, snap):
+    with tempfile.TemporaryDirectory() as td:
+        fp = os.path.join(td, "s.json"); sp = os.path.join(td, "snap.json")
+        json.dump(d, open(fp, "w", encoding="utf-8"), ensure_ascii=False)
+        json.dump(snap, open(sp, "w", encoding="utf-8"), ensure_ascii=False)
+        return cs.check(fp, None, sp)
+
+
+_, errs, _, info = _run_cs_snap(GOOD, {"dividend_yield_ttm_frac": 0.087})
+check("S9 与快照一致时通过", not any(e.startswith("S9") for e in errs), " ".join(errs)[:150])
+_, errs, _, _ = _run_cs_snap(GOOD, {"dividend_yield_ttm_frac": 0.012})
+check("S9 与快照不一致被拒", any(e.startswith("S9") and "不一致" in e for e in errs))
+_, _, warns, info = _run_cs_snap(GOOD, {"dividend_yield_ttm": 8.70})
+check("S9 快照裸字段歧义发出告警",
+      any("单位有歧义" in w for w in warns)
+      and info["snapshot_dividend_yield"]["unit_ambiguous"] is True, str(warns)[:150])
+
 print("== 10.6 闸门二换维度（reverse_dcf gate2）==")
 import reverse_dcf as rd  # noqa: E402
 _mos_w, _h_w = rd.moat_irr_hurdle("wide", 0.10, 5)

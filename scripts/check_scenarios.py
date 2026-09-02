@@ -115,6 +115,52 @@ TRAP_VERDICT_CAPS = {"小仓位试探", "排除"}
 E_PTR = re.compile(r"\[E:[^\]]+\]")
 
 
+def normalize_yield(key, value):
+    """比率类字段归一化为小数口径，返回 (小数值, 判定依据, 是否歧义)。
+
+    ★ 为什么需要这个函数（归档实测，v2.15 新增闸门引入的新风险面）★
+    market_snapshot 里**同一个字段名 `dividend_yield_ttm` 单位并不统一**：
+      招行 0.0511（小数）  腾讯 1.17（百分数）  伊利 5.14（百分数）
+      英伟达 `dividend_yield_ttm_pct` = 0.13（即 0.13%，不是 13%）
+    腾讯与伊利额外给了 `_frac` 字段消歧，另外 8 个案例只有一个裸字段。
+
+    这在旧流程里只影响展示，但「价值不收敛下限 = 股息率 + 内在价值增速」
+    把股息率当成**加数**直接参与闸门判定——单位错 100× 会让英伟达的 0.13%
+    被读成 13%，闸门二直接自动过闸。这是典型的「算得出数、不报错」的静默错误。
+
+    判定顺序（后缀是强证据，量级只作兜底）：
+      1. 键名以 `_pct` 结尾 → 值为百分数，除以 100；
+      2. 键名以 `_frac` 结尾 → 值已是小数；
+      3. 裸键名且值 > 0.20 → 判为百分数误填（20% 以上股息率极罕见），除以 100
+         并标记歧义 —— 这种情况必须由分析师显式消歧，不能由脚本猜。
+      4. 其余按小数。
+    """
+    if value is None:
+        return None, "缺失", False
+    k = (key or "").lower()
+    if k.endswith("_pct"):
+        return value / 100.0, "键名后缀 _pct", False
+    if k.endswith("_frac"):
+        return value, "键名后缀 _frac", False
+    if value > 0.20:
+        return value / 100.0, "裸键名且值 >0.20，判为百分数误填", True
+    return value, "裸键名，按小数", False
+
+
+def snapshot_dividend_yield(snapshot):
+    """从 market_snapshot 取股息率并归一化。优先带后缀的字段（无歧义）。"""
+    if not snapshot:
+        return None, None, "无快照", False
+    order = ["dividend_yield_ttm_frac", "dividend_yield_frac",
+             "dividend_yield_ttm_pct", "dividend_yield_pct",
+             "dividend_yield_forward", "dividend_yield", "dividend_yield_ttm"]
+    for k in order:
+        if isinstance(snapshot.get(k), (int, float)):
+            v, basis, ambiguous = normalize_yield(k, snapshot[k])
+            return v, k, basis, ambiguous
+    return None, None, "快照无股息率字段", False
+
+
 def _revenue_series(metrics):
     cs = (metrics or {}).get("chart_series") or {}
     revs = None
@@ -179,7 +225,7 @@ def revenue_peak_stagnation(metrics, min_drawdown=0.10, min_years_since_peak=3):
     }
 
 
-def check(path, metrics_path=None):
+def check(path, metrics_path=None, snapshot_path=None):
     errors, warnings, info = [], [], {}
     with open(path, "r", encoding="utf-8") as f:
         d = json.load(f)
@@ -344,6 +390,41 @@ def check(path, metrics_path=None):
                                  f"不得进核心买入")
         if vt.get("catalyst") and not E_PTR.search(vt.get("catalyst", "")):
             warnings.append(head + "催化剂建议挂 [E:] 指针以便红队核验")
+
+    # ---- S9 股息率量纲哨兵（闸门二"不收敛下限"的输入防护）----
+    # 「不收敛下限 = 股息率 + 内在价值增速」把股息率当加数直接参与闸门判定，
+    # 单位错 100× 会让闸门二自动过闸（英伟达 0.13% 被读成 13%）。
+    dy = d.get("dividend_yield")
+    info["dividend_yield"] = dy
+    if dy is None:
+        warnings.append("S9 未登记 `dividend_yield`：闸门二的不收敛下限将只算内在价值增速，"
+                        "对高股息标的会系统性低估保底回报")
+    elif dy > 0.20:
+        errors.append(f"S9 `dividend_yield` = {dy}，超过 20%：几乎必然是百分数误填成小数"
+                      f"（如 5.14 应写 0.0514）。本字段是闸门二不收敛下限的加数，"
+                      f"错 100× 会让闸门直接自动过闸")
+    elif dy < 0:
+        errors.append(f"S9 `dividend_yield` = {dy} 为负，非法")
+    if snapshot_path:
+        if not os.path.exists(snapshot_path):
+            warnings.append(f"S9 快照文件不存在：{snapshot_path}，股息率无法交叉核对")
+        else:
+            with open(snapshot_path, "r", encoding="utf-8") as f:
+                snap = json.load(f)
+            sv, skey, sbasis, ambiguous = snapshot_dividend_yield(snap)
+            info["snapshot_dividend_yield"] = {"value": sv, "field": skey, "basis": sbasis,
+                                               "unit_ambiguous": ambiguous}
+            if ambiguous:
+                warnings.append(
+                    f"S9 快照字段 `{skey}` 单位有歧义（{sbasis}）：归档案例中同名字段"
+                    f"既有小数（0.0511）也有百分数（1.17 / 5.14）。请在快照中改用"
+                    f"`_frac`（小数）或 `_pct`（百分数）后缀显式消歧")
+            if sv is not None and dy is not None:
+                if abs(sv - dy) > max(abs(sv) * 0.05, 1e-4):
+                    errors.append(
+                        f"S9 股息率与快照不一致：scenarios.json = {dy:.4%}，"
+                        f"market_snapshot `{skey}` 归一化后 = {sv:.4%}（{sbasis}）。"
+                        f"两者必须同源同口径，否则闸门二的保底回报是假的")
     return d, errors, warnings, info
 
 
@@ -351,11 +432,12 @@ def main():
     ap = argparse.ArgumentParser(description="三情景底稿门禁（Phase 4 出口关卡）")
     ap.add_argument("scenarios", help="data/scenarios.json 路径")
     ap.add_argument("--metrics", help="data/metrics_<公司>.json，用于自动核验收入连续下滑年数")
+    ap.add_argument("--snapshot", help="data/market_snapshot.json，用于股息率量纲与同源交叉核对（S9）")
     ap.add_argument("-o", "--output", help="审计结果 JSON 输出路径")
     args = ap.parse_args()
 
     try:
-        d, errors, warnings, info = check(args.scenarios, args.metrics)
+        d, errors, warnings, info = check(args.scenarios, args.metrics, args.snapshot)
     except Exception as e:  # noqa: BLE001 — 脚本自身异常必须与"数据不合格"区分
         print(f"[EXCEPTION] 校验器自身异常：{type(e).__name__}: {e}")
         print("退出码 3 绝不可当作「已校验」或「数据不合格」 —— 那是脚本 bug，修脚本后重跑。")
