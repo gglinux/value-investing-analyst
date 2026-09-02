@@ -256,5 +256,27 @@
       "fetched": "2026-09-01"
     }
   ],
-  "notes": "capex 序列：2024/2025 取 SSE 已审财务报表原文（A级），2016-2023 与 Yahoo 及网搜双源一致（B级）。d_and_a 由 compute_metrics 兜底。"
+  "notes": "capex 序列：2024/2025 取 SSE 已审财务报表原文（A级），2016-2023 与 Yahoo 及网搜双源一致（B级）。d_and_a 由 compute_metrics 兜底。",
+  "data_sources": [
+    {
+      "source": "westock-data",
+      "version": "1.0.4",
+      "level": "A",
+      "used_for": [
+        "三表",
+        "行情",
+        "一致预期",
+        "研报"
+      ]
+    },
+    {
+      "source": "巨潮资讯网",
+      "level": "A",
+      "used_for": [
+        "年报原文",
+        "已审财报",
+        "命门科目双源核对"
+      ]
+    }
+  ]
 }

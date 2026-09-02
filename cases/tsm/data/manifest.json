@@ -127,5 +127,24 @@
     "registered_at": "2026-09-01",
     "impact": "ROE/BVPS 类指标不可引用；估值结论走 DCF/FCF 路径，不依赖权益科目，档位结论不受影响",
     "todo": "按 Taiwan-IFRS 单一准则重建 financials_TSM.json（数据源：台积电年报合并报表，非 SEC XBRL）"
-  }
+  },
+  "data_sources": [
+    {
+      "source": "westock-data",
+      "version": "1.0.4",
+      "level": "A",
+      "used_for": [
+        "行情",
+        "一致预期"
+      ]
+    },
+    {
+      "source": "SEC EDGAR",
+      "level": "A",
+      "used_for": [
+        "20-F/6-K原文",
+        "XBRL companyfacts"
+      ]
+    }
+  ]
 }

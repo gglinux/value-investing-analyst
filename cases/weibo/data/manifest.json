@@ -240,5 +240,24 @@
       "period": "-",
       "validated": true
     }
+  ],
+  "data_sources": [
+    {
+      "source": "westock-data",
+      "version": "1.0.4",
+      "level": "A",
+      "used_for": [
+        "三表",
+        "行情",
+        "研报"
+      ]
+    },
+    {
+      "source": "SEC EDGAR",
+      "level": "A",
+      "used_for": [
+        "20-F双源核对"
+      ]
+    }
   ]
 }

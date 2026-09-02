@@ -1,17 +1,72 @@
 {
- "generated_at": "2026-08-28",
- "company": "腾讯控股 hk00700",
- "note": "港股通用管道第二次实证（首证为泡泡玛特）。腾讯特殊性：①接口营收字段缺失，收入手工从财报补齐（A级）；②2023 年归母利润含投资减值异常低点；③巨额投资组合（上市4872亿+非上市3879亿 CNY）单独处理；④AI 资本开支 2025-2026 陡增，FCF 2026Q2 转负。",
- "files": [
-  {"file": "financials_TENCENT.json", "source": "结构化金融数据接口（港股接口）+ 历年财报手工补营收", "level": "A", "fetched_at": "2026-08-28", "validated": "pass（0错3警）"},
-  {"file": "raw_finance_tx.json", "source": "结构化金融数据接口00700", "level": "A"},
-  {"file": "segments.json", "source": "2026Q2 业绩公告（2026-08-12）+ 2025 年报", "level": "A"},
-  {"file": "market_snapshot.json", "source": "行情接口00700", "level": "A"},
-  {"file": "consensus.json", "source": "中金/高盛/大摩/方正研报转引", "level": "B"},
-  {"file": "metrics_TENCENT.json", "source": "compute_metrics.py", "level": "derived"},
-  {"file": "valuation.json", "source": "估值底稿（双轨+投资组合加回）", "level": "derived"},
-  {"file": "expected_return.json", "source": "reverse_dcf expected-return", "level": "derived"}
- ],
- "user_prior": "用户未提供初始判断",
- "timing_note": "2026Q2 财报 2026-08-12 发布（分析日前 16 天），信息新鲜：营收+11%、IFRS 归母+0.7%、Non-IFRS+9%、资本开支 528 亿（+176%）、FCF 转负 -138 亿、回购 169 亿 HKD"
+  "generated_at": "2026-08-28",
+  "company": "腾讯控股 hk00700",
+  "note": "港股通用管道第二次实证（首证为泡泡玛特）。腾讯特殊性：①接口营收字段缺失，收入手工从财报补齐（A级）；②2023 年归母利润含投资减值异常低点；③巨额投资组合（上市4872亿+非上市3879亿 CNY）单独处理；④AI 资本开支 2025-2026 陡增，FCF 2026Q2 转负。",
+  "files": [
+    {
+      "file": "financials_TENCENT.json",
+      "source": "结构化金融数据接口（港股接口）+ 历年财报手工补营收",
+      "level": "A",
+      "fetched_at": "2026-08-28",
+      "validated": "pass（0错3警）"
+    },
+    {
+      "file": "raw_finance_tx.json",
+      "source": "结构化金融数据接口00700",
+      "level": "A"
+    },
+    {
+      "file": "segments.json",
+      "source": "2026Q2 业绩公告（2026-08-12）+ 2025 年报",
+      "level": "A"
+    },
+    {
+      "file": "market_snapshot.json",
+      "source": "行情接口00700",
+      "level": "A"
+    },
+    {
+      "file": "consensus.json",
+      "source": "中金/高盛/大摩/方正研报转引",
+      "level": "B"
+    },
+    {
+      "file": "metrics_TENCENT.json",
+      "source": "compute_metrics.py",
+      "level": "derived"
+    },
+    {
+      "file": "valuation.json",
+      "source": "估值底稿（双轨+投资组合加回）",
+      "level": "derived"
+    },
+    {
+      "file": "expected_return.json",
+      "source": "reverse_dcf expected-return",
+      "level": "derived"
+    }
+  ],
+  "user_prior": "用户未提供初始判断",
+  "timing_note": "2026Q2 财报 2026-08-12 发布（分析日前 16 天），信息新鲜：营收+11%、IFRS 归母+0.7%、Non-IFRS+9%、资本开支 528 亿（+176%）、FCF 转负 -138 亿、回购 169 亿 HKD",
+  "data_sources": [
+    {
+      "source": "westock-data",
+      "version": "1.0.4",
+      "level": "A",
+      "used_for": [
+        "三表",
+        "行情",
+        "一致预期"
+      ]
+    },
+    {
+      "source": "港交所披露易",
+      "level": "A",
+      "used_for": [
+        "年报/业绩公告原文",
+        "营收补齐",
+        "港币口径反推"
+      ]
+    }
+  ]
 }
