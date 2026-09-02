@@ -171,8 +171,34 @@ def solve_implied_growth(market_cap, base_oe, discount, terminal_g, years, fade=
     return (lo + hi) / 2, "ok"
 
 
+# ---- 闸门二的护城河档位映射（v2.15）----
+# 门槛不再手写常数，而是**从闸门一的安全边际要求反推**，保证两道闸门口径自洽：
+#   期望 IRR 门槛 = (1+r) × (1/(1−安全边际要求))^(1/H) − 1
+# r=10%、H=5 时：宽护城河 25% → 16.5%；窄护城河 40% → 21.8%。
+# 这个门槛的作用是**自洽性校验**而不是独立证据 —— 见 gate2 的 basis 字段说明。
+MOAT_MOS_REQUIREMENT = {"wide": 0.25, "narrow": 0.40, "none": None}
+# 不收敛下限的默认门槛：长期国债 + 2~3pct。含义是"即使折价永不收敛，
+# 也要跑赢低风险替代"。取 6% 是 A 股/美股十年国债（约 2~4.5%）加溢价后的中枢，
+# 可按市场用 --floor-hurdle 显式调整并在报告论证。
+DEFAULT_FLOOR_HURDLE = 0.06
+
+
+def moat_irr_hurdle(moat, discount_rate, hold_years):
+    """由闸门一的安全边际要求反推期望 IRR 门槛，保证两闸门自洽。
+
+    返回 (mos_requirement, irr_hurdle)；moat='none' 时返回 (None, None)——
+    无护城河不给买入结论，闸门讨论无意义。
+    """
+    mos = MOAT_MOS_REQUIREMENT.get(moat)
+    if mos is None:
+        return None, None
+    return mos, (1.0 + discount_rate) * (1.0 / (1.0 - mos)) ** (1.0 / hold_years) - 1.0
+
+
 def expected_return(price, scenarios, hold_years, index_hurdle=0.09,
-                    dividend_yield=0.0, discount_rate=0.10):
+                    dividend_yield=0.0, discount_rate=0.10,
+                    moat=None, iv_growth=None,
+                    floor_hurdle=DEFAULT_FLOOR_HURDLE, pessimistic_hurdle=0.0):
     """期望回报率引擎：把三情景估值转成"这笔钱年化几个点"。
 
     价值投资的决策变量不是"公司好不好"，而是"相对机会成本，这笔钱划不划算"。
@@ -208,6 +234,27 @@ def expected_return(price, scenarios, hold_years, index_hurdle=0.09,
     discount_rate: 三情景估值所用折现率 r，必须与 forward-value 的 --discount-rate 一致，
       否则期望回报与内在价值不同源。r 同时是机会成本的下限——买在内在价值上（P=V0）
       时 IRR 恒等于 r，故 index_hurdle 设在 r 之下时闸门二形同虚设（见 --index-hurdle 校验）。
+
+    ★ 闸门二换维度（v2.15，重要）★
+    旧闸门二 = 期望年化 IRR vs 指数门槛。问题在于**期望 IRR 与安全边际同源**：
+    两者共享同一个 V0、同一套假设、同一份模型误差，V0 高估 30% 两个闸门同时被污染。
+    实测更糟：r=10%/H=5 时 13% 门槛等价于安全边际 12.6%，而闸门一要求 25%/40%
+    （等价 IRR 16.5%/21.8%）—— 门槛被校准在闸门一之下，闸门二在 10 个归档案例里
+    从未成为约束条件。
+
+    改为三项，各自门槛独立设定，全过才算闸门二通过：
+      ① consistency_expected_irr（自洽性校验，**不是独立证据**）
+         期望 IRR vs 由护城河档位从闸门一反推的门槛（moat_irr_hurdle）。
+         数学上它与闸门一在期望值口径下等价，故其唯一作用是暴露口径不自洽
+         （例如安全边际达标而期望 IRR 不达标 ⇒ 情景离散度或概率有问题）。
+      ② no_convergence_floor（**独立**）= 股息率 + 内在价值增速。
+         回答"如果折价永不收敛，我实际赚什么"。它完全不含 V0/P 比值——
+         不管你把内在价值算成多少，这个数只由分红和生意本身的增长决定。
+         价值陷阱的杀伤力正在此：安全边际 60% 而不收敛下限只有 1%，
+         意味着这笔投资的回报全部押在"市场哪天承认我对"。
+      ③ pessimistic_irr（**独立**）来自独立方法推导的悲观情景（见 check_scenarios.py）。
+         回答"错了会怎样"。只有当悲观值由清算/PB底/历史最差年等独立路径给出时
+         这一项才真正独立——若悲观情景只是基准调低增速，它退化成 ① 的换算。
     """
     total_p = sum(s["probability"] for s in scenarios)
     if abs(total_p - 1.0) > 1e-6:
@@ -269,6 +316,54 @@ def expected_return(price, scenarios, hold_years, index_hurdle=0.09,
     pess_irr = ((pess_v * growth_factor) / price) ** (1.0 / hold_years) - 1.0 \
         if pess_v > 0 else -1.0
     div_share = (dividend_yield / discount_rate) if discount_rate > 0 else None
+
+    # ---- 闸门二三项（v2.15）----
+    mos_req, irr_hurdle = moat_irr_hurdle(moat, discount_rate, hold_years) if moat else (None, None)
+    floor = (dividend_yield + iv_growth) if iv_growth is not None else None
+    gate2 = {
+        "moat": moat,
+        "consistency_expected_irr": {
+            "value": exp_irr,
+            "hurdle": irr_hurdle,
+            "hurdle_derivation": (
+                f"由闸门一安全边际要求 {mos_req:.0%} 反推：(1+r)×(1/(1−MoS))^(1/H)−1"
+                if mos_req is not None else None),
+            "pass": (exp_irr >= irr_hurdle) if irr_hurdle is not None else None,
+            "basis": "自洽性校验，非独立证据——期望值口径下与闸门一互为单调函数，"
+                     "共享同一个 V0 与同一份模型误差。不达标而安全边际达标 ⇒ "
+                     "情景离散度或概率赋值有问题",
+        },
+        "no_convergence_floor": {
+            "value": floor,
+            "dividend_yield": dividend_yield,
+            "intrinsic_value_growth": iv_growth,
+            "hurdle": floor_hurdle,
+            "pass": (floor >= floor_hurdle) if floor is not None else None,
+            "basis": "独立信息——完全不含 V0/P 比值。回答『折价永不收敛时我实际赚什么』："
+                     "= 股息率 + 内在价值增速。安全边际很大而此值很低 = 回报全押在"
+                     "『市场哪天承认我对』，这是价值陷阱的定量特征",
+        },
+        "pessimistic_irr": {
+            "value": pess_irr,
+            "hurdle": pessimistic_hurdle,
+            "pass": pess_irr >= pessimistic_hurdle,
+            "basis": "独立信息——回答『错了会怎样』。前提是悲观情景由独立方法推导"
+                     "（清算/PB底/历史最差年，见 check_scenarios.py S2）；"
+                     "若悲观值只是基准调低增速，本项退化为自洽性校验的换算",
+        },
+    }
+    _checks = [gate2[k]["pass"] for k in
+               ("consistency_expected_irr", "no_convergence_floor", "pessimistic_irr")]
+    gate2["independent_checks"] = ["no_convergence_floor", "pessimistic_irr"]
+    gate2["evaluable"] = all(c is not None for c in _checks)
+    gate2["pass"] = all(c is True for c in _checks) if gate2["evaluable"] else None
+    gate2["missing_inputs"] = [k for k in
+                               ("consistency_expected_irr", "no_convergence_floor")
+                               if gate2[k]["pass"] is None]
+    if moat == "none":
+        gate2["pass"] = False
+        gate2["note"] = "无护城河不给买入结论（valuation-guide 第四步），闸门二直接不过"
+
     return {
         "price": price, "hold_years": hold_years,
         "discount_rate": discount_rate,
@@ -302,6 +397,9 @@ def expected_return(price, scenarios, hold_years, index_hurdle=0.09,
         "beats_index": exp_irr > index_hurdle,
         "excess_vs_index": exp_irr - index_hurdle,
         "hurdle_above_discount_rate": index_hurdle > discount_rate,
+        "gate2": gate2,
+        "gate2_decision_note": "闸门二判定看 gate2.pass（三项全过）。beats_index 保留仅作"
+                               "机会成本对照展示，不再单独决定档位——它与安全边际同源",
         "note": "IRR=(1+r)×(V0/P)^(1/H)−1：内在价值随时间以折现率增值，"
                 "已隐含分红+留存增值全部股东回报，股息不再叠加（叠加即重复计算）；"
                 f"折现率 r={discount_rate:.1%} 是 IRR 的下限（P=V0 时 IRR=r），"
@@ -360,10 +458,12 @@ def main():
 
     p3 = sub.add_parser("expected-return",
                         help="三情景转期望年化回报率（Phase 4.5 机会成本对照强制使用）")
-    p3.add_argument("--price", type=float, required=True, help="当前股价（market_snapshot 底稿）")
+    p3.add_argument("--price", type=float,
+                    help="当前股价（market_snapshot 底稿）。用 --scenarios-file 时可省略")
     p3.add_argument("--hold-years", type=int, default=5, help="持有期，默认 5 年")
-    p3.add_argument("--scenarios", required=True,
-                    help='三情景每股价值与概率，格式："悲观:105.12:0.3,基准:211.65:0.5,乐观:396.52:0.2"')
+    p3.add_argument("--scenarios",
+                    help='三情景每股价值与概率，格式："悲观:105.12:0.3,基准:211.65:0.5,乐观:396.52:0.2"。'
+                         '与 --scenarios-file 二选一，优先用后者（单一事实源）')
     p3.add_argument("--index-hurdle", type=float, default=0.09,
                     help="机会成本门槛（指数长期年化），默认 9%%。"
                          "必须 > --discount-rate，否则闸门二形同虚设（买在内在价值上"
@@ -371,6 +471,25 @@ def main():
     p3.add_argument("--discount-rate", type=float, default=0.10,
                     help="三情景估值所用折现率 r（须与 forward-value 的 --discount-rate 一致）。"
                          "内在价值按 (1+r)^H 增值，这是期望 IRR 的理论下限")
+    p3.add_argument("--moat", choices=["wide", "narrow", "none"],
+                    help="护城河档位。闸门二的期望 IRR 门槛由此从闸门一的安全边际要求"
+                         "（宽 25% / 窄 40%）反推，保证两闸门自洽（r=10%/H=5 时为 "
+                         "16.5% / 21.8%）。该项只是自洽性校验，独立信息在下面两项")
+    p3.add_argument("--iv-growth", type=float,
+                    help="基准情景下每股内在价值的长期增速（小数）。与股息率相加得"
+                         "『价值不收敛下限』——折价永不收敛时的实际年化回报。"
+                         "这是闸门二真正独立于 V0 的一项，强烈建议必填")
+    p3.add_argument("--floor-hurdle", type=float, default=DEFAULT_FLOOR_HURDLE,
+                    help=f"不收敛下限的门槛（默认 {DEFAULT_FLOOR_HURDLE:.0%}，"
+                         f"约当长期国债 + 2~3pct）。含义：即使市场永不重估，"
+                         f"也要跑赢低风险替代")
+    p3.add_argument("--pessimistic-hurdle", type=float, default=0.0,
+                    help="悲观情景年化门槛（默认 0%，即最坏情况不亏本金）。"
+                         "前提是悲观值来自独立方法，见 check_scenarios.py")
+    p3.add_argument("--scenarios-file",
+                    help="已通过 check_scenarios.py 门禁的 data/scenarios.json。"
+                         "提供时自动读取 price/情景/概率/折现率/护城河/股息率/"
+                         "内在价值增速，避免命令行手抄导致口径漂移")
     p3.add_argument("--dividend-yield", type=float, default=0.0,
                     help="预期持有期平均股息率（小数，如 0.05）。**不再进入 IRR 计算**"
                          "（修正式已隐含分红+留存的全部股东回报，叠加即重复计算）；"
@@ -380,15 +499,40 @@ def main():
     args = ap.parse_args()
 
     if args.mode == "expected-return":
-        scen = []
-        for part in args.scenarios.split(","):
-            bits = part.split(":")
-            if len(bits) != 3:
-                raise SystemExit(f"情景格式错误：{part}，应为 名称:每股价值:概率")
-            scen.append({"name": bits[0], "value_per_share": float(bits[1]),
-                         "probability": float(bits[2])})
-        res = expected_return(args.price, scen, args.hold_years, args.index_hurdle,
-                              args.dividend_yield, args.discount_rate)
+        price, hold_years = args.price, args.hold_years
+        dividend_yield, discount_rate = args.dividend_yield, args.discount_rate
+        moat, iv_growth = args.moat, args.iv_growth
+        if args.scenarios_file:
+            # 单一事实源：口径全部取自已过门禁的 scenarios.json，禁止命令行手抄
+            with open(args.scenarios_file, "r", encoding="utf-8") as f:
+                sd = json.load(f)
+            scen = [{"name": s["name"], "value_per_share": float(s["value_per_share"]),
+                     "probability": float(s["probability"])} for s in sd["scenarios"]]
+            price = float(sd.get("price", price))
+            hold_years = int(sd.get("hold_years", hold_years))
+            discount_rate = float(sd.get("discount_rate", discount_rate))
+            dividend_yield = float(sd.get("dividend_yield", dividend_yield))
+            moat = sd.get("moat", moat)
+            if sd.get("intrinsic_value_growth") is not None:
+                iv_growth = float(sd["intrinsic_value_growth"])
+            print(f"口径取自 {args.scenarios_file}（已过 check_scenarios 门禁）\n")
+        else:
+            if args.price is None:
+                raise SystemExit("错误：须提供 --price，或改用 --scenarios-file")
+            if not args.scenarios:
+                raise SystemExit("错误：须提供 --scenarios 或 --scenarios-file")
+            scen = []
+            for part in args.scenarios.split(","):
+                bits = part.split(":")
+                if len(bits) != 3:
+                    raise SystemExit(f"情景格式错误：{part}，应为 名称:每股价值:概率")
+                scen.append({"name": bits[0], "value_per_share": float(bits[1]),
+                             "probability": float(bits[2])})
+        res = expected_return(price, scen, hold_years, args.index_hurdle,
+                              dividend_yield, discount_rate,
+                              moat=moat, iv_growth=iv_growth,
+                              floor_hurdle=args.floor_hurdle,
+                              pessimistic_hurdle=args.pessimistic_hurdle)
         print(f"现价 {res['price']:,.2f}，持有期 {res['hold_years']} 年，"
               f"折现率 {res['discount_rate']:.1%}"
               f"（内在价值按此速率增值）\n")
@@ -417,14 +561,46 @@ def main():
         if res["expected_downside_given_loss"] is not None:
             print(f"亏损情景平均跌幅    : {res['expected_downside_given_loss']:.1%}")
         print(f"\n机会成本门槛（指数）: {res['index_hurdle']:.1%}")
-        if not res["hurdle_above_discount_rate"]:
+        if not res["hurdle_above_discount_rate"] and not res["gate2"]["moat"]:
             print(f"⚠️  警告：门槛 {res['index_hurdle']:.1%} ≤ 折现率 "
                   f"{res['discount_rate']:.1%}，闸门二失效——买在内在价值上 IRR 即等于"
                   f"折现率，任何不溢价的标的都会自动过闸。请将门槛设在折现率之上"
                   f"（如 {res['discount_rate'] + 0.03:.0%}）或提高安全边际要求。")
         verdict = "跑赢" if res["beats_index"] else "跑输"
-        print(f"结论：期望年化 {verdict}门槛 {abs(res['excess_vs_index']):.2%}"
-              f"{'' if res['beats_index'] else '，机会成本不划算 → 结论最高只能给「观察等价格」'}")
+        print(f"（机会成本对照，仅展示）期望年化 {verdict}指数门槛 "
+              f"{abs(res['excess_vs_index']):.2%}")
+
+        # ---- 闸门二三项判定（v2.15：换维度，不再由 beats_index 定档）----
+        g = res["gate2"]
+        print(f"\n=== 闸门二（护城河档位：{g['moat'] or '未指定'}）===")
+        rows = [
+            ("① 期望 IRR（自洽性校验，非独立证据）", g["consistency_expected_irr"]),
+            ("② 不收敛下限 = 股息率 + 内在价值增速（独立）", g["no_convergence_floor"]),
+            ("③ 悲观情景年化（独立）", g["pessimistic_irr"]),
+        ]
+        for label, item in rows:
+            v, h, ok = item["value"], item["hurdle"], item["pass"]
+            v_txt = f"{v:.2%}" if v is not None else "未提供"
+            h_txt = f"{h:.2%}" if h is not None else "未设定"
+            mark = "✓" if ok is True else ("✗" if ok is False else "—")
+            print(f"  {mark} {label}: {v_txt}  门槛 {h_txt}")
+        if g["consistency_expected_irr"]["hurdle_derivation"]:
+            print(f"     ①门槛来源：{g['consistency_expected_irr']['hurdle_derivation']}")
+        if g["missing_inputs"]:
+            print(f"  ⚠️  缺输入无法判定：{g['missing_inputs']}"
+                  f"（--moat / --iv-growth 未提供时闸门二不可评）")
+        if g.get("note"):
+            print(f"  {g['note']}")
+        if g["pass"] is True:
+            print("  闸门二：通过（三项全过）")
+        elif g["pass"] is False:
+            print("  闸门二：不通过 → 档位最高「观察等价格」")
+            fl = g["no_convergence_floor"]
+            if fl["pass"] is False and fl["value"] is not None:
+                print(f"     其中不收敛下限仅 {fl['value']:.2%}：安全边际再大，"
+                      f"回报也全押在『市场哪天承认我对』——这是价值陷阱的定量特征")
+        else:
+            print("  闸门二：不可评（缺必要输入，不得当作通过）")
         if args.output:
             with open(args.output, "w", encoding="utf-8") as f:
                 json.dump(res, f, ensure_ascii=False, indent=2)

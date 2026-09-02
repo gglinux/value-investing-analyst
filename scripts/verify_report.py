@@ -291,6 +291,54 @@ def main():
                            f"radar 系列内有 {len(bad)} 个数据项误用 data 键（必须用 value，"
                            f"否则数据点塌缩到圆心、图表看似空白）", ""))
 
+    # ---- 核验强度标签校验（v2.15，首屏强制披露）----
+    # 为什么是门禁而不是建议：交付时打印的"校验通过（退出码 0）"，其实只保证
+    # "报告 = 底稿"，不保证底稿为真；勾稽覆盖率可能只有 18%、命门核对是自填区块、
+    # 数据窗口可能没覆盖过一次系统性压力。绿色勾给出的置信度高于它实际的保证范围，
+    # 因此必须把核验强度与结论放在同一屏，让读者看见"这个结论有多硬"。
+    # 触发规则：
+    #   ① 报告含徽章 → 必须能与 verification_strength.json 逐字段比对通过；
+    #   ② 报告是完整报告（含 report-header / verdict-banner）却无徽章 → 失败；
+    #   ③ 片段/测试用 HTML（无上述结构）→ 仅提示，不拦截。
+    vs_fp = os.path.join(args.data_dir, "verification_strength.json")
+    badge = re.search(r'data-verification-strength="1"([^>]*)>', html)
+    is_full_report = bool(re.search(r'class="(?:report-header|verdict-banner)"', html))
+    if badge:
+        if not os.path.exists(vs_fp):
+            failed.append(("verification_strength.json", "core-verification",
+                           "报告含核验强度徽章但底稿缺 verification_strength.json，"
+                           "无法核验徽章数值（须先跑 scripts/verification_strength.py）", ""))
+        else:
+            with open(vs_fp, "r", encoding="utf-8") as f:
+                vs = json.load(f)
+            attrs = dict(re.findall(r'data-([\w-]+)="([^"]*)"', badge.group(1)))
+            expect = {
+                "grade": str(vs.get("grade")),
+                "reconciliation-coverage": f'{vs["reconciliation"]["coverage"]:.4f}',
+                "crosscheck-level": str(vs["crosscheck"]["level"]),
+                "window-years": str(vs["data_window"]["span_years"]),
+                "covers-full-cycle": str(vs["data_window"]["covers_full_cycle"]).lower(),
+            }
+            for k, want in expect.items():
+                got = attrs.get(k)
+                if got is None:
+                    failed.append(("verification_strength.json", f"badge:{k}",
+                                   "徽章缺该属性（禁止手写徽章，用脚本 --emit-html 生成）", ""))
+                elif got != want:
+                    failed.append(("verification_strength.json", f"badge:{k}",
+                                   f"徽章与底稿不一致：底稿={want}", got))
+            if "未经原文机器逐字比对" not in html:
+                failed.append(("report", "core-verification",
+                               "徽章必须显式写明「未经原文机器逐字比对」——"
+                               "校验器只能核验来源字符串形态，不能核验数字本身与原文一致", ""))
+    elif is_full_report:
+        failed.append(("report", "core-verification",
+                       "完整报告首屏缺核验强度徽章（data-verification-strength）。"
+                       "跑 scripts/verification_strength.py --emit-html 生成并置于"
+                       "首屏决策卡内——核验强度必须与结论同屏，不得只写在附录", ""))
+    else:
+        print("提示：未检测到核验强度徽章（当前 HTML 不含完整报告结构，按片段处理）。")
+
     # ---- 文本完整性校验（乱码/损坏字符防护）----
     # 实证教训（腾讯/PDD 报告）：长文本生成偶发乱码段落，肉眼难查。
     # U+FFFD 替换符、CJK 正文中夹杂的连续拉丁扩展/西里尔等异常序列均视为损坏。
