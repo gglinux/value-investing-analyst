@@ -89,6 +89,16 @@
     padding-top: 20px; border-top: 1px solid var(--border);
   }
   .source-note { font-size: 12px; color: var(--muted); }
+  /* 核验强度徽章：首屏强制，与结论同屏。A 绿 / B 琥珀 / C 红，靠左细边框区分。 */
+  .verification-strength {
+    font-size: 12px; line-height: 1.7; margin: 12px 0; padding: 10px 14px;
+    border-left: 3px solid var(--border); background: rgba(127,127,127,.06);
+    border-radius: 4px;
+  }
+  .verification-strength[data-grade="A"] { border-left-color: #1D9E75; }
+  .verification-strength[data-grade="B"] { border-left-color: #BA7517; }
+  .verification-strength[data-grade="C"] { border-left-color: #E24B4A; }
+  .verification-strength .vs-meaning { color: var(--muted); }
   @media print { section { break-inside: avoid; } .chart { height: 360px; } }
 </style>
 </head>
@@ -102,11 +112,22 @@
       <!-- verdict-label 类根据结论切换: verdict-buy / verdict-watch / verdict-hard / verdict-reject -->
       <div class="verdict-label verdict-watch">{{结论档位}}</div>
       <div class="verdict-score">
-        <b>双闸门状态</b>：安全边际 {{安全边际达标否}} ｜ 期望年化 IRR {{期望IRR达标否}}<br>
+        <b>闸门一</b>：安全边际 {{安全边际}} vs 要求 {{护城河对应门槛}} → {{闸门一达标否}}<br>
+        <b>闸门二（三项全过才算通过）</b>：① 期望 IRR {{期望IRR}} vs {{IRR门槛}}（<i>自洽性校验，与闸门一同源，非独立证据</i>）
+        ② 不收敛下限 {{不收敛下限}} vs {{下限门槛}}（<i>独立：股息率+内在价值增速，折价永不收敛时的实际回报</i>）
+        ③ 悲观情景年化 {{悲观IRR}} vs {{悲观门槛}}（<i>独立：悲观值由{{悲观情景方法}}独立推导</i>）→ {{闸门二达标否}}<br>
         三位大师独立判断：巴菲特【{{巴菲特结论}}】｜ 段永平【{{段永平结论}}】｜ 李录【{{李录结论}}】<br>
-        内在价值区间：{{悲观值}} ~ {{乐观值}}（基准 {{基准值}}）｜ 期望年化回报：{{期望IRR}}（5年期，亏损概率 {{亏损概率}}）
+        内在价值区间：{{悲观值}} ~ {{乐观值}}（基准 {{基准值}}）｜ 亏损概率 {{亏损概率}} ｜ 亏损情景平均跌幅 {{亏损跌幅}}
       </div>
     </div>
+    <!-- 核验强度徽章（首屏强制，verify_report.py 门禁项）：
+         禁止手写，必须用 python3 scripts/verification_strength.py --financials data/financials_X.json
+         --manifest data/manifest.json --emit-html -o data/verification_strength.json 生成后原样粘贴。
+         校验器会把 data-* 属性与 verification_strength.json 逐字段比对，不一致即交付失败。
+         设计意图：交付时的"校验通过"只保证「报告 = 底稿」，不保证底稿为真——
+         勾稽覆盖率可能只有 18%、命门核对是自填区块、数据窗口可能没覆盖过一次系统性压力。
+         核验强度必须与结论同屏，不能埋在附录。 -->
+    {{核验强度徽章}}
     <!-- 市场快照信息卡：数据取自 data/market_snapshot.json，关键数字用 vnum 溯源标签包裹，例：
          <span class="vnum" data-src="market_snapshot.json" data-path="pe_ttm" data-fmt="num1">18.3</span> -->
     <div class="snapshot-grid">

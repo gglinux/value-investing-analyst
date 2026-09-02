@@ -1308,6 +1308,221 @@ if os.path.exists(_pa):
     check("平安 evps 序列无机械腰斩（口径断裂已修）", not _drop,
           f"仍有断点 idx={_drop}: {_ev}")
 
+print("== 10. 三情景门禁 check_scenarios（v2.15）==")
+import check_scenarios as cs  # noqa: E402
+
+
+def _scen(**over):
+    """微博原始三情景（悲观=基准调低增速）作为负向基线，可局部覆盖成合规版。"""
+    d = {
+        "company": "T", "ticker": "T", "currency": "USD",
+        "price": 6.99, "moat": "narrow", "discount_rate": 0.10, "hold_years": 5,
+        "dividend_yield": 0.087, "intrinsic_value_growth": 0.0,
+        "default_probabilities": {"悲观": 0.3, "基准": 0.5, "乐观": 0.2},
+        "scenarios": [
+            {"name": "悲观", "value_per_share": 15.11, "probability": 0.3,
+             "method": "dcf_owner_earnings", "method_note": "g=-5%",
+             "stressed_assumptions": ["growth", "terminal_growth"],
+             "non_operating_addback_per_share": 8.29},
+            {"name": "基准", "value_per_share": 18.07, "probability": 0.5,
+             "method": "dcf_owner_earnings", "non_operating_addback_per_share": 8.29},
+            {"name": "乐观", "value_per_share": 20.93, "probability": 0.2,
+             "method": "dcf_owner_earnings", "non_operating_addback_per_share": 8.29},
+        ],
+    }
+    d.update(over)
+    return d
+
+
+def _run_cs(d, metrics=None):
+    with tempfile.TemporaryDirectory() as td:
+        fp = os.path.join(td, "s.json")
+        json.dump(d, open(fp, "w", encoding="utf-8"), ensure_ascii=False)
+        mp = None
+        if metrics is not None:
+            mp = os.path.join(td, "m.json")
+            json.dump(metrics, open(mp, "w", encoding="utf-8"), ensure_ascii=False)
+        return cs.check(fp, mp)
+
+
+_, errs, warns, info = _run_cs(_scen())
+_txt = " ".join(errs)
+check("S2 悲观走 DCF 被拒（与基准同源）", any(e.startswith("S2 悲观情景方法") for e in errs), _txt[:120])
+check("S3 只压增速被拒", any("只压了增速类假设" in e for e in errs))
+check("S4 离散度哨兵报出比值", info["bear_base_ratio"] is not None)
+check("S5 非经营资产共用折价被拒", any(e.startswith("S5") for e in errs))
+check("S6 悲观值>现价须显式承认", any(e.startswith("S6") for e in errs))
+check("悲观/现价 = 2.16（微博原始口径复现）",
+      abs(info["bear_vs_price"] - 2.16) < 0.01, str(info["bear_vs_price"]))
+
+# 合规版：独立方法 + 多项压力 + 分层折价 + 概率挂证据
+GOOD = _scen(scenarios=[
+    {"name": "悲观", "value_per_share": 6.20, "probability": 0.45,
+     "method": "liquidation", "method_note": "净现金+投资3折+主业最差年 [E:fin.json]",
+     "stressed_assumptions": ["base_oe", "non_operating_discount", "margin"],
+     "non_operating_addback_per_share": 2.30,
+     "probability_evidence": "[E:phase3.md] DAU 连续下滑"},
+    {"name": "基准", "value_per_share": 18.07, "probability": 0.40,
+     "method": "dcf_owner_earnings", "non_operating_addback_per_share": 8.29,
+     "probability_evidence": "[E:phase3.md] 广告企稳"},
+    {"name": "乐观", "value_per_share": 20.93, "probability": 0.15,
+     "method": "dcf_owner_earnings", "non_operating_addback_per_share": 8.29,
+     "probability_evidence": "[E:phase3.md] 分流见顶"},
+])
+_, errs, _, info = _run_cs(GOOD)
+check("合规三情景通过", not errs, " ".join(errs)[:200])
+check("合规版悲观/基准 ≤0.85", info["bear_base_ratio"] <= cs.DISPERSION_MAX)
+
+# S7 概率偏离默认但未挂证据 → 拒
+_bad_p = json.loads(json.dumps(GOOD))
+for s in _bad_p["scenarios"]:
+    s.pop("probability_evidence", None)
+_, errs, _, _ = _run_cs(_bad_p)
+check("S7 概率偏离默认且无 [E:] 指针被拒", any(e.startswith("S7") for e in errs))
+# 概率等于默认值时不要求证据（负向：不得误报）
+_dflt = json.loads(json.dumps(GOOD))
+for s, p in zip(_dflt["scenarios"], (0.3, 0.5, 0.2)):
+    s["probability"] = p
+    s.pop("probability_evidence", None)
+_, errs, _, _ = _run_cs(_dflt)
+check("概率等于默认值时不误报 S7", not any(e.startswith("S7") for e in errs), " ".join(errs)[:150])
+
+print("== 10.5 价值陷阱闸门（S8）==")
+# 微博真实收入形态：2021 见顶后回撤 22%，末年微涨 0.14% —— 严格连续口径会被翘尾破坏
+WB_REV = [334.2, 477.9, 655.8, 1150.1, 1718.5, 1766.9, 1689.9, 2257.1,
+          1836.3, 1759.8, 1754.7, 1757.2]
+WB_METRICS = {"chart_series": {"years": list(range(2014, 2026)), "revenue": WB_REV}}
+check("严格连续下滑口径被末年翘尾破坏（0 年）",
+      cs.revenue_decline_streak(WB_METRICS) == 0)
+_stag = cs.revenue_peak_stagnation(WB_METRICS)
+check("峰值回撤停滞口径仍能识别萎缩", _stag["stagnating"] is True, str(_stag))
+check("峰值年与回撤幅度正确", _stag["peak_year"] == 2021
+      and abs(_stag["drawdown_from_peak"] - 0.2214) < 0.01, str(_stag))
+_, errs, _, info = _run_cs(GOOD, WB_METRICS)
+check("价值陷阱闸门触发（MoS 61% + 峰值回撤停滞）", info["value_trap_triggered"] is True)
+check("缺催化剂被拒", any("缺 `value_trap.catalyst`" in e for e in errs))
+check("缺时间上限被拒", any("catalyst_deadline" in e for e in errs))
+check("verdict_cap 非法被拒", any("verdict_cap" in e for e in errs))
+_trap_ok = json.loads(json.dumps(GOOD))
+_trap_ok["value_trap"] = {"catalyst": "特别分红 [E:phase3.md]",
+                          "catalyst_deadline": "2028-12-31",
+                          "verdict_cap": "小仓位试探"}
+_, errs, _, _ = _run_cs(_trap_ok, WB_METRICS)
+check("补齐催化剂+时间上限+降档后通过", not errs, " ".join(errs)[:200])
+_trap_core = json.loads(json.dumps(_trap_ok))
+_trap_core["value_trap"]["verdict_cap"] = "核心买入"
+_, errs, _, _ = _run_cs(_trap_core, WB_METRICS)
+check("价值陷阱标的不得进核心买入", any("verdict_cap" in e for e in errs))
+# 负向：健康标的（收入持续增长）不得触发价值陷阱
+HEALTHY = {"chart_series": {"years": list(range(2016, 2027)),
+                            "revenue": [100 * 1.15 ** i for i in range(11)]}}
+_, _, _, info = _run_cs(GOOD, HEALTHY)
+check("收入持续增长的标的不触发价值陷阱", info["value_trap_triggered"] is False)
+
+print("== 10.6 闸门二换维度（reverse_dcf gate2）==")
+import reverse_dcf as rd  # noqa: E402
+_mos_w, _h_w = rd.moat_irr_hurdle("wide", 0.10, 5)
+_mos_n, _h_n = rd.moat_irr_hurdle("narrow", 0.10, 5)
+check("宽护城河门槛由 25% 安全边际反推 ≈16.5%", abs(_h_w - 0.1650) < 0.002, f"{_h_w:.4f}")
+check("窄护城河门槛由 40% 安全边际反推 ≈21.8%", abs(_h_n - 0.2183) < 0.002, f"{_h_n:.4f}")
+check("无护城河不给门槛（不给买入结论）", rd.moat_irr_hurdle("none", 0.10, 5) == (None, None))
+_sc = [{"name": "悲观", "value_per_share": 6.20, "probability": 0.45},
+       {"name": "基准", "value_per_share": 18.07, "probability": 0.40},
+       {"name": "乐观", "value_per_share": 20.93, "probability": 0.15}]
+_r = rd.expected_return(6.99, _sc, 5, 0.13, 0.087, 0.10, moat="narrow", iv_growth=0.0)
+_g = _r["gate2"]
+check("gate2 三项齐备", set(_g) >= {"consistency_expected_irr", "no_convergence_floor",
+                                    "pessimistic_irr", "pass", "independent_checks"})
+check("不收敛下限 = 股息率 + 内在价值增速",
+      abs(_g["no_convergence_floor"]["value"] - 0.087) < 1e-9)
+check("独立项只认下限与悲观年化",
+      _g["independent_checks"] == ["no_convergence_floor", "pessimistic_irr"])
+check("期望 IRR 项被标注为自洽性校验而非独立证据",
+      "自洽性校验" in _g["consistency_expected_irr"]["basis"])
+# 缺 iv_growth → 不可评，绝不能当作通过（静默通过是最危险的形态）
+_r2 = rd.expected_return(6.99, _sc, 5, 0.13, 0.087, 0.10, moat="narrow")
+check("缺 --iv-growth 时闸门二不可评（pass=None，不得视为通过）",
+      _r2["gate2"]["pass"] is None and "no_convergence_floor" in _r2["gate2"]["missing_inputs"])
+# 不收敛下限不达标必须拦住（价值陷阱的定量特征）
+_r3 = rd.expected_return(6.99, _sc, 5, 0.13, 0.0, 0.10, moat="narrow", iv_growth=0.0)
+check("零股息+零增长 → 不收敛下限 0% 不达标 → 闸门二不过",
+      _r3["gate2"]["no_convergence_floor"]["pass"] is False and _r3["gate2"]["pass"] is False)
+check("此时期望 IRR 仍可能达标（证明两项确实不同维度）",
+      _r3["gate2"]["consistency_expected_irr"]["pass"] is True)
+_r4 = rd.expected_return(6.99, _sc, 5, 0.13, 0.087, 0.10, moat="none", iv_growth=0.05)
+check("无护城河直接不过闸门二", _r4["gate2"]["pass"] is False)
+check("旧字段 beats_index 仍在（向后兼容）", "beats_index" in _r)
+
+print("== 10.7 核验强度标签 + 首屏门禁 ==")
+import verification_strength as vst  # noqa: E402
+_fin_full = {"company": "T", "annual": [
+    {"year": y, "total_assets": 100, "total_liabilities": 60, "total_equity": 40}
+    for y in range(2015, 2026)],
+    "crosscheck": [{"year": y, "source": f"{y}年报 PDF p.45（巨潮）"} for y in (2023, 2024, 2025)]}
+_v = vst.assess(_fin_full)
+check("三项达标 → A 级", _v["grade"] == "A", str(_v["grade"]))
+check("勾稽覆盖率 100%", abs(_v["reconciliation"]["coverage"] - 1.0) < 1e-9)
+check("原文比对等级 full", _v["crosscheck"]["level"] == "full")
+check("始终声明未经原文机器逐字比对",
+      _v["crosscheck"]["machine_verified_against_source_text"] is False)
+_fin_gap = json.loads(json.dumps(_fin_full))
+for r_ in _fin_gap["annual"][:9]:
+    r_["total_assets"] = None
+_v2 = vst.assess(_fin_gap)
+check("勾稽覆盖率 18% 场景被判 C（0 错误不再掩盖没检查）",
+      _v2["grade"] == "C" and _v2["reconciliation"]["level"] == "weak",
+      f"{_v2['grade']} {_v2['reconciliation']['coverage']:.2f}")
+_fin_bank = {"company": "B", "company_type": "银行", "annual": [
+    {"year": y, "total_assets": 100, "total_equity": 8, "gross_loans": 60,
+     "npl_balance": 1, "provision_balance": 2} for y in range(2016, 2026)],
+    "crosscheck": [{"year": y, "source": f"{y}年报（巨潮）"} for y in (2023, 2024, 2025)]}
+_v3 = vst.assess(_fin_bank)
+check("银行专属 schema 不因缺 total_liabilities 被误判",
+      _v3["reconciliation"]["coverage"] == 1.0, str(_v3["reconciliation"]))
+check("银行自动按 15 年窗口要求 → 10 年判 partial",
+      _v3["data_window"]["required_years"] == 15
+      and _v3["data_window"]["level"] == "partial", str(_v3["data_window"]))
+_fin_nostress = {"company": "T", "annual": [
+    {"year": y, "total_assets": 100, "total_liabilities": 60, "total_equity": 40}
+    for y in range(2023, 2027)],
+    "crosscheck": [{"year": y, "source": f"{y}年报（巨潮）"} for y in (2024, 2025, 2026)]}
+_v4 = vst.assess(_fin_nostress)
+check("窗口未覆盖任何系统性压力年 → weak",
+      _v4["data_window"]["level"] == "weak"
+      and not _v4["data_window"]["stress_years_covered"], str(_v4["data_window"]))
+_badge = vst.badge_html(_v)
+check("徽章含机器可比对属性", 'data-verification-strength="1"' in _badge
+      and 'data-grade="A"' in _badge)
+check("徽章含未经原文比对声明", "未经原文机器逐字比对" in _badge)
+
+with tempfile.TemporaryDirectory() as td:
+    ddir = os.path.join(td, "data"); os.makedirs(ddir)
+    json.dump({"kpi": 0.123}, open(os.path.join(ddir, "m.json"), "w"))
+    json.dump(_v, open(os.path.join(ddir, "verification_strength.json"), "w"),
+              ensure_ascii=False)
+    _vn = '<span class="vnum" data-src="m.json" data-path="kpi" data-fmt="pct1">12.3%</span>'
+    _hdr = '<header class="report-header"><div class="verdict-banner">x</div></header>'
+
+    def _vr(name, content):
+        fp = os.path.join(td, name + ".html")
+        open(fp, "w", encoding="utf-8").write(content)
+        return subprocess.run([sys.executable, os.path.join(SCRIPTS, "verify_report.py"),
+                               fp, "--data-dir", ddir], capture_output=True, text=True)
+
+    r = _vr("nobadge", _hdr + _vn)
+    check("完整报告缺核验强度徽章被拒",
+          r.returncode == 1 and "core-verification" in r.stdout, r.stdout[-160:])
+    r = _vr("ok", _hdr + _vn + _badge)
+    check("徽章与底稿一致的报告通过", r.returncode == 0, r.stdout[-200:])
+    r = _vr("tamper", _hdr + _vn + _badge.replace('data-grade="A"', 'data-grade="C"'))
+    check("篡改徽章等级被逮住",
+          r.returncode == 1 and "badge:grade" in r.stdout, r.stdout[-160:])
+    r = _vr("nodecl", _hdr + _vn + _badge.replace("未经原文机器逐字比对", "已完整核验"))
+    check("删掉「未经原文机器逐字比对」声明被拒",
+          r.returncode == 1, r.stdout[-160:])
+    r = _vr("frag", _vn)
+    check("片段 HTML 不强制徽章（不误伤）", r.returncode == 0, r.stdout[-160:])
+
 print()
 if FAILED:
     print(f"结果：{len(FAILED)} 项失败 → {FAILED}")
