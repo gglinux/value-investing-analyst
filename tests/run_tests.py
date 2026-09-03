@@ -1387,6 +1387,28 @@ for s, p in zip(_dflt["scenarios"], (0.3, 0.5, 0.2)):
 _, errs, _, _ = _run_cs(_dflt)
 check("概率等于默认值时不误报 S7", not any(e.startswith("S7") for e in errs), " ".join(errs)[:150])
 
+# S7b iv-growth 证据指针：非零必须挂 [E:]，与 S7 同等强制
+_ivg = json.loads(json.dumps(GOOD))
+_ivg["intrinsic_value_growth"] = 0.05
+_, errs, _, _ = _run_cs(_ivg)
+check("S7b iv-growth 非零且无 [E:] 指针被拒",
+      any(e.startswith("S7b") and "iv_growth_evidence" in e for e in errs), " ".join(errs)[:150])
+_ivg["iv_growth_evidence"] = "过去 5 年 OE 复合增速 8%，保守取 5% [E:fin.json]"
+_, errs, _, info = _run_cs(_ivg)
+check("S7b 挂上 [E:] 指针后通过", not any(e.startswith("S7b") for e in errs), " ".join(errs)[:150])
+_ivg["intrinsic_value_growth"] = 5.0
+_, errs, _, _ = _run_cs(_ivg)
+check("S7b 量纲哨兵：5.0 判为百分数误填被拒",
+      any(e.startswith("S7b") and "20%" in e for e in errs), " ".join(errs)[:150])
+_, errs, _, _ = _run_cs(GOOD)
+check("S7b iv-growth 为 0 时不要求证据", not any(e.startswith("S7b") for e in errs))
+_no_ivg = json.loads(json.dumps(GOOD))
+del _no_ivg["intrinsic_value_growth"]
+_, errs, warns, _ = _run_cs(_no_ivg)
+check("S7b 缺 iv-growth 字段仅告警不报错",
+      not any(e.startswith("S7b") for e in errs)
+      and any("intrinsic_value_growth" in w for w in warns), str(warns)[:150])
+
 print("== 10.5 价值陷阱闸门（S8）==")
 # 微博真实收入形态：2021 见顶后回撤 22%，末年微涨 0.14% —— 严格连续口径会被翘尾破坏
 WB_REV = [334.2, 477.9, 655.8, 1150.1, 1718.5, 1766.9, 1689.9, 2257.1,
