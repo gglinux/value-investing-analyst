@@ -1359,6 +1359,9 @@ check("悲观/现价 = 2.16（微博原始口径复现）",
 GOOD = _scen(scenarios=[
     {"name": "悲观", "value_per_share": 6.20, "probability": 0.45,
      "method": "liquidation", "method_note": "净现金+投资3折+主业最差年 [E:fin.json]",
+     "method_inputs": {"shares_m": 100, "components": [
+         {"item": "净现金", "amount_m": 500, "haircut": 1.0},
+         {"item": "投资组合", "amount_m": 400, "haircut": 0.3}]},
      "stressed_assumptions": ["base_oe", "non_operating_discount", "margin"],
      "non_operating_addback_per_share": 2.30,
      "probability_evidence": "[E:phase3.md] DAU 连续下滑"},
@@ -1372,6 +1375,46 @@ GOOD = _scen(scenarios=[
 _, errs, _, info = _run_cs(GOOD)
 check("合规三情景通过", not errs, " ".join(errs)[:200])
 check("合规版悲观/基准 ≤0.85", info["bear_base_ratio"] <= cs.DISPERSION_MAX)
+
+# S2b 悲观值算术重算：标签必须兑现为算术（堵「标签写 liquidation、数字随手填」）
+check("S2b 合规版重算值与登记值一致",
+      abs(info.get("bear_recomputed_value", 0) - 6.20) < 1e-6, str(info)[:150])
+_forged = json.loads(json.dumps(GOOD))
+_forged["scenarios"][0].pop("method_inputs")
+_forged["scenarios"][0]["value_per_share"] = 14.91  # 旧 DCF 15.11 随手减 0.2
+_, errs, _, _ = _run_cs(_forged)
+check("S2b 无 method_inputs 的 liquidation 标签被拒（实测绕过路径复现）",
+      any(e.startswith("S2b") and "method_inputs" in e for e in errs), " ".join(errs)[:150])
+_forged2 = json.loads(json.dumps(GOOD))
+_forged2["scenarios"][0]["value_per_share"] = 14.91  # 有 inputs 但数字与算术不符
+_, errs, _, info = _run_cs(_forged2)
+check("S2b 登记值偏离重算值 >2% 被拒（数字不是算出来的）",
+      any(e.startswith("S2b") and "偏差" in e for e in errs), " ".join(errs)[:150])
+_incomp = json.loads(json.dumps(GOOD))
+_incomp["scenarios"][0]["method_inputs"] = {"shares_m": 100}
+_, errs, _, _ = _run_cs(_incomp)
+check("S2b inputs 不完整无法重算被拒",
+      any(e.startswith("S2b") and "不完整" in e for e in errs), " ".join(errs)[:150])
+_pb = json.loads(json.dumps(GOOD))
+_pb["scenarios"][0].update({"method": "pb_trough", "method_inputs":
+                            {"trough_pb": 0.5, "bvps": 12.4}})
+_, errs, _, info = _run_cs(_pb)
+check("S2b pb_trough 重算通过（0.5×12.4=6.20）",
+      not any(e.startswith("S2b") for e in errs)
+      and abs(info["bear_recomputed_value"] - 6.20) < 1e-6, " ".join(errs)[:150])
+_wm = json.loads(json.dumps(GOOD))
+_wm["scenarios"][0].update({"method": "worst_year_margin", "method_inputs":
+                            {"worst_margin": 0.10, "revenue_m": 1240,
+                             "crisis_multiple": 5, "shares_m": 100}})
+_, errs, _, info = _run_cs(_wm)
+check("S2b worst_year_margin 重算通过（0.10×1240×5/100=6.20）",
+      not any(e.startswith("S2b") for e in errs)
+      and abs(info["bear_recomputed_value"] - 6.20) < 1e-6, " ".join(errs)[:150])
+_bad_h = json.loads(json.dumps(GOOD))
+_bad_h["scenarios"][0]["method_inputs"]["components"][1]["haircut"] = 1.55
+_, errs, _, _ = _run_cs(_bad_h)
+check("S2b 折价率越界（>1）被拒",
+      any(e.startswith("S2b") and "越界" in e for e in errs), " ".join(errs)[:150])
 
 # S7 概率偏离默认但未挂证据 → 拒
 _bad_p = json.loads(json.dumps(GOOD))

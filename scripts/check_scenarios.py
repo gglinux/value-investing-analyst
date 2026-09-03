@@ -27,10 +27,15 @@ check_scenarios.py — 三情景底稿门禁（Phase 4 出口关卡，expected-r
 
 因此本脚本把"悲观情景必须由独立方法推导"从文档纪律升级为机器门禁。
 
-═══ 十项检查 ═══
+═══ 十一项检查 ═══
 S1 schema：必填字段齐全、概率和为 1、现价为正、护城河档位合法。
 S2 悲观情景方法独立性：`method` 必须属独立方法白名单（不走 DCF 的另一条路），
    禁止 dcf_* 系列。基准/乐观可以用 DCF。
+S2b 悲观值算术重算：`method` 只是标签，标签与数字之间此前零算术关联——实测把
+   method 写成 liquidation、数字从旧 DCF 随手减 0.2、配一句带 [E:] 的话即可全过。
+   故白名单方法必须登记 `method_inputs`（结构化输入），脚本按该方法的公式重算
+   每股价值并与 `value_per_share` 比对，容差 2%，对不上即 FAIL。
+   悲观值必须是「算出来的」，不是「填出来的」。
 S3 压力项充分性：悲观情景 `stressed_assumptions` ≥2 项且不得只有 growth——
    "只调增速"正是本次要消灭的做法。
 S4 离散度哨兵：悲观/基准 每股价值比 > 0.85 即报错（下行不是独立估计，只是轻微打折）。
@@ -68,6 +73,15 @@ S9 股息率量纲哨兵：`dividend_yield` >20% 判为百分数误填报错、�
     {"name": "悲观", "value_per_share": 5.90, "probability": 0.4,
      "method": "liquidation",
      "method_note": "净现金 5.42 亿 + 上市投资 3 折 + 非上市归零 [E:financials_WB.json]",
+     "method_inputs": {                 # S2b：脚本按方法公式重算并与 value_per_share 比对（容差 2%）
+       "shares_m": 245.7,               # 股本（百万股）
+       "components": [                  # 清算科目：金额（百万，负债用负数）× 折价率
+         {"item": "净现金", "amount_m": 542, "haircut": 1.0},
+         {"item": "上市投资", "amount_m": 780, "haircut": 0.3},
+         {"item": "非上市投资", "amount_m": 883, "haircut": 0.0},
+         {"item": "主业清算价值", "amount_m": 300, "haircut": 0.5}
+       ]
+     },
      "stressed_assumptions": ["base_oe", "non_operating_discount", "margin"],
      "non_operating_addback_per_share": 2.10,
      "probability_evidence": "[E:phase3_analysis.md] DAU 连续 6 季下滑"},
@@ -117,11 +131,88 @@ DCF_METHODS = {
 }
 MOATS = {"wide", "narrow", "none"}
 DISPERSION_MAX = 0.85          # S4：悲观/基准 上限
+S2B_TOLERANCE = 0.02           # S2b：机器重算 vs 登记值 容差
 NON_OP_MATERIAL = 0.10         # S5：非经营资产占基准价值的重大性阈值
 VALUE_TRAP_MOS = 0.50          # S8：安全边际触发线
 VALUE_TRAP_DECLINE_YEARS = 3   # S8：连续负增长年数
 TRAP_VERDICT_CAPS = {"小仓位试探", "排除"}
 E_PTR = re.compile(r"\[E:[^\]]+\]")
+
+
+# ═══ S2b 悲观值算术重算 ═══
+# 为什么：`method` 是自由字符串，`value_per_share` 是手填数字，两者零算术关联。
+# 归档实测的绕过路径：标签写 liquidation、数字从旧 DCF 随手减 0.2、配一句带 [E:]
+# 的话 → 九项检查全过。S2 查的是"你声称用了什么方法"，不是"数字是否真由该方法算出"。
+# 修法：白名单方法各定义结构化输入 schema，脚本按公式重算、与登记值比对（容差 2%）。
+# 这是把「底稿 ≈ 事实」的纪律从数据层延伸到推导层：悲观值必须是算出来的。
+
+def _rc_components(mi):
+    """清算/重置/分部底价共用：Σ(科目金额 × 折价率) / 股本。负债登负数、折价 1.0。"""
+    comps = mi.get("components")
+    shares = mi.get("shares_m")
+    if not comps or not shares:
+        return None, "缺 `components`（科目金额×折价率清单）或 `shares_m`（百万股）"
+    total = 0.0
+    for c in comps:
+        if c.get("amount_m") is None or c.get("haircut") is None:
+            return None, f"科目 {c.get('item', '?')} 缺 `amount_m` 或 `haircut`"
+        h = float(c["haircut"])
+        if not (0.0 <= h <= 1.0):
+            return None, f"科目 {c.get('item', '?')} 折价率 {h} 越界（应在 0~1，负债请把金额登负数）"
+        total += float(c["amount_m"]) * h
+    return total / float(shares), None
+
+
+def _rc_pb_trough(mi):
+    """历史 PB 最低分位 × 当期每股净资产。"""
+    pb, bvps = mi.get("trough_pb"), mi.get("bvps")
+    if pb is None or bvps is None:
+        return None, "缺 `trough_pb`（历史 PB 低分位）或 `bvps`（当期每股净资产）"
+    return float(pb) * float(bvps), None
+
+
+def _rc_pe_trough(mi):
+    """危机期倍数 × 当期每股盈利（eps 或 earnings_m/shares_m 二选一）。"""
+    mult = mi.get("trough_multiple")
+    if mult is None:
+        return None, "缺 `trough_multiple`（历史 PE / EV-EBIT 最低分位倍数）"
+    eps = mi.get("eps")
+    if eps is None and mi.get("earnings_m") is not None and mi.get("shares_m"):
+        eps = float(mi["earnings_m"]) / float(mi["shares_m"])
+    if eps is None:
+        return None, "缺 `eps`（或 `earnings_m` + `shares_m`）"
+    return float(mult) * float(eps), None
+
+
+def _rc_worst_year_margin(mi):
+    """历史最差年利润率 × 当期收入 × 危机期倍数，除以股本。全程不走 DCF。"""
+    need = [k for k in ("worst_margin", "revenue_m", "crisis_multiple", "shares_m")
+            if mi.get(k) is None]
+    if need:
+        return None, f"缺 {'、'.join('`%s`' % k for k in need)}"
+    return (float(mi["worst_margin"]) * float(mi["revenue_m"])
+            * float(mi["crisis_multiple"]) / float(mi["shares_m"])), None
+
+
+def _rc_peer_death(mi):
+    """同类死亡案例类比：锚定每股价值 × 终局比例（峰值→稳态实际跌幅推出的存活比例）。"""
+    a, r = mi.get("anchor_value_per_share"), mi.get("terminal_ratio")
+    if a is None or r is None:
+        return None, "缺 `anchor_value_per_share`（锚定每股价值）或 `terminal_ratio`（终局存活比例 0~1）"
+    if not (0.0 <= float(r) <= 1.0):
+        return None, f"`terminal_ratio` {r} 越界（应在 0~1）"
+    return float(a) * float(r), None
+
+
+S2B_RECOMPUTE = {
+    "liquidation": _rc_components,
+    "asset_replacement": _rc_components,
+    "sotp_asset_floor": _rc_components,
+    "pb_trough": _rc_pb_trough,
+    "pe_trough_multiple": _rc_pe_trough,
+    "worst_year_margin": _rc_worst_year_margin,
+    "peer_death_analogy": _rc_peer_death,
+}
 
 
 def normalize_yield(key, value):
@@ -288,6 +379,31 @@ def check(path, metrics_path=None, snapshot_path=None):
     if not E_PTR.search(bear.get("method_note", "") or ""):
         errors.append("S2 悲观情景 `method_note` 必须含 [E:] 证据指针 —— "
                       "独立方法的输入（清算科目/历史最差年/危机期倍数）必须可溯源")
+
+    # ---- S2b 悲观值算术重算（标签必须兑现为算术）----
+    if m in S2B_RECOMPUTE:
+        mi = bear.get("method_inputs")
+        if not mi:
+            errors.append(
+                f"S2b 悲观情景方法 `{m}` 缺 `method_inputs`：方法标签与数字之间必须有"
+                f"算术关联，脚本要按该方法的公式重算并与 value_per_share 比对。"
+                f"没有结构化输入，「liquidation」只是一个可以随便写的词"
+                f"（实测：标签写 liquidation、数字从旧 DCF 随手减 0.2 即可绕过 S2）")
+        else:
+            recomputed, err = S2B_RECOMPUTE[m](mi)
+            if err:
+                errors.append(f"S2b 悲观情景 `method_inputs` 不完整，无法重算：{err}")
+            else:
+                info["bear_recomputed_value"] = round(recomputed, 4)
+                dev = abs(recomputed - bear_v) / bear_v if bear_v else None
+                info["bear_recompute_deviation"] = round(dev, 6) if dev is not None else None
+                if dev is None or dev > S2B_TOLERANCE:
+                    errors.append(
+                        f"S2b 机器按 `{m}` 重算悲观每股价值 = {recomputed:.2f}，登记值 "
+                        f"{bear_v:.2f}，偏差 {dev:.1%} > {S2B_TOLERANCE:.0%} 容差。"
+                        f"两者必须一致：要么 method_inputs 登记的科目/倍数与实际推导不符，"
+                        f"要么 value_per_share 不是由该方法算出——悲观值必须是算出来的，"
+                        f"不是填出来的")
 
     # ---- S3 压力项充分性 ----
     stressed = bear.get("stressed_assumptions") or []
