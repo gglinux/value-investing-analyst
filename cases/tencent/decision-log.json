@@ -8,20 +8,68 @@
   "margin_of_safety": 0.057,
   "expected_irr_incl_div": 0.0375,
   "loss_probability": 0.0,
-  "band_hkd": [441.5, 482.8, 697.6],
-  "buy_zone_hkd": [380, 420],
+  "band_hkd": [
+   441.5,
+   482.8,
+   697.6
+  ],
+  "buy_zone_hkd": [
+   380,
+   420
+  ],
   "normalization_alert": false,
   "base_oe_recommended": 299409,
-  "base_oe_range": [219013, 256881],
-  "investment_portfolio": {"total": 875100, "neutral_recoverable": 671200, "per_share_hkd": 80.2},
-  "key_variables": [
-   {"name": "AI资本开支节奏", "call": "最关键：放缓则利润提前释放", "proxy": "单季capex", "falsify": ">500亿连续两季（军备坐实）"},
-   {"name": "广告增速", "call": "AI变现最直接验证", "proxy": "营销服务收入增速", "falsify": "<10%连续两季"},
-   {"name": "回购持续性", "call": "资本配置纪律试金石", "proxy": "单季回购额", "falsify": "<100亿HKD"}
+  "base_oe_range": [
+   219013,
+   256881
   ],
-  "falsifiers": ["广告增速连续两季<10%", "AI资本开支2027仍1500亿+且无收入兑现", "回购缩减<100亿/季", "【上行】capex放缓+广告20%+"],
-  "persona_verdicts": {"buffett": "公用事业价格买平台(80)", "duan": "最不需要动脑的公司(93)", "li_lu": "确定性最高复利机器(85)"},
-  "red_team": {"bear": 394.9, "downgrade": false, "buy_zone_revision": "380-420"},
+  "investment_portfolio": {
+   "total": 875100,
+   "neutral_recoverable": 671200,
+   "per_share_hkd": 80.2
+  },
+  "key_variables": [
+   {
+    "name": "AI资本开支节奏",
+    "call": "最关键：放缓则利润提前释放",
+    "proxy": "单季capex",
+    "falsify": ">500亿连续两季（军备坐实）",
+    "check_by": "2026-11-30",
+    "data_source": "季报现金流量表/业绩会披露单季 capex（Q3 报告约 11 月中旬，连续两季判定用 2026Q2+Q3）"
+   },
+   {
+    "name": "广告增速",
+    "call": "AI变现最直接验证",
+    "proxy": "营销服务收入增速",
+    "falsify": "<10%连续两季",
+    "check_by": "2026-11-30",
+    "data_source": "季报分部收入「营销服务」同比增速（连续两季判定用 2026Q2+Q3）"
+   },
+   {
+    "name": "回购持续性",
+    "call": "资本配置纪律试金石",
+    "proxy": "单季回购额",
+    "falsify": "<100亿HKD",
+    "check_by": "2026-12-31",
+    "data_source": "港交所每日回购申报汇总成单季回购额（HKEX 披露易），任一单季 <100 亿 HKD 触发"
+   }
+  ],
+  "falsifiers": [
+   "广告增速连续两季<10%",
+   "AI资本开支2027仍1500亿+且无收入兑现",
+   "回购缩减<100亿/季",
+   "【上行】capex放缓+广告20%+"
+  ],
+  "persona_verdicts": {
+   "buffett": "公用事业价格买平台(80)",
+   "duan": "最不需要动脑的公司(93)",
+   "li_lu": "确定性最高复利机器(85)"
+  },
+  "red_team": {
+   "bear": 394.9,
+   "downgrade": false,
+   "buy_zone_revision": "380-420"
+  },
   "variant_perception": "市场把AI投入当纯成本，我们看广告+22%证明AI变现路径存在——但变现规模能否覆盖1500亿capex双方同样不确定",
   "pipeline_note": "港股通用管道第二次实证；营收字段接口缺失需手工补；投资组合8751亿单独加回；AI capex陡增期FCF失真需双重口径披露"
  }

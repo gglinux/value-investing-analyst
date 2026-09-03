@@ -7,21 +7,64 @@
   "verdict": "观察 · 等价格",
   "margin_of_safety": -0.155,
   "expected_irr_incl_div": 0.0169,
-  "loss_probability": 0.30,
+  "loss_probability": 0.3,
   "dividend_yield": 0.0514,
-  "band_cny": [19.53, 22.71, 26.27],
-  "buy_zone_cny": [18, 22],
+  "band_cny": [
+   19.53,
+   22.71,
+   26.27
+  ],
+  "buy_zone_cny": [
+   18,
+   22
+  ],
   "normalization_alert": false,
   "base_oe_used": 11565,
   "base_oe_redteam": 10000,
   "key_variables": [
-   {"name": "原奶价格走势", "call": "最关键变量：反弹 20%+ 则基期下修", "proxy": "生鲜乳主产区均价", "falsify": ">3.5元/公斤且毛利率<33%"},
-   {"name": "奶粉份额天花板", "call": "18.3%→25% 判断可期", "proxy": "奶粉收入增速", "falsify": "连续两季<5%"},
-   {"name": "资本开支水位", "call": "30 亿低位稳态", "proxy": "购建固定资产现金", "falsify": ">50亿"}
+   {
+    "name": "原奶价格走势",
+    "call": "最关键变量：反弹 20%+ 则基期下修",
+    "proxy": "生鲜乳主产区均价",
+    "falsify": ">3.5元/公斤且毛利率<33%",
+    "check_by": "2027-04-30",
+    "data_source": "农业农村部生鲜乳主产区均价周报 + 伊利年报毛利率（价格线随时可查，毛利率联合判定以 FY2026 年报为准，约 2027-04）"
+   },
+   {
+    "name": "奶粉份额天花板",
+    "call": "18.3%→25% 判断可期",
+    "proxy": "奶粉收入增速",
+    "falsify": "连续两季<5%",
+    "check_by": "2026-11-15",
+    "data_source": "季报分产品「奶粉及奶制品」收入同比增速（Q3 报告约 10 月底，连续两季判定用 2026Q2+Q3）"
+   },
+   {
+    "name": "资本开支水位",
+    "call": "30 亿低位稳态",
+    "proxy": "购建固定资产现金",
+    "falsify": ">50亿",
+    "check_by": "2027-04-30",
+    "data_source": "FY2026 年报现金流量表「购建固定资产、无形资产和其他长期资产支付的现金」"
+   }
   ],
-  "falsifiers": ["原奶>3.5元/公斤且毛利率<33%", "奶粉增速连续两季<5%", "分红率<70%", "食品安全或批量减持"],
-  "persona_verdicts": {"buffett": "买入等价格(77)", "duan": "生意顶级公道偏上(89)", "li_lu": "等22元以下(75)"},
-  "red_team": {"bear": 13.63, "base": 10000, "expected_irr_incl_div": -0.01, "downgrade_triggered": true, "final": "采纳18元纪律底线，档位保留观察"},
+  "falsifiers": [
+   "原奶>3.5元/公斤且毛利率<33%",
+   "奶粉增速连续两季<5%",
+   "分红率<70%",
+   "食品安全或批量减持"
+  ],
+  "persona_verdicts": {
+   "buffett": "买入等价格(77)",
+   "duan": "生意顶级公道偏上(89)",
+   "li_lu": "等22元以下(75)"
+  },
+  "red_team": {
+   "bear": 13.63,
+   "base": 10000,
+   "expected_irr_incl_div": -0.01,
+   "downgrade_triggered": true,
+   "final": "采纳18元纪律底线，档位保留观察"
+  },
   "variant_perception": "未通过（无方向优势：市场按零增长债券定价，我们用引擎检验后认为程度过悲观但方向基本对）",
   "impairment_note": "2024年52.3亿减值压低基数，2025年+36.8%含低基数效应（还原后约+8%）",
   "pipeline_note": "A股通用管道首次实证；固化A股字段映射5条坑点"

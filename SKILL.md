@@ -137,7 +137,7 @@ description: 价值投资深度公司分析。输入一家上市公司（A股/�
 
 ## 分析闭环机制（跨次复用）
 
-1. **决策日志（双写）**：每次分析结束，把「日期、当时股价、结论档位、三位大师各自结论、1~3 个关键变量及判断、证伪条件、期望年化 IRR 与亏损概率、用户初判与分析动机 vs 最终结论的分歧」写两份：`<公司名>_analysis/decision-log.md`（人读，追加节）+ `<公司名>_analysis/decision-log.json`（机器读，追加数组元素，字段：`date/price/verdict/margin_of_safety/expected_irr/loss_probability/key_variables[]/falsifiers[]/persona_verdicts{buffett,duan,li_lu}/user_prior/motivation`）。复盘校准协议要求跨公司统计系统性偏差（≥5 次复盘归纳），没有结构化 JSON 只能靠肉眼翻 Markdown。
+1. **决策日志（双写）**：每次分析结束，把「日期、当时股价、结论档位、三位大师各自结论、1~3 个关键变量及判断、证伪条件、期望年化 IRR 与亏损概率、用户初判与分析动机 vs 最终结论的分歧」写两份：`<公司名>_analysis/decision-log.md`（人读，追加节）+ `<公司名>_analysis/decision-log.json`（机器读，追加数组元素，字段：`date/price/verdict/margin_of_safety/expected_irr/loss_probability/key_variables[]/falsifiers[]/persona_verdicts{buffett,duan,li_lu}/user_prior/motivation`）。复盘校准协议要求跨公司统计系统性偏差（≥5 次复盘归纳），没有结构化 JSON 只能靠肉眼翻 Markdown。**`key_variables[]` 每项必须是结构化对象且含全部五个字段：`name`（变量）、`call`（当时判断）、`proxy`（观测指标）、`falsify`（证伪线）、`check_by`（截止日 YYYY-MM-DD）+ `data_source`（取数路径，如「季报利息收支表」「公司 IR 页月度经营数据」）。没有截止日的命题永远处于未决态、永远不进复盘分母——五字段缺一，这个变量就没资格叫判断，只是观点**。
 2. **复盘校准协议（反馈闭环，skill 进化的唯一 ground truth）**：分析满 6 个月或 12 个月后再次触达该公司时（复分析、定时提醒、用户问起），必须先做复盘再做新分析：① 对照当时的关键变量判断与实际走向（对/错/未决）；② 证伪条件是否触发过、触发后有没有被注意到；③ 当时期望年化 IRR vs 实际年化回报（注明市场 beta 的贡献）；④ 三位大师谁的框架在这个标的上事后看最准。复盘结果追加进 decision-log 的"复盘记录"节。多家公司积累后（≥5 次复盘），归纳系统性偏差写入 skill 改进建议（例：增速假设普遍乐观 → 收紧基率检验阈值）。没有这个回路，skill 永远不知道自己哪类判断系统性偏差。
 3. **复分析 diff 模式**：启动时若发现该公司已有 `decision-log.md`，本次必须先读取上次结论，报告增加"与上次结论对比"章节：哪些判断变了、为什么变、上次的关键变量判断被验证还是被证伪。禁止无视历史输出一份全新报告。
 4. **跟踪自动化**：报告交付后，主动询问用户是否创建复盘/财报季定时提醒（用本地定时任务工具，禁用 cron/notify）；到期提醒内容为：执行复盘校准协议 + 复查证伪条件与季度跟踪清单是否触线。

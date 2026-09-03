@@ -10,16 +10,58 @@
   "expected_irr_incl_div": 0.0763,
   "loss_probability": 0.0,
   "dividend_yield": 0.0511,
-  "band": [34, 47, 58],
-  "buy_zone": [30, 35.3],
-  "key_variables": [
-   {"name": "净息差企稳", "call": "企稳概率略占优", "proxy": "单季NIM", "falsify": "连续两季<1.70%"},
-   {"name": "零售不良软着陆", "call": "可控但尾部未出清", "proxy": "零售不良率", "falsify": ">1.50%"},
-   {"name": "大财富管理持续性", "call": "判断较强", "proxy": "财富管理手续费增速", "falsify": "连续两季负增长"}
+  "band": [
+   34,
+   47,
+   58
   ],
-  "falsifiers": ["NIM连续两季<1.70%", "零售不良率>1.5%", "财富管理手续费连续两季负增长", "拨备覆盖率<330%", "分红率<30%"],
-  "persona_verdicts": {"buffett": "观察(76)", "duan": "观察(83)", "li_lu": "值得跟踪未懂(79)"},
-  "red_team": {"bear": 28, "expected_irr_incl_div": 0.036, "downgrade": false},
+  "buy_zone": [
+   30,
+   35.3
+  ],
+  "key_variables": [
+   {
+    "name": "净息差企稳",
+    "call": "企稳概率略占优",
+    "proxy": "单季NIM",
+    "falsify": "连续两季<1.70%",
+    "check_by": "2026-11-15",
+    "data_source": "招行季报「净利息收益率」（定期报告·经营情况讨论与分析）；Q3 报告约 10 月底披露，连续两季判定用 2026Q2+Q3"
+   },
+   {
+    "name": "零售不良软着陆",
+    "call": "可控但尾部未出清",
+    "proxy": "零售不良率",
+    "falsify": ">1.50%",
+    "check_by": "2027-04-30",
+    "data_source": "中报/年报「资产质量」节零售贷款不良率细项（季报不披露零售口径，最近核验点为 FY2026 年报）"
+   },
+   {
+    "name": "大财富管理持续性",
+    "call": "判断较强",
+    "proxy": "财富管理手续费增速",
+    "falsify": "连续两季负增长",
+    "check_by": "2026-11-15",
+    "data_source": "季报「手续费及佣金收入」明细之财富管理手续费，同比增速自算；连续两季判定用 2026Q2+Q3"
+   }
+  ],
+  "falsifiers": [
+   "NIM连续两季<1.70%",
+   "零售不良率>1.5%",
+   "财富管理手续费连续两季负增长",
+   "拨备覆盖率<330%",
+   "分红率<30%"
+  ],
+  "persona_verdicts": {
+   "buffett": "观察(76)",
+   "duan": "观察(83)",
+   "li_lu": "值得跟踪未懂(79)"
+  },
+  "red_team": {
+   "bear": 28,
+   "expected_irr_incl_div": 0.036,
+   "downgrade": false
+  },
   "variant_perception": "未通过",
   "user_prior": "中国体验最好的银行，低成本资金，股息率好，基本能永续经营",
   "motivation": "趋势有好转了",
