@@ -11,19 +11,63 @@
   "expected_irr_incl_div": -0.084,
   "loss_probability": 1.0,
   "dividend_yield": 0.0173,
-  "band_hkd": [78.4, 95.6, 116.2],
-  "buy_zone_hkd": [80, 110],
+  "band_hkd": [
+   78.4,
+   95.6,
+   116.2
+  ],
+  "buy_zone_hkd": [
+   80,
+   110
+  ],
   "normalization_alert": true,
   "base_oe_used": 9175,
-  "base_oe_range": [7991, 9175],
-  "key_variables": [
-   {"name": "星星人接棒 LABUBU", "call": "方向可期未完成时", "proxy": "2026H2 星星人收入", "falsify": "环比<22亿"},
-   {"name": "2026 负增长落点", "call": "卖方一致 -13%~-17%", "proxy": "2026 年报归母净利", "falsify": "<100亿"},
-   {"name": "海外库存/单店产出", "call": "最被低估风险", "proxy": "存货周转天数", "falsify": ">140天"}
+  "base_oe_range": [
+   7991,
+   9175
   ],
-  "falsifiers": ["星星人H2收入环比<22亿", "2026归母净利<100亿", "存货周转>140天", "重大资本动作"],
-  "persona_verdicts": {"buffett": "回避(57)", "duan": "生意顶级价格公道偏上(87，本人120亿持仓成本150-162.5)", "li_lu": "太难但跟踪(67)"},
-  "red_team": {"bear": 45, "expected_irr_incl_div": -0.10, "downgrade": false},
+  "key_variables": [
+   {
+    "name": "星星人接棒 LABUBU",
+    "call": "方向可期未完成时",
+    "proxy": "2026H2 星星人收入",
+    "falsify": "环比<22亿",
+    "check_by": "2027-04-15",
+    "data_source": "泡泡玛特年度业绩公告分 IP 收入披露（2026 年报约 2027-03 下旬）+ 业绩会问答；若中期有分 IP 数据以 2026 年报为准"
+   },
+   {
+    "name": "2026 负增长落点",
+    "call": "卖方一致 -13%~-17%",
+    "proxy": "2026 年报归母净利",
+    "falsify": "<100亿",
+    "check_by": "2027-04-15",
+    "data_source": "港交所 2026 年度业绩公告归母净利润"
+   },
+   {
+    "name": "海外库存/单店产出",
+    "call": "最被低估风险",
+    "proxy": "存货周转天数",
+    "falsify": ">140天",
+    "check_by": "2027-04-15",
+    "data_source": "2026 年报存货余额 + 营业成本自算存货周转天数；单店产出取业绩会/年报门店数与海外收入"
+   }
+  ],
+  "falsifiers": [
+   "星星人H2收入环比<22亿",
+   "2026归母净利<100亿",
+   "存货周转>140天",
+   "重大资本动作"
+  ],
+  "persona_verdicts": {
+   "buffett": "回避(57)",
+   "duan": "生意顶级价格公道偏上(87，本人120亿持仓成本150-162.5)",
+   "li_lu": "太难但跟踪(67)"
+  },
+  "red_team": {
+   "bear": 45,
+   "expected_irr_incl_div": -0.1,
+   "downgrade": false
+  },
   "variant_perception": "未通过（无方向优势，低置信度）",
   "user_prior": "商业模式已走通，毛利率很高，潮玩长期是好生意，价格适中",
   "motivation": "看到段永平一直在加仓",

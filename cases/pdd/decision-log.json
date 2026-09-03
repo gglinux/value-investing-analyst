@@ -8,21 +8,62 @@
   "margin_of_safety": 0.21,
   "expected_irr_incl_div": 0.0453,
   "loss_probability": 0.0,
-  "band_usd": [96.44, 107.21, 114.69],
-  "buy_zone_usd": [70, 78],
+  "band_usd": [
+   96.44,
+   107.21,
+   114.69
+  ],
+  "buy_zone_usd": [
+   70,
+   78
+  ],
   "normalization_alert": true,
   "base_oe_used": 6547,
   "base_oe_cross_track": 13610,
   "net_cash_usd": 662,
   "net_cash_per_ads": 47.4,
   "key_variables": [
-   {"name": "现金归还股东", "call": "最关键且不可知，最大免费期权", "proxy": "回购/分红公告", "falsify": "出现即重估（上行）"},
-   {"name": "Temu 转型稳态利润率", "call": "转型中", "proxy": "交易服务收入增速", "falsify": "连续两季<5%"},
-   {"name": "国内广告变现率", "call": "仍在提升", "proxy": "在线营销服务增速", "falsify": "连续两季<0"}
+   {
+    "name": "现金归还股东",
+    "call": "最关键且不可知，最大免费期权",
+    "proxy": "回购/分红公告",
+    "falsify": "出现即重估（上行）",
+    "check_by": "2027-03-31",
+    "data_source": "SEC 6-K/20-F 及公司 IR 新闻稿（回购或分红授权公告）；每季财报电话会资本配置问答，最近核验点 FY2026 年报（约 2027-03）"
+   },
+   {
+    "name": "Temu 转型稳态利润率",
+    "call": "转型中",
+    "proxy": "交易服务收入增速",
+    "falsify": "连续两季<5%",
+    "check_by": "2026-12-15",
+    "data_source": "季报收入表「交易服务收入」同比增速（Q2/Q3 财报，Q3 约 11 月底发布，连续两季判定用 2026Q2+Q3）"
+   },
+   {
+    "name": "国内广告变现率",
+    "call": "仍在提升",
+    "proxy": "在线营销服务增速",
+    "falsify": "连续两季<0",
+    "check_by": "2026-12-15",
+    "data_source": "季报收入表「在线营销服务及其他」同比增速（连续两季判定用 2026Q2+Q3）"
+   }
   ],
-  "falsifiers": ["广告收入连续两季负增长", "交易服务收入连续两季<5%", "现金大规模低回报投放", "【上行】回购/分红公告"],
-  "persona_verdicts": {"buffett": "便宜但结构风险(66)", "duan": "生意优质公道价(83)", "li_lu": "最有性价比中概仓位≤5%(76)"},
-  "red_team": {"bear": 85.56, "downgrade": false, "buy_zone_revision": "82-88 → 70-78"},
+  "falsifiers": [
+   "广告收入连续两季负增长",
+   "交易服务收入连续两季<5%",
+   "现金大规模低回报投放",
+   "【上行】回购/分红公告"
+  ],
+  "persona_verdicts": {
+   "buffett": "便宜但结构风险(66)",
+   "duan": "生意优质公道价(83)",
+   "li_lu": "最有性价比中概仓位≤5%(76)"
+  },
+  "red_team": {
+   "bear": 85.56,
+   "downgrade": false,
+   "buy_zone_revision": "82-88 → 70-78"
+  },
   "variant_perception": "市场对业务面的悲观定价基本合理，对现金的'永远拿不到'定价可能过头——分歧在662亿现金打几折",
   "pipeline_note": "美股中概链路实跑；Futu接口字段完整；双轨基期修正；固化5条中概管道经验"
  }

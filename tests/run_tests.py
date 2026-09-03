@@ -24,6 +24,7 @@ run_tests.py — 脚本引擎回归测试（任何人改 scripts/ 前后必须�
 import glob
 import json
 import os
+import re
 import subprocess
 import sys
 import tempfile
@@ -1307,6 +1308,35 @@ if os.path.exists(_pa):
     _drop = [i for i in range(1, len(_ev)) if _ev[i] < _ev[i - 1] * 0.7]
     check("平安 evps 序列无机械腰斩（口径断裂已修）", not _drop,
           f"仍有断点 idx={_drop}: {_ev}")
+
+# 决策日志 key_variables 结构化五字段完整性（复盘闭环的前提）
+# 纪律（SKILL.md 分析闭环机制）：结构化 key_variables 必须含
+# name/call/proxy/falsify + check_by（截止日）+ data_source（取数路径）。
+# 没有截止日的命题永远处于未决态、永远不进复盘分母——判断永远不被计分。
+_KV_REQUIRED = {"name", "call", "proxy", "falsify", "check_by", "data_source"}
+_kv_bad = []
+for _dl in glob.glob(os.path.join(_root, "cases", "*", "decision-log.json")):
+    _case = os.path.basename(os.path.dirname(_dl))
+    _doc = json.load(open(_dl, encoding="utf-8"))
+    _entries = _doc if isinstance(_doc, list) else [_doc]
+    for _entry in _entries:
+        if not isinstance(_entry, dict):
+            continue  # 旧日志的非结构化条目豁免（不追溯改写）
+        for _v in _entry.get("key_variables") or []:
+            if isinstance(_v, dict):  # 旧日志的纯字符串条目豁免（不追溯改写）
+                _miss = _KV_REQUIRED - set(_v)
+                if _miss:
+                    _kv_bad.append(f"{_case}:{_v.get('name', '?')} 缺 {sorted(_miss)}")
+                elif not re.match(r"^\d{4}-\d{2}-\d{2}$", str(_v["check_by"])):
+                    _kv_bad.append(f"{_case}:{_v['name']} check_by 非 YYYY-MM-DD")
+check("结构化 key_variables 五字段齐全（截止日+取数路径强制）",
+      not _kv_bad, "; ".join(_kv_bad)[:300])
+_cmb_dl = os.path.join(_root, "cases", "cmb", "decision-log.json")
+if os.path.exists(_cmb_dl):
+    _kv = json.load(open(_cmb_dl, encoding="utf-8"))[0]["key_variables"]
+    check("招行三个关键变量已回填 check_by + data_source",
+          all(isinstance(v, dict) and v.get("check_by") and v.get("data_source")
+              for v in _kv), str(_kv)[:200])
 
 print("== 10. 三情景门禁 check_scenarios（v2.15）==")
 import check_scenarios as cs  # noqa: E402
