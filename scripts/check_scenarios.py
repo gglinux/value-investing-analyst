@@ -27,7 +27,7 @@ check_scenarios.py — 三情景底稿门禁（Phase 4 出口关卡，expected-r
 
 因此本脚本把"悲观情景必须由独立方法推导"从文档纪律升级为机器门禁。
 
-═══ 八项检查 ═══
+═══ 十项检查 ═══
 S1 schema：必填字段齐全、概率和为 1、现价为正、护城河档位合法。
 S2 悲观情景方法独立性：`method` 必须属独立方法白名单（不走 DCF 的另一条路），
    禁止 dcf_* 系列。基准/乐观可以用 DCF。
@@ -40,10 +40,17 @@ S6 "无真实下行"显式承认：悲观每股价值 > 现价时，等价于"�
    必须在 `no_real_downside_ack` 写明理由，否则报错。
 S7 概率证据指针：任一情景概率偏离 `default_probabilities` 即须挂 [E:] 指针
    （偏离容差 1e-9——纪律是"任何偏离"，不是"偏离超过 10pct"）。
+S7b iv-growth 证据指针：`intrinsic_value_growth` 非零即须在 `iv_growth_evidence`
+   挂 [E:] 指针。该字段是闸门二"不收敛下限"的加数（下限 = 股息率 + 内在价值增速），
+   杀伤力大于情景概率——回溯审计显示保守按 0 填时 11 个案例中 9 个过不了闸门二，
+   即这个手填数字直接决定过闸与否。概率偏离都要证据而它裸奔，
+   等于前门装指纹锁、后窗户敞开。缺失该字段时告警（下限将只剩股息率）。
 S8 价值陷阱闸门：安全边际（vs 基准）> 50% 且（收入或核心驱动因子连续 ≥3 年负增长）
    → 强制降档，且必须给出 `value_trap.catalyst` 与 `value_trap.catalyst_deadline`，
    `verdict_cap` 只能是"小仓位试探"或"排除"。缺任一项报错。
    收入连续下滑年数可由 `--metrics` 自动读取，核心驱动因子年数手工登记。
+S9 股息率量纲哨兵：`dividend_yield` >20% 判为百分数误填报错、为负报错；
+   提供 `--snapshot` 时与 market_snapshot 交叉核对同源同口径（差异 >5% 报错）。
 
 ═══ 输入格式（data/scenarios.json）═══
 {
@@ -54,6 +61,8 @@ S8 价值陷阱闸门：安全边际（vs 基准）> 50% 且（收入或核心�
   "hold_years": 5,
   "dividend_yield": 0.087,
   "intrinsic_value_growth": 0.00,       # 基准情景下每股内在价值长期增速（不收敛下限用）
+  "iv_growth_evidence": "过去 5 年 OE 复合增速 -3%，保守取 0 [E:financials_WB.json]",
+                                        # S7b：intrinsic_value_growth 非零时必填，须含 [E:] 指针
   "default_probabilities": {"悲观": 0.3, "基准": 0.5, "乐观": 0.2},
   "scenarios": [
     {"name": "悲观", "value_per_share": 5.90, "probability": 0.4,
@@ -345,6 +354,32 @@ def check(path, metrics_path=None, snapshot_path=None):
                     f"但 `probability_evidence` 未挂 [E:] 指针。概率是闸门二唯一不受"
                     f"闸门一污染的输入，也是最容易被叙事污染的参数——任何偏离都必须"
                     f"挂 Phase 3 证据，不是「偏离超过 10pct 才写理由」")
+
+    # ---- S7b iv-growth 证据指针（与 S7 同等强制）----
+    # `intrinsic_value_growth` 是闸门二"不收敛下限"的加数（下限 = 股息率 + 内在价值增速），
+    # 回溯审计显示保守按 0 填时 11 个案例中 9 个过不了闸门二——这个手填数字直接决定过闸与否，
+    # 杀伤力大于情景概率。概率偏离 1e-9 都要证据，此处不能裸奔。
+    ivg = d.get("intrinsic_value_growth")
+    ivg_ev = d.get("iv_growth_evidence") or ""
+    info["intrinsic_value_growth"] = ivg
+    if ivg is None:
+        warnings.append("S7b 未登记 `intrinsic_value_growth`：闸门二的不收敛下限将不可评"
+                        "（reverse_dcf 会置 gate2.pass = None）。若判断内在价值不增长，"
+                        "请显式填 0 而不是留空")
+    else:
+        ivg = float(ivg)
+        if ivg > 0.20:
+            errors.append(f"S7b `intrinsic_value_growth` = {ivg}，超过 20%：几乎必然是"
+                          f"百分数误填成小数（如 5 应写 0.05）。本字段是闸门二不收敛下限的"
+                          f"加数，错 100× 会让闸门直接自动过闸")
+        elif abs(ivg) > 1e-12 and not E_PTR.search(ivg_ev):
+            errors.append(
+                f"S7b `intrinsic_value_growth` = {ivg:.2%} 非零，但 `iv_growth_evidence` "
+                f"未挂 [E:] 证据指针。该字段直接加进闸门二的不收敛下限，是决定过闸与否的"
+                f"手填参数——必须写明推导依据（如「过去 5 年 Owner Earnings 复合增速 8%，"
+                f"保守取 5% [E:financials_XX.json]」），与 S7 概率纪律同等强制")
+        elif abs(ivg) > 1e-12:
+            info["iv_growth_evidence"] = ivg_ev[:120]
 
     # ---- S8 价值陷阱闸门 ----
     mos = info["margin_of_safety_vs_base"]
