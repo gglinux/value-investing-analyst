@@ -269,6 +269,9 @@ def expected_return(price, scenarios, hold_years, index_hurdle=0.09,
         raise SystemExit("错误：股息率应在 0~20% 之间（按小数传入，如 0.05）")
     if discount_rate <= 0 or discount_rate > 0.30:
         raise SystemExit("错误：折现率应在 0~30% 之间（按小数传入，如 0.10）")
+    if discount_rate < 0.10:
+        print(f"⚠ 警告：折现率 {discount_rate:.2%} 低于下限纪律 max(10%, 10Y国债+4pct)。"
+              "低利率环境下限仍为 10%，请上调后重跑。", file=sys.stderr)
 
     growth_factor = (1.0 + discount_rate) ** hold_years
     rows = []
