@@ -1,0 +1,14 @@
+{
+ "mode": "implied-growth",
+ "as_of": "2015-08-31",
+ "market_cap_million": 245423.4,
+ "base_oe": 15349.8,
+ "discount_rate": 0.1,
+ "terminal_growth": 0.025,
+ "years": 10,
+ "fade": true,
+ "deduct": 0.0,
+ "implied_oe_growth_10y": 0.0636,
+ "source_note": "reverse_dcf.py implied-growth 引擎 stdout 输出（该模式无-o落盘，本记录为逐字转写）：现价隐含的未来10年 Owner Earnings 年增速（增速线性衰减至永续）= 6.36%",
+ "context": "对照我方基准增速8%：市场定价低于我方基准1.64pct——我们略比市场乐观，但分歧温和；对照2016-04-20回放隐含+11.10%：2015-08时点市场预期明显更低"
+}

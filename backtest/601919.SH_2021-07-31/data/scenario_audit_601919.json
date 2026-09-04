@@ -1,0 +1,59 @@
+{
+  "file": "backtest/601919.SH_2021-07-31/data/scenarios_601919.json",
+  "errors": [],
+  "warnings": [
+    "S5 未登记 `non_operating_addback_per_share`：若估值用了 --add-back，必须逐情景登记，否则无法门禁分层折价"
+  ],
+  "diagnostics": {
+    "scenario_values": {
+      "悲观": 2.79,
+      "基准": 10.54,
+      "乐观": 14.38
+    },
+    "bear_name": "悲观",
+    "base_name": "基准",
+    "margin_of_safety_vs_base": -0.6755218216318788,
+    "bear_method": "pb_trough",
+    "bear_recomputed_value": 2.7855,
+    "bear_recompute_deviation": 0.001613,
+    "bear_stressed": [
+      "运价立即崩回：SCFI 2022 起回落至 2015-2019 均值区（约 900 点，较现价 4196 点 −79%）",
+      "盈利转亏：2022-2023 重演 2016 式亏损（新船 2023 交付潮压价），净资产被侵蚀",
+      "估值坍缩：PB 从 4.26 倍历史最高分位回归 0.75 倍历史最低分位"
+    ],
+    "bear_base_ratio": 0.2647058823529412,
+    "non_operating_addback_per_share": {
+      "悲观": null,
+      "基准": null,
+      "乐观": null
+    },
+    "bear_vs_price": 0.1579841449603624,
+    "probability_deviations": {},
+    "intrinsic_value_growth": 0.0,
+    "revenue_decline_streak": 0,
+    "core_driver_decline_years": null,
+    "peak_stagnation": {
+      "peak_year": 2020,
+      "peak_revenue": 171259.0,
+      "latest_revenue": 171259.0,
+      "drawdown_from_peak": 0.0,
+      "years_since_peak": 0,
+      "stagnating": false,
+      "thresholds": {
+        "min_drawdown": 0.1,
+        "min_years_since_peak": 3
+      }
+    },
+    "decline_streak_used": 0,
+    "shrinking_reasons": [],
+    "value_trap_triggered": false,
+    "dividend_yield": 0.0,
+    "snapshot_dividend_yield": {
+      "value": 0.0,
+      "field": "dividend_yield_ttm_frac",
+      "basis": "键名后缀 _frac",
+      "unit_ambiguous": false
+    }
+  },
+  "passed": true
+}

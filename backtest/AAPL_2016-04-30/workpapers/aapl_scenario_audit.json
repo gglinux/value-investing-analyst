@@ -1,0 +1,58 @@
+{
+  "file": "/workspace/value-investing-analyst/backtest/AAPL_2016-04-30/data/scenarios_AAPL_2016Q2.json",
+  "errors": [],
+  "warnings": [],
+  "diagnostics": {
+    "scenario_values": {
+      "悲观": 61.58,
+      "基准": 162.04,
+      "乐观": 192.18
+    },
+    "bear_name": "悲观",
+    "base_name": "基准",
+    "margin_of_safety_vs_base": 0.4215008639842014,
+    "bear_method": "worst_year_margin",
+    "bear_recomputed_value": 61.5829,
+    "bear_recompute_deviation": 4.7e-05,
+    "bear_stressed": [
+      "margin",
+      "multiple",
+      "iphone_cycle"
+    ],
+    "bear_base_ratio": 0.38002962231547766,
+    "non_operating_addback_per_share": {
+      "悲观": null,
+      "基准": 27.62,
+      "乐观": 27.62
+    },
+    "bear_vs_price": 0.6569234051632175,
+    "probability_deviations": {},
+    "intrinsic_value_growth": 0.07,
+    "iv_growth_evidence": "FY2013-FY2016 股本 CAGR 约 −5.3%/年（回购注销），2016-04-27（财报/10-Q 同步公告）宣布回购加速至 500 亿美元/年 + 股息上调 10%[E:market_snapshot_AAPL_2016Q2",
+    "revenue_decline_streak": 0,
+    "core_driver_decline_years": null,
+    "peak_stagnation": {
+      "peak_year": 2015,
+      "peak_revenue": 233715.0,
+      "latest_revenue": 233715.0,
+      "drawdown_from_peak": 0.0,
+      "years_since_peak": 0,
+      "stagnating": false,
+      "thresholds": {
+        "min_drawdown": 0.1,
+        "min_years_since_peak": 3
+      }
+    },
+    "decline_streak_used": 0,
+    "shrinking_reasons": [],
+    "value_trap_triggered": false,
+    "dividend_yield": 0.0226,
+    "snapshot_dividend_yield": {
+      "value": 0.0226,
+      "field": "dividend_yield_ttm_frac",
+      "basis": "键名后缀 _frac",
+      "unit_ambiguous": false
+    }
+  },
+  "passed": true
+}

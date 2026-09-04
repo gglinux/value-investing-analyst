@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8"><title>中远海控 601919 历史回放报告 2021-07-31（第一批案例5）</title>
+<script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+<style>
+body{font-family:'PingFang SC','Microsoft YaHei',sans-serif;max-width:980px;margin:0 auto;padding:24px;color:#2c3e50;line-height:1.75;background:#fafafa}
+h1{font-size:22px;border-bottom:3px solid #1a3a5c;padding-bottom:8px} h2{font-size:18px;color:#1a3a5c;margin-top:32px;border-left:4px solid #1a3a5c;padding-left:10px}
+h3{font-size:15.5px;color:#2c3e50;margin-top:18px}
+.card{background:#fff;border:1px solid #e0e0e0;border-radius:10px;padding:18px 22px;margin:14px 0;box-shadow:0 1px 3px rgba(0,0,0,.06)}
+.verdict{background:linear-gradient(135deg,#fff8e1,#fff);border:2px solid #f39c12}
+.gate-fail{color:#c0392b;font-weight:700} .gate-pass{color:#27ae60;font-weight:700}
+table{border-collapse:collapse;width:100%;margin:10px 0;background:#fff}
+th,td{border:1px solid #d5d8dc;padding:7px 10px;font-size:14px;text-align:left}
+th{background:#e8eef4}
+.warnbox{background:#fdecea;border-left:4px solid #c0392b;padding:10px 14px;border-radius:4px;margin:10px 0}
+.okbox{background:#e8f6f3;border-left:4px solid #27ae60;padding:10px 14px;border-radius:4px;margin:10px 0}
+.chart{width:100%;height:300px}
+.small{font-size:12.5px;color:#7f8c8d}
+.tag{display:inline-block;background:#1a3a5c;color:#fff;border-radius:4px;padding:1px 8px;font-size:12px;margin-right:6px}
+.verification-strength{background:#f6f8fa;border:1px dashed #95a5a6;border-radius:8px;padding:10px 14px;font-size:13px;margin-top:12px}
+.vs-meaning{color:#7f8c8d;font-size:12px}
+</style>
+</head>
+<body>
+
+<h1>中远海控 601919.SH / 1919.HK — 历史回放分析报告</h1>
+<p class="small">backtest/PROMPT.md 第一批 · 案例 5（检验 <code>normalization</code>：周期高位识别与强制禁用当期基期）｜ 回放时点 <b>2021-07-31</b>（信息截断日同日）｜ 生成于 2026-09-04</p>
+
+<div class="warnbox"><b>本报告仅使用 2021-07-31 及之前的公开信息。</b>2021 年报（2022-03 披露，归母 892.96 亿）、2021-10-18 集团增持承诺、2022 运价与利润走势等事后信息已全部隔离，仅用于回测对照（diff.md）。执行者已知事后答案的污染自陈见 <code>meta.json / contamination_disclosure</code>。</div>
+
+<div class="card verdict">
+<h2 style="margin-top:0">决策卡（一页看懂）</h2>
+<p>结论档位：<b style="font-size:20px">观察等价格</b>（五档制：排除／太难放弃／观察等价格／小仓位试探／核心买入。闸门一、闸门二均未过，档位上限即"观察等价格"）</p>
+<p>现价 <span class="vnum" data-src="market_snapshot_601919_2021.json" data-path="price_a" data-fmt="num2">17.66</span> 元（A 股）｜ 市值 <span class="vnum" data-src="market_snapshot_601919_2021.json" data-path="market_cap.value_cny_million" data-fmt="num0">2,535,137</span> 百万元（A/H 分计价）｜ PE-TTM <span class="vnum" data-src="market_snapshot_601919_2021.json" data-path="pe_ttm" data-fmt="num2">10.11</span>x ｜ H1 年化 PE <span class="vnum" data-src="market_snapshot_601919_2021.json" data-path="pe_annualized_h1" data-fmt="num2">3.42</span>x ｜ PB <span class="vnum" data-src="market_snapshot_601919_2021.json" data-path="pb" data-fmt="num2">4.26</span>x（历史最高分位）｜ 股息率 <span class="vnum" data-src="market_snapshot_601919_2021.json" data-path="dividend_yield_ttm_frac" data-fmt="pct1">0.0%</span></p>
+<p>闸门一（安全边际）：基准内在价值 <span class="vnum" data-src="scenarios_601919.json" data-path="scenarios.1.value_per_share" data-fmt="num2">10.54</span> 元 → MoS = <span class="vnum gate-fail" data-src="scenario_audit_601919.json" data-path="diagnostics.margin_of_safety_vs_base" data-fmt="pct1">-67.6%</span> <span class="gate-fail">✗ 未达标（现价为基准价值的 2.9 倍）</span></p>
+<p>闸门二（期望回报，护城河档位 none——无护城河不给买入结论）：期望年化 IRR <span class="vnum gate-fail" data-src="workpapers/phase45_expected_return_601919.json" data-path="six_numbers.expected_annualized_irr" data-fmt="pct1">-6.5%</span>（明示：该项只是自洽性校验、与闸门一同源）<span class="gate-fail">✗</span>；② 价值不收敛下限 = 股息率 0.0% + 内在价值增速 0.0% = <span class="gate-fail">0.0% &lt; 6.0% ✗</span>；③ 悲观情景年化 <span class="vnum gate-fail" data-src="workpapers/phase45_expected_return_601919.json" data-path="six_numbers.bear_case_annualized_irr" data-fmt="pct1">-24.0%</span> &lt; 0% <span class="gate-fail">✗</span>（悲观值由 <b>pb_trough 独立方法</b>推导：0.75×BPS 3.714 元）。亏损概率 <span class="vnum gate-fail" data-src="workpapers/phase45_expected_return_601919.json" data-path="six_numbers.loss_probability" data-fmt="pct1">80.0%</span>，亏损情景平均跌幅 <span class="vnum gate-fail" data-src="workpapers/phase45_expected_return_601919.json" data-path="six_numbers.loss_scenarios_avg_drawdown" data-fmt="pct1">-30.4%</span></p>
+<p><b>关键变量一句话</b>：① 运价（SCFI 4196 点 vs 2015-2019 均值约 900 点）——当前判断：均值回归是基率必然，时点不可知；② 新船交付潮（2023 起 12 艘 23000TEU）——当前判断：下一轮过剩的种子已在土里；③ 分红制度化——当前判断：历史为零，承诺无制度背书。</p>
+<p><b>证伪条件（最关键两条）</b>：① 若 SCFI 回落至 1500 点下方而公司宣布制度化分红（分红率 ≥30%）且股价已回落至净资产附近——本报告"观察"档位作废，需重新评估资产价值型机会；② 若 2022 长协签约价与履约率证明运价中枢系统性抬升（中周期 OE &gt; 70 亿连续 3 年）——中周期锚需要重估。</p>
+<p><b>下次复查</b>：2021 年中报（2021-08 底披露）核对 H1 实际归母 vs 预告 370.93 亿；此后每季跟踪 SCFI 与长协价。</p>
+<div class="verification-strength" data-verification-strength="1"
+     data-grade="B"
+     data-reconciliation-coverage="1.0000"
+     data-crosscheck-level="full"
+     data-window-years="11"
+     data-covers-full-cycle="false">
+  <b>核验强度 B</b>：三表勾稽覆盖率 100%（达标） ｜ 命门科目原文登记 达标（<u>未经原文机器逐字比对</u>） ｜ 数据窗口 11 年，含A股股灾与去杠杆、去杠杆与贸易战、新冠冲击（部分）<br>
+  <span class="vs-meaning">存在部分核验缺口：结论可用，但相关章节须显式降低置信度</span>
+</div>
+<p style="margin-top:12px"><b>三人结论对照（不合成分数）</b>：巴菲特——不买（周期高点低 PE 陷阱）；段永平——不买（无差异化生意模式一票否决）；李录——观察等价格（方向可判时点不可判）。<b>三大投资论点</b>：① 这是门十年扣非累计 <span class="vnum" data-src="financials_601919_2021Q1.json" data-path="phase0_arithmetic.cum_ni_deducted_2011_2020" data-fmt="num0">-27,915</span> 百万的生意，2021 爆利是运价事件不是能力事件；② 现价已高于乐观情景价值（14.38 元），定价的是"运价永久化"；③ 正常化盈利路径被引擎判定失效后由中周期运价接管，任何口径下现价都无安全边际。<b>三大风险</b>：① 运价均值回归（SCFI 4196→900 点区间）时盈利将从 700 亿级回到 20-35 亿级；② 2023 起新船交付潮压价；③ 2022-01-24 集团 13.28 亿股解禁（占 8.29%）。<b>一句话生意</b>：把集装箱从 A 港搬到 B 港按箱收费——客户用脚投票、十年没给股东一分钱、利润完全跟着运价指数走。<b>信息局限声明</b>：① SCFI 2015-2019 均值约 900 点为 C 级来源（雪球综述），仅作旁证、不单独支撑任何结论；② 竞对（马士基）未建同口径财务底稿，五维对照降级为定性+年报行业数据；③ 2019 年报未逐页核对；④ 股东户数与其他应收款未采集。普通投资者相对机构的信息差主要在：2021-2022 长协价格与履约率（机构可从货代渠道交叉验证）、船厂订单簿细节。</p>
+</div>
+
+<h2>1. 投资摘要</h2>
+<div class="card">
+<p>中远海控在 2021-07-31 处于教科书级的<b>周期高位</b>：SCFI 4196.24 点为 2015-2019 均值的 4.7 倍 [E:filings/zhyk_H1forecast_2021.txt][E:market_snapshot_601919_2021.json]，H1 预增归母约 370.93 亿（超过 2010-2020 任何一年的全年两倍以上），PE-TTM 10.1 倍、H1 年化仅 3.4 倍——<b>"盈利高点低 PE 最危险"的完整形态</b>。引擎（compute_metrics）对正常化的裁定是本案例最核心的机器证据：全期净利率均值 -1.64%（十年累计亏损的直接后果），当期/均值 = -3.53 无数学意义，脚本拒绝输出"周期高位"标签并直接判"全期平均亏损（不适用周期正常化）"、<code>base_oe_recommended = null</code>、警报明文"禁止直接用当期数据做 DCF 基期"。正常化责任按 valuation-guide 第 6 条（大宗商品路径）由"中周期运价 × 正常运量"接管：中周期 OE 区间 22-46 亿（中枢 35 亿），对照市值 2535 亿 = 55-115 倍。三情景（悲观 pb_trough 2.79 元／基准两段式 10.54 元／乐观结构性改善 14.38 元）全部低于现价——<b>市场定价的不是三情景中的任何一个，而是"运价永久化"</b>；反向 DCF 用中周期基期在全增速域（-50%~+60%）无解，从机器层面确认了这一点。期望年化 IRR -6.5%、亏损概率 80%。结论：观察等价格，等运价与价格双回归。</p>
+</div>
+
+<h2>2. 公司与生意（商业模式）</h2>
+<div class="card">
+<p><b>先给结论：这是一门同质化运力服务生意——价格接受者、客户零转换成本、利润是运价的函数。</b>中远海控经营集装箱航运（船队 536 艘、307.4 万 TEU，全球第一梯队 [E:filings/zhyk_AR2020.txt#L553]）+ 码头（中远海运港口）+ 集装箱租赁。收入结构：2020 年集装箱航运业务收入 1660.09 亿（占 97%），其中航线收入 1566.13 亿 [E:filings/zhyk_AR2020.txt#L1115]。商业模式要点：① 客户极度分散且无忠诚——前五名客户仅占 4.98% [E:filings/zhyk_AR2020.txt#L829]，货代按周比价订舱；② 产品零差异化——舱位是无差别商品，服务由海洋联盟统一调度（329 艘船、386 万 TEU [E:filings/zhyk_AR2020.txt#L544]）；③ 成本结构高经营杠杆+高财务杠杆（有息负债 1384 亿 [E:financials_601919_2021Q1.json]）；④ 单位经济：单箱 EBIT 2019 年 257 元/TEU → 2020 年 556 元/TEU，在盈亏平衡线 ±500 元内摆动 [E:business_drivers_601919.json]。收入 = 运量 × 单箱收入：运量增长靠并购（2016 中海 +54.4%、2018 OOCL +29.0% [E:business_drivers_601919.json]），单箱收入十年在 3351-5945 元间三次往返 [E:business_drivers_601919.json][E:workpapers/phase3_qualitative_601919.json]。</p>
+</div>
+
+<h2>3. 定量画像（2010-2020 十一年）</h2>
+<div class="card">
+<div id="c1" class="chart"></div>
+<div id="c2" class="chart"></div>
+<div id="c3" class="chart"></div>
+<p><b>这张图说明什么（归母净利）</b>：十年间三次巨亏（2011 -104.49、2012 -95.59、2016 -99.06 亿）与盈利年份交替，2019 年 67.64 亿中 76.45 亿来自出售 LBCT 一次性收益（扣非仅 15.85 亿）——盈利的"高点"全部与运价周期同步，且多次靠卖资产 [E:financials_601919_2021Q1.json]。</p>
+<p><b>这张图说明什么（净利率）</b>：十年三次为负（2011/2012/2016），2019 年的 4.48% 中含 LBCT 出售一次性收益（扣非仅 1.05%）——净利率水平由运价决定而非经营决定；五年均值 ROIC 仅 0.65%（区间 -13.7%~+5.9%）[E:metrics_601919.json]——每个平均年份都在毁灭价值（ROIC 远低于 7-10% 的 WACC），这是"无护城河"的定量定义。</p>
+<p><b>这张图说明什么（收入）</b>：收入 CAGR 7.8% 的两条腿都是买的：2016 并中海、2018 并 OOCL [E:metrics_601919.json][E:business_drivers_601919.json]。</p>
+<p>每股口径复核：总量净利 CAGR 3.9% vs EPS CAGR <span class="vnum" data-src="metrics_601919.json" data-path="summary.cagr_per_share.eps" data-fmt="pct1">2.0%</span>（股本 +20% 稀释一半增长）；BVPS 十年 CAGR 仅 <span class="vnum" data-src="metrics_601919.json" data-path="summary.cagr_per_share.bvps" data-fmt="pct1">0.5%</span>（每股净资产 4.67→3.58 元，累计 -23%）——增长被并购增发吃掉，每股股东留存近乎零 [E:metrics_601919.json]。</p>
+<p>引擎警报 5 条逐条回应（详见 workpapers/phase2_metrics_note_601919.json）：①分红幻觉（回报/FCF 覆盖 -14.13x）；②利润含金量（2016-2018 FCF/净利&lt;0.6，周期归因）；③<b>基期不可用（本案核心警报）</b>；④利润率形状=周期波动（rho +0.40、穿越 4 次）；⑤所有者收益率含金量（0.39%、回本 255 年、cash_backed=false）[E:metrics_601919.json][E:workpapers/phase2_metrics_note_601919.json]。</p>
+</div>
+
+<h2>4. 护城河</h2>
+<div class="card">
+<p><b>评级：无护城河（五源全缺），趋势平坦。</b>① 无形资产：无品牌溢价、无牌照壁垒 [E:workpapers/phase3_qualitative_601919.json]；② 转换成本：零，订舱周度切换、前五客户仅 4.98% [E:filings/zhyk_AR2020.txt#L829][E:workpapers/phase3_qualitative_601919.json]；③ 网络效应：航线网络是规模经济不是网络效应 [E:workpapers/phase3_qualitative_601919.json]；④ 成本优势：极窄且被燃油/港口费外生波动淹没（燃油集中锁价是管理能力非结构壁垒 [E:filings/zhyk_AR2020.txt#L598]）；⑤ 规模：是活下来的资格而非超额利润来源——运力过剩期（2011-2016）规模越大亏得越多。<b>定价权三项硬测试全败</b>：提价后销量（无提价动作可言——运价是行业指数决定的）、成本转嫁（2011-2016 成本上行期连续亏损自行消化）、毛利率稳定（十年摆幅 >15 个百分点，2016 年为负 → 2020 年 13.5%）[E:workpapers/phase3_qualitative_601919.json]。定量证伪：ROIC 五年均值 0.65% &lt; WACC——若存在任何护城河，ROIC 应持续高于资本成本 [E:metrics_601919.json][E:workpapers/phase3_qualitative_601919.json]。</p>
+</div>
+
+<h2>5. 增长</h2>
+<div class="card">
+<p><b>结论：量的增长靠买，价的增长靠周期；TAM 年增 2-4%，公司增长对股东价值贡献近零。</b>运量 2015 年 1095 万 TEU → 2020 年 2634 万 TEU（CAGR 19.2%），但跳升全部来自并购（中海+OOCL），内生增速仅 2.35%-7.4% [E:business_drivers_601919.json]。ROIIC 极差：十年 capex 1074 亿撬动的收入增长大部分来自并购对价，ROIC 0.65% 意味着增长本身在毁灭价值 [E:metrics_601919.json][E:workpapers/phase3_qualitative_601919.json]。2020 年订造 12 艘 23000TEU（2023-2025 交付）[E:filings/zhyk_AR2020.txt#L460]——今天的订单就是下一轮过剩的种子（2018 年行业刚消化完 2015-2016 订单潮）。2021 的"一箱难求"是疫情错位造成的短期供需错配，不是长期需求跃迁——TAM 没有变，变的只是价格 [E:workpapers/phase3_qualitative_601919.json][E:filings/zhyk_H1forecast_2021.txt]。</p>
+</div>
+
+<h2>6. 管理层与文化</h2>
+<div class="card">
+<p><b>结论：资本配置十年评分差（3/10）；经营求生合格、股东回报纪律缺失；"为股东创造更大的价值"与十年零分红构成言行背离。</b>资本配置：十年 capex 1074 亿 ≈ 全部 OCF（买船养船）；周期腰部举债并购（2018-2019 有息负债 1222→1512 亿）[E:metrics_601919.json]；分红：2011-2020 十个分红年度全部为零，2020 年继续"不进行利润分配"（仅资本公积转增）[E:filings/zhyk_AR2020.txt#L1473]；2020 末累计未分配利润为负，直至 2021Q1 单季转正 [E:financials_601919_2021Q1.json]。承诺 vs 兑现：2020 年报"为股东创造更大的价值" [E:filings/zhyk_AR2020.txt#L670] 与同一份年报的不分配决议同屏 [E:filings/zhyk_AR2020.txt#L1473][E:workpapers/phase3_qualitative_601919.json]。求生执行：2013-2015 连续卖资产过冬、2019 出售 LBCT 回笼 76.45 亿美元——果断但十年两次大甩卖本身就是周期管理失败的证据 [E:workpapers/phase0_screening_601919.json]。激励结构：央企体制、无股权激励——代理问题不是"为自己捞"而是"为大集团战略服务"（收购 OOCL 优先服从集团集装箱资产整合）[E:workpapers/phase3_qualitative_601919.json]。</p>
+</div>
+
+<h2>7. 财务质量与风险</h2>
+<div class="card">
+<p><b>结论：报表干净（无欺诈形态）但财务结构脆弱；利润质量受一次性损益与 IFRS16 口径切换扰动，2020 年扣非占比 96.6% 为十年最干净。</b>应计质量：OCF 连续三年为净利 3.1×/4.5×/6.6×（2018-2020）——先收现金后确认利润，与造假形态相反 [E:financials_601919_2021Q1.json]；十年扣非累计 <span class="vnum" data-src="financials_601919_2021Q1.json" data-path="phase0_arithmetic.cum_ni_deducted_2011_2020" data-fmt="num0">-27,915</span> 百万——"敢亏"本身是诚实信号 [E:financials_601919_2021Q1.json][E:workpapers/phase0_screening_601919.json]。债务结构：有息负债 1384 亿/总资产 50.9%，货币资金 528 亿覆盖一年内到期约 1.7×，央企信用成本约 3%+——短期无流动性危机，但高杠杆放大下行期利润弹性 [E:financials_601919_2021Q1.json][E:workpapers/phase0_screening_601919.json]。排雷结果（Phase 0）：六项一票否决全不命中；红旗命中 3 条（非经常损益史、融资/回报比 26×、IFRS16 口径切换）全部为周期底部行为映射，强反证成立继续管线 [E:workpapers/phase0_screening_601919.json]。A股防割附加清单：<b>热点板块高位预警命中</b>——A 股年内 +44.6%（12.21→17.66 元），自 2020-05 低点约 10 倍（"海运茅"情绪顶），摘要页已提示"当前可能处于情绪定价区间"；解禁：集团 13.28 亿股（8.29%）2022-01-24 解禁（分析时点起 12 个月窗口内）[E:workpapers/phase0_screening_601919.json]。可及性与摩擦：A/H 两地上市（H 股 10.76 HKD 折价约 39%）；A 股通红利税、汇率敞口（收入美元/报表人民币）、央企无回购史——摩擦成本中等。</p>
+</div>
+
+<h2>8. 估值（Phase 4）</h2>
+<div class="card">
+<p><b>折现率纪律</b>：中国 10Y 国债 2.84%（三源）[E:manifest.json#cn_10y] → r = max(10%, 2.84%+4pct) = <b>10.0%</b>，另加高周期波动溢价考虑（基准情景沿用 10%）。<b>基期正常化（前置关卡）——本案最锋利处</b>：引擎判"全期平均亏损（不适用周期正常化）"、base_oe_recommended=null、明文禁止当期基期 [E:metrics_601919.json]。按 valuation-guide 第 6 条大宗商品路径接管：中周期运价锚 = 2017-2019 综合单箱收入均值 4906 元/TEU（2016 谷底 3351 为过度悲观锚剔除、2020 5945 已被下半年暴涨污染）× 正常运量 2634.45 万 TEU → 中周期收入约 1437 亿 → 中周期净利（剔除一次性后净利率 0.83%~2.5%）11.9-35.9 亿 → 中周期 OE 区间 <span class="vnum" data-src="workpapers/phase4_valuation_derivation_601919.json" data-path="normalization_override.mid_cycle_oe.low" data-fmt="num0">22</span> - <span class="vnum" data-src="workpapers/phase4_valuation_derivation_601919.json" data-path="normalization_override.mid_cycle_oe.high" data-fmt="num0">46</span> 亿（中枢 35 亿）[E:workpapers/phase4_valuation_derivation_601919.json][E:business_drivers_601919.json]。市值/中周期 OE = 55-115 倍。<b>禁止项执行</b>：2021Q1 净利 154.52 亿/H1 预增 370.93 亿未进入任何基期——若以年化 740 亿作基期（PE 年化 3.4 倍），将得出"安全边际 80%、核心买入"的灾难结论，这正是 PROMPT 设计的陷阱，引擎+手工双重封死 [E:workpapers/phase4_valuation_derivation_601919.json]。</p>
+<h3>8.1 交叉验证</h3>
+<p>PB 分位：现值 4.26 倍处历史 100% 分位（历史区间约 0.75-3.3 倍，2016 谷底 0.75）[E:market_snapshot_601919_2021.json][E:workpapers/phase4_valuation_derivation_601919.json]。重置成本：船队 307.4 万 TEU 重置约 1350-1550 亿人民币（23000TEU 型约 1.55 亿美元/艘锚自年报订造协议 [E:filings/zhyk_AR2020.txt#L10019]）——市值为重置成本 1.6-1.9 倍，为 ROIC 0.65% 的资本支付 60-90% 溢价 [E:workpapers/phase4_valuation_derivation_601919.json]。</p>
+<h3>8.2 三情景（check_scenarios 十一项通过，悲观/基准离散度 0.26）</h3>
+<table>
+<tr><th>情景</th><th>每股价值</th><th>方法（悲观独立于 DCF）</th><th>概率</th></tr>
+<tr><td>悲观</td><td><span class="vnum" data-src="scenarios_601919.json" data-path="scenarios.0.value_per_share" data-fmt="num2">2.79</span> 元</td><td><b>pb_trough</b>（独立白名单方法，S2b 机器重算偏差 0.16%）：历史 PB 谷底 0.75（2016 真实亏损年定价）× BPS 3.714 元</td><td>0.3</td></tr>
+<tr><td>基准</td><td><span class="vnum" data-src="scenarios_601919.json" data-path="scenarios.1.value_per_share" data-fmt="num2">10.54</span> 元</td><td>两段式 DCF（过渡期利润不外推）：2021 全年 740 亿（=H1 公告 370.93×2 零增长外推，仅用截断日前信息）+2022 长协 550 亿+2023 交付潮压价 300 亿；2024 起中周期 OE 35 亿（g=2%）</td><td>0.5</td></tr>
+<tr><td>乐观</td><td><span class="vnum" data-src="scenarios_601919.json" data-path="scenarios.2.value_per_share" data-fmt="num2">14.38</span> 元</td><td>结构性改善论全盘接受：过渡期同基准+中周期 OE 70 亿、g=3%（r=9.5%）——该盈利水平为行业历史任何 3 年窗口所未见</td><td>0.2</td></tr>
+</table>
+<p class="small">安全边际（vs 基准）<span class="vnum" data-src="scenario_audit_601919.json" data-path="diagnostics.margin_of_safety_vs_base" data-fmt="pct1">-67.6%</span>；悲观/现价 0.16。期望每股价值 = 0.3×2.79+0.5×10.54+0.2×14.38 = <span class="vnum" data-src="workpapers/phase45_expected_return_601919.json" data-path="six_numbers.expected_value_per_share_v0" data-fmt="num2">8.98</span> 元 vs 现价 17.66 元。</p>
+<h3>8.3 反向 DCF：市场定价了什么</h3>
+<div class="warnbox"><b>implied-growth 无解</b>：以中周期 OE 35 亿为基期（r=10%、永续 2%、10 年），现价 2535 亿在 -50%~+60% 全增速域无解（有效域上限 g=8% 时 DCF 仅约 1100 亿）。脚本结论原文："说明市场定价隐含了其他假设（利润率跃迁、并购、或情绪定价），需在报告中明确讨论。"本报告的讨论：市场把 2021 的运价当作了新常态——若 740 亿 OE 永续（g=2%），内在价值约 9250 亿 = 3.6 倍现市值；即市场只透支了约 27% 的"运价永久化"，但对"运价回归"的定价为零。这与十年扣非 -279 亿的基率直接冲突。</div>
+</div>
+
+<h2>9. 关键判断（Phase 4.5）</h2>
+<div class="card">
+<h3>9.1 关键变量表（既重要又可知）</h3>
+<table>
+<tr><th>变量</th><th>当前判断</th><th>依据</th><th>为什么可知</th><th>观测指标与证伪线</th></tr>
+<tr><td>运价均值回归</td><td>必然（基率），时点不可知</td><td>十年单箱收入三次往返 3351-5945 元 [E:business_drivers_601919.json]</td><td>供给响应可观测（船厂订单簿+新船交付表）</td><td>SCFI：跌破 1500 点启动重估；跌破 1000 点进入观察区</td></tr>
+<tr><td>新船交付潮压价</td><td>2023 起供给压力上升</td><td>12 艘 23000TEU 订造 [E:filings/zhyk_AR2020.txt#L460]</td><td>交付计划公开且刚性</td><td>季度运力增速 &gt; 货量增速 3pct 连续两季 = 警戒</td></tr>
+<tr><td>分红制度化</td><td>概率高但无历史背书</td><td>十年零分红+累计未分配利润 2021Q1 刚转正 [E:filings/zhyk_AR2020.txt#L1473][E:financials_601919_2021Q1.json]</td><td>分红方案是披露事项，每季可验证</td><td>2021 中报/年报分红率 ≥30% = 触发复核</td></tr>
+</table>
+<h3>9.2 变异认知测试（三问）</h3>
+<p><b>市场为什么给这个价？</b>主流叙事："联盟化+疫情错位+中国出口红利=行业结构性重估，这次不一样"；一致预期的做法是把 2021 利润年化（PE 年化 3.4 倍的错觉）。第一量化锚是价格本身（A 级）：反向 DCF 无解 = 现价隐含"运价永久化"。卖方 consensus 未采集（manifest 登记 collected: false，环境限制）——<b>因一致预期数据缺失，分歧判定主要依赖价格锚与基率证据，置信度标注为"中高"而非"高"</b>。</p>
+<p><b>我们与市场的具体分歧？</b>我方基准 10.54 元 vs 现价 17.66 元（-40%）；分歧的参数化：市场假设中周期 OE ≈ 740 亿（运价永久化），我方假设 35 亿（2017-2019 锚）——相差 21 倍，全部分歧集中在"运价回归与否"这一个变量上，量、成本、份额三变量双方无分歧。</p>
+<p><b>认知优势来自哪里？</b>来自基率纪律（否定性认知：知道市场在为历史基率为零的假设付费），不来自对运价的预测能力（肯定性认知为零——我不知道运价哪天回归）。否定性认知支持"不买"，不支持做空或预测时点。</p>
+<h3>9.3 双重机会成本对照</h3>
+<p>① 指数门槛 13%（设于折现率之上，按脚本警告修正）：期望年化 IRR <span class="vnum" data-src="workpapers/phase45_expected_return_601919.json" data-path="six_numbers.expected_annualized_irr" data-fmt="pct1">-6.5%</span>，跑输 19.46 个百分点 <span class="gate-fail">✗ 机会成本不划算</span>；② 用户持仓：回放模式无持仓信息，跳过。亏损概率 <span class="vnum" data-src="workpapers/phase45_expected_return_601919.json" data-path="six_numbers.loss_probability" data-fmt="pct1">80.0%</span> + 亏损情景平均跌幅 <span class="vnum" data-src="workpapers/phase45_expected_return_601919.json" data-path="six_numbers.loss_scenarios_avg_drawdown" data-fmt="pct1">-30.4%</span>——负期望+高亏损概率是赌注特征而非投资特征 [E:workpapers/phase45_expected_return_601919.json]。</p>
+</div>
+
+<h2>10. 投委会评审</h2>
+<div class="card">
+<p>三份独立评估（分离生成协议，各自仅以 Phase 0-4 底稿为输入）全文见 workpapers/persona_巴菲特.md、persona_段永平.md、persona_李录.md。以下为核心摘要与分歧。</p>
+<table>
+<tr><th>大师</th><th>结论</th><th>体系路径</th><th>核心论据</th></tr>
+<tr><td>巴菲特</td><td><b>不买</b></td><td>确定性复利路径：十年后经济形态可预测吗</td><td>伯克希尔纺织厂原型（同质化资本密集生意）；十年持有测试不过（接受零分红+ROIC&lt;WACC）；周期高点低 PE 是体温计 [E:workpapers/persona_巴菲特.md]</td></tr>
+<tr><td>段永平</td><td><b>不买</b></td><td>商业模式×文化：Stop Doing List</td><td>无差异化生意一票否决（客户零转换成本）；私有化测试年回报 1-1.4%；"为股东创造价值"话术 vs 十年零分红非本分 [E:workpapers/persona_段永平.md]</td></tr>
+<tr><td>李录</td><td><b>观察等价格</b></td><td>事实 vs 推断清点+能力圈边界</td><td>方向可判（运价回归+十年基率）、时点不可判→不动；等 SCFI≈1000 点+PB≈1 倍双触发 [E:workpapers/persona_李录.md]</td></tr>
+</table>
+<p><b>分歧对照</b>（5 个关键问题，详见 persona_divergence_redteam.md）：① 行业十年后形态：巴菲特"不可预测即不进" vs 李录"量可测价不可测"；② 2021 利润定性：巴菲特"危险信号"、段永平"无关变量"、李录"过渡期现金流不外推"；③ 管理层：段永平最严（非本分）、李录最宽（求生合格）；④ 行动：2 票不买 1 票观察。<b>共识点</b>：现价隐含"运价永久化"、2021 利润不可外推、十年基率是共同锚。<b>采纳裁决</b>：采纳李录档位（与双闸门机器裁决一致——闸门不过最高档即观察等价格），巴菲特/段永平的负面评估把该档位置信度推至高（三票无一看多）。</p>
+<p><b>红队输出</b>：① 反演质询——现价赚钱需要"比乐观更乐观"（运价永久化），结论成立；② 心理误判自检——警惕本案回放的确认偏误反向作用（先验"拒绝"可能造成过度苛刻），检查结果：乐观情景参数已给到行业历史极限，-67.6% 是算术不是苛刻；③ 最强空头逻辑（新常态论：联盟纪律+长协重定价+订单低位+假想分红）——即便全盘接受，内在价值 2302 亿仍 &lt; 市值 2535 亿，空头逻辑只动摇悲观概率不改变档位；④ Pre-mortem——12 个月后股价翻倍的最可能路径是市场进一步透支 2023-2024 利润，是时机错误不是判断错误；⑤ 盲区质询——李录触发条件增加第三条"连续两季盈利处于中周期区间"（防半山腰接飞刀）[E:workpapers/persona_divergence_redteam.md]。</p>
+</div>
+
+<h2>11. 结论与行动</h2>
+<div class="card">
+<p><b>档位：观察等价格。</b>持有体验预演：该股 2011-2016 年从周期高点到 2016 谷底（PB 0.75 倍）的回撤超过 70%，修复用了整整一轮运价周期（5-6 年）；同类商业模式（集运）的典型回撤区间 50-80%。正面拷问：<b>若买入后下跌 40% 而基本面未变（运价仍高位），你敢加仓吗？</b>——注意本题的反直觉性：本案"基本面未变"本身就是最坏消息（运价高位不可持续），敢于加仓的理由只存在于资产价值（PB&lt;1）。不敢，说明你把它当成长股买了；敢，也请等到 PB&lt;1 再说。</p>
+<p><b>证伪条件</b>（挂关键变量）：① SCFI &lt;1500 点+制度化分红（≥30%）+PB&lt;1.2 → "观察"档位作废，重评资产价值型机会；② 中周期 OE &gt;70 亿连续 3 年（长协价+履约率证明）→ 中周期锚重估；③ 若 2022 年报运价回落但公司仍巨亏（杠杆放大）→ 悲观情景概率上调。</p>
+<p><b>季度跟踪清单</b>：① SCFI/CCFI 周度（警戒线：SCFI 1500 点）；② 季度归母净利 vs 中周期锚 35 亿（警戒线：连续两季 &lt;60 亿=回归开始）；③ 新船交付量与行业运力增速（警戒线：运力增速-货量增速 &gt;3pct）；④ 分红方案（触发线：分红率 ≥30%）；⑤ 集团解禁后减持公告（2022-01-24 后）。</p>
+<p><b>用户初判对照</b>：回放模式无用户实时初判；官方先验（meta.json）：预期"拒绝或观察等价格"，must_trigger 周期高位+强制禁用当期基期——两者均触发 ✓（详见 diff.md）。</p>
+</div>
+
+<h2>12. 附录</h2>
+<div class="card">
+<h3>12.1 数据底稿摘要</h3>
+<table>
+<tr><th>底稿</th><th>内容</th><th>等级</th></tr>
+<tr><td>financials_601919_2021Q1.json</td><td>2010-2020 十一年年度+2021Q1+phase0_arithmetic（年报原文转录）</td><td>A</td></tr>
+<tr><td>market_snapshot_601919_2021.json</td><td>价格三源仲裁（A 17.66/H 10.76）、市值 2535.14 亿（A/H 分计价，同花顺交叉验证差 1.1%）、PB 4.26、SCFI/CCFI、10Y 2.84%</td><td>A</td></tr>
+<tr><td>metrics_601919.json</td><td>compute_metrics 输出（ROIC/OE/normalization/alerts）</td><td>A</td></tr>
+<tr><td>business_drivers_601919.json</td><td>量价驱动 2015-2020（运量×单箱收入勾稽 2017-2020 偏差 8.5%-13.9% 通过）</td><td>A</td></tr>
+<tr><td>scenarios_601919.json + scenario_audit</td><td>三情景底稿+十一项门禁（通过，S2b 重算偏差 0.16%）</td><td>A</td></tr>
+<tr><td>manifest.json</td><td>32 项文件登记+对立面检索+信息时效豁免</td><td>A</td></tr>
+</table>
+<h3>12.2 入口校验与机器门禁摘要</h3>
+<p>validate_data：错误 0/警告 2（信息时效+A1 年度覆盖，均有 manifest 豁免登记：latest_quarter_checked + official_filing_missing 时间机器悖论）。check_business_drivers：通过（2 条警告=2015/2016 总收入含码头分部口径差异，已解释）。check_scenarios：通过（S5 一条警告：无非经营资产加回项——本案估值未使用 add-back）。verification_strength：<b>B 级</b>（勾稽 100%/原文登记 full/窗口 11/15 年 partial——强周期要求 15 年，2010-2020+2021Q1 共 11 个年度样本，缺口显式披露）。</p>
+<p><b>数字校验闭环（verify_report.py，发布前强制）：通过——45 项全过（正文数字 26 项 + 图表数组 3 组 + 证据指针 16 个，0 失败），退出码 0。</b>reverse_dcf/implied-growth 无解已作为结构化结论呈现于 8.3 节。</p>
+<h3>12.3 术语速查</h3>
+<p>ROIC（投入资本回报率：生意每年用股东和债权人的钱赚几个点）；Owner Earnings（所有者盈余：净利润+折旧摊销−维持性资本开支−营运资本增加，≈每年可自由拿走的现金）；反向 DCF（用现价反推市场隐含的增长假设）；安全边际（价格低于内在价值的缓冲垫）；中周期盈利（把运价/商品价格调到历史中枢后的可持续利润）；PB 分位（当前市净率在自身历史分布中的位置）。</p>
+<h3>12.4 数据来源与截止日</h3>
+<p>全部来源与等级登记于 manifest.json（32 项）：年报原文 6 份（2010-2020 巨潮，A级）、2021Q1 季报（2021-04-30 披露，A）、H1 预增公告（2021-07-08 刊载，A）、SCFI/CCFI（上海航运交易所，经央视财经/北青网转发，A 转 B）、价格三源（腾讯行情+通联+同花顺报道，A）、10Y 国债（三源 2.84%，A）、SCFI 2015-2019 均值 900 点（雪球综述，<b>C 级</b>——仅作旁证不单独支撑结论）。所有数据截止 2021-07-31。</p>
+<h3>12.5 免责声明</h3>
+<p class="small">本报告由分析工具生成，仅供研究参考，不构成任何投资建议。市场有风险，投资需谨慎。本报告为历史回放（replay），所有结论仅基于 2021-07-31 前公开信息，用于检验分析方法本身，不代表对当前时点的任何判断。</p>
+</div>
+
+<script>
+function mk(id, opt){var c=document.getElementById(id); if(!c) return null; var ch=echarts.init(c); ch.setOption(opt); return ch;}
+var YRS=[2010,2011,2012,2013,2014,2015,2016,2017,2018,2019,2020];
+mk('c1',{title:{text:'归母净利润十年三次巨亏：盈利高点全部与运价同步（亿元）',left:'center',textStyle:{fontSize:14}},tooltip:{trigger:'axis'},xAxis:{type:'category',data:YRS},yAxis:{type:'value'},series:[{name:'归母净利',type:'bar',
+/*<!-- vchart src=metrics_601919.json path=chart_series.net_income scale=0.01 -->*/
+data:[67.61,-104.49,-95.59,2.35,3.63,4.69,-99.06,26.62,12.3,67.64,99.27],itemStyle:{color:function(p){return p.value>=0?'#1a3a5c':'#c0392b'}}}]});
+mk('c2',{title:{text:'净利率十年三次为负：利润率是运价的函数而非经营的函数（%）',left:'center',textStyle:{fontSize:14}},tooltip:{trigger:'axis'},xAxis:{type:'category',data:YRS},yAxis:{type:'value',axisLabel:{formatter:'{value}%'}},series:[{name:'净利率',type:'line',
+/*<!-- vchart src=metrics_601919.json path=chart_series.net_margin scale=100 -->*/
+data:[8.39,-15.16,-13.27,0.38,0.56,0.72,-13.92,2.94,1.02,4.48,5.8],itemStyle:{color:'#d97706'},markLine:{data:[{yAxis:0,name:'盈亏线',lineStyle:{color:'#c0392b',type:'dashed'}}]}}]});
+mk('c3',{title:{text:'收入 CAGR 7.8%：两条腿都是买的（2016 并中海、2018 并 OOCL，百万元）',left:'center',textStyle:{fontSize:14}},tooltip:{trigger:'axis'},xAxis:{type:'category',data:YRS},yAxis:{type:'value'},series:[{name:'收入',type:'line',areaStyle:{opacity:0.15},
+/*<!-- vchart src=metrics_601919.json path=chart_series.revenue scale=1 -->*/
+data:[80578,68908,72057,61934,64374,65036,71160,90464,120830,151057,171259],itemStyle:{color:'#1a3a5c'},markArea:{data:[[{xAxis:'2016',name:'并中海',itemStyle:{color:'rgba(217,119,6,.12)'}},{xAxis:'2016'}],[{xAxis:'2018',name:'并OOCL',itemStyle:{color:'rgba(217,119,6,.12)'}},{xAxis:'2018'}]]}}]});
+window.addEventListener('resize',function(){document.querySelectorAll('.chart').forEach(function(el){echarts.getInstanceByDom(el)&&echarts.getInstanceByDom(el).resize()})});
+</script>
+</body>
+</html>

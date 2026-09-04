@@ -1,0 +1,64 @@
+{
+  "file": "backtest/EK_2011-06-30/data/scenarios_EK_2011Q2.json",
+  "errors": [],
+  "warnings": [
+    "S5 未登记 `non_operating_addback_per_share`：若估值用了 --add-back，必须逐情景登记，否则无法门禁分层折价"
+  ],
+  "diagnostics": {
+    "scenario_values": {
+      "悲观": 0.18,
+      "基准": 0.5,
+      "乐观": 9.0
+    },
+    "bear_name": "悲观",
+    "base_name": "基准",
+    "margin_of_safety_vs_base": -6.16,
+    "bear_method": "peer_death_analogy",
+    "bear_recomputed_value": 0.179,
+    "bear_recompute_deviation": 0.005556,
+    "bear_stressed": [
+      "balance_sheet_insolvency",
+      "cash_burn_exhaustion",
+      "pension_underfunding",
+      "patent_sale_fails"
+    ],
+    "bear_base_ratio": 0.36,
+    "non_operating_addback_per_share": {
+      "悲观": null,
+      "基准": null,
+      "乐观": null
+    },
+    "bear_vs_price": 0.05027932960893854,
+    "probability_deviations": {},
+    "intrinsic_value_growth": -0.055,
+    "iv_growth_evidence": "基准情景每股内在价值长期增速取持续经营收入趋势：2006-2010 持续经营口径收入 10,568→7,187 五年 CAGR −7.4%，近三年 −8.7%，取 −5.5%（比 CAGR 温和，反映 Graphic Communicati",
+    "revenue_decline_streak": 5,
+    "core_driver_decline_years": null,
+    "peak_stagnation": {
+      "peak_year": 2005,
+      "peak_revenue": 14268.0,
+      "latest_revenue": 7187.0,
+      "drawdown_from_peak": 0.49628539388842163,
+      "years_since_peak": 5,
+      "stagnating": true,
+      "thresholds": {
+        "min_drawdown": 0.1,
+        "min_years_since_peak": 3
+      }
+    },
+    "decline_streak_used": 5,
+    "shrinking_reasons": [
+      "收入/核心驱动因子连续 5 年负增长",
+      "收入自 2005 年峰值回撤 50%、已 5 年未收复（峰值回撤停滞口径）"
+    ],
+    "value_trap_triggered": false,
+    "dividend_yield": 0.0,
+    "snapshot_dividend_yield": {
+      "value": 0.0,
+      "field": "dividend_yield_ttm_frac",
+      "basis": "键名后缀 _frac",
+      "unit_ambiguous": false
+    }
+  },
+  "passed": true
+}

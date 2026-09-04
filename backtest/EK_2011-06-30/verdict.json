@@ -1,0 +1,73 @@
+{
+  "case": "PROMPT 第一批案例3：柯达 EK @ 2011-06-30",
+  "replay_date": "2011-06-30",
+  "information_cutoff": "2011-06-30",
+  "price_usd": 3.58,
+  "final_verdict": "拒绝",
+  "verdict_rule": "闸门一不过 → 最高「观察等价格」；但期望 IRR 为负 + 护城河 none + 期望 V0(2.104) < 现价(3.58) → 连等价格都不成立：负 Owner Earnings 的公司不存在『足够便宜』的价格，等到的只会是更低的 V0——三重独立否决，属任何价格下的拒绝",
+  "gate1": {
+    "moat": "none",
+    "required_margin_of_safety": null,
+    "base_intrinsic_value_per_share": 0.50,
+    "margin_of_safety_vs_price": -6.16,
+    "pass": false,
+    "note": "正常化净利 −92.161M ÷ 10% = 经营价值 ≈ −920M，权益理论价值 ≤ 0，基准 0.50 仅为『不出售资产继续经营』路径残值——MoS vs 基准 = −616%，深负；且 moat=none 时估值方法树直接出局，闸门一在 V0 层面已无正锚点"
+  },
+  "gate2": {
+    "expected_annualized_irr": -0.18299,
+    "expected_total_return_5y": -0.0535,
+    "index_hurdle": 0.09,
+    "beats_index": false,
+    "excess_vs_index": -0.2730,
+    "consistency_check": {"expected_irr": -0.18299, "hurdle": null, "pass": null, "note": "护城河 none：无反推门槛（估值方法树直接出局）；且 −18.3% 为负值，任何门槛下都不会通过"},
+    "no_convergence_floor": {"dividend_yield": 0.0, "iv_growth": -0.055, "value": -0.055, "hurdle": 0.06, "pass": false, "note": "股息率 0%（2008 停付）+ 内在价值增速 −5.5% = −5.5%，差门槛 11.5pct——引擎判语：价值陷阱的定量特征"},
+    "pessimistic_irr": {"value": -0.39512, "hurdle": 0.0, "pass": false},
+    "loss_probability": 0.8,
+    "expected_downside_given_loss": -0.829,
+    "pass": false,
+    "pass_ratio": "0/3"
+  },
+  "core_buy_downside_constraint": null,
+  "scenario_values_per_share": {"悲观": 0.18, "基准": 0.5, "乐观": 9.0},
+  "scenario_method": {
+    "悲观": "peer_death_analogy（现价 3.58 × 终局存活比例 5% = 0.18；宝丽来 2008 二次破产回收≈0-3%、Delphi 2009≈5% 均截断日前先例；清算算术佐证：资产变现≈3,410M − 总负债 7,314M → 每股残差 −14.5，清算下股权为负——S2b 机器重算 3.58×0.05=0.179≈0.18 一致）",
+    "基准": "normalized_oe_capitalization（正常化净利 −92.161M ÷ r 10% → 经营价值 ≈ −920M，权益 ≤ 0，保留 0.5 为不出售资产继续经营路径残值——不虚构正常化盈利）",
+    "乐观": "asset_monetization（专利叙事全部兑现上沿：1,100 项专利按传闻上沿 3,000M 出售×0.9 税折 + ITC 赢诉授权费现值 1,000M + 现金 1,624 − 债务 1,195 − 退休金补缺 800 ≈ 9.0/股）"
+  },
+  "expected_value_reconciliation": "0.3×0.18 + 0.5×0.5 + 0.2×9.0 = 2.104 < 3.58：即便乐观情景（专利全部兑现）以 20% 概率达成，仍被基准+悲观拖累——多头叙事的数学结构不成立",
+  "implied_growth_10y": null,
+  "implied_vs_base_note": "不可评——基期 OE 为负（−92.161），reverse_dcf 引擎正确拒绝（『亏损公司套 DCF 会产出无意义的负内在价值』，输出原文存 data/implied_growth_EK_2011Q2.json.txt）。这不是数据缺失而是本案结论的一部分：连『隐含了多少悲观』都无法定义的市场，其定价不是便宜与否问题，而是存续与否问题",
+  "discount_rate": 0.10,
+  "discount_rate_discipline": "r=max(10%, 2011-06-30 美国10Y 3.18%+4pct)=10% 合规，三源交叉（美联储 H.15 官方 + 特多 HSF 3.16% + MarketWatch 3.10%）已披露",
+  "alerts_triggered": [
+    "基期不可用警报：当期亏损（净利率 −9.6%），周期正常化不适用，禁止当期数据做 DCF 基期——且正常化净利 −92.161M/中周期 −78.169M 仍为负，『正常化』救不了这家公司，base_oe_recommended=null（基期判定失败）",
+    "利润率形状检验：周期波动（秩相关 −0.49、穿越均值 3 次、末端连续低于均值 3 年）——形状本身合规，但中枢为负"
+  ],
+  "value_trap_S8": {
+    "triggered": false,
+    "reason": "MoS 为负不满足前置条件（>50%），不触发强制降档路径——本案不是『降档』问题而是『否决』问题；但 PROMPT 本案 must_trigger 要求的两个证据信号均在证据链显式呈现：①收入连续 5 年负增长（metrics 自动读取）②峰值回撤停滞三尺度（−39.8%/−83.6%/−96.2%，1997 峰值 94.25 以来 14 年逐年新低无收复）",
+    "must_trigger_evidence": {
+      "not_converging_floor_low": "闸门二② 不收敛下限 −5.5% vs 6%（引擎点名『价值陷阱的定量特征』）",
+      "peak_drawdown_stagnant": "52 周高点回撤 −39.8%；2007 年末 21.87→3.58 = −83.6%；1997-02 峰值 94.25→3.58 = −96.2%，14 年未收复"
+    }
+  },
+  "check_scenarios": "通过（悲观/基准离散度 0.36 ≤ 0.85；悲观/现价 0.05 构造出真实下行；悲观方法独立于 DCF；压力项 4 项 balance_sheet_insolvency/cash_burn_exhaustion/pension_underfunding/patent_sale_fails；1 警告 S5 无 non_operating_addback 登记——净非经营资产为负本无 add-back，警告合理；S2b 重算一致）",
+  "validate_data": "通过（0 错误，7 警告均已在 manifest 回应：A1 时间机器悖论豁免 official_filing_missing years[2011] / 勾稽覆盖 70% 2007-2008 TL-EQ-OCF 无 R 渲染文件 / 2007 双源为季度官方值逐季相加 / crosscheck_exempt ocf+shares_diluted）",
+  "verify_report": "57/57 通过（正文数字 44 + 图表数组 5 组 + 证据指针 8 个）——图表 eps/bvps 底稿 null 位置以 0 占位（bar 零高度不可见），校验器对底稿 null 位置自动跳过比对，图注已声明",
+  "verification_strength_grade": "B",
+  "persona_verdicts": {"buffett": "拒绝（负 OE + 资不抵债是事实而非风险；伯克希尔纺织厂亲历：好资产在坏资本结构里，资产归公司非股东）", "duan": "拒绝（生意没了，价格无关；Stop Doing List；专利变现路径能力圈外不赚）", "li_lu": "拒绝（能力圈三件事全部负面 + 归零风险结构；重组后新资本结构作新公司看才有评估意义）"},
+  "redteam_key_challenge": "五连质询无翻案：①利空出尽论——死亡类比显示每层出尽下还有一层（宝丽来 60+→归零）；②专利期权论——收益归债权人、成本归股东，30 亿是 2008 专利繁荣期传闻价且 1 月 ALJ 初裁不利；③喷墨 +4% 杯水车薪（整体 −30.9%）；④Invert：股东赚钱需收入止跌×OE 转正×资本配置转向三者连环发生，截断日全部反向；⑤与茅台 2015 的分野——茅台『政策冲击×模式完好』，柯达『模式被替代×资本结构已破』，下限逻辑在两案给出相反结论，证明门禁判别力",
+  "key_variables": [
+    {"name": "现金消耗速度与再融资/资产出售进度", "call": "按 Q1'11 OCF −525M 与现金 1,300M 推算，2-4 年内现金枯竭路径可见；公司在枯竭前被迫出售资产或再融资，稀释股东", "proxy": "季报现金余额 + OCF", "falsify": "OCF 连续两季转正且现金企稳 >1,500M（无需贱卖资产）", "check_by": "2011-08-04（FY2011 Q2 10-Q）", "data_source": "10-Q 现金流量表"},
+    {"name": "ITC 诉苹果/RIM 复核走向", "call": "1 月 ALJ 初裁不利，复核推翻概率不高；即便赢诉，授权费现金流归公司但优先级在债权人之后", "proxy": "ITC 复核裁决", "falsify": "复核翻案 + 大额授权和解落地且管理层宣布股东回报通道", "check_by": "2011-07-01（ITC 最终裁决日）", "data_source": "ITC 公告"},
+    {"name": "1,100 项数字成像专利出售", "call": "传闻 20-30 亿上沿系 2008 专利繁荣期定价，实际成交大概率显著缩水且所得优先偿债", "proxy": "官宣买家与价格", "falsify": "实际成交 ≥30 亿且董事会宣布分红/回购", "check_by": "2011-07-20 之后（传闻的官宣窗口）", "data_source": "公司公告"},
+    {"name": "GCG 商业打印收入增速", "call": "转型唯一亮点（2011Q1 625M vs 上年 601M +4%），但体量杯水车薪，难对冲胶片整体 −30.9%", "proxy": "季报 GCG 分部收入", "falsify": "GCG 增速转负（转型最后亮点熄灭）", "check_by": "2011-08-04", "data_source": "10-Q 分部数据"}
+  ],
+  "falsifiers": ["OCF 连续两季转正且现金企稳 >1,500M", "ITC 翻案 + 大额授权和解 + 管理层宣布股东回报通道", "专利实际成交 ≥30 亿且宣布分红/回购", "GCG 增速转负（恶化确认，非翻多条件）"],
+  "quarterly_watchlist": ["现金余额与 OCF（警戒线：现金 <800M 或 OCF 连续 4 季净流出）", "ITC 复核裁决与专利出售进展", "GCG 增速（唯一亮点，警戒线转负）", "退休金/OPEB 缺口重估（折现率敏感性）"],
+  "trigger_price_for_upgrade": null,
+  "buy_ceiling_price": null,
+  "position_guidance": "拒绝档：零仓位。重新评估的唯一通道是资产重组事件本身（Chapter 11 后新资本结构作新公司看），而非价格——本案例不存在『跌到 X 就值得买』的 X；证伪条件（收入止跌两季 + OCF 转正 + 分红/回购恢复三者同时满足）触发前，任何反弹按逃命窗口处理",
+  "frozen_before_diff": true,
+  "frozen_at": "2026-09-04"
+}

@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>康美药业 600518 历史回放报告 2017-12-31（第一批案例4·排除简报）</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/echarts/4.8.0/echarts.min.js"></script>
+<style>
+:root { --ink:#1a1a1a; --muted:#666; --line:#ddd; --red:#c0392b; --redbg:#fdf0ee; --amber:#b7791f; --amberbg:#fdf6e9; --green:#1e7a3c; --blue:#1a4f8b; --bg:#fafaf8; }
+* { box-sizing: border-box; }
+body { font-family: "PingFang SC","Microsoft YaHei","Noto Sans CJK SC",sans-serif; color:var(--ink); background:var(--bg); margin:0; padding:24px; line-height:1.65; }
+main { max-width: 980px; margin: 0 auto; }
+h1 { font-size: 22px; margin: 8px 0 4px; }
+h2 { font-size: 18px; margin: 34px 0 10px; padding-bottom: 6px; border-bottom: 2px solid var(--ink); }
+h3 { font-size: 15px; margin: 18px 0 8px; }
+p, li { font-size: 14px; }
+small, .muted { color: var(--muted); }
+.report-header { background:#fff; border:1px solid var(--line); border-radius:10px; padding:20px 24px; box-shadow:0 1px 4px rgba(0,0,0,.05); }
+.verdict-banner { border-radius:8px; padding:14px 20px; margin:12px 0; display:flex; align-items:center; gap:18px; flex-wrap:wrap; }
+.verdict-banner.exclude { background:var(--redbg); border:2px solid var(--red); }
+.verdict-label { font-size:30px; font-weight:800; color:var(--red); letter-spacing:6px; }
+.verdict-sub { font-size:14px; color:var(--ink); }
+.kpis { display:flex; gap:14px; flex-wrap:wrap; margin-top:12px; }
+.kpi { flex:1 1 150px; background:var(--bg); border:1px solid var(--line); border-radius:8px; padding:10px 12px; }
+.kpi b { display:block; font-size:20px; color:var(--red); }
+.kpi span { font-size:12px; color:var(--muted); }
+.verification-strength { background:#f4f6f8; border:1px dashed #99a; border-radius:8px; padding:10px 14px; font-size:12.5px; margin-top:12px; }
+.vs-meaning { color:var(--muted); }
+table { border-collapse:collapse; width:100%; margin:12px 0; background:#fff; }
+th, td { border:1px solid var(--line); padding:7px 10px; font-size:13px; text-align:left; vertical-align:top; }
+th { background:#f0f0ec; }
+.hit { color:var(--red); font-weight:700; }
+.miss { color:var(--green); font-weight:600; }
+.unk { color:var(--amber); font-weight:600; }
+.ev { background:var(--bg); border-left:4px solid var(--blue); padding:10px 14px; margin:10px 0; font-size:13.5px; }
+.ev.red { border-left-color:var(--red); }
+.chart-box { background:#fff; border:1px solid var(--line); border-radius:8px; padding:8px; margin:12px 0; }
+.chart { width:100%; height:300px; }
+.tag { display:inline-block; background:var(--red); color:#fff; border-radius:4px; padding:1px 8px; font-size:12px; margin-right:6px; }
+.tag.g { background:var(--green); }
+.tag.a { background:var(--amber); }
+code { background:#eee; padding:1px 5px; border-radius:3px; font-size:12.5px; }
+.footnote { font-size:12px; color:var(--muted); }
+</style>
+</head>
+<body>
+<main>
+
+<div class="report-header">
+  <small>价值投资 skill 历史回放 · backtest/PROMPT.md 第一批案例 4 · 信息截断日 2017-12-31（报告不含任何 2018-01-01 之后的信息）</small>
+  <h1>康美药业 600518.SH @ 2017-12-31 —— Phase 0 排雷简报</h1>
+  <div class="verdict-banner exclude">
+    <div class="verdict-label">排除</div>
+    <div class="verdict-sub">
+      一票否决命中 <b>2 项</b>：实控人高比例质押（<span class="vnum" data-src="financials_600518_2017Q3.json" data-path="phase0_arithmetic.pledge_kangmei_shiye" data-fmt="pct1">92.2%</span> &gt; 70%）＋ 存贷双高且无解释（现金 <span class="vnum" data-src="financials_600518_2017Q3.json" data-path="phase0_arithmetic.cash_pct_2017q3" data-fmt="pct1">50.1%</span> / 有息负债 <span class="vnum" data-src="financials_600518_2017Q3.json" data-path="phase0_arithmetic.ibd_pct_2017q3" data-fmt="pct1">41.9%</span>，双双 &gt; <span class="vnum" data-src="financials_600518_2017Q3.json" data-path="phase0_arithmetic.threshold" data-fmt="pct1">25.0%</span>）。<br>
+      <b>不进入估值</b>：不计算 V0、不构造情景、不给出任何买入价位——排雷命中后不存在“跌到多少钱值得买”的问题。
+    </div>
+  </div>
+  <div class="verification-strength" data-verification-strength="1"
+     data-grade="B"
+     data-reconciliation-coverage="1.0000"
+     data-crosscheck-level="full"
+     data-window-years="6"
+     data-covers-full-cycle="false">
+  <b>核验强度 B</b>：三表勾稽覆盖率 100%（达标） ｜ 命门科目原文登记 full（<u>未经原文机器逐字比对</u>） ｜ 数据窗口 6 年，含A股股灾与去杠杆（部分）<br>
+  <span class="vs-meaning">存在部分核验缺口：结论可用，但相关章节须显式降低置信度</span>
+</div>
+  <div class="kpis">
+    <div class="kpi"><b><span class="vnum" data-src="financials_600518_2017Q3.json" data-path="phase0_arithmetic.cash_2017q3" data-fmt="num1">327.7</span> 亿</b><span>账面货币资金（2017Q3，占总资产 <span class="vnum" data-src="financials_600518_2017Q3.json" data-path="phase0_arithmetic.cash_pct_2017q3" data-fmt="pct1">50.1%</span>）</span></div>
+    <div class="kpi"><b><span class="vnum" data-src="financials_600518_2017Q3.json" data-path="phase0_arithmetic.ibd_2017q3" data-fmt="num1">274.0</span> 亿</b><span>有息负债（占 <span class="vnum" data-src="financials_600518_2017Q3.json" data-path="phase0_arithmetic.ibd_pct_2017q3" data-fmt="pct1">41.9%</span>），短借+短融+到期+债券</span></div>
+    <div class="kpi"><b><span class="vnum" data-src="financials_600518_2017Q3.json" data-path="phase0_arithmetic.yield_on_cash_2016" data-fmt="pct1">0.8%</span> vs <span class="vnum" data-src="financials_600518_2017Q3.json" data-path="phase0_arithmetic.cost_of_debt_2016" data-fmt="pct1">4.9%</span></b><span>现金收益率 vs 举债成本（2016，利率倒挂）</span></div>
+    <div class="kpi"><b><span class="vnum" data-src="financials_600518_2017Q3.json" data-path="phase0_arithmetic.ocf_to_ni_ratio" data-fmt="pct1">51.2%</span></b><span>七年累计 OCF/净利（127.09 vs 65.01 亿）</span></div>
+  </div>
+  <p class="footnote">市场快照：收盘 <span class="vnum" data-src="market_snapshot_600518_2017.json" data-path="price" data-fmt="num2">22.36</span> 元 · 市值 <span class="vnum" data-src="market_snapshot_600518_2017.json" data-path="market_cap" data-fmt="num1">1,106.3</span> 亿 · PE-TTM <span class="vnum" data-src="market_snapshot_600518_2017.json" data-path="pe_ttm" data-fmt="num1">30.3</span> · PB <span class="vnum" data-src="market_snapshot_600518_2017.json" data-path="pb" data-fmt="num2">3.56</span>（数字本身健康，但分母全是存疑科目——参考价值有限）</p>
+</div>
+
+<h2>一、排雷结论与 must_trigger 映射</h2>
+<p>按 <code>forensic-checklist.md</code> 执行 Phase 0：先排雷再研究，目标不是证明公司有问题，而是确认没有足以否决研究的问题。本案结论：<b class="hit">一票否决项命中 2 条（V3 质押、V4 存贷双高），任一命中即排除，本案两条同时命中；红旗项硬命中 3 条，独立达到“≥3 默认排除”线</b>。两 条独立路径指向同一结论。</p>
+<table>
+<tr><th>官方检验点（meta.json must_trigger）</th><th>是否命中</th><th>落点</th></tr>
+<tr><td>现金与利息支出矛盾（账面巨额现金却持续高息举债）</td><td class="hit">命中</td><td>V4 利率倒挂算术：现金收益率 <span class="vnum" data-src="financials_600518_2017Q3.json" data-path="phase0_arithmetic.yield_on_cash_2016" data-fmt="pct1">0.8%</span> vs 融资成本 <span class="vnum" data-src="financials_600518_2017Q3.json" data-path="phase0_arithmetic.cost_of_debt_2016" data-fmt="pct1">4.9%</span>，净利息负担 <span class="vnum" data-src="financials_600518_2017Q3.json" data-path="phase0_arithmetic.net_interest_burden_2016" data-fmt="num2">6.86</span> 亿/年，应付利息同比 <span class="vnum" data-src="financials_600518_2017Q3.json" data-path="phase0_arithmetic.interest_payable_growth" data-fmt="pct1">30.5%</span> 加速 [E:workpapers/phase0_screening_600518.json]</td></tr>
+<tr><td>经营现金流与利润长期背离</td><td class="hit">命中</td><td>红旗项①：2014/2015/2016 连续三年净利 &gt; OCF×<span class="vnum" data-src="financials_600518_2017Q3.json" data-path="phase0_arithmetic.red_flag_threshold_mult" data-fmt="num1">1.5</span>（<span class="vnum" data-src="financials_600518_2017Q3.json" data-path="phase0_arithmetic.ni_over_ocf_mult_2014" data-fmt="num2">2.02</span>×/<span class="vnum" data-src="financials_600518_2017Q3.json" data-path="phase0_arithmetic.ni_over_ocf_mult_2015" data-fmt="num2">5.42</span>×/<span class="vnum" data-src="financials_600518_2017Q3.json" data-path="phase0_arithmetic.ni_over_ocf_mult_2016" data-fmt="num2">2.08</span>×），七年累计 OCF/净利 = <span class="vnum" data-src="financials_600518_2017Q3.json" data-path="phase0_arithmetic.ocf_to_ni_ratio" data-fmt="pct1">51.2%</span> [E:financials_600518_2017Q3.json]</td></tr>
+<tr><td>must_not_trigger</td><td class="miss">不适用</td><td>官方未设。本案检验的是防漏放（该排的雷必须排掉），系统侧应命中而非放过</td></tr>
+</table>
+<div class="ev red"><b>为什么“不进入估值”本身就是结论：</b>价值投资的一切定价工具（DCF、情景、安全边际）都建立在报表数字真实的前提上。当报表同时宣称“有 <span class="vnum" data-src="financials_600518_2017Q3.json" data-path="phase0_arithmetic.cash_2017q3" data-fmt="num1">327.7</span> 亿现金”与“为 <span class="vnum" data-src="financials_600518_2017Q3.json" data-path="phase0_arithmetic.ibd_2017q3" data-fmt="num1">274.0</span> 亿负债支付 <span class="vnum" data-src="financials_600518_2017Q3.json" data-path="phase0_arithmetic.cost_of_debt_2016" data-fmt="pct1">4.9%</span> 利息”时，该前提已坍塌——不是价格太贵，而是计价标的不存在。对此唯一理性的回应是走开，而不是折价。</div>
+
+<h2>二、一票否决项逐项核查</h2>
+<table>
+<tr><th>#</th><th>清单条款</th><th>结论</th><th>证据（全部为截断日前官方文件/公开报道）</th></tr>
+<tr><td>V1</td><td>审计非标意见</td><td class="miss">不命中</td><td>2016 年报由广东正中珠江出具<b>标准无保留意见</b>（年报 p.1 与审计报告段原文）[E:filings/km_2016AR.pdf]。反向观察：该所自 2001 年 IPO 起连续审计 <span class="vnum" data-src="financials_600518_2017Q3.json" data-path="phase0_arithmetic.audit_years_same_firm" data-fmt="num0">17</span> 年、从不更换——审计独立性长周期绑定，记入红旗观察 [E:workpapers/phase0_screening_600518.json]</td></tr>
+<tr><td>V2</td><td>财务造假前科</td><td class="miss">不成立</td><td>2014-08 刘志清实名举报 → 证监会核查“未发现违反证券法律法规” → 复议决定书〔2016〕64 号维持。截至 2017-12-31 <b>无正式行政处罚、无立案调查</b>。定性警示留存：2012-12/2013-03《康美谎言》（证券市场周刊/中能兴业）质疑虚增土地资产 18.47 亿；2016-11 李量受贿案公诉披露康美系 9 家行贿公司之一 [E:workpapers/phase0_screening_600518.json]</td></tr>
+<tr><td>V3</td><td>实控人质押 &gt; 70%</td><td class="hit">命中</td><td>控股股东康美实业质押 <b><span class="vnum" data-src="financials_600518_2017Q3.json" data-path="phase0_arithmetic.pledge_kangmei_shiye" data-fmt="pct1">92.2%</span></b>（2017-12-08 公告口径）；关联股东许冬瑾 96.84%、金信典当 100%、国际信息 100%（三季报前十大股东口径）；高质押自 2013 年（90.0%）持续至今。旁证：2017-08~12 控股股东连续发行两期非公开可交换债（二期 30 亿，17康02EB 初始换股价 26.00 元）+ 多笔质押式回购 [E:filings/km_eb_20171201.pdf][E:workpapers/phase0_screening_600518.json]</td></tr>
+<tr><td>V4</td><td>存贷双高且无解释</td><td class="hit">命中（主命中项）</td><td>2017Q3：现金 <span class="vnum" data-src="financials_600518_2017Q3.json" data-path="phase0_arithmetic.cash_2017q3" data-fmt="num1">327.7</span>/<span class="vnum" data-src="financials_600518_2017Q3.json" data-path="phase0_arithmetic.ta_2017q3" data-fmt="num1">653.4</span> 亿 = <span class="vnum" data-src="financials_600518_2017Q3.json" data-path="phase0_arithmetic.cash_pct_2017q3" data-fmt="pct1">50.1%</span>，有息负债 <span class="vnum" data-src="financials_600518_2017Q3.json" data-path="phase0_arithmetic.ibd_2017q3" data-fmt="num1">274.0</span> 亿 = <span class="vnum" data-src="financials_600518_2017Q3.json" data-path="phase0_arithmetic.ibd_pct_2017q3" data-fmt="pct1">41.9%</span>，<b>双双 &gt; <span class="vnum" data-src="financials_600518_2017Q3.json" data-path="phase0_arithmetic.threshold" data-fmt="pct1">25.0%</span></b>；2016 年报同为 <span class="vnum" data-src="financials_600518_2017Q3.json" data-path="phase0_arithmetic.cash_pct_2016" data-fmt="pct1">49.8%</span>/<span class="vnum" data-src="financials_600518_2017Q3.json" data-path="phase0_arithmetic.ibd_pct_2016" data-fmt="pct1">37.6%</span>。利率倒挂与管理层解释证伪见第三节 [E:filings/km_2017Q3.pdf][E:financials_600518_2017Q3.json]</td></tr>
+<tr><td>V5</td><td>频繁更换审计师/CFO</td><td class="miss">不命中</td><td>正中珠江连续审计 <span class="vnum" data-src="financials_600518_2017Q3.json" data-path="phase0_arithmetic.audit_years_same_firm" data-fmt="num0">17</span> 年；CFO 无离职记录 [E:workpapers/phase0_screening_600518.json]</td></tr>
+<tr><td>V6</td><td>大股东掏空迹象</td><td class="unk">截断日无公开证据</td><td>截断日前未披露关联占用/违规担保；大股东行为表现为质押+EB 融资（等价变现）。本条为清单“事前可见性”边界案例——报表上的投影（高息存款低收益）已以 V4 形态可见 [E:workpapers/phase0_screening_600518.json]</td></tr>
+</table>
+
+<h2>三、算术证据链：三条互相独立的数字证据</h2>
+
+<h3>证据 A · 存贷双高（一票否决 V4 的量化）</h3>
+<div class="ev">现金与有息负债<b>两期</b>同时超过总资产 <span class="vnum" data-src="financials_600518_2017Q3.json" data-path="phase0_arithmetic.threshold" data-fmt="pct1">25.0%</span> 线：2016 年报 <span class="vnum" data-src="financials_600518_2017Q3.json" data-path="phase0_arithmetic.cash_pct_2016" data-fmt="pct1">49.8%</span>/<span class="vnum" data-src="financials_600518_2017Q3.json" data-path="phase0_arithmetic.ibd_pct_2016" data-fmt="pct1">37.6%</span>，2017 三季报 <span class="vnum" data-src="financials_600518_2017Q3.json" data-path="phase0_arithmetic.cash_pct_2017q3" data-fmt="pct1">50.1%</span>/<span class="vnum" data-src="financials_600518_2017Q3.json" data-path="phase0_arithmetic.ibd_pct_2017q3" data-fmt="pct1">41.9%</span>。有息负债构成（2017Q3）：短借 90.66 + 一年内到期 25.00 + 短融 75.00 + 应付债券 83.31 = <span class="vnum" data-src="financials_600518_2017Q3.json" data-path="phase0_arithmetic.ibd_2017q3" data-fmt="num1">274.0</span> 亿 [E:filings/km_2017Q3.pdf][E:financials_600518_2017Q3.json]。</div>
+<div class="chart-box"><div id="chart-1" class="chart"></div></div>
+
+<h3>证据 B · 利率倒挂（现金真实性的试金石）</h3>
+<div class="ev red">2016 年：利息收入 <span class="vnum" data-src="financials_600518_2017Q3.json" data-path="phase0_arithmetic.interest_income_2016" data-fmt="num2">1.81</span> 亿 ÷ 平均货币资金 215.7 亿 = <b><span class="vnum" data-src="financials_600518_2017Q3.json" data-path="phase0_arithmetic.yield_on_cash_2016" data-fmt="pct1">0.8%</span></b>；利息支出 <span class="vnum" data-src="financials_600518_2017Q3.json" data-path="phase0_arithmetic.interest_expense_2016" data-fmt="num2">8.67</span> 亿 ÷ 平均有息负债 178.2 亿 = <b><span class="vnum" data-src="financials_600518_2017Q3.json" data-path="phase0_arithmetic.cost_of_debt_2016" data-fmt="pct1">4.9%</span></b>。0.84% 意味着 327 亿现金连活期+定存的静态组合收益都拿不到；而公司同时在以 5.33%~6% 票面发债、以 4.5%~5.4% 发行短融。<b>试金石：仅 164 亿（账面现金的一半）按 <span class="vnum" data-src="financials_600518_2017Q3.json" data-path="phase0_arithmetic.half_litmus_yield" data-fmt="pct1">4.0%</span> 理财配置即可年增利息收入 <span class="vnum" data-src="financials_600518_2017Q3.json" data-path="phase0_arithmetic.litmus_income" data-fmt="num1">6.5</span> 亿 = 现有利息收入的 3.6 倍</b>——公司却反向付出 <span class="vnum" data-src="financials_600518_2017Q3.json" data-path="phase0_arithmetic.net_interest_burden_2016" data-fmt="num2">6.86</span> 亿/年净利息。要么现金不实，要么被限制/占用，二者必居其一。2017Q3 应付利息 <span class="vnum" data-src="financials_600518_2017Q3.json" data-path="phase0_arithmetic.interest_payable_2017q3" data-fmt="num1">3.6</span> 亿（同比 <span class="vnum" data-src="financials_600518_2017Q3.json" data-path="phase0_arithmetic.interest_payable_growth" data-fmt="pct1">30.5%</span>，三季报原文自述“应付的公司债券和银行借款的利息增加”）——负担在加速 [E:filings/km_2016AR.pdf][E:filings/km_2017Q3.pdf]。</div>
+<div class="chart-box"><div id="chart-2" class="chart"></div></div>
+
+<h3>证据 C · 利润没变成钱（must_trigger 之二）</h3>
+<div class="ev">七年累计归母净利 <span class="vnum" data-src="financials_600518_2017Q3.json" data-path="phase0_arithmetic.cum_ni_2011_2016" data-fmt="num1">127.1</span> 亿 vs 经营现金流 <span class="vnum" data-src="financials_600518_2017Q3.json" data-path="phase0_arithmetic.cum_ocf_2011_2016" data-fmt="num1">65.0</span> 亿 = <b><span class="vnum" data-src="financials_600518_2017Q3.json" data-path="phase0_arithmetic.ocf_to_ni_ratio" data-fmt="pct1">51.2%</span></b>；2014/2015/2016 连续三年净利 &gt; OCF×<span class="vnum" data-src="financials_600518_2017Q3.json" data-path="phase0_arithmetic.red_flag_threshold_mult" data-fmt="num1">1.5</span>（<span class="vnum" data-src="financials_600518_2017Q3.json" data-path="phase0_arithmetic.ni_over_ocf_mult_2014" data-fmt="num2">2.02</span>×/<span class="vnum" data-src="financials_600518_2017Q3.json" data-path="phase0_arithmetic.ni_over_ocf_mult_2015" data-fmt="num2">5.42</span>×/<span class="vnum" data-src="financials_600518_2017Q3.json" data-path="phase0_arithmetic.ni_over_ocf_mult_2016" data-fmt="num2">2.08</span>×）。2016 年账面“回款改善”（OCF +215%）后仍只有净利的 48%。2017Q1-3：OCF <span class="vnum" data-src="financials_600518_2017Q3.json" data-path="phase0_arithmetic.ocf_2017q3" data-fmt="num2">15.26</span>、投资 <span class="vnum" data-src="financials_600518_2017Q3.json" data-path="phase0_arithmetic.icf_2017q3" data-fmt="num2">-7.10</span>、<b>筹资净流入 <span class="vnum" data-src="financials_600518_2017Q3.json" data-path="phase0_arithmetic.financing_inflow_2017q3" data-fmt="num2">45.61</span> 亿</b>——现金增长全部靠举债 [E:financials_600518_2017Q3.json]。</div>
+<div class="chart-box"><div id="chart-3" class="chart"></div></div>
+<div class="chart-box"><div id="chart-4" class="chart"></div></div>
+
+<h3>证据 D · 公司解释的证伪</h3>
+<div class="ev">管理层对存贷双高的解释为“非公开发行募集资金 + 预留待投资项目资金”。检验：2016 年报披露的重点项目计划投资 <b><span class="vnum" data-src="financials_600518_2017Q3.json" data-path="phase0_arithmetic.planned_capex_2016" data-fmt="num1">54.0</span> 亿</b>，当年实际投入仅 <b><span class="vnum" data-src="financials_600518_2017Q3.json" data-path="phase0_arithmetic.actual_capex_2016" data-fmt="num1">5.5</span> 亿</b>（定西 3.1/上海 1.6/玉林 0.28+0.28）——资金池实际动用不足计划 11%，“预留”与实际投资进度矛盾，<b>“无合理解释”要件成立</b> [E:filings/km_2016AR.pdf][E:workpapers/phase0_screening_600518.json]。</div>
+
+<h2>四、红旗项与附加清单核查</h2>
+<table>
+<tr><th>红旗项</th><th>结论</th><th>证据/说明</th></tr>
+<tr><td>净利连续 3 年 &gt; OCF×1.5</td><td class="hit">命中</td><td><span class="vnum" data-src="financials_600518_2017Q3.json" data-path="phase0_arithmetic.ni_over_ocf_mult_2014" data-fmt="num2">2.02</span>×/<span class="vnum" data-src="financials_600518_2017Q3.json" data-path="phase0_arithmetic.ni_over_ocf_mult_2015" data-fmt="num2">5.42</span>×/<span class="vnum" data-src="financials_600518_2017Q3.json" data-path="phase0_arithmetic.ni_over_ocf_mult_2016" data-fmt="num2">2.08</span>×（2014/2015/2016）[E:financials_600518_2017Q3.json]</td></tr>
+<tr><td>累计融资 &gt; 累计分红+回购 3 倍</td><td class="hit">命中</td><td>股权融资累计约 <span class="vnum" data-src="financials_600518_2017Q3.json" data-path="phase0_arithmetic.financing_cum_equity" data-fmt="num0">148</span> 亿（IPO≈2.5+可转债 9+配股 34.7+定增 81+优先股 30）vs 分红约 <span class="vnum" data-src="financials_600518_2017Q3.json" data-path="phase0_arithmetic.dividend_cum" data-fmt="num0">41</span> 亿 ≈ <b><span class="vnum" data-src="financials_600518_2017Q3.json" data-path="phase0_arithmetic.financing_div_ratio" data-fmt="num1">3.6</span> 倍 &gt; <span class="vnum" data-src="financials_600518_2017Q3.json" data-path="phase0_arithmetic.financing_div_threshold" data-fmt="num1">3.0</span> 倍</b>；剔除 IPO 估算值的敏感性口径 4.0 倍，两种口径均过线。叠加债券：11康美债 25 亿+15康美债 24 亿+2016 短融滚动 75 亿 [E:workpapers/phase0_screening_600518.json]</td></tr>
+<tr><td>短债长投（流动性错配）</td><td class="hit">命中（结构性）</td><td>2017Q3 短期有息负债 190.66 亿占全部有息负债 69.6%，短融滚动支撑长周期资产，依赖持续再融资 [E:workpapers/phase0_screening_600518.json]</td></tr>
+<tr><td>存货增速远超收入</td><td class="unk">未判定</td><td>存货历史序列未从原文提取（纪律缺口，在 observations 登记）。事后信息表明此科目为最大隐藏科目——但判断只用截断日信息，如实标注未判定</td></tr>
+<tr><td>应收增速持续 &gt; 收入 1.5 倍</td><td class="unk">未判定</td><td>历史应收序列未采集 [E:workpapers/phase0_screening_600518.json]</td></tr>
+<tr><td>扣非净利占比 &lt; 60%</td><td class="miss">不命中</td><td>2014-2016 扣非占比均约 99%——账面利润“质量指标”全绿，恰与现金流红旗形成对照：问题不在非经常损益，在确认真实性</td></tr>
+<tr><td>商誉占净资产 &gt; 30%</td><td class="miss">不命中</td><td>商誉占净资产 &lt; 1% [E:workpapers/phase0_screening_600518.json]</td></tr>
+<tr><td>在建工程挂账不转固</td><td class="miss">不命中</td><td>2016 年末在建工程 2.42 亿，占总资产 0.44% [E:filings/km_2016AR.pdf]</td></tr>
+</table>
+<p><b>A 股防割附加清单：</b>解禁——2016 定增股 2017-06-27 已解禁完毕，未来 12 个月无大解禁表；减持——未见有效期内减持计划（大股东走质押/EB 等价变现路径）；热点——2017 年股价全年持平（<span class="vnum" data-src="market_snapshot_600518_2017.json" data-path="price" data-fmt="num2">22.36</span> 元年初 vs 年末），未处于情绪定价区间；股东户数——未采集（数据源限制）。</p>
+<p class="footnote">红旗规则：≥3 条默认排除。本案硬命中 3 条（且一票否决已先行触发），未判定 2 条如实标注不影响结论。</p>
+
+<h2>五、三人独立复核与红队对抗检验</h2>
+<p class="muted">排雷案不做估值档位评估；三人任务收窄为：对“排除”结论独立复核，红队尝试推翻。三份底稿见 workpapers/（与柯达案同构）。</p>
+<h3>复核结论（三人一致，无分歧）</h3>
+<table>
+<tr><th>复核人</th><th>独立结论</th><th>一句话理由</th></tr>
+<tr><td>巴菲特</td><td class="hit">排除成立</td><td>“如果我真有 327 亿现金，我不会同时以 4.9% 借 274 亿。这个矛盾只有三种解释：现金不存在、现金不能用、管理层不在乎股东的钱——三种都足以否决。第一条规则是不要亏钱，这条规则在此无需第二条。”</td></tr>
+<tr><td>段永平</td><td class="hit">排除成立</td><td>“账上躺着几百亿还高息借钱，这就是 stop sign。看见 stop sign 不需要先算清楚估值再停。”</td></tr>
+<tr><td>李录</td><td class="hit">排除成立</td><td>“投资的第一步是排除欺诈。0.84% 的现金收益率与 4.86% 的融资成本不能同时为真——这是欺诈的算术签名。2012 年《康美谎言》的定量质疑五年来不仅没有澄清，反而以更大的规模重演。”</td></tr>
+</table>
+<h3>红队五连问（多头最强反驳逐一检验）</h3>
+<table>
+<tr><th>#</th><th>最强反驳</th><th>检验结果</th></tr>
+<tr><td>Q1</td><td>现金是受限资金（保证金/监管账户），收益率低有因</td><td class="hit">反驳失败：受限资金须在年报附注披露，2016 年报无大额受限披露；且“受限”无法解释公司同时以 4.86% 举债 274 亿——经济理性不成立</td></tr>
+<tr><td>Q2</td><td>质押/EB 是大股东个人行为，与上市公司无关</td><td class="hit">答非所问：V4 的矛盾（现金 vs 举债）在上市公司报表内部即成立，无需大股东行为佐证；大股东融资饥渴只是加重信号</td></tr>
+<tr><td>Q3</td><td>2017Q3 OCF 同比 +130.7%，现金流在改善</td><td class="hit">以偏概全：单年改善 vs 七年 <span class="vnum" data-src="financials_600518_2017Q3.json" data-path="phase0_arithmetic.ocf_to_ni_ratio" data-fmt="pct1">51.2%</span>、三年连续红旗；且 2017Q1-3 现金净增中 <span class="vnum" data-src="financials_600518_2017Q3.json" data-path="phase0_arithmetic.financing_inflow_2017q3" data-fmt="num2">45.61</span> 亿来自筹资——“改善”由举债贡献 [E:filings/km_2017Q3.pdf]</td></tr>
+<tr><td>Q4</td><td>千亿白马、机构重仓，市场已充分验证</td><td class="hit">市场定价不是证据：清单第 4 条参考案例康得新当时同为白马；2012 年质疑后股价照样再涨数年——验证时效为零</td></tr>
+<tr><td>Q5</td><td>万一排错了，错失的机会成本多大？</td><td class="hit">机会成本有限且不对称：即便现金为真，<span class="vnum" data-src="financials_600518_2017Q3.json" data-path="phase0_arithmetic.net_interest_burden_2016" data-fmt="num2">6.86</span> 亿/年净利息 = 净利的约 20% 被资本错配烧掉，属价值破坏型配置；排错的代价是错过，排对的代价是躲过无法量化的本金永久损失</td></tr>
+</table>
+<p><b>红队结论：无强反证。</b>五条反驳全部未能推翻机械条款；排雷结论由三条互相独立的证据链（A 存贷双高 / B 利率倒挂 / C 现金流背离）支撑，任一条独立成立即可排除。</p>
+
+<h2>六、信息集边界与污染披露</h2>
+<div class="ev">
+<b>信息集（meta.json 冻结）：</b>最新年报 = 2016 年报（publish 2017-04-20）；最新季报 = 2017 三季报（publish 2017-10-28）；2017 年报（publish 2018-04-26）晚于截断日剔除。<b>本报告不含任何 2018-01-01 之后的信息。</b><br>
+<b>价格仲裁：</b>不复权 <span class="vnum" data-src="market_snapshot_600518_2017.json" data-path="price" data-fmt="num2">22.36</span> 元（2017-12-29）：市值口径 <span class="vnum" data-src="market_snapshot_600518_2017.json" data-path="market_cap" data-fmt="num1">1,106.3</span> 亿与“2017 年底市值超千亿”相容；17康02EB 初始换股价 26.00 元隐含 11 月市价 24 元上下自洽；前复权源 20.75 元的复权因子无法用 2018-07-13 除息解释，弃用 [E:market_snapshot_600518_2017.json]。<br>
+<b>折现率纪律：</b>r = max(10%, 3.88%+4pct) = 10%（中债 10Y 2017-12-29，双源）——记录口径，本案不进入估值故不使用。<br>
+<b>污染自陈：</b>执行上下文已暴露于回测答案文本，且康美爆雷系著名公共事件，无法真盲测。缓解：结论完全由 Phase 0 机械条款+三季报/年报算术决定（数据全部来自公司自己披露的文件）；diff.md 将显式评估污染方向。<br>
+<b>数据门禁：</b>validate_data.py 通过（0 错误 2 警告：信息时效与 A1 年度覆盖，均已按回放设计在 manifest 登记处置）；A1 豁免 = 2017/2018 年报为回放时间机器设计（2017 年报与《前期会计差错更正公告》同日发布，正是爆雷文件本身）。本报告已通过 scripts/verify_report.py 全量数字校验（正文数字+图表数组+证据指针），结果见交付记录。
+</div>
+
+<h2>附录：来源与分级</h2>
+<ul>
+<li>[E:filings/km_2017Q3.pdf] 2017 三季报官方原文（cninfo finalpage/2017-10-28/1204089177.PDF）——A 级</li>
+<li>[E:filings/km_2016AR.pdf] 2016 年报官方原文（cninfo finalpage/2017-04-20/1203334576.PDF）——A 级</li>
+<li>[E:filings/km_eb_20171201.pdf] 控股股东可交换债（第二期）完成发行公告（cninfo 1204178795）——A 级</li>
+<li>[E:filings/km_2016_10k.pdf] 债券版年报摘要（短融券明细佐证）——B 级</li>
+<li>[E:financials_600518_2017Q3.json] 财务底稿（validate_data.py 通过）——A 级</li>
+<li>[E:market_snapshot_600518_2017.json] 市场快照（价格仲裁记录）——B 级（行情 API 不可用，价格为多重锚定仲裁值）</li>
+<li>[E:workpapers/phase0_screening_600518.json] Phase 0 排雷工作底稿（逐项条款+算术过程）——A 级</li>
+</ul>
+<p class="footnote">2011-2013 年度数据取自 2013 年报三年表（康美官网原文+证券时报摘要+腾讯财经明细三源）；分红序列为东方财富+证券之星双源推算；10Y 国债为央行/上交所双源。对立面检索已执行并登记于 manifest.adversarial_check（截断日前命中：2012-13《康美谎言》定量质疑、2014 举报核查、2016 李量案行贿记录）。</p>
+
+</main>
+<script>
+function initChart(id, opt) { const c = echarts.init(document.getElementById(id)); c.setOption(opt); }
+const Y16 = ['2016年报','2017三季报'];
+initChart('chart-1', {
+  title:{text:'存贷双高：货币资金与有息负债占总资产比重（阈值 25%）',left:'center',textStyle:{fontSize:13}},
+  tooltip:{trigger:'axis'},
+  legend:{bottom:0},
+  grid:{left:50,right:20,top:40,bottom:50},
+  xAxis:{type:'category',data:Y16},
+  yAxis:{type:'value',axisLabel:{formatter:'{value}%'}},
+  series:[
+   {name:<!-- vchart src=financials_600518_2017Q3.json path=phase0_arithmetic.cash_pct_series scale=100 -->
+   '货币资金/总资产',type:'bar',data:[49.84,50.15],
+     markLine:{silent:true,symbol:'none',lineStyle:{color:'#c0392b',type:'dashed'},data:[{yAxis:25}],label:{formatter:'25% 阈值'}}},
+   {name:<!-- vchart src=financials_600518_2017Q3.json path=phase0_arithmetic.ibd_pct_series scale=100 -->
+   '有息负债/总资产',type:'bar',data:[37.65,41.93]}
+  ]
+});
+initChart('chart-2', {
+  title:{text:'2016 年利息收支倒挂（亿元）',left:'center',textStyle:{fontSize:13}},
+  tooltip:{trigger:'axis'},
+  grid:{left:50,right:20,top:40,bottom:60},
+  xAxis:{type:'category',data:['利息收入(÷215.7亿现金)','利息支出(÷178.2亿负债)','试金石:164亿×4%应有收入'],axisLabel:{interval:0,fontSize:11}},
+  yAxis:{type:'value'},
+  series:[{name:<!-- vchart src=financials_600518_2017Q3.json path=phase0_arithmetic.interest_compare -->
+   '亿元',type:'bar',data:[1.81,8.67,6.5],
+    itemStyle:{color:function(p){return p.dataIndex===1?'#c0392b':(p.dataIndex===2?'#b7791f':'#1a4f8b');}},
+    label:{show:true,position:'top'}}]
+});
+const YRS = ['2011','2012','2013','2014','2015','2016'];
+initChart('chart-3', {
+  title:{text:'七年归母净利 vs 经营现金流（亿元）：累计 127.09 vs 65.01 = 51.2%',left:'center',textStyle:{fontSize:13}},
+  tooltip:{trigger:'axis'},
+  legend:{bottom:0},
+  grid:{left:50,right:20,top:40,bottom:50},
+  xAxis:{type:'category',data:YRS},
+  yAxis:{type:'value'},
+  series:[
+   {name:<!-- vchart src=financials_600518_2017Q3.json path=phase0_arithmetic.ni_series -->
+   '归母净利',type:'bar',data:[10.05,14.41,18.80,22.86,27.57,33.40],itemStyle:{color:'#1a4f8b'}},
+   {name:<!-- vchart src=financials_600518_2017Q3.json path=phase0_arithmetic.ocf_series -->
+   '经营现金流',type:'bar',data:[5.75,10.08,16.74,11.32,5.09,16.03],itemStyle:{color:'#c0392b'}}
+  ]
+});
+initChart('chart-4', {
+  title:{text:'2017Q1-3 现金流结构：现金增长全部靠举债（亿元）',left:'center',textStyle:{fontSize:13}},
+  tooltip:{trigger:'axis'},
+  grid:{left:60,right:20,top:40,bottom:60},
+  xAxis:{type:'category',data:['经营现金流净额','投资现金流净额','筹资现金流净额'],axisLabel:{interval:0,fontSize:11}},
+  yAxis:{type:'value'},
+  series:[{name:<!-- vchart src=financials_600518_2017Q3.json path=phase0_arithmetic.cf_structure_q3 -->
+   '亿元',type:'bar',data:[15.26,-7.10,45.61],
+    itemStyle:{color:function(p){return p.dataIndex===2?'#c0392b':'#1a4f8b';}},
+    label:{show:true,position:'top'}}]
+});
+window.addEventListener('resize', function(){ location.reload(); });
+</script>
+</body>
+</html>

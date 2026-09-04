@@ -1,0 +1,102 @@
+{
+ "case": "backtest/PROMPT.md 第一批案例1：贵州茅台 600519.SH @ 2015-08-31",
+ "backtest_note": "历史回放底稿：全部数据严格截止 2015-08-31 已公开披露。最新年报=2014年报(publish 2015-04-21)；最新季报=2015半年报(publish 2015-08-28，截断日前3天)。2015年报(2016-03-23)/2015三季报(2015-10-23)晚于截断日，防前视剔除",
+ "latest_quarter_checked": "2015半年报(2015-08-28披露)为最新已披露财报，已纳入底稿half_year_2015h1并双源核对；2015三季报(2015-10-23)在截断日尚未披露；无未消化剧变——半年报收入+10.17%/净利+9.11%属恢复性增长而非异常波动",
+ "official_filing_missing": {
+  "years": [
+   2015
+  ],
+  "reason": "历史回放场景：底稿严格截止回放日2015-08-31已披露数据，2015年报在回放日尚未披露(2016-03-23)，属防前视回放设计而非申报缺失；校验器以真实当前时间判定死线，对回放底稿为时间机器悖论"
+ },
+ "reconciliation_coverage_waiver": {},
+ "data_sources": {
+  "MAOTAI": "新浪财经三表(2015H1拉取与官方摘要双源一致)+cninfo 2015半年报官方PDF摘要+2014年报摘要cninfo官方原文+腾讯行情接口日K/周K",
+  "heritage": "2006-2013年度行来源与2016-04-20回放底稿同源同值(已过当时双源核对+validate_data门禁)"
+ },
+ "price_sources": "腾讯行情接口 web.ifzq.gtimg.cn 不复权日K(2015-08-31收盘195.37元)+周K 52周区间(高290.00@2015-05-29周/低145.50@2014-11-07周)；不复权口径防送股除权扭曲",
+ "cn_10y": {
+  "date": "2015-08-31",
+  "value": 0.0333,
+  "source": "中国债券信息网中债国债收益率曲线(广发基金2015-09月报+友邦2015-08月报双源交叉3.33%)"
+ },
+ "files": [
+  {
+   "file": "financials_MAOTAI_2015H1.json",
+   "source": "年度行2006-2014沿用2016-04-20回放底稿(已过门禁)；2015H1行新浪+cninfo官方摘要双源",
+   "grade": "A",
+   "coverage": "2006-2014年度+2015H1半年度",
+   "crosscheck": "2013/2014年度+2015H1半年度(元级精确值)已登记"
+  },
+  {
+   "file": "market_snapshot_MAOTAI_2015H1.json",
+   "source": "腾讯行情接口不复权日K/周K+2015半年报归母权益(官方613.04亿)+2014年度分红实施值(10转1派43.74,总额49.95亿)",
+   "grade": "A",
+   "coverage": "2015-08-31时点"
+  },
+  {
+   "file": "scenarios_MAOTAI_2015H1.json",
+   "source": "worst_year_margin法(历史最差净利率2006=31.5%×2014收入×危机倍数9x)+DCF OE fade基准/乐观",
+   "grade": "A",
+   "coverage": "2015-08-31回放口径"
+  },
+  {
+   "file": "expected_return_MAOTAI_2015H1.json",
+   "source": "reverse_dcf.py expected-return引擎输出(口径全部取自已过门禁的scenarios.json)",
+   "grade": "A",
+   "coverage": "2015-08-31回放口径"
+  },
+  {
+   "file": "metrics_MAOTAI_2015H1.json",
+   "source": "compute_metrics.py 引擎输出(2006-2014窗口)",
+   "grade": "A",
+   "coverage": "2006-2014"
+  },
+  {
+   "file": "implied_growth.json",
+   "source": "reverse_dcf.py implied-growth stdout逐字转写",
+   "grade": "A",
+   "coverage": "2015-08-31时点"
+  },
+  {
+   "file": "verification_strength.json",
+   "source": "verification_strength.py 引擎输出",
+   "grade": "A",
+   "coverage": "底稿核验强度"
+  },
+  {
+   "file": "workpapers/mt_fwd_base.json",
+   "source": "forward-value 基准情景(8% fade)",
+   "grade": "A",
+   "coverage": "2015-08-31"
+  },
+  {
+   "file": "workpapers/mt_fwd_opt.json",
+   "source": "forward-value 乐观情景(12% fade)",
+   "grade": "A",
+   "coverage": "2015-08-31"
+  },
+  {
+   "file": "workpapers/mt_scenario_audit.json",
+   "source": "check_scenarios 审计(如产出)",
+   "grade": "A",
+   "coverage": "S1-S9"
+  },
+  {
+   "file": "manifest.json",
+   "source": "本清单（数据来源等级/对立面检索/10Y国债收益率登记）",
+   "grade": "A",
+   "coverage": "案例全程"
+  }
+ ],
+ "adversarial_check": {
+  "search_date": "2026-09-04（回放语境限定信息集≤2015-08-31）",
+  "queries": "贵州茅台+做空报告/财务造假/监管处罚/集体诉讼/审计意见（以2015-08-31前公开信息为准）",
+  "findings": [
+   "无针对茅台的做空报告或财务造假指控（截至2015-08-31公开信息）",
+   "2013年白酒行业塑化剂事件为行业性事件，茅台产品未检出超标（2013-04公开抽检结论），属行业信任冲击而非公司造假",
+   "无重大监管处罚记录（截断日前）；历年审计意见均为标准无保留意见",
+   "需留意的对立面：2013-2014三公消费冲击期渠道批价倒挂（一批价曾接近出厂价819元），公司对渠道有较强控制但真实动销存信息不对称——记入Phase 0观察而非排雷命中"
+  ],
+  "conclusion": "未命中排雷项，Phase 0 通过"
+ }
+}

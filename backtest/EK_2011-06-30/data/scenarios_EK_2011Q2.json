@@ -1,0 +1,85 @@
+{
+ "company": "伊士曼柯达公司（Eastman Kodak Company）",
+ "ticker": "EK",
+ "currency": "USD",
+ "backtest_note": "2011-06-30 回放（backtest/PROMPT.md 第一批案例3）：price=3.58（SEC FY2012 10-K 市值锚点 963M÷268.9M 与 Forbes 报道双源一致）；假设仅用截止截断日已披露信息（FY2010 10-K filed 2011-02-25 + FY2011 Q1 10-Q filed 2011-04-28）；ITC 2011-07-01 裁决与 7-20 专利出售官宣晚于截断日，不进入情景构造。基期判定：compute_metrics 判『当期亏损、周期正常化不适用、禁止当期数据做 DCF 基期』，base_oe_recommended=null——本案估值链条从基期一步即断，三情景按『负/零 OE 公司』如实构造，不虚构正常化盈利",
+ "price": 3.58,
+ "moat": "none",
+ "moat_note": "五维定性（Phase 3）结论：百年品牌与专利组合仍具残值，但胶片生态网络崩塌、成本优势尽失、数码定价权在苹果/安卓阵营手中、Graphic Communications 面临惠普/佳能/理光绞杀——经济护城河不成立，moat=none（闸门二①直接不过且门槛取 none 无反推 IRR）",
+ "discount_rate": 0.1,
+ "discount_rate_discipline": "r = max(10%, US 10Y 3.18% + 4pct) = max(10%, 7.18%) = 10%，合规（Fed H.15 2011-06-30 官方值，manifest 登记）",
+ "hold_years": 5,
+ "dividend_yield": 0.0,
+ "dividend_yield_frac": 0.0,
+ "dividend_note": "2008 年起停付股息（FY2007 每股 0.50 → 0），TTM DY=0——不收敛下限加数为零是本案结构性事实（非口径选择）",
+ "intrinsic_value_growth": -0.055,
+ "iv_growth_evidence": "基准情景每股内在价值长期增速取持续经营收入趋势：2006-2010 持续经营口径收入 10,568→7,187 五年 CAGR −7.4%，近三年 −8.7%，取 −5.5%（比 CAGR 温和，反映 Graphic Communications 喷墨业务 2011Q1 +4% 的对冲）[E:metrics_EK_2011Q2.json][E:financials_EK_2011Q1.json]；iv_growth 为负使不收敛下限 = 0 + (−5.5%) = −5.5%，远低于 6% 门槛——闸门二②结构性不过",
+ "non_operating_assets_note": "无净现金可加回：现金 1,624M（FY2010 末，Q1'11 已降至 1,300M）< 有息债务（长期 1,195M + 短期借款，Item 6 口径 1,195M 仅长期）且退休金/OPEB 或有义务未足额 funded——净非经营资产为负，全部情景不适用 add-back",
+ "default_probabilities": {
+  "悲观": 0.3,
+  "基准": 0.5,
+  "乐观": 0.2
+ },
+ "probability_note": "概率不偏离系统默认（0.3/0.5/0.2）——但登记 OBS 候选：对资不抵债+OCF 连负+现金四年 −45% 的公司，基准 50% 概率给『不死不活续命路径』仍可能过于慷慨，悲观路径（现金枯竭被迫重组）在 3-5 年窗口的真实概率显著高于 30%；本案不偏离默认是为保持与茅台/苹果案例同构可比，校准问题登记 observations（OBS-2011-06-01 候选）",
+ "scenarios": [
+  {
+   "name": "悲观",
+   "value_per_share": 0.18,
+   "probability": 0.3,
+   "method": "peer_death_analogy",
+   "method_note": "同类死亡案例类比（独立于 DCF）：锚定现价 3.58 × 终局存活比例 5%。死亡路径与柯达同构的先例（均截断日前公开）：宝丽来（即时成像霸主被数码替代 + 高杠杆）2008-12 二次破产后普通股回收≈0-3%；Delphi 2009 重组股东回收≈5%；清算算术佐证：FY2010 末资产变现（流动 3,799×保守回收 + 非流动折价）≈3,410M − 总负债 7,314M = 每股残差 ≈ −14.5（负），即清算情形股权价值为负、有限责任下归零——5% 为同类案例的保守存活上沿，锚定现价而非峰值以避免夸大[E:financials_EK_2011Q1.json][E:metrics_EK_2011Q2.json]",
+   "method_inputs": {
+    "anchor_value_per_share": 3.58,
+    "terminal_ratio": 0.05,
+    "liquidation_residual_per_share_reference": -14.5
+   },
+   "stressed_assumptions": [
+    "balance_sheet_insolvency",
+    "cash_burn_exhaustion",
+    "pension_underfunding",
+    "patent_sale_fails"
+   ],
+   "probability_evidence": "[E:financials_EK_2011Q1.json] 资不抵债 −1,276M 且加深、OCF −525M/Q1（即便季节性）消耗现金 1,500→1,300M、无外部融资新渠道公开披露；1 月 ITC ALJ 初裁不利（公开报道），专利授权收入主叙事存在裁决落空风险；同规模转型失败先例（宝丽来 2001/2008 破产）显示该财务形态下 3-5 年窗口重组概率不可忽略"
+  },
+  {
+   "name": "基准",
+   "value_per_share": 0.5,
+   "probability": 0.5,
+   "method": "normalized_oe_capitalization",
+   "method_note": "正常化 OE 资本化法：全期 10 年净利率均值 −1.28%/中位 −1.09% × 当期收入 7,187M → 正常化净利 −92M/中周期 −78M（compute_metrics 官方输出，基期禁用当期亏损）→ 以 r=10% 永续资本化经营价值 ≈ −920M → 加非经营资产（现金 1,624 − 长期债务 1,195 − 短期借款/退休金或有缺口）后权益理论价值 ≤ 0 → 股权价值趋零，保留 0.5/股为『不出售资产、继续经营』路径下的市场残值（历史同类转型中后期股价带）[E:metrics_EK_2011Q2.json]",
+   "method_inputs": {
+    "normalized_net_income": -92.161,
+    "mid_cycle_net_income": -78.169,
+    "capitalization_rate": 0.1,
+    "shares_m": 268.9
+   },
+   "stressed_assumptions": [
+    "secular_revenue_decline",
+    "no_positive_oe"
+   ],
+   "probability_evidence": "[E:metrics_EK_2011Q2.json] 收入五连降（10,568→7,187，−32%）、十年 6 亏且盈利年靠资产出售（2007 CIG +884M）、员工十年 74,000→18,800（−75%）——『正常化盈利』在可预见窗口不存在正值锚点； Graphic Communications 喷墨 +4% 增长不足以对冲胶片 −双位数萎缩"
+  },
+  {
+   "name": "乐观",
+   "value_per_share": 9.0,
+   "probability": 0.2,
+   "method": "asset_monetization",
+   "method_note": "资产变现多头叙事的『全部兑现』上沿：1,100 项数字成像专利按市场传闻上沿 3,000M 出售（税费折价 10%→2,700M 净得）+ ITC 诉苹果/RIM 赢诉后授权费流现值 ≈1,000M（ALJ 已初裁不利、复核悬而未决，期权价值而非主叙事）+ 现有现金 1,624M − 长期债务 1,195M − 退休金补缺 800M → 股权价值 ≈2,429M ≈ 9.0/股[E:market_snapshot_EK_2011Q2.json][E:manifest.json]",
+   "method_inputs": {
+    "patent_sale_gross_upper": 3000.0,
+    "patent_net_after_tax": 2700.0,
+    "itc_royalty_pv": 1000.0,
+    "cash": 1624.0,
+    "debt": 1195.0,
+    "pension_topup": 800.0,
+    "shares_m": 268.9
+   },
+   "stressed_assumptions": [
+    "patent_sale_max_price",
+    "itc_full_win",
+    "no_further_burn"
+   ],
+   "probability_evidence": "[E:manifest.json] 乐观情景本身即本案 must_trigger 检验的『专利叙事』：多头路径要求三件事同时发生（专利卖到传闻上沿 + ITC 完胜 + 烧钱止血），任一缺角即向基准回落；注意即便全部兑现，9.0/股相对现价 3.58 的期望贡献 0.2×9.0=1.80 仍不足以覆盖现价与基准/悲观的期望拖累"
+  }
+ ]
+}
