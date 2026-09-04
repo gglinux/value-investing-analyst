@@ -1,0 +1,37 @@
+{
+  "workpaper": "phase45_expected_return_601919",
+  "company": "中远海控（原中国远洋） 601919.SH",
+  "replay_date": "2021-07-31",
+  "engine": "scripts/reverse_dcf.py expected-return",
+  "command": "reverse_dcf.py expected-return --price 17.66 --hold-years 5 --scenarios '悲观:2.79:0.3,基准:10.54:0.5,乐观:14.38:0.2' --index-hurdle 0.13 --dividend-yield 0 --moat none --iv-growth 0.0",
+  "six_numbers": {
+    "price": 17.66,
+    "expected_value_per_share_v0": 8.98,
+    "expected_annualized_irr": -0.0646,
+    "bear_case_annualized_irr": -0.2395,
+    "loss_probability": 0.80,
+    "loss_scenarios_avg_drawdown": -0.304
+  },
+  "scenario_irr_table": {
+    "悲观_30pct": {"v0": 2.79, "v_H": 4.49, "total": -0.746, "annualized": -0.239},
+    "基准_50pct": {"v0": 10.54, "v_H": 16.97, "total": -0.039, "annualized": -0.008},
+    "乐观_20pct": {"v0": 14.38, "v_H": 23.16, "total": 0.311, "annualized": 0.056}
+  },
+  "gate_2_detail": {
+    "moat": "none",
+    "expected_irr": -0.0646,
+    "irr_hurdle": "未设定（moat=none 无映射——无护城河公司不给买入结论，valuation-guide 第四步）",
+    "no_convergence_floor": {"value": 0.0, "hurdle": 0.06, "components": "股息率 0% + 内在价值增速 0%", "verdict": "不通过——安全边际再大，回报也全押在『市场哪天承认我对』，价值陷阱的定量特征"},
+    "bear_case_irr": {"value": -0.2395, "hurdle": 0.0, "verdict": "不通过（悲观年化为深度负值）"},
+    "consistency_expected_irr": {"value": -0.0646, "verdict": "自洽校验：与安全边际方向一致（现价高于期望价值 96.7%）"},
+    "gate_2_verdict": "不通过 → 档位最高「观察等价格」"
+  },
+  "gate_1": {
+    "safety_margin_vs_base": -0.676,
+    "safety_margin_vs_expected": "现价 17.66 vs 期望价值 8.98 = 现价高 96.7%",
+    "verdict": "不通过（负安全边际）"
+  },
+  "opportunity_cost": {"index_hurdle": 0.13, "shortfall_vs_index": -0.1946},
+  "implied_growth_unsolvable": "reverse_dcf implied-growth（market-cap 2535147、base-oe 3500、r 10%、tg 2%、10 年）在 -50%~+60% 增速全域无解——现价无法用正常化盈利路径解释（有效搜索域上限 g=8% 时 DCF 仅约 1100 亿 < 2535 亿）。脚本结论：市场定价隐含了其他假设（利润率跃迁=运价永久化、或情绪定价），需在报告中明确讨论",
+  "narrative": "以中周期 OE 35 亿为基期的任何合法路径都到不了现价：期望年化 -6.46%，唯一正回报的乐观情景（要求行业历史从未实现的盈利结构）年化也只有 5.6%，跑输指数门槛 7.4 个百分点。买入了什么？买入的是『运价永久维持 2021 水平』——而这门生意 2011-2020 十年扣非累计 -279 亿的历史对此给出的基率是零"
+}

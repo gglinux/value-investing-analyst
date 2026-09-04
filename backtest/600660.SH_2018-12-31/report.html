@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8"><title>福耀玻璃 600660 历史回放报告 2018-12-31（第一批案例6）</title>
+<script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+<style>
+body{font-family:'PingFang SC','Microsoft YaHei',sans-serif;max-width:980px;margin:0 auto;padding:24px;color:#2c3e50;line-height:1.75;background:#fafafa}
+h1{font-size:22px;border-bottom:3px solid #1a3a5c;padding-bottom:8px} h2{font-size:18px;color:#1a3a5c;margin-top:32px;border-left:4px solid #1a3a5c;padding-left:10px}
+h3{font-size:15.5px;color:#2c3e50;margin-top:18px}
+.card{background:#fff;border:1px solid #e0e0e0;border-radius:10px;padding:18px 22px;margin:14px 0;box-shadow:0 1px 3px rgba(0,0,0,.06)}
+.verdict{background:linear-gradient(135deg,#fff8e1,#fff);border:2px solid #f39c12}
+.gate-fail{color:#c0392b;font-weight:700} .gate-pass{color:#27ae60;font-weight:700}
+table{border-collapse:collapse;width:100%;margin:10px 0;background:#fff}
+th,td{border:1px solid #d5d8dc;padding:7px 10px;font-size:14px;text-align:left}
+th{background:#e8eef4}
+.warnbox{background:#fdecea;border-left:4px solid #c0392b;padding:10px 14px;border-radius:4px;margin:10px 0}
+.okbox{background:#e8f6f3;border-left:4px solid #27ae60;padding:10px 14px;border-radius:4px;margin:10px 0}
+.chart{width:100%;height:300px}
+.small{font-size:12.5px;color:#7f8c8d}
+.tag{display:inline-block;background:#1a3a5c;color:#fff;border-radius:4px;padding:1px 8px;font-size:12px;margin-right:6px}
+.verification-strength{background:#f6f8fa;border:1px dashed #95a5a6;border-radius:8px;padding:10px 14px;font-size:13px;margin-top:12px}
+.vs-meaning{color:#7f8c8d;font-size:12px}
+</style>
+</head>
+<body>
+
+<h1>福耀玻璃 600660.SH / 3606.HK — 历史回放分析报告</h1>
+<p class="small">backtest/PROMPT.md 第一批 · 案例 6（<b>排雷负样本</b>：检验"财务健康的重资产公司会不会被误排雷"）｜ 回放时点 <b>2018-12-31</b>（最后交易日 2018-12-28，元旦休市）｜ 生成于 2026-09-04</p>
+
+<div class="warnbox"><b>本报告仅使用 2018-12-31 及之前的公开信息。</b>信息集止于 2017 年报（2018-03-17 披露）+ 2018 三季报（2018-10-26 披露）；12 月车市数据（2019-01-14 发布）与 <b>SAM 收购公告（2019-01-15）均晚于截断日</b>，已全部隔离，仅用于回测对照（diff.md）。2018 年报死线问题以 manifest <code>official_filing_missing</code>（回放防前视设计）处理。执行者已知事后答案的污染自陈见 <code>meta.json / contamination_disclosure</code>。</div>
+
+<div class="card verdict">
+<h2 style="margin-top:0">决策卡（一页看懂）</h2>
+<p>结论档位：<b style="font-size:20px">观察等价格</b>（五档制：排除／太难放弃／观察等价格／小仓位试探／核心买入。排雷全过、生意优质，但闸门一、闸门二均未过，档位上限即"观察等价格"——<b>财务真实≠随时可买</b>，这正是负样本要验证的判别力）</p>
+<p>现价 <span class="vnum" data-src="market_snapshot_600660_2018.json" data-path="price_a" data-fmt="num2">22.78</span> 元（A 股，CSMAR 不复权+东财双源）｜ 市值 <span class="vnum" data-src="market_snapshot_600660_2018.json" data-path="market_cap.value_cny_million" data-fmt="num0">56,630</span> 百万元（A/H 分计价）｜ PE-TTM <span class="vnum" data-src="market_snapshot_600660_2018.json" data-path="multiples.pe_ttm" data-fmt="num2">13.30</span>x（剔一次性 <span class="vnum" data-src="market_snapshot_600660_2018.json" data-path="multiples.pe_ttm_adjusted" data-fmt="num2">16.10</span>x）｜ PB <span class="vnum" data-src="market_snapshot_600660_2018.json" data-path="multiples.pb" data-fmt="num2">2.75</span>x ｜ 股息率 <span class="vnum" data-src="market_snapshot_600660_2018.json" data-path="multiples.dividend_yield" data-fmt="pct1">3.3%</span></p>
+<p><span class="gate-pass">Phase 0 排雷：全部通过</span>——硬否决 0/6、红旗 0/20、中国特色清单 0/4（造假类告警 must_not_trigger 逐项复核 ✓）。V4 存贷双高双门槛一单项未过但<b>形态与康美相反</b>（现金 85.95 亿 &lt; 有息负债 104.79 亿），R3/R9 两项形态相似均有强反证且如实登记不隐藏 [E:workpapers/phase0_screening_600660.json]。</p>
+<p>闸门一（安全边际）：基准内在价值 <span class="vnum" data-src="scenarios_600660.json" data-path="scenarios.1.value_per_share" data-fmt="num2">19.66</span> 元 → MoS = <span class="vnum gate-fail" data-src="scenario_audit_600660.json" data-path="diagnostics.margin_of_safety_vs_base" data-fmt="pct1">-15.9%</span> <span class="gate-fail">✗ 未达标（现价高于基准价值 15.9%）</span></p>
+<p>闸门二（期望回报，护城河档位 narrow）：① 期望年化 IRR <span class="vnum gate-fail" data-src="workpapers/phase45_expected_return_600660.json" data-path="expected_annualized_irr" data-fmt="pct1">6.5%</span>（自洽性校验，与闸门一同源）<span class="gate-fail">✗</span>；② 价值不收敛下限 = 股息率 3.3% + 内在价值增速 2.5% = <span class="gate-fail">5.8% &lt; 6.0% ✗</span>（不收敛下限低于门槛：安全边际再大，回报也全押在"市场哪天承认我对"）；③ 悲观情景年化 <span class="gate-pass">2.2% &gt; 0% ✓</span>（悲观值由 <b>pb_trough 独立方法</b>推导：谷底 PB 1.8 × 压力 BPS 8.8 = <span class="vnum" data-src="scenarios_600660.json" data-path="scenarios.0.value_per_share" data-fmt="num2">15.80</span> 元，谷底证据为 2012-2016 六次熊市实证 1.66-2.46 倍）。亏损概率 <span class="vnum gate-pass" data-src="workpapers/phase45_expected_return_600660.json" data-path="loss_probability" data-fmt="pct1">0.0%</span>——下行有底但上行不够</p>
+<p><b>关键变量一句话</b>：① 车市周期（2018 年 1-11 月产量 -2.6%、11 月单月 -13.9% 降幅扩大）——当前判断：基准情景已含 2019 单年负增长，连续两年负增长通向悲观情景；② 单车玻璃价值量升级（550-650 元/车，HUD/天幕渗透）——当前判断：升级引擎独立于车市 β，是最可信的长期变量；③ 创始人交接班（曹德旺 72 岁）——当前判断：资本配置十年记录干净，但治理安排未制度化。</p>
+<p><b>证伪条件（最关键两条）</b>：① 若股价回落至 16-17 元以下（悲观情景附近，股息率 4.5%+）——安全边际补足，档位复核上调；② 若 2019-2020 车市连续负增长但福耀净利率守住 15%+ 且美国工厂爬坡完成——量价分解中枢上修，基准情景重估。</p>
+<p><b>下次复查</b>：2019 年 1 月中汽协 12 月车市数据（截断日不可见）；2019-03 年报披露核对分红与扣非；此后每季跟踪月度车市产量与美国工厂利润率。</p>
+<div class="verification-strength" data-verification-strength="1"
+     data-grade="A"
+     data-reconciliation-coverage="1.0000"
+     data-crosscheck-level="full"
+     data-window-years="10"
+     data-covers-full-cycle="true">
+  <b>核验强度 A</b>：三表勾稽覆盖率 100%（10/10 年） ｜ 命门科目原文登记 full（官方原文年份 2015/2016/2017，<u>未经原文机器逐字比对</u>） ｜ 数据窗口 10 年，覆盖全球金融危机、A股股灾与去杠杆（full）<br>
+  <span class="vs-meaning">三项均达标：结论建立在完整勾稽 + 官方原文登记 + 覆盖完整周期的数据上</span>
+</div>
+<p style="margin-top:12px"><b>三人结论对照（不合成分数）</b>：巴菲特——观察等价格（好公司不便宜的价格，等悲观情景价格让买入成为算术）；段永平——观察等价格（生意模式+本分认可，只赚"三份钱"的那次机会）；李录——观察等价格（能力圈内+财务干净+无安全边际=纪律的机械推论）。<b>三大投资论点</b>：① 这是门十年 OCF/NI <span class="vnum" data-src="financials_600660_2018Q3.json" data-path="phase0_arithmetic.ocf_ni_ratio" data-fmt="num2">1.41</span>、累计分红 <span class="vnum" data-src="metrics_600660.json" data-path="capital_allocation.cum_dividends" data-fmt="num0">11,772</span> 百万的真实印钞机生意（全球市占率 1/3，毛利率 36.03% vs 同行 25-33%）；② 现价高于基准与期望价值（-15.9%/-16.5%），定价的是"优质公司的正常估值"而非恐慌；③ 期望年化 6.5% 跑输指数门槛 13% 约 6.5 个百分点——缺的不是好公司是安全边际。<b>三大风险</b>：① 车市连续两年负增长（悲观情景核心压力：盈利 -20% + PB 压缩 35%）；② 分红幻觉警报（FCF 覆盖分红 0.58x）——扩张期资本开支由融资支撑，分红可持续性依赖 OCF 而非 FCF；③ 创始人交接班未完成+中美贸易摩擦下的海外产能地缘风险。<b>一句话生意</b>：把沙子做成车厂离不开的玻璃，靠浮法自供+规模+认证锁定收取"成本领先费"——客户年降每年砍价、产品升级每年加价、净利率十年稳在 15-21%。<b>信息局限声明</b>：① 2018 全年车市数据未披露（截断日 12-31），车市信息止于 1-11 月+中汽协全年预测 -3%；② 竞对（旭硝子/圣戈班/板硝子）未建同口径财务底稿，五维对照降级为年报行业数据+毛利率比较；③ 2008/2010/2012/2014 年报为 CAS 口径转录、2016-2017 部分字段 IFRS 口径（已注明）；④ 2018Q3 持有待售资产估值未逐项核验。普通投资者相对机构的信息差主要在：月度车市上险数与库存系数（机构可从中保协渠道交叉验证）、美国工厂爬坡的季度利润率细节。</p>
+</div>
+
+<h2>1. 投资摘要</h2>
+<div class="card">
+<p>福耀玻璃在 2018-12-31 是一道<b>反向题</b>：它财务真实、分红连续、护城河清晰（Phase 3 四源三缺一），是教科书级的优质制造企业——但它也正处于"市场已经承认它好"的阶段：PB 2.75 倍处历史中高位（六次熊市谷底实证 1.66-2.46 倍），PE 剔一次性 16.1 倍，股息率仅 3.3%，而车市 28 年来首次负增长正在展开。引擎对本案最核心的机器证据是<b>排雷全过 + 双闸门全不过</b>的组合：Phase 0 硬否决 0/6、红旗 0/20、中国特色清单 0/4，两项形态相似项（R3 毛利率高于同行、R9 债务短期化）均有强反证且如实登记 [E:workpapers/phase0_screening_600660.json]；同时闸门一安全边际 -15.9%、闸门二不收敛下限 5.8% 低于 6.0% 门槛 [E:workpapers/phase45_expected_return_600660.json]。十年画像：归母累计 <span class="vnum" data-src="financials_600660_2018Q3.json" data-path="phase0_arithmetic.cum_ni_2008_2017" data-fmt="num0">19,225</span> 百万、OCF 累计 <span class="vnum" data-src="financials_600660_2018Q3.json" data-path="phase0_arithmetic.cum_ocf_2008_2017" data-fmt="num0">27,070</span> 百万（OCF/NI 141%）、扣非/归母差仅 1.5%——利润几乎全部来自主业 [E:financials_600660_2018Q3.json#phase0_arithmetic]。三情景（悲观 pb_trough 15.8／基准两段式 OE DCF 19.66／乐观提速 24.89）全部低于现价 22.78——<b>市场定价的是"优质公司可以不便宜"，本体系回答"优质不是安全边际"</b>。结论：观察等价格，等悲观情景价格或车市见底信号。</p>
+</div>
+
+<h2>2. 公司与生意（商业模式）</h2>
+<div class="card">
+<p><b>先给结论：这是一门认证锁定的配套生意——定点即锁定车型生命周期，量价双引擎清晰可测。</b>福耀经营汽车玻璃（全球市占率约 1/3，国内 OEM 市占率更高），商业模式要点：① <b>量×价收入结构</b>：2017 年收入 187.13 亿 = 销量 112.64 百万㎡ × 均价 158.6 元/㎡；OEM 占绝对主体（96.81 百万㎡），售后市场 15.83 百万㎡ 毛利率更高 [E:business_drivers_600660.json]；② <b>成本领先三支柱</b>：浮法自供（原料-玻璃一体化）、全球产能规模、国内物流半径——毛利率 36.03% 持续高于同行 25-33% 区间 [E:filings/fy_AR2017.txt#L1352][E:workpapers/phase3_qualitative_600660.json]；③ <b>客户绑定</b>：前五大客户仅占收入 16.04%、最大客户 4.78%、合作关系超 20 年——客户分散但每家都深度绑定（定点认证制）[E:filings/fy_AR2017.txt#L1045-L1046]；④ <b>单车价值量升级</b>：单车玻璃价值 550-650 元/车，HUD/天幕/镀膜/包边总成持续加价——升级是产品结构问题，不依赖车市增速 [E:business_drivers_600660.json]。与康美的镜像对照：康美的"毛利率高于同行"来自账面（存货造假），福耀的毛利率优势有产能布局、浮法自供比例、客户结构三重业务解释且可从现金流量表交叉验证（OCF/NI 141%）[E:workpapers/phase0_screening_600660.json][E:workpapers/phase3_qualitative_600660.json]。</p>
+</div>
+
+<h2>3. 定量画像（2008-2017 十年）</h2>
+<div class="card">
+<div id="c1" class="chart"></div>
+<div id="c2" class="chart"></div>
+<div id="c3" class="chart"></div>
+<p><b>这张图说明什么（归母净利）</b>：十年从 2.46 亿到 31.49 亿（CAGR 32.7%），仅 2008 一年低于 5 亿（金融危机 +71.4% 恶化年）且无亏损年——与中远海控"三次巨亏"的周期形态本质不同；2009 年起连续九年正增长 [E:metrics_600660.json#chart_series]。</p>
+<p><b>这张图说明什么（净利率）</b>：净利率从 2008 的 4.3%（危机极端值）修复到 14.9-21.0% 区间并稳住十年，2018Q1-Q3 达 16.83%（剔一次性后约 14.6%）——引擎判定"周期波动正常化成立"（秩相关 +0.30、穿越均值 3 次），均值 16.30% 可作周期中枢 [E:metrics_600660.json#normalization]。</p>
+<p><b>这张图说明什么（自由现金流）</b>：FCF 十年累计 <span class="vnum" data-src="financials_600660_2018Q3.json" data-path="phase0_arithmetic.fcf_cum_2008_2017" data-fmt="num0">6,876</span> 百万（FCF/NI 35.8%），仅 2015 年为负（-2.42 亿）——恰是 H 股增发 70 亿+美国工厂建设高峰年，资本去向可追溯 [E:metrics_600660.json#chart_series][E:financials_600660_2018Q3.json#spike_notes.2015.total_assets]。</p>
+<p><b>引擎 5 条警报逐条正面回应（本案核心张力，详见 workpapers/phase2 笔记）</b>：① <b>分红幻觉警报</b>（累计分红 117.72 亿 > 累计 FCF 68.76 亿，覆盖 0.58x）——正确解读：分红由 OCF 支撑（270.70 亿），扩张由增发+借款支撑（2015 年 H 股约 70 亿 [E:filings/fy_AR2015.txt]），"分红靠 OCFF、扩张靠融资"是结构清晰的重资产扩张期特征，非庞氏；但警报的质询成立：<b>扩张期分红可持续性依赖 OCF 不依赖 FCF，若美国工厂投产后 ROIC 不及预期，分红将失去扩张叙事的掩护</b>；② 利润含金量警报（近 5 年 FCF/NI&lt;0.6）——同上归因于扩张 capex（capex/NI 1.05）；③ 稀释警报（总量 CAGR 14.1% vs 每股 11.3%）——2015 增发一次性的摊薄，非持续稀释；④ 利润率形状=周期波动（正常化成立）；⑤ OE 收益率含金量警报（5.6%/回本 18 年、cash_backed=false）——OE 收益率不可落袋部分即扩张 capex，与美国工厂 ROI 转正证据对冲 [E:metrics_600660.json#alerts][E:filings/fy_AR2017.txt#L1686-L1690]。</p>
+</div>
+
+<h2>4. 护城河</h2>
+<div class="card">
+<p><b>评级：强护城河（四源三缺一），趋势稳定——narrow 偏强（wide_narrow_borderline），因年降机制使定价权不完整。</b>① 成本优势（强）：毛利率 36.03% vs 同行 25-33%，浮法自供+规模+物流半径三重来源，且十年稳定不收窄 [E:filings/fy_AR2017.txt#L1352][E:workpapers/phase3_qualitative_600660.json]；② 客户绑定（强）：定点认证制锁定车型生命周期 5-8 年，前五客户 16.04%、最大客户 4.78%、合作 20 年+ [E:filings/fy_AR2017.txt#L1045-L1046]；③ 有效规模（强）：全球产能布局下新进入者无法达到盈亏平衡规模——圣戈班 1999 年退出汽车玻璃 OEM 即为历史注脚 [E:workpapers/phase3_qualitative_600660.json]；④ 无形资产（部分）：品牌在售后市场有溢价，OEM 端是认证壁垒而非品牌溢价。<b>缺失项</b>：网络效应（制造业无此形态）。<b>定价权三测试 2.5/3</b>：结构性提价通过（产品升级 ASP 四年 +3.8%）、成本转嫁部分通过（浮法涨价可传导但年降机制吞噬部分）、毛利率稳定性通过（十年 15-21% 净利率带）；<b>不过 wide 的原因</b>：OEM 年降机制+车市 β 使客户始终保有议价杠杆，与可口可乐对灌装厂的定价权有质的差距 [E:workpapers/phase3_qualitative_600660.json]。定量佐证：ROIC 五年均值 <span class="vnum" data-src="metrics_600660.json" data-path="summary.roic_avg_5y" data-fmt="pct1">18.9%</span>（区间 16.4%-20.7%）持续高于 WACC——存在护城河的定量定义满足 [E:metrics_600660.json#summary]。</p>
+</div>
+
+<h2>5. 增长</h2>
+<div class="card">
+<p><b>结论：量价双引擎——量的中枢 +6-8%（全球车市 3-4% × 市占率提升），价的中枢 +4-5%（产品升级）；基准情景取 +6.5% 名义增长，低于量价分解中枢的下沿乘积。</b>收入 2013-2017 从 102.5 亿到 187.1 亿（CAGR 16.3%），分解：量（销量 2014-2017 从 90.91 到 112.64 百万㎡，CAGR +7.4%）+ 价（ASP 136.8→158.6 元/㎡，CAGR +3.8%）[E:business_drivers_600660.json]。增长的三个来源与可持续性：① 国内份额提升（存量车厂份额向龙头集中，国内市占率已 60%+ 但海外仅 ~10%）；② 海外扩张（美国工厂 7.68 亿美元投资 4 年转正至 2.2 亿/年盈利 [E:filings/fy_AR2017.txt#L1686-L1690]——执行力的实证而非规划）；③ 单车价值量升级（HUD/天幕/镀膜渗透早期，独立于车市 β）。<b>基率检验</b>：≥10% 的增长假设需要"欧洲复制美国"的例外证据——基准情景因此不假设欧洲落地（乐观情景内容），量取 2019 单年下行后回归 +3%/年、价 +3.5%/年 [E:workpapers/phase3_qualitative_600660.json#growth]。2018 年 1-11 月国内车市 -2.6% 且 11 月单月 -13.9% 降幅扩大 [E:manifest.json#industry_context]——短周期逆风不改长期量价结构，但 2019 单年负增长已计入基准。</p>
+</div>
+
+<h2>6. 管理层与文化</h2>
+<div class="card">
+<p><b>结论：资本配置十年正面（8.5/10）；创始人人格与文化深度绑定；负面清单两条已登记；交接班是最大的未定项。</b>资本配置：① 十年 capex 201.94 亿全部投向主业（浮法-成型-总成一体化+全球产能），无跨界并购、无多元化——对比康美的 300 亿货币资金去向不明，福耀每一笔大额资本开支都有工厂可看 [E:financials_600660_2018Q3.json][E:metrics_600660.json#capital_allocation]；② 美国工厂是十年最大单笔决策，4 年从建设到 2.2 亿/年盈利——重资产扩张的成功实证；③ 分红连续十年（2008 危机年不断），2017 年度每 10 股派 7.5 元合计 18.81 亿 [E:filings/fy_AR2017.txt#L37][E:filings/fy_AR2017.txt#L836]。<b>negative_watch 两条</b>：① 河仁基金会捐赠（股票捐赠的税务与治理安排曾受质疑，2011 年）——非现金流出但对治理透明度有边际影响；② 汇兑损益不对冲（2017 年报 IFRS 注释）——财务费用波动大，管理层视汇率敞口为经营性而非投机性 [E:workpapers/phase3_qualitative_600660.json#management]。<b>交接班</b>：曹德旺 72 岁（2018 年时点），其子曹晖曾任总裁后出走创业，2018 年内收购福建三锋（体表资产回归）为回归埋伏笔但治理安排未制度化——创始人依赖是真实风险，基率上创始人家族企业传承是高失败率事件 [E:workpapers/phase3_qualitative_600660.json]。</p>
+</div>
+
+<h2>7. 财务质量与风险</h2>
+<div class="card">
+<p><b>结论：本案作为负样本的核心价值——"财务健康的重资产公司"长什么样，与康美的每一个造假形态逐项相反。</b>① 利润含金量：OCF/NI 十年 141%（真金白银流入大于账面利润）、扣非/归母十年累计差 1.5%（利润来自主业而非营业外）[E:financials_600660_2018Q3.json#phase0_arithmetic]——康美：OCF 与利润长期背离、存货黑洞；② 存贷形态：2018Q3 货币资金 85.95 亿 &lt; 有息负债 104.79 亿（净债务 18.84 亿）——<b>与康美"存贷双高"形态相反</b>，不存在"高息借款的同时高现金趴账"的利息逻辑矛盾；短债占 80% 但现金全额覆盖一年内到期+主动选择短债滚动（债务成本低于长债），R9 红旗强反证成立 [E:workpapers/phase0_screening_600660.json][E:filings/fy_Q3_2018.txt]；③ 审计：普华永道十年标准无保留 [E:filings/fy_AR2017.txt#L20]——康美最后是"保留意见"；④ 一次性损益透明：2018 前三季归母 32.62 亿中含出售北京福通 51% 股权收益 4.51 亿+汇兑收益 3.04 亿，两项均在三季报注释明示，PE 调整口径 16.1 倍已剔除 [E:filings/fy_Q3_2018.txt#L107][E:filings/fy_Q3_2018.txt#L246][E:market_snapshot_600660_2018.json#multiples]；⑤ 2009 年扣非&gt;归母的反向背离有真实业务解释（政府补助收益的如实披露）——造假公司不会披露"利润比主业差" [E:financials_600660_2018Q3.json#spike_notes]。<b>排雷结果（Phase 0）</b>：六项一票否决全不命中；红旗 0/20 命中（R3"毛利率高于同行"与 R9"债务短期化"两项形态相似经四支柱/强反证复核后不计入且不隐藏）；中国特色清单 0/4——本案方向与康美案完全相反（股价年跌 45% 不属热点高位预警）[E:workpapers/phase0_screening_600660.json]。<b>风险清单</b>：车市下行传导（收入端）、扩产+增发后的 ROIC 摊薄（资本端）、汇兑波动（利润表端）、交接班（治理端）。</p>
+</div>
+
+<h2>8. 估值（Phase 4）</h2>
+<div class="card">
+<p><b>折现率纪律</b>：中国 10Y 国债 3.23%（2018-12-28）[E:manifest.json#cn_10y] → r = max(10%, 3.23%+4pct) = <b>10.0%</b>（纪律下限顶格，因强护城河+财务质量优不再上调）。<b>基期正常化</b>：引擎 normalization 判定"周期波动正常化成立"，基期 OE = 十年均值净利率 16.30% × 2017 收入 = <span class="vnum" data-src="scenarios_600660.json" data-path="base_oe.value" data-fmt="num0">3,050</span> 百万——机械中立口径，避免用 2018 前三季扣非年化 37.5 亿（含车市 Q4 下行未落地风险）的乐观偏差；2018 内生口径 34-36 亿登记为乐观情景基期下界 [E:metrics_600660.json#normalization][E:scenarios_600660.json#base_oe]。</p>
+<h3>8.1 交叉验证</h3>
+<p>PB 分位：现值 2.75 倍处历史中高位——六次熊市谷底实证 1.66-2.46 倍（2012-01 恐慌 2.46／2012-09 2.15／2013-06 钱荒 1.92／2014-01 2.09／2015-08 股灾 1.66／2016-01 熔断 1.91），增发后高 BPS 状态可比样本为 1.66/1.91 [E:scenarios_600660.json#method_inputs.trough_pb_evidence]。与 2018 年末最相关的基率：<b>增发后状态下 PB 谷底距现价约 35%</b>——车市若深度下行，估值向 1.8 倍压缩有实证路径，无实证依据的是"优质公司永远不回谷底"。</p>
+<h3>8.2 三情景（check_scenarios 全部通过，悲观/基准离散度 0.80——贴近归档中位数 0.79）</h3>
+<table>
+<tr><th>情景</th><th>每股价值</th><th>方法（悲观独立于 DCF）</th><th>概率</th></tr>
+<tr><td>悲观</td><td><span class="vnum" data-src="scenarios_600660.json" data-path="scenarios.0.value_per_share" data-fmt="num2">15.80</span> 元</td><td><b>pb_trough</b>（独立白名单方法，S2b 机器重算 15.84 偏差 0.25%）：谷底 PB 1.8（2015 股灾 1.66/2016 熔断 1.91 中值偏下，增发后可比状态）× 压力 BPS 8.8（2018Q3 BPS 8.21 + 两年压力年留存）；压力项：车市两年 -5%~-8%、净利率 13.5%、盈利 -20%（2011 年购置税退出实证 -15.4% 外推）、分红维持 0.75 元/股</td><td>0.3</td></tr>
+<tr><td>基准</td><td><span class="vnum" data-src="scenarios_600660.json" data-path="scenarios.1.value_per_share" data-fmt="num2">19.66</span> 元</td><td>两段式 DCF（dcf_oe_fade）：基期 OE 30.5 亿 → 5 年名义增长 6.5%（量 +3%/价 +3.5%，低于量价分解中枢）→ 永续 2.5%；r=10%。PV₁ <span class="vnum" data-src="scenarios_600660.json" data-path="scenarios.1.method_inputs.pv_stage1_mn" data-fmt="num0">13,855</span> + TV 折回 <span class="vnum" data-src="scenarios_600660.json" data-path="scenarios.1.method_inputs.pv_tv_mn" data-fmt="num0">35,461</span> = <span class="vnum" data-src="scenarios_600660.json" data-path="scenarios.1.method_inputs.equity_value_mn" data-fmt="num0">49,316</span> 百万</td><td>0.5</td></tr>
+<tr><td>乐观</td><td><span class="vnum" data-src="scenarios_600660.json" data-path="scenarios.2.value_per_share" data-fmt="num2">24.89</span> 元</td><td>DCF 提速（dcf_oe_upside）：基期 OE 33 亿（2018 内生口径下界）→ 5 年 9%（量 +5%：欧洲落地+美国满产+车市复苏；价 +4%：HUD/天幕加速）→ 永续 3%；r=10%</td><td>0.2</td></tr>
+</table>
+<p class="small">安全边际（vs 基准）<span class="vnum" data-src="scenario_audit_600660.json" data-path="diagnostics.margin_of_safety_vs_base" data-fmt="pct1">-15.9%</span>；悲观/现价 0.69。期望每股价值 = 0.3×15.8+0.5×19.66+0.2×24.89 = <span class="vnum" data-src="workpapers/phase45_expected_return_600660.json" data-path="expected_value_per_share" data-fmt="num2">19.55</span> 元 vs 现价 22.78 元。</p>
+<h3>8.3 反向 DCF：市场定价了什么</h3>
+<p>现价 22.78 高于乐观情景 24.89 的 91.5%——市场没有定价"一切顺利"（那只需 24.89），定价的是"优质公司值得溢价"。以基准 OE 30.5 亿反解：现价 566.3 亿市值隐含 5 年增长约 8.5-9%（介于基准 6.5% 与乐观 9% 之间偏乐观端）——即市场把"产品升级+海外扩张"的乐观假设当作中性预期。本报告的分歧不在假设真假（美国爬坡与升级引擎都是真的），在<b>为真实假设支付的价格</b>：9% 增长的乐观情景也只支撑 24.89 元，其期望回报 12.0% 仍低于机会成本 13%——市场为"确定性溢价"多付的部分，正是本体系所说的"无安全边际" [E:workpapers/phase45_expected_return_600660.json]。</p>
+</div>
+
+<h2>9. 关键判断（Phase 4.5）</h2>
+<div class="card">
+<h3>9.1 关键变量表（既重要又可知）</h3>
+<table>
+<tr><th>变量</th><th>当前判断</th><th>依据</th><th>为什么可知</th><th>观测指标与证伪线</th></tr>
+<tr><td>车市周期深度</td><td>2019 单年负增长为基准假设；连续两年负增长通向悲观情景</td><td>2018 年 1-11 月产量 -2.6%、11 月 -13.9% 降幅扩大；购置税退出效应 2011 年实证 [E:manifest.json#industry_context]</td><td>月度产量/上险数公开高频</td><td>月度产量同比转正 = 基准确认；连续两年 &lt;-5% = 悲观路径</td></tr>
+<tr><td>单车价值量升级</td><td>可信且独立于车市 β（ASP 四年 CAGR +3.8%）</td><td>HUD/天幕/镀膜/包边总成渗透早期 [E:business_drivers_600660.json]</td><td>新车型配置表+定点公告可跟踪</td><td>ASP 年增速 &lt;2% 连续两年 = 升级引擎证伪</td></tr>
+<tr><td>美国工厂利润率爬坡</td><td>已转正（2.2 亿/年），爬坡至满产是乐观情景的关键一环</td><td>7.68 亿美元投资 4 年转正 [E:filings/fy_AR2017.txt#L1686-L1690]</td><td>分区域利润年报/半年报披露</td><td>北美利润率连续两年停滞 = 海外复制证伪</td></tr>
+</table>
+<h3>9.2 变异认知测试（三问）</h3>
+<p><b>市场为什么给这个价？</b>主流叙事："全球玻璃龙头+产品升级+美国样板复制=确定性成长，值得确定性溢价"；一致预期的做法是把 16.1 倍 PE 视为"合理不便宜"。第一量化锚是价格本身（A 级）：PB 2.75 处历史中高位、隐含增长介于基准与乐观之间。<b>我方与市场的分歧不在事实在价格</b>：所有乐观假设都是真的，但 22.78 的价格已经把它们全部定价——确定性溢价（市场愿意为"不意外"支付）在 10% 折现纪律下无法通过任何一道闸门。</p>
+<p><b>我们与市场的具体分歧？</b>我方基准 19.66 元 vs 现价 22.78 元（-15.9%）；分歧的参数化：市场隐含 5 年增长 8.5-9%，我方基准 6.5%——分歧集中在"欧洲复制是否已计入预期"与"2019 下行深度"两个变量，量价引擎与执行力双方无分歧。</p>
+<p><b>认知优势来自哪里？</b>来自价格锚与基率纪律（否定性认知：知道市场为"优质溢价"付费超过了保守估值能支持的水平），不来自对车市时点的预测（肯定性认知为零）。否定性认知支持"等价格"，不支持"看空公司"——本案与康美案的本质区别：<b>拒绝康美是拒绝它的报表，拒绝福耀是拒绝它的价格</b>。</p>
+<h3>9.3 双重机会成本对照</h3>
+<p>① 指数门槛 13%（A 股案例统一口径）：期望年化 IRR <span class="vnum" data-src="workpapers/phase45_expected_return_600660.json" data-path="expected_annualized_irr" data-fmt="pct1">6.5%</span>，跑输 <span class="vnum gate-fail" data-src="workpapers/phase45_expected_return_600660.json" data-path="excess_vs_index" data-fmt="pct1">-6.5%</span> 个百分点 <span class="gate-fail">✗ 机会成本不划算</span>；即便乐观情景兑现也仅 12.0%，仍低于门槛；② 用户持仓：回放模式无持仓信息，跳过。亏损概率 <span class="vnum gate-pass" data-src="workpapers/phase45_expected_return_600660.json" data-path="loss_probability" data-fmt="pct1">0.0%</span>——三情景 5 年期末价值全部高于现价按折现率的增值路径下限，下行有底（分红托底+谷底 PB 实证），但"不下亏"不等于"值得买"：不收敛下限 5.8%&lt;6.0% 的定量含义是<b>回报不依赖安全边际的兑现，而依赖市场最终承认价值</b>——这是价值陷阱的定量特征，只是本案的"价值"是真实的。</p>
+</div>
+
+<h2>10. 投委会评审</h2>
+<div class="card">
+<p>三份独立评估（分离生成协议，各自仅以 Phase 0-4 底稿为输入）全文见 workpapers/persona_巴菲特.md、persona_段永平.md、persona_李录.md。以下为核心摘要与分歧。</p>
+<table>
+<tr><th>大师</th><th>结论</th><th>体系路径</th><th>核心论据</th></tr>
+<tr><td>巴菲特</td><td><b>观察等价格</b></td><td>质量-价格边际（"我买过 15 倍的可口可乐，但那是定价权生意"）</td><td>收费桥近似但年降机制使牙齿不锋利；美国工厂是"有效规模壁垒本身"不是船；22.78 无恐慌无误解，等 13-15 元让买入成为算术 [E:workpapers/persona_巴菲特.md]</td></tr>
+<tr><td>段永平</td><td><b>观察等价格</b></td><td>商业模式×文化：Stop Doing List</td><td>认证锁定+浮法自供的差异化生意；曹德旺本分（不讲故事不蹭热点没套现）；"22.78 买它赚 6-7%，15.8 买它赚三份钱——懒人只赚后面那种" [E:workpapers/persona_段永平.md]</td></tr>
+<tr><td>李录</td><td><b>观察等价格</b></td><td>能力圈+财务真实+安全边际三要素</td><td>前两项全过（三句话讲清+报表可信），纯价格缺口；观察是有内容的：16-17 元以下或车市见底+爬坡确认双触发 [E:workpapers/persona_李录.md]</td></tr>
+</table>
+<p><b>分歧对照</b>（5 个关键问题，详见 persona_divergence_redteam.md）：① 十年后经济形态：三人一致"可预测"但约束条件不同；② FCF 覆盖分红 0.58x 定性：巴菲特"结构清晰非幻觉"、段永平"capex 买到好资产"、李录"要求 ROIC 逐年复核"；③ 22.78 隐含什么：巴菲特"正常估值"、段永平"为一切顺利付钱"、李录"部分悲观非充分悲观"；④ 车市下行：巴菲特"单年≠永久受损"、李录"连续两年通向悲观"；⑤ 触发价位：13-15 / 不设价只等 / 16-17+双触发。<b>共识点</b>：财务真实性无瑕疵、生意优质 narrow 偏强、现价无安全边际——"这个阶段的钱属于持有者不属于买入者"。<b>采纳裁决</b>：三人同档但推理路径实质不同（触发价位与容忍度互异），与双闸门机器裁决一致（闸门二不过档位上限即观察等价格），置信度中高。</p>
+<p><b>红队输出</b>：① 反演质询——要在现价拿 13%+ 需要"比乐观更乐观"（估值扩张承担剩余回报），结论成立；② 心理误判自检——本案最大风险是<b>回放先验的反向作用</b>（先验"不排雷"可能放松估值苛刻度），检查结果：折现率顶格取纪律下限、悲观 PB 取六次实证中值偏下、基准 g 低于量价中枢下沿，算术诚实；同时警惕"不买结论与市场情绪同向"（车市+A 股双熊）——但 PB 2.75 非情绪性低估，"无安全边际"是算术不是情绪；③ 最强多头逻辑 steelman（复利机器论：α 确实存在+好公司等不到悲观价格+精密铸件类比）——回答：六年六次谷底基率证伪"等不到"、同 PE 不同质证伪类比、乐观情景 12.0% 仍低于 13% 门槛，多头逻辑只把乐观概率从 20% 抬到约 25%（期望 IRR 约 7.3%），档位裁决不变；④ Pre-mortem——12 个月后股价 +30% 的最可能路径是估值扩张为主盈利为辅，是时机错误不是价值判断错误；登记学习点：r=10% 下限在利率下行周期会系统性偏保守、恐慌出清与基本面出清需区分触发纪律；⑤ 盲区质询——巴菲特触发价（13-15 元=PB 1.5-1.7）历史仅 2015 单点到达、概率偏低；段永平"不急"忽视每年约 10pct 的等待机会成本（3.3% 股息率下）；李录"车市见底信号"缺乏可执行定义且未讨论 H 股替代（A/H 溢价 4.67% 折价通道已关闭，22.78 即最低可得价格）[E:workpapers/persona_divergence_redteam.md]。</p>
+</div>
+
+<h2>11. 结论与行动</h2>
+<div class="card">
+<p><b>档位：观察等价格。</b>本案的持有体验预演：2018 年 1 月高点 30.22 元至 10 月低点 20.41 元年内回撤 -32%；六次熊市谷底的均值修复周期 1-2 年。正面拷问：<b>若买入后下跌 40% 而基本面未变（车市短期下滑但份额与净利率稳定），你敢加仓吗？</b>——本案的正确答案与康美案相反：福耀跌 40%（约 13.7 元，PB 1.67）将落入六次谷底实证区间且分红收益率升至 5.5%，基本面为真的前提下这是加仓区；康美跌 40% 则要重新审一遍全部排雷项。<b>同一个动作，取决于你对报表的信任——这就是排雷模块存在的意义，也是负样本的意义：排雷通过的公司，跌下来是机会；排雷不通过的公司，跌下来是深渊。</b></p>
+<p><b>证伪条件</b>（挂关键变量）：① 股价 ≤16-17 元（悲观情景附近，股息率 4.5%+）→ 安全边际补足，档位复核上调；② 2019-2020 车市连续负增长但净利率守住 15%+ 且北美爬坡完成 → 基准重估（g 上修）；③ 月度车市连续两年 &lt;-5% 且 ASP 增速 &lt;2% → 悲观情景概率上调，观察期拉长。</p>
+<p><b>季度跟踪清单</b>：① 中汽协月度产量/批发（基准确认线：同比转正）；② 季度归母净利与扣非（警戒线：单季扣非同比 -20%+）；③ 分区域利润（北美利润率爬坡）；④ ASP 季度走势（升级引擎）；⑤ 年报分红方案（警戒线：分红率跌破 50%——扩张吞噬分红的信号）；⑥ 交接班治理安排公告。</p>
+<p><b>用户初判对照</b>：回放模式无用户实时初判；官方先验（meta.json）：预期"不排雷、正常进入估值"，must_not_trigger 全部造假类告警——<b>排雷侧全部验证 ✓</b>（详见 diff.md）；档位无官方约束，管线独立得出"观察等价格"。</p>
+</div>
+
+<h2>12. 附录</h2>
+<div class="card">
+<h3>12.1 数据底稿摘要</h3>
+<table>
+<tr><th>底稿</th><th>内容</th><th>等级</th></tr>
+<tr><td>financials_600660_2018Q3.json</td><td>2008-2017 十年年度（CAS 为主，2016-2017 部分字段 IFRS 已注明）+2018Q3+phase0_arithmetic（年报原文转录）</td><td>A</td></tr>
+<tr><td>market_snapshot_600660_2018.json</td><td>价格双源仲裁（A 22.78 不复权/H 24.85 HKD）、市值 566.3 亿（A/H 分计价，CSMAR 口径交叉验证差 0.9%）、PB 2.75、10Y 3.23%；unit_error_note 登记 10 倍错位教训</td><td>A</td></tr>
+<tr><td>metrics_600660.json</td><td>compute_metrics 输出（ROIC 5y 18.9%/OE/normalization 中枢 16.30%/5 条警报）</td><td>A</td></tr>
+<tr><td>business_drivers_600660.json</td><td>量价驱动 2014-2017（销量×ASP 勾稽+单车价值量+分区域）</td><td>A</td></tr>
+<tr><td>scenarios_600660.json + scenario_audit</td><td>三情景底稿+门禁全过（S2b 重算偏差 0.25%）</td><td>A</td></tr>
+<tr><td>manifest.json</td><td>26 项文件登记+对立面检索（唯一命中左敏短线交易通报批评）+信息时效豁免</td><td>A</td></tr>
+</table>
+<h3>12.2 入口校验与机器门禁摘要</h3>
+<p>validate_data：错误 0/警告 2（A1 年度覆盖+A2 命门部分年份，回放豁免：official_filing_missing 时间机器悖论登记）。check_business_drivers：通过。check_scenarios：通过（0 错误 0 警告；修正史：scenarios 必须为 list、S2 悲观 method_note 字符串+指针、S7b iv_growth_evidence 键名、折现率 9.5%→10% 下限纪律、谷底 PB 口径污染重建为六次实证）。verification_strength：<b>A 级</b>（勾稽 100%/原文登记 full/窗口 10 年覆盖危机年）。</p>
+<p><b>数字校验闭环（verify_report.py，发布前强制）：通过——48 项全过（正文数字 29 项 + 图表数组 3 组 + 证据指针 16 个，0 失败），退出码 0。</b>expected-return 双闸门已过（index-hurdle 13%）。</p>
+<h3>12.3 术语速查</h3>
+<p>Owner Earnings（所有者盈余：净利润+折旧摊销−维持性资本开支−营运资本增加）；PB 谷底实证（熊市底部市净率的历史分布，用于独立下行估计）；不收敛下限（股息率+内在价值增速，低于门槛意味着回报依赖市场认知收敛）；安全边际（价格低于内在价值的缓冲垫）；年降（车厂对零部件供应商的年度降价要求，行业惯例）；定点（车厂对零部件的车型认证，锁定车型生命周期）。</p>
+<h3>12.4 数据来源与截止日</h3>
+<p>全部来源与等级登记于 manifest.json（26 项）：年报原文 5 份（2008/2010/2012/2014/2017，巨潮+港交所 A/H，A 级）+2018 三季报（A 级）、价格双源（CSMAR 不复权+东方财富，A 级）、H 股（智通 AH 统计）、10Y 国债（东方财富+国债期货互证，A 级）、车市数据（中汽协 1-11 月，经行业媒体转发，A 转 B）、谷底行情（东方财富不复权月线+CSMAR 日线互证，A 级）。所有数据截止 2018-12-31。</p>
+<h3>12.5 免责声明</h3>
+<p class="small">本报告由分析工具生成，仅供研究参考，不构成任何投资建议。市场有风险，投资需谨慎。本报告为历史回放（replay），所有结论仅基于 2018-12-31 前公开信息，用于检验分析方法本身，不代表对当前时点的任何判断。</p>
+</div>
+
+<script>
+function mk(id, opt){var c=document.getElementById(id); if(!c) return null; var ch=echarts.init(c); ch.setOption(opt); return ch;}
+var YRS=['2008','2009','2010','2011','2012','2013','2014','2015','2016','2017'];
+mk('c1',{title:{text:'归母净利润十年无亏损年：2008 危机年 2.46 亿是唯一的深坑（亿元）',left:'center',textStyle:{fontSize:14}},tooltip:{trigger:'axis'},xAxis:{type:'category',data:YRS},yAxis:{type:'value'},series:[{name:'归母净利',type:'bar',
+/*<!-- vchart src=metrics_600660.json path=chart_series.net_income scale=0.01 -->*/
+data:[2.46,11.18,17.88,15.13,15.25,19.17,22.2,26.05,31.44,31.49],itemStyle:{color:'#1a3a5c'},markArea:{data:[[{xAxis:'2008',name:'金融危机',itemStyle:{color:'rgba(192,57,43,.12)'}},{xAxis:'2008'}]]}}]});
+mk('c2',{title:{text:'净利率十年稳在 15-21% 带（2008 除外）：正常化判定成立（%）',left:'center',textStyle:{fontSize:14}},tooltip:{trigger:'axis'},xAxis:{type:'category',data:YRS},yAxis:{type:'value',axisLabel:{formatter:'{value}%'}},series:[{name:'净利率',type:'line',
+/*<!-- vchart src=metrics_600660.json path=chart_series.net_margin scale=100 -->*/
+data:[4.3,18.4,21.0,15.6,14.9,16.7,17.2,19.2,18.9,16.8],itemStyle:{color:'#d97706'},markLine:{data:[{yAxis:16.3,name:'十年均值',lineStyle:{color:'#27ae60',type:'dashed'}}]}}]});
+mk('c3',{title:{text:'FCF 与扩张期：2015 年 H 股增发+美国工厂高峰 FCF 转负（亿元）',left:'center',textStyle:{fontSize:14}},tooltip:{trigger:'axis'},xAxis:{type:'category',data:YRS},yAxis:{type:'value'},series:[{name:'FCF(OCF-capex)',type:'bar',
+/*<!-- vchart src=metrics_600660.json path=chart_series.fcf scale=0.01 -->*/
+data:[6.74,15.01,10.41,3.52,9.39,9.51,3.54,-2.42,0.99,12.07],itemStyle:{color:function(p){return p.value>=0?'#1a3a5c':'#c0392b'}},markArea:{data:[[{xAxis:'2015',name:'增发+美国工厂高峰',itemStyle:{color:'rgba(217,119,6,.12)'}},{xAxis:'2015'}]]}}]});
+window.addEventListener('resize',function(){document.querySelectorAll('.chart').forEach(function(el){echarts.getInstanceByDom(el)&&echarts.getInstanceByDom(el).resize()})});
+</script>
+</body>
+</html>

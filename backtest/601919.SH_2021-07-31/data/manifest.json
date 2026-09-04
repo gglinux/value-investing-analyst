@@ -1,0 +1,297 @@
+{
+  "company": "中远海控",
+  "ticker": "601919.SH / 1919.HK",
+  "analysis_date": "2021-07-31",
+  "created": "2026-09-04",
+  "official_filing_missing": {
+    "years": [
+      2021
+    ],
+    "reason": "回放案时间机器悖论：分析时点 2021-07-31，2021 年报最早于 2022-03 才发布。底稿以 2021Q1 季报 + 2021-07-07 H1 业绩预增公告（归母约 370.93 亿，扣非 370.21 亿）覆盖 2021 年信息。2021 年报实际值（收入 3336.94 亿 / 归母 892.96 亿）属事后信息，仅用于 diff.md 对照，禁止进入估值。2022 及以后同理隔离。"
+  },
+  "latest_quarter_checked": {
+    "checked": true,
+    "latest_interim": "2021Q1 季报（2021-04-30 披露）",
+    "result": "剧变已消化：Q1 归母 154.52 亿（同比 +5200%）；截断日前最新事件为 2021-07-07 H1 预增公告（370.93 亿）与 2021-07-08 刊载，已纳入信息集；2021-07-28 10 转 3 资本公积转增实施，2021-07-29 中远海运港口收购天津码头 12.48 亿——均已登记 meta.information_set.key_announcements_before_cutoff"
+  },
+  "adversarial_check": {
+    "search_date": "2026-09-04",
+    "queries": [
+      "中远海控 财务造假/做空报告",
+      "中国远洋 证监会处罚",
+      "中远海控 问询函",
+      "中远海控 集体诉讼",
+      "中远海控 审计意见非标"
+    ],
+    "findings_before_cutoff": [
+      "2011-2012 连续巨亏致 *ST 风险（2013 年 3 月被实施退市风险警示后 2014 摘帽——公开事实，非处罚）",
+      "2016 重大资产重组（中远中海重组）正常完成，无监管处罚记录",
+      "2016-2017 年上海航运交易所运价操纵调查（P3 网络 2014 被否属行业事件）：未涉及中远海控被处罚",
+      "审计意见：2010-2020 全部标准无保留（信永中和/大华等），无持续经营强调事项段",
+      "未发现财务造假指控、做空报告、集体诉讼（截断日前）"
+    ],
+    "conclusion": "对立面检索无硬命中；Phase 0 六项一票否决预计全部通过。治理层面记录：央企控股（中远海运集团合计约 45%+）、董事会含独立非执行董事；2013 卖资产保壳属经营行为非造假。",
+    "post_cutoff_isolation": "2021-07-31 后无新增处罚/诉讼；事后信息（2021 全年 892.96 亿、2022 运价崩塌、2023 净利 238.6 亿回落 78%）仅限 diff.md 使用"
+  },
+  "price_sources": {
+    "a_close_20210730": 17.66,
+    "h_close_20210730": 10.76,
+    "market_cap_cny_million": 2535137,
+    "arbitration_note": "三源 A 股 17.66（腾讯/通联/同花顺报道）一致；H 股 10.76 来自智通 AH 统计且经同花顺市值 2562.80 亿交叉（误差 1.1%）；腾讯前复权 3.30 与智通 A 股 12.9 两处口径问题均登记弃用理由（见 market_snapshot.price_sources.rejected）",
+    "fx_cny_per_hkd": 0.8307,
+    "shares_total_million": 16012.9
+  },
+  "cn_10y": {
+    "value_frac": 0.0284,
+    "sources": [
+      "中债月报 2021-07",
+      "德邦证券 2021-08-05 周报",
+      "光大证券 2021-08-02 周报"
+    ],
+    "grade": "B（权威转引 Wind）"
+  },
+  "files": [
+    {
+      "name": "financials_601919_2021Q1.json",
+      "grade": "A",
+      "desc": "2010-2020 十一年年度 + 2021Q1 + phase0_arithmetic；全部取自年报原文",
+      "file": "financials_601919_2021Q1.json"
+    },
+    {
+      "name": "market_snapshot_601919_2021.json",
+      "grade": "A/B",
+      "desc": "价格三源仲裁 + 市值 + 估值倍数 + SCFI/CCFI + 10Y 国债",
+      "file": "market_snapshot_601919_2021.json"
+    },
+    {
+      "name": "filings/zhyk_AR2020.pdf",
+      "grade": "A",
+      "desc": "2020 年报（巨潮 finalpage/2021-03-31/1209496025.PDF）",
+      "file": "filings/zhyk_AR2020.pdf"
+    },
+    {
+      "name": "filings/zhyk_AR2020.txt",
+      "grade": "A",
+      "desc": "2020 年报文本（pdftotext 转换）",
+      "file": "filings/zhyk_AR2020.txt"
+    },
+    {
+      "name": "filings/zhyk_AR2018.pdf",
+      "grade": "A",
+      "desc": "2018 年报（巨潮 finalpage/2019-03-30/1205968050.PDF）",
+      "file": "filings/zhyk_AR2018.pdf"
+    },
+    {
+      "name": "filings/zhyk_AR2018.txt",
+      "grade": "A",
+      "desc": "2018 年报文本",
+      "file": "filings/zhyk_AR2018.txt"
+    },
+    {
+      "name": "filings/zhyk_AR2016.pdf",
+      "grade": "A",
+      "desc": "2016 年报（巨潮 finalpage/2017-03-31/1203241586.PDF）",
+      "file": "filings/zhyk_AR2016.pdf"
+    },
+    {
+      "name": "filings/zhyk_AR2016.txt",
+      "grade": "A",
+      "desc": "2016 年报文本",
+      "file": "filings/zhyk_AR2016.txt"
+    },
+    {
+      "name": "filings/zhyk_AR2014.pdf",
+      "grade": "A",
+      "desc": "2014 年报（巨潮 finalpage/2015-03-27/1200749959.PDF）",
+      "file": "filings/zhyk_AR2014.pdf"
+    },
+    {
+      "name": "filings/zhyk_AR2014.txt",
+      "grade": "A",
+      "desc": "2014 年报文本",
+      "file": "filings/zhyk_AR2014.txt"
+    },
+    {
+      "name": "filings/zhyk_AR2012.pdf",
+      "grade": "A",
+      "desc": "2012 年报（巨潮 finalpage/2013-03-28/62287061.PDF）",
+      "file": "filings/zhyk_AR2012.pdf"
+    },
+    {
+      "name": "filings/zhyk_AR2012.txt",
+      "grade": "A",
+      "desc": "2012 年报文本",
+      "file": "filings/zhyk_AR2012.txt"
+    },
+    {
+      "name": "filings/zhyk_AR2010.pdf",
+      "grade": "A",
+      "desc": "2010 年报（巨潮 finalpage/2011-03-30/59199658.PDF）",
+      "file": "filings/zhyk_AR2010.pdf"
+    },
+    {
+      "name": "filings/zhyk_AR2010.txt",
+      "grade": "A",
+      "desc": "2010 年报文本",
+      "file": "filings/zhyk_AR2010.txt"
+    },
+    {
+      "name": "filings/zhyk_Q1_2021.pdf",
+      "grade": "A",
+      "desc": "2021Q1 季报（巨潮 finalpage/2021-04-30/1209875961.PDF）",
+      "file": "filings/zhyk_Q1_2021.pdf"
+    },
+    {
+      "name": "filings/zhyk_Q1_2021.txt",
+      "grade": "A",
+      "desc": "2021Q1 季报文本",
+      "file": "filings/zhyk_Q1_2021.txt"
+    },
+    {
+      "name": "filings/zhyk_H1forecast_2021.pdf",
+      "grade": "A",
+      "desc": "2021-07-07 H1 业绩预增公告（巨潮 finalpage/2021-07-08/1210437730.PDF）",
+      "file": "filings/zhyk_H1forecast_2021.pdf"
+    },
+    {
+      "name": "filings/zhyk_H1forecast_2021.txt",
+      "grade": "A",
+      "desc": "H1 预增公告文本",
+      "file": "filings/zhyk_H1forecast_2021.txt"
+    },
+    {
+      "name": "workpapers/phase0_screening_601919.json",
+      "grade": "A",
+      "desc": "Phase 0 排雷底稿",
+      "file": "workpapers/phase0_screening_601919.json"
+    },
+    {
+      "name": "business_drivers_601919.json",
+      "grade": "A",
+      "desc": "量价驱动因子底稿（运量×单箱收入）",
+      "file": "business_drivers_601919.json"
+    },
+    {
+      "file": "metrics_601919.json",
+      "name": "metrics_601919.json",
+      "grade": "A",
+      "desc": "compute_metrics 输出：series/summary/normalization/capital_allocation/owner_yield/chart_series/alerts"
+    },
+    {
+      "file": "scenarios_601919.json",
+      "name": "scenarios_601919.json",
+      "grade": "A",
+      "desc": "三情景底稿（悲观 pb_trough/基准两段式 DCF/乐观结构性改善），check_scenarios 通过"
+    },
+    {
+      "file": "scenario_audit_601919.json",
+      "name": "scenario_audit_601919.json",
+      "grade": "A",
+      "desc": "check_scenarios 十一项检查输出：margin_of_safety_vs_base=-67.6%"
+    },
+    {
+      "file": "verification_strength.json",
+      "name": "verification_strength.json",
+      "grade": "A",
+      "desc": "核验强度徽章 B 级（勾稽 100%/原文 full/窗口 11 年 partial）"
+    },
+    {
+      "file": "workpapers/phase2_metrics_note_601919.json",
+      "name": "workpapers/phase2_metrics_note_601919.json",
+      "grade": "A",
+      "desc": "Phase 2 定量画像小结：5 警报逐条回应 + 22 警告口径登记"
+    },
+    {
+      "file": "workpapers/phase3_qualitative_601919.json",
+      "name": "workpapers/phase3_qualitative_601919.json",
+      "grade": "A",
+      "desc": "Phase 3 五维定性：每维 4-5 条证据指针"
+    },
+    {
+      "file": "workpapers/phase4_valuation_derivation_601919.json",
+      "name": "workpapers/phase4_valuation_derivation_601919.json",
+      "grade": "A",
+      "desc": "Phase 4 正常化推导：第 6 条大宗商品路径 + 中周期锚 + 交叉验证"
+    },
+    {
+      "file": "workpapers/phase45_expected_return_601919.json",
+      "name": "workpapers/phase45_expected_return_601919.json",
+      "grade": "A",
+      "desc": "Phase 4.5 期望回报六数表 + 双闸门明细"
+    },
+    {
+      "file": "workpapers/persona_巴菲特.md",
+      "name": "workpapers/persona_巴菲特.md",
+      "grade": "A",
+      "desc": "三位大师独立评估（分离生成协议）"
+    },
+    {
+      "file": "workpapers/persona_段永平.md",
+      "name": "workpapers/persona_段永平.md",
+      "grade": "A",
+      "desc": "三位大师独立评估（分离生成协议）"
+    },
+    {
+      "file": "workpapers/persona_李录.md",
+      "name": "workpapers/persona_李录.md",
+      "grade": "A",
+      "desc": "三位大师独立评估（分离生成协议）"
+    },
+    {
+      "file": "workpapers/persona_divergence_redteam.md",
+      "name": "workpapers/persona_divergence_redteam.md",
+      "grade": "A",
+      "desc": "分歧对照 + 红队质询 + 抽查 5 条证据"
+    },
+    {
+      "file": "manifest.json",
+      "name": "manifest.json",
+      "grade": "A",
+      "desc": "数据清单与豁免登记（自登记：报告 [E:manifest.json] 指针指向本文件）"
+    }
+  ],
+  "external_evidence": [
+    {
+      "item": "SCFI 2021-07-30 = 4196.24 点历史新高（2020 最低 818 的 5.1 倍）",
+      "source": "上海航运交易所，央视财经/北青网 2021-07-30 转发",
+      "grade": "B",
+      "url": "https://www.toutiao.com/article/6990704275928121864/"
+    },
+    {
+      "item": "SCFI 2015-2019 均值约 800-1000 点；2016 年均值 724.2 点",
+      "source": "雪球行业综述（多源一致）",
+      "grade": "C",
+      "url": "https://xueqiu.com/6219570634/350005651"
+    },
+    {
+      "item": "CCFI 2021-07-30 = 2930.03 点",
+      "source": "上海航运交易所 + 时代财经 2021-07-30",
+      "grade": "B",
+      "url": "https://time-weekly.com/post/283616/"
+    },
+    {
+      "item": "港交所证券变动月报表 2021-07：总股本 160.13 亿股（A 126.58 + H 33.55）",
+      "source": "HKEX www1.hkexnews.hk",
+      "grade": "A",
+      "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2021/0804/2021080400632_c.pdf"
+    },
+    {
+      "item": "2021-07-30 A 股收盘 17.66 元",
+      "source": "腾讯行情/通联 BaoStock/同花顺报道 三源一致",
+      "grade": "B"
+    },
+    {
+      "item": "10Y 国债 2021-07-30 = 2.84%",
+      "source": "中债月报/德邦/光大三源",
+      "grade": "B"
+    }
+  ],
+  "consensus_and_calls": {
+    "collected": false,
+    "reason": "2021-07 时点的卖方一致预期与研报评级在公开网络难以完整复原（仅零散新闻转述）；本期为回放案，估值不依赖一致预期（reverse DCF 隐含预期对照部分用定性描述并标注局限）。此缺口在报告信息局限声明中披露。"
+  },
+  "check_data_sources_run": {
+    "date": "2026-09-04",
+    "result": "westock-data 未安装（2026-09 康美案已实测）；SEC EDGAR 不适用 A 股；巨潮 static 下载通道可用（本案全部年报/季报/公告经此获取）；腾讯行情 API/网易财经被 WAF 拦截，价格改用搜索多源仲裁"
+  }
+}

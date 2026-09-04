@@ -1,0 +1,33 @@
+{
+  "ticker": "600519.SH",
+  "company": "贵州茅台",
+  "replay_date": "2015-08-31",
+  "information_cutoff": "2015-08-31",
+  "batch": 1,
+  "case_id": 1,
+  "purpose": "S8 价值陷阱闸门能否区分「政策冲击」与「商业模式衰退」",
+  "prior_expectation": {
+    "expected_verdict": "观察等价格",
+    "expected_gate1": false,
+    "expected_gate2": false,
+    "reasoning_before_analysis": "先验形成于跑分析管线之前，但已掌握信息集基础数据（收盘价 195.37 元为行情事实，非分析产物）。逻辑：① 基期 OE 只能用 2014 年报 15,349.8 百万（2015 年报 publish 2016-03-23 晚于截断日，不可用）；② 沿用 2016-05-13 回放同构参数（growth 8% fade、r=10%、永续 2.5%），V0 约 208.7 元/股；③ MoS = 208.7/195.37 − 1 ≈ +6.8% < 宽护城河 25% 门槛 → 闸门一预期不过；④ 闸门二：IRR ≈ 11.5% < 16.5%，悲观情景年化为负 → 预期 1/3 不过。由此先验档位为「观察等价格」。风险声明：本先验与价格事实强耦合，若管线产出 V0 与同构推算偏离 >5%，先验作废重立。"
+  },
+  "contamination_disclosure": "执行上下文已暴露于 backtest/PROMPT.md 第七节事后答案文本（本 session 早前全文读取过该文件）。缓解措施：① 先验与结论完全由数据管线计算决定，不因答案文本调整任何参数；② 悲观情景构造沿用 2016-05-13 回放的 worst_year_margin 同构方法（历史最差净利率×危机收入×危机倍数 9x），参数口径可复现、不受答案暗示影响；③ diff.md 将显式评估污染对结论的可能方向。此污染无法消除，只能披露——PROMPT 第一节承认「你已经知道答案，这是无法回避的污染源」，本登记即按该条款处理。",
+  "must_trigger": [],
+  "must_not_trigger": ["S8_value_trap"],
+  "must_not_trigger_note": "S8 价值陷阱断言取自 PROMPT.md 第二节案例 1 的设计目的（公开列示，非第七节答案），收入负增长系反腐政策冲击而非模式衰退，预期不触发价值陷阱降档。",
+  "actual_3y_total_return": null,
+  "actual_5y_total_return": null,
+  "actual_max_drawdown": null,
+  "outcome_note": null,
+  "information_set": {
+    "latest_annual": "2014 年报（publish 2015-04-21）",
+    "latest_interim": "2015 半年报（publish 2015-08-28，截断日前 3 天披露，已进信息集）",
+    "excluded_late_filings": ["2015 年报（publish 2016-03-23）", "2015 三季报（publish 2015-10-23）"],
+    "price_source": "腾讯行情接口不复权日K：2015-08-31 收盘 195.37 元",
+    "cn_10y_2015_08_31": 0.0333,
+    "cn_10y_source": "中国债券信息网中债国债收益率曲线（广发基金 2015 年 9 月月报、友邦 8 月月报双源交叉：3.33%）",
+    "discount_rate_discipline": "r = max(10%, 3.33% + 4pct) = max(10%, 7.33%) = 10%，合规"
+  },
+  "frozen_at": "2026-09-04"
+}

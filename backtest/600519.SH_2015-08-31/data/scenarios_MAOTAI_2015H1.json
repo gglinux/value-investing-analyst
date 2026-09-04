@@ -1,0 +1,56 @@
+{
+ "company": "贵州茅台",
+ "ticker": "600519",
+ "currency": "CNY",
+ "backtest_note": "历史回放（PROMPT第一批案例1）：2015-08-31 回放，price=195.37(当日收盘不复权)；假设仅用截止回放日已披露信息(最新年报2014年报2015-04-21披露、最新半年报2015-08-28披露)",
+ "price": 195.37,
+ "moat": "wide",
+ "discount_rate": 0.1,
+ "hold_years": 5,
+ "dividend_yield": 0.0203,
+ "dividend_yield_note": "2014年度分配10转1派43.74元已于2015年年中实施：现金分红总额49.94亿(1141.998百万股×4.374元)→/回放日市值2454.23亿=2.03%",
+ "intrinsic_value_growth": 0.06,
+ "iv_growth_evidence": "茅台出厂价2000-2012年195→819元CAGR约12%+量增约束(2015H1基酒产量24,487吨,年化约4.9万吨水平,2014年报口径产能),长期提价权+产能储备下保守取6%[E:financials_MAOTAI_2015H1.json]",
+ "default_probabilities": {
+  "悲观": 0.3,
+  "基准": 0.5,
+  "乐观": 0.2
+ },
+ "scenarios": [
+  {
+   "name": "悲观",
+   "value_per_share": 72.71,
+   "probability": 0.3,
+   "method": "worst_year_margin",
+   "method_note": "历史最差年净利率(2006年31.5%)×当期收入(2014年报32,217百万,营业总收入口径)×危机期倍数9x(2013-14白酒塑化剂+三公消费恐慌底PE,同2016-04回放口径)[E:financials_MAOTAI_2015H1.json]",
+   "method_inputs": {
+    "worst_margin": 0.315,
+    "revenue_m": 32217.21374108,
+    "crisis_multiple": 9,
+    "shares_m": 1256.1978
+   },
+   "stressed_assumptions": [
+    "margin",
+    "multiple",
+    "demand"
+   ],
+   "probability_evidence": "[E:financials_MAOTAI_2015H1.json] 三公消费限制+塑化剂阴影余波未散,2012-2014批价从2000+元腰斩至850元附近先例;反腐高压延续+基建放缓的悲观世界观;股灾后市场对'政策打压可选消费'定价敏感"
+  },
+  {
+   "name": "基准",
+   "value_per_share": 208.66,
+   "probability": 0.5,
+   "method": "dcf_owner_earnings",
+   "method_note": "基期OE 15,349.8(2014年报,净利率47.6%处中性区间,当期值)×10年增速8%fade至2.5%，r=10%；8%依据:2015H1收入+10.17%/净利+9.11%恢复双位数、预收款23.37亿较年初+8.61亿(+58.33%)渠道补库存、行业出清集中度提升[E:workpapers/mt_fwd_base.json]",
+   "probability_evidence": "[E:financials_MAOTAI_2015H1.json] 半年报收入净利双恢复+预收款激增58%为领先信号;但公司2015全年指引仅1%(保守),行业调整未完全出清"
+  },
+  {
+   "name": "乐观",
+   "value_per_share": 244.68,
+   "probability": 0.2,
+   "method": "dcf_owner_earnings",
+   "method_note": "增速12% fade(民间消费接力+渠道出清后批价回升+2016-2018年前后恢复出厂价提价周期)[E:workpapers/mt_fwd_opt.json]",
+   "probability_evidence": "[E:financials_MAOTAI_2015H1.json] 高端白酒集中度提升、茅台供需缺口长期存在、系列酒企稳"
+  }
+ ]
+}

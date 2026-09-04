@@ -1,0 +1,13 @@
+{
+ "as_of": "2016-04-29 收盘",
+ "market_cap_million": 519403.0,
+ "base_oe_million": 53394.0,
+ "discount_rate": 0.1,
+ "terminal_growth": 0.025,
+ "years": 10,
+ "fade": true,
+ "implied_10y_oe_growth": -0.057,
+ "engine_stdout_verbatim": "现价隐含的未来 10 年 Owner Earnings 年增速（增速线性衰减至永续）: -5.70%\n假设：折现率 10.0%，永续增速 2.5%\n下一步：将该隐含增速与 Phase 3 基准情景增速对照，回答『市场预期苛刻还是宽松』。\n",
+ "interpretation": "现价 93.74 隐含未来 10 年 Owner Earnings 年衰退 5.7%（10 年累计约 −44%）；对照基准情景 +3%/乐观 +8%，市场定价处于『iPhone 见顶→永久衰退』的恐慌区间。若未来 10 年 OE 仅零增长，今日买入的年化回报也已高于该隐含假设所对应的水平。",
+ "source": "reverse_dcf.py implied-growth stdout 逐字转写（无 -o 参数）"
+}

@@ -1,0 +1,116 @@
+{
+ "case": "backtest/PROMPT.md 第一批案例3：柯达 EK @ 2011-06-30",
+ "backtest_note": "历史回放底稿：全部数据严格截止 2011-06-30 已公开披露。最新年报=FY2010 10-K(EDGAR filed 2011-02-25)；最新季报=FY2011 Q1 10-Q(filed 2011-04-28)。FY2011 Q2 10-Q(2011-08-04)/FY2011 10-K(2012-02-28)晚于截断日，防前视剔除",
+ "latest_quarter_checked": "FY2011 Q1 10-Q(filed 2011-04-28)为最新已披露财报，已纳入底稿 half_year_2011q1 并经 companyfacts XBRL 核对。核对结论：Q1 收入 −30.9%(1,914→1,322M)/净利由 +119M 扭亏为 −246M(上年同期经营利润 +389M 系专利许可收入季节性高峰，本期未重现)/OCF −525M/现金 1,500→1,300M/权益 −1,077→−1,276M 资不抵债加深——恶化加速是回放时点核心财务事实；同期市场叙事：ITC 诉苹果/RIM 专利案 3 月复核通过悬而未决(股价 3.02→3.58 反弹)、1,100 项数字成像专利出售传闻(预期 20-30 亿)",
+ "official_filing_missing": {
+  "years": [2011],
+  "reason": "历史回放场景：底稿严格截止回放日 2011-06-30 已披露数据，FY2011 10-K 在回放日尚未披露(filed 2012-02-28，且 FY2011 财年本身在回放日尚未结束)，属防前视回放设计而非申报缺失；校验器以真实当前时间判定死线，对回放底稿为时间机器悖论"
+ },
+ "reconciliation_coverage_waiver": {},
+ "accounting_break_disclosure": "十年序列含会计口径断层：2001-2005 为 FY2005 10-K Item 6(含 Health Group 全口径)；2006-2010 为 FY2010 10-K Item 6(持续经营口径，2007 年剥离 Health 后重分类)。2005→2006 收入 14,268→10,568 断层系口径而非业务变化，跨断层 YoY 置 null；负增长证据(五连降 10,568→7,187)全部位于 2006-2010 单表口径内自洽。A1 十年窗口按此口径拼接，如实披露",
+ "ocf_coverage_disclosure": "OCF 仅 2008-2010 三年可得(XBRL 强制申报期自 2008 始)，2001-2007 置 null 不虚构；三年轨迹 +168→−136→−219 与 capex/D&A 缺失导致 OwnerEarnings 全序列 null——估值基期因此不存在正值 OE，此为本案估值链条的事实前提而非数据事故",
+ "data_sources": {
+  "EK": "SEC EDGAR companyfacts XBRL(机器核对级：FY2010 10-K accn 0000031235-11-000025 + FY2011 Q1 10-Q accn 0000031235-11-000085) + FY2010/FY2007/FY2005 三份 10-K Item 6 五年表(pandas.read_html 表格扫描)交叉验证；2007/2006 另以 FY2007 10-K 季度表加总双源验证(10,301/10,568 一致)"
+ },
+ "price_sources": "行情接口不可用(腾讯 ek.us 退市无数据、stooq 双域名沙箱连接失败、Wayback Machine 被沙箱网络拦截)→ SEC 官方文件三重锚定：① FY2012 10-K 封面『2011-06-30 非关联方持股市值 ≈ $963M』÷ 股本 268.9M = 3.58；② Forbes 2011-07-05 逐字『close on June 30 again at, exactly, $3.58』；③ FY2011 10-K Item 5 Q2'11 收盘区间 [2.75, 3.81] 包含之——三源独立一致，采用 2011-06-30 收盘 3.58 USD；2010-12-31 收盘 5.36(DEF 14A + 1stock1 双源)；52 周区间 [2.75, 5.95](FY2011/FY2010 10-K Item 5，sales price 口径)",
+ "us_10y": {
+  "date": "2011-06-30",
+  "value": 0.0318,
+  "source": "美联储 H.15 官方(federalreserve.gov/releases/h15/20110705) 2011-06-30 Treasury constant maturities Nominal 10-year = 3.18%；交叉：特多 HSF 2011Q2 季报 6-30 收于 3.16%、MarketWatch 6-30 盘前报道 3.10%——量级一致，取官方收盘曲线值"
+ },
+ "discount_rate_discipline": "r = max(10%, 3.18% + 4pct) = max(10%, 7.18%) = 10%，合规(折现率下限纪律，计价货币 USD，与茅台/苹果案例同口径)",
+ "files": [
+  {
+   "file": "financials_EK_2011Q1.json",
+   "source": "2001-2005 = FY2005 10-K Item 6(filed 2006-03-02)；2006-2010 = FY2010 10-K Item 6(filed 2011-02-25)；Q1'11 = 10-Q XBRL(accn 0000031235-11-000085)；口径断层/OCF 覆盖缺口/新闻稿初值 vs 10-K 终值(−439 vs −687)均已在 spike_notes 登记",
+   "grade": "B",
+   "coverage": "FY2001-FY2010 年度(两段口径) + FY2011 Q1 季度；ocf/capex/d_and_a 部分年份缺失如实置 null",
+   "crosscheck": "FY2008/FY2009/FY2010(Item 6 vs XBRL)+FY2006/FY2007(季度加总 vs Item 6)已登记"
+  },
+  {
+   "file": "market_snapshot_EK_2011Q2.json",
+   "source": "SEC 官方文件三重锚定价格(3.58/52 周区间/YTD)+FY2010 10-K 股本 268.9M+Q1'11 10-Q 权益 −1,276M/TTM 净利 −1,052M",
+   "grade": "B",
+   "coverage": "2011-06-30 时点",
+   "note": "PE/PB 因负值置 null；chg_60d 因无日度序列置 null"
+  },
+  {
+   "file": "metrics_EK_2011Q2.json",
+   "source": "compute_metrics.py 引擎输出(FY2001-FY2010 窗口，market-cap 962.7M)",
+   "grade": "A",
+   "coverage": "FY2001-FY2010"
+  },
+  {
+   "file": "scenarios_EK_2011Q2.json",
+   "source": "三情景：悲观 peer_death_analogy(宝丽来/Delphi 死亡类比，清算算术佐证 −14.5/股)、基准 normalized_oe_capitalization(正常化净利 −92M 资本化，权益理论价值≤0 保留残值 0.5)、乐观 asset_monetization(专利叙事全部兑现上沿 9.0)；check_scenarios S1-S9 通过(1 警告 S5 无 add-back 登记合理)",
+   "grade": "A",
+   "coverage": "2011-06-30 回放口径"
+  },
+  {
+   "file": "expected_return_EK_2011Q2.json",
+   "source": "reverse_dcf.py expected-return 引擎输出(moat=none；期望 IRR −18.30%/不收敛下限 −5.50%/悲观年化 −39.51%/亏损概率 80%)",
+   "grade": "A",
+   "coverage": "2011-06-30 回放口径"
+  },
+  {
+   "file": "implied_growth_EK_2011Q2.json.txt",
+   "source": "reverse_dcf.py implied-growth 引擎拒绝输出原文(基期 OE −92.161 为负，隐含增速结构性不可评——引擎正确拒绝负基期 DCF)",
+   "grade": "A",
+   "coverage": "2011-06-30 时点"
+  },
+  {
+   "file": "verification_strength.json",
+   "source": "verification_strength.py 引擎输出(B 级：勾稽 70% partial/命门科目 full/窗口 10 年 full 含全球金融危机)",
+   "grade": "A",
+   "coverage": "底稿核验强度"
+  },
+  {
+   "file": "workpapers/ek_scenario_audit.json",
+   "source": "check_scenarios.py 审计输出(悲观/基准 0.36、悲观/现价 0.05、S2b 重算一致)",
+   "grade": "A",
+   "coverage": "S1-S9"
+  },
+  {
+   "file": "workpapers/persona_巴菲特.md",
+   "source": "巴菲特独立评估(从原始证据独立推导)",
+   "grade": "A",
+   "coverage": "Phase 5"
+  },
+  {
+   "file": "workpapers/persona_段永平.md",
+   "source": "段永平独立评估(从原始证据独立推导)",
+   "grade": "A",
+   "coverage": "Phase 5"
+  },
+  {
+   "file": "workpapers/persona_李录.md",
+   "source": "李录独立评估(从原始证据独立推导)",
+   "grade": "A",
+   "coverage": "Phase 5"
+  },
+  {
+   "file": "workpapers/persona_divergence_redteam.md",
+   "source": "三人分歧对照+芒格红队五连质询(must_trigger 检验点映射)",
+   "grade": "A",
+   "coverage": "Phase 5"
+  },
+  {
+   "file": "manifest.json",
+   "source": "本清单(数据来源等级/口径断层披露/对立面检索/10Y 国债收益率登记)",
+   "grade": "A",
+   "coverage": "案例全程"
+  }
+ ],
+ "adversarial_check": {
+  "search_date": "2026-09-04（回放语境限定信息集≤2011-06-30）",
+  "queries": "Eastman Kodak+做空报告/财务造假/监管处罚/集体诉讼/审计保留意见/SEC 调查（以 2011-06-30 前公开信息为准）",
+  "findings": [
+   "无针对柯达的财务造假指控或 SEC 会计欺诈调查（截至 2011-06-30 公开信息），历年审计意见均为标准无保留意见——Phase 0 造假类排雷不应命中（对照案例 4 康美为本批排雷正样本）",
+   "重大或有负债事实（非排雷项，进入估值与下行论证）：退休金与 OPEB 义务规模远超账面（FY2010 10-K 披露 PBO 数十亿级，资金缺口随折现率下行扩大）；此为权益已为负情况下的额外偿付压力",
+   "诉讼事实：ITC 诉苹果/RIM 专利案 2010-01 起诉、2011-01 ALJ 初裁不利、2011-03 委员会决定复核——截断日悬而未决，市场按潜在授权费收入定价；2011-04 起诉三星等。属叙事变量，非排雷项",
+   "减值历史：FY2005 −1,362M（Health 相关减值）、Q3'10 商誉减值 626M（FPEG）——资产质量的持续证伪轨迹，进入『不收敛下限』论证",
+   "需留意的对立面（利多方向如实登记）：Graphic Communications 商业喷墨收入 FY2011 Q1 625M vs 601M 同比增长；专利许可收入 2008 年以来累计近 20 亿——多头叙事的核心支撑，将交由五维定性 + 不收敛下限闸门对抗检验"
+  ],
+  "conclusion": "未命中造假类排雷项，Phase 0 通过；系统应走完估值与下限逻辑给出『拒绝』，而非排雷直出『排除』（对应 meta.must_not_trigger=phase0_false_fire）"
+ }
+}

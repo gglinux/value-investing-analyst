@@ -1,0 +1,36 @@
+{
+  "ticker": "EK",
+  "company": "伊士曼柯达公司（Eastman Kodak Company）",
+  "replay_date": "2011-06-30",
+  "information_cutoff": "2011-06-30",
+  "batch": 1,
+  "case_id": 3,
+  "purpose": "不收敛下限 / 峰值回撤停滞能否识破仍有品牌与专利叙事的昔日霸主：柯达 2011-06 账面仍握百年品牌、1,100 项数字成像专利（市场传闻售价 20-30 亿美元、2008 年以来专利许可费近 20 亿）与 Graphic Communications 收入增长叙事，检验系统是否被『资产变现救公司』叙事迷惑，还是通过不收敛下限（股息率 0 + 长期负增长）与峰值回撤停滞（收入五连降、股价自峰值 −96%）正确拒绝。选型说明（PROMPT 第二节公开列示）：诺基亚信号太明显且有 NSN+专利垫底，柯达破产前一年叙事仍强，更能检验下限逻辑是否真的起作用。",
+  "prior_expectation": {
+    "expected_verdict": "拒绝",
+    "expected_gate1": false,
+    "expected_gate2": false,
+    "reasoning_before_analysis": "先验形成于跑分析管线之前，仅基于截断日前公开的行情与财务事实（非分析产物）：① 价格与市值：2011-06-30 收盘 3.58 USD（SEC FY2012 10-K 封面市值锚点 963M ÷ 股本 268.9M = 3.58，与 Forbes 2011-07-05 报道逐字一致），市值约 9.63 亿；52 周区间 2.75–5.95，现价处 26% 分位；YTD −33.2%；自 2010 年内高点 9.08 回撤 −60.6%，自 1997-02 峰值 94.25 回撤 −96.2%。② 财务事实（均截断日前公开）：FY2010 净亏 −687M（10-K 终值，含 626M FPEG 商誉减值）、股东权益 −1,077M 资不抵债、OCF −219M 连续两年为负、现金 2,947→1,624M 四年下降 45%、持续经营口径收入 2006-2010 五连降 10,568→7,187M（−32%）、2008 年停付股息（DY=0）；FY2011 Q1 10-Q（2011-04-28 filed）：Q1 净亏 −246M、OCF −525M、现金降至 1,300M、权益恶化至 −1,276M。③ 估值可行性预判：净利与 Owner Earnings 均为负 → 基期 OE 无法取正，V0 预计为负或无意义 → 闸门一必不过；不收敛下限 = DY 0 + iv_growth（十年趋势为负）远低于 6% → 闸门二②必不过；悲观情景年化必 <0 → 闸门二③必不过。④ S8 价值陷阱：收入连续 5 年负增长、峰值回撤多年未收复，若出现『安全边际 >50%』前置条件即强制降档——本例 MoS 大概率为负，S8 检验点以 must_trigger 形式落在「不收敛下限低 / 峰值回撤停滞」。⑤ 先验档位「拒绝」；若 Phase 0/定量排雷直接判「排除」亦属方向正确，diff 时辨析路径。风险声明：本先验仅使用截断日前公开事实，不使用任何事后信息（ITC 2011-07-01 裁决、专利出售官宣、破产时点均不进入分析）。"
+  },
+  "contamination_disclosure": "本案例存在三重污染，显式披露：① 执行上下文已暴露于 backtest/PROMPT.md 第七节事后答案文本（柯达 2011-06：拒绝；must_trigger = 不收敛下限低 或 峰值回撤停滞；2012-01 申请破产保护，股东权益归零）——本 session 早前全文读取过；② 行情锚定过程中暴露于大量事后文件与数据：FY2012 10-K 披露文本（2012 年申报）、Forbes 2011-07-05 全文（含 ITC 7-01 裁决结果报道）、1stock1 年度收益序列（含 2011 全年 −87.88%）、1,100 项专利出售传闻的后续进展（7-20 官宣、9 月聘 Lazard/Jones Day）、2012-01-19 Chapter 11 申请等；③ 上述②中的多数事件时点晚于 2011-06-30 截断日。缓解措施：① 分析管线全部输入仅取截断日前公开文件（FY2010 10-K、FY2011 Q1 10-Q）与截断日前价格事实（6-30 收盘、52 周区间、2010 年末收盘）；② 价格数值虽经事后文件转述，但 3.58/5.36/2.75–5.95 均为 SEC 官方文件披露的当时公开行情，非结论驱动；③ 定性分析（三人+芒格红队）严格基于 2011-06-30 前可得的公开叙事（专利出售市场传闻、ITC 复核悬而未决、Graphic Communications 增长、现金消耗速度、专利许可收入历史），不使用裁决结果与破产时点；④ 事后信息仅用于 Step 4 diff 与事后回报实测，diff.md 将显式评估污染对结论的可能方向。此污染无法消除，只能披露。",
+  "must_trigger": ["not_converging_floor_low", "peak_drawdown_stagnant"],
+  "must_trigger_note": "取自 PROMPT.md 第二节案例 3 设计目的（公开列示）：『不收敛下限 / 峰值回撤停滞能否识破仍有品牌与专利叙事的昔日霸主』。第七节答案给出同两条 must_trigger（已污染，见 contamination_disclosure），登记以第二节设计目的为准，两者表述一致。",
+  "must_not_trigger": ["phase0_false_fire"],
+  "must_not_trigger_note": "软约束（由官方档位「拒绝」而非「Phase 0 排雷」推断）：柯达财务糟糕但无造假指控（审计意见无保留、无监管处罚、无存贷双高），应走完估值与下限逻辑被「拒绝」，不应在 Phase 0 被造假类排雷直接拦下——否则下限逻辑的检验目的落空（对照案例 4 康美才是排雷正样本）。",
+  "actual_3y_total_return": null,
+  "actual_5y_total_return": null,
+  "actual_max_drawdown": null,
+  "outcome_note": null,
+  "information_set": {
+    "latest_annual": "FY2010 10-K（EDGAR filed 2011-02-25，accn 0000031235-11-000025，本地 filings/ek_2010_10k.htm）",
+    "latest_interim": "FY2011 Q1 10-Q（EDGAR filed 2011-04-28，accn 0000031235-11-000085；期间 2011-01-01→2011-03-31，柯达实际季末 2011-03-26）",
+    "excluded_late_filings": ["FY2011 Q2 10-Q（filed 2011-08-04，accn 0000031235-11-000117）", "FY2011 10-K（filed 2012-02-28，accn 0000031235-12-000036）"],
+    "excluded_events": ["2011-07-01 ITC 对柯达诉苹果/RIM 案裁决（截断日后 1 天，Forbes 2011-07-05 报道其结果）", "2011-07-20 官宣探索出售 1,100 项数字成像专利（截断日前市场已有传闻，官宣在截断日后）", "2011-09 聘 Jones Day 与 Lazard", "2012-01-19 Chapter 11 破产申请", "2011 下半年股价走势（8-15 收盘 2.14、9-30 收盘 0.78）"],
+    "price_source": "行情接口不可用（腾讯 ek.us 退市无数据、stooq 双域名连接失败、Wayback Machine 被沙箱网络拦截）→ SEC 官方文件锚定：FY2012 10-K 封面『aggregate market value of voting common equity held by non-affiliates as of June 30, 2011 ≈ $963 million』÷ 股本 268.9M = 3.58 USD；Forbes 2011-07-05 逐字『close on June 30 again at, exactly, $3.58』——双源独立一致，采用 3.58 USD。2010-12-31 收盘 5.36（柯达 DEF 14A 委托书『closing price of $5.36 as of December 31, 2010』+ 1stock1 年度表 +27.01% 双源）。52 周区间 [2.75, 5.95]（FY2011 10-K Item 5：Q2'11 低 2.75；FY2010 10-K Item 5：Q4'10 高 5.95，sales price 口径，10-K 与 424B2 收盘口径差 <2%）",
+    "us_10y_2011_06_30": 0.0318,
+    "us_10y_source": "美联储 H.15 官方（federalreserve.gov/releases/h15/20110705）：2011-06-30 U.S. government securities Treasury constant maturities Nominal 10-year = 3.18%；交叉：特多 Heritage & Stabilisation Fund 2011Q2 季报 6-30 收于 3.16%、MarketWatch 6-30 盘前报道 3.10%——量级一致，取官方 H.15 收盘曲线值 3.18%",
+    "discount_rate_discipline": "r = max(10%, 3.18% + 4pct) = max(10%, 7.18%) = 10%，合规（计价货币 USD，10Y+4pct 低于 10% 下限，与茅台/苹果案例同口径）",
+    "financial_data_window_note": "十年窗口存在会计口径断层：FY2001-2005 来自 FY2005 10-K Item 6（含 Health Group，2005 净销售 14,268M）；FY2006-2010 来自 FY2010 10-K Item 6（持续经营口径，2007 年剥离 Health Group 后重分类，2006 净销售 10,568M）。2005→2006 收入 −26% 系口径变化而非真实下滑，YoY 增长在该衔接处置 null 并注记；净利序列同断层（FY2005 −1,362M 含 Health 减值）。主序列 2001-2010 十年照登、断层处如实标注，A1 窗口与口径问题在 manifest 登记。"
+  },
+  "frozen_at": "2026-09-04"
+}

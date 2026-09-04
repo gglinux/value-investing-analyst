@@ -1,0 +1,53 @@
+{
+  "file": "backtest/600660.SH_2018-12-31/data/scenarios_600660.json",
+  "errors": [],
+  "warnings": [],
+  "diagnostics": {
+    "scenario_values": {
+      "悲观": 15.8,
+      "基准": 19.66,
+      "乐观": 24.89
+    },
+    "bear_name": "悲观",
+    "base_name": "基准",
+    "margin_of_safety_vs_base": -0.1586978636826044,
+    "bear_method": "pb_trough",
+    "bear_recomputed_value": 15.84,
+    "bear_recompute_deviation": 0.002532,
+    "bear_stressed": [
+      "车市连续两年负增长：2019/2020 国内汽车产量 -5%~-8%（2018 年 1-11 月已 -2.6% 且 11 月单月 -13.9% 降幅扩大）[E:data/manifest.json industry_context]",
+      "盈利下滑：净利率回落至 13.5%（历史区间 14.9%-21.0% 下沿外推，非 2008 极端 4.3%），2019 净利约 24-26 亿（较 2017 的 31.49 亿 -20%）[E:data/financials_600660_2018Q3.json phase0_arithmetic]",
+      "估值坍缩：PB 从 2.75 倍回归 1.8 倍增发后熊市谷底（2015 股灾 1.66/2016 熔断 1.91 中值偏下）——较 2018-12-28 的 2.75 倍压缩 35%",
+      "分红维持每股 0.75 元，股息率升至 4.7%（15.8 元股价下）——分红不减是估值托底项而非加密项"
+    ],
+    "bear_base_ratio": 0.8036622583926755,
+    "non_operating_addback_per_share": {
+      "悲观": 0,
+      "基准": 0,
+      "乐观": 0
+    },
+    "bear_vs_price": 0.6935908691834943,
+    "probability_deviations": {},
+    "intrinsic_value_growth": 0.025,
+    "iv_growth_evidence": "永续增长锚定名义 GDP 下沿：量（全球汽车产量长期 3-4%，2017 年报 OICA 引用 [E:filings/fy_AR2017.txt#L609-L614]）× 价（ASP +3-5% 产品升级，2014-2017 实测 CAGR",
+    "revenue_decline_streak": 0,
+    "core_driver_decline_years": null,
+    "peak_stagnation": {
+      "peak_year": 2017,
+      "peak_revenue": 18713.0,
+      "latest_revenue": 18713.0,
+      "drawdown_from_peak": 0.0,
+      "years_since_peak": 0,
+      "stagnating": false,
+      "thresholds": {
+        "min_drawdown": 0.1,
+        "min_years_since_peak": 3
+      }
+    },
+    "decline_streak_used": 0,
+    "shrinking_reasons": [],
+    "value_trap_triggered": false,
+    "dividend_yield": 0.033
+  },
+  "passed": true
+}

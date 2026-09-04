@@ -1,0 +1,51 @@
+{
+  "company": "中远海控（原中国远洋）",
+  "ticker": "601919.SH / 1919.HK",
+  "annual_rows": 11,
+  "year_min": 2010,
+  "year_max": 2020,
+  "reconciliation": {
+    "schema": "general（三表勾稽）",
+    "keys_required": [
+      "total_assets",
+      "total_liabilities",
+      "total_equity"
+    ],
+    "covered_years": 11,
+    "total_years": 11,
+    "coverage": 1.0,
+    "level": "full",
+    "note": "取证检查只在科目齐备的年份执行，缺科目的年份是跳过而非通过。覆盖率必须与「0 错误」一起读（GOOG/TSM 曾以 18% 覆盖率通过校验）。"
+  },
+  "crosscheck": {
+    "years_registered": [
+      2020,
+      2019,
+      2018
+    ],
+    "years_official_source": [
+      2018,
+      2019,
+      2020
+    ],
+    "level": "full",
+    "machine_verified_against_source_text": false,
+    "note": "脚本只能核验 source 字符串是否指向官方原文的**形态**，无法核验数字本身是否与原文一致——编一个数字配一行「2025年报 p.45」同样过闸。因此本项无论哪一级，首屏都必须写明「未经原文机器逐字比对」"
+  },
+  "data_window": {
+    "span_years": 11,
+    "required_years": 15,
+    "cycle_sensitive": true,
+    "stress_years_covered": {
+      "2015": "A股股灾与去杠杆",
+      "2018": "去杠杆与贸易战",
+      "2020": "新冠冲击"
+    },
+    "covers_full_cycle": false,
+    "level": "partial",
+    "note": "窗口内不含任何系统性压力年时，该标的的「历史最差」并未被观测到——周期正常化的均值口径与悲观情景的历史锚都不成立，此时正常化基期与悲观情景必须改用行业基率或同类死亡案例"
+  },
+  "grade": "B",
+  "grade_meaning": "存在部分核验缺口：结论可用，但相关章节须显式降低置信度",
+  "generated_at": "2026-09-04"
+}

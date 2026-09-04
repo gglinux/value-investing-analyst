@@ -1,0 +1,63 @@
+{
+  "case": "PROMPT 第一批案例2：苹果 AAPL @ 2016-04-30",
+  "replay_date": "2016-04-30",
+  "information_cutoff": "2016-04-30",
+  "price_usd": 93.74,
+  "final_verdict": "核心买入",
+  "verdict_rule": "闸门一通过 + 闸门二三项全过 + 核心买入追加下行约束（悲观年化≥0 且 亏损概率≤30%）通过 → 五档制最高档（SKILL.md Phase 5 第2条）",
+  "gate1": {
+    "moat": "wide",
+    "required_margin_of_safety": 0.25,
+    "base_intrinsic_value_per_share": 162.04,
+    "margin_of_safety_vs_price": 0.422,
+    "pass": true,
+    "note": "25% 闸门反推买入上限 121.53 USD，现价低于上限 22.9%；即便按悲观情景 61.58 衡量，现价距其 −34.3% 且其中 27.62/股为净现金"
+  },
+  "gate2": {
+    "expected_annualized_irr": 0.17099,
+    "expected_total_return_5y": 1.3697,
+    "index_hurdle": 0.13,
+    "beats_index": true,
+    "excess_vs_index": 0.0410,
+    "consistency_check": {"expected_irr": 0.17099, "hurdle": 0.16515, "pass": true, "note": "达标但余量仅 0.6pct，红队已如实质询余量薄的风险"},
+    "no_convergence_floor": {"dividend_yield": 0.0226, "iv_growth": 0.07, "value": 0.0926, "hurdle": 0.06, "pass": true},
+    "pessimistic_irr": {"value": 0.01134, "hurdle": 0.0, "pass": true},
+    "loss_probability": 0.0,
+    "pass": true,
+    "pass_ratio": "3/3"
+  },
+  "core_buy_downside_constraint": {"pessimistic_irr": 0.01134, "loss_probability": 0.0, "pass": true, "rule": "悲观 IRR<0 或 亏损概率>30% 时核心买入最高降档至小仓位试探——本案两项均不触发"},
+  "scenario_values_per_share": {"悲观": 61.58, "基准": 162.04, "乐观": 192.18},
+  "scenario_method": {
+    "悲观": "worst_year_margin（0.146×233,715×10x÷5,540.886，独立推导）",
+    "基准": "dcf_owner_earnings（53,394×3% fade 10y + 净现金 153,056M，r=10%）",
+    "乐观": "dcf_owner_earnings（8% fade + 净现金 153,056M）"
+  },
+  "net_cash_reconciliation": {"cash_and_securities": 232928, "debt_total": 79872, "debt_decompose": "LTD 69,374 + LTD 当期 2,500 + 商业票据 7,998", "net_cash": 153056, "per_share": 27.62, "note": "5-13 版底稿 155,556M 漏计 LTD 当期部分 2,500M，本回放修正"},
+  "implied_growth_10y": -0.057,
+  "implied_vs_base_note": "现价隐含 −5.70% vs 我方基准 +3%：市场定价『十年每年衰退 5.7%（累计 −44%）』——恐慌到荒谬区间，买入只需赌『十年内不衰退』弱命题",
+  "discount_rate": 0.10,
+  "discount_rate_discipline": "r=max(10%, 2016-04-29 美国10Y 1.83%+4pct)=10% 合规，三源交叉已披露",
+  "alerts_triggered": [
+    "利润率形状检验：结构性改善（秩相关 +0.73、穿越均值 1 次、末端连续高于均值 6 年）——不强制正常化到均值，基期 OE 用当期值（本回放沿用 5-13 版取净利 53,394，较引擎推荐 55,453 保守 3.9%）"
+  ],
+  "value_trap_S8": {"triggered": false, "reason": "MoS 42.2% < 50% 且收入无连续 3 年负增长（FY16Q2 为首次下滑）、FY2015 即峰值年回撤 0——价值陷阱闸门前提不成立"},
+  "check_scenarios": "通过（悲观/基准离散度 0.38 ≤ 0.85；压力项 margin/multiple/iphone_cycle；独立推导确认，0 警告）",
+  "validate_data": "通过（0 错误；4 警告均已在 manifest 回应：latest_quarter_checked 核对结论 + A1 回放豁免 + FY2007 TA/TL 沿袭说明）",
+  "verify_report": "52/52 通过（正文数字 37 + 图表数组 5 + 证据指针 10）",
+  "verification_strength_grade": "B",
+  "persona_verdicts": {"buffett": "核心买入（经营业务 6.9x + 500 亿回购/年的资本配置）", "duan": "核心买入、跌 30% 加仓（隐含十年衰退 −5.7% = 市场把恐慌卖给你）", "li_lu": "核心买入、分 2-3 段建仓（产品周期不可预测，用仓位消化）"},
+  "redteam_key_challenge": "期望 IRR 17.1% 仅超门槛 0.6pct——情景概率轻微调整即抹掉余量；最强空头逻辑=iPhone 装机量见顶后 ASP 支撑模式天花板，悲观值 61.58 可能不是下限（2013 恐慌 PE 曾到 9.5x 以下）",
+  "key_variables": [
+    {"name": "iPhone7 发布季出货与渠道库存回补", "call": "FY16Q3/Q4 库存回补正常化，iPhone7 发布季出货不塌方", "proxy": "季报 iPhone 收入与渠道库存指数", "falsify": "iPhone7 发布季收入再降两位数且渠道库存回补失败", "check_by": "2017-01-31（FY17Q1 财报）", "data_source": "季报 + 供应链调研"},
+    {"name": "服务收入增速", "call": "维持 +15% 以上（生态收入的直接读数，巴菲特 IBM 盲区的差异化变量）", "proxy": "季报服务收入同比", "falsify": "连续两季 <10%", "check_by": "2017-05-02（FY17Q2 财报）", "data_source": "季报"},
+    {"name": "大中华区收入降幅", "call": "收窄至个位数（渠道去库存完成）", "proxy": "季报大中华区收入同比", "falsify": "降幅再扩大或连续 4 季两位数下滑", "check_by": "2017-01-31", "data_source": "季报分部数据"}
+  ],
+  "falsifiers": ["iPhone7 发布季收入再降两位数且渠道库存回补失败", "服务收入连续两季 +10% 以下", "大中华区降幅再扩大"],
+  "quarterly_watchlist": ["iPhone 出货/ASP 与渠道库存", "服务收入增速（警戒：<10%）", "大中华区同比（警戒：降幅再扩）", "回购执行率（警戒：年化 <300 亿）"],
+  "trigger_price_for_upgrade": null,
+  "buy_ceiling_price": 121.53,
+  "position_guidance": "核心买入档：标准仓位；李录补充纪律=分 2-3 段（现价一段，若 iPhone7 发布季恐慌至 62-70 悲观区间加重），跌破悲观值 61.58 不是加仓信号而是重检信号",
+  "frozen_before_diff": true,
+  "frozen_at": "2026-09-04"
+}

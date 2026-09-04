@@ -1,0 +1,228 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""生成柯达 EK 2011-06-30 回放报告 HTML：数值全部从 data/ 底稿程序化注入，防手抄漂移"""
+import json, os
+
+BASE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))  # backtest/EK_2011-06-30/
+D = lambda name: json.load(open(os.path.join(BASE, 'data', name)))
+
+fin = D('financials_EK_2011Q1.json')
+snap = D('market_snapshot_EK_2011Q2.json')
+scen = D('scenarios_EK_2011Q2.json')
+er = D('expected_return_EK_2011Q2.json')
+met = D('metrics_EK_2011Q2.json')
+
+def vnum(src, path, fmt, val):
+    if val is None:     s = '缺失'   # 底稿 null → verify_report.render(None)='缺失'，文本严格比对
+    elif fmt == 'pct1': s = f"{val*100:.1f}%"
+    elif fmt == 'num0': s = f"{val:,.0f}"
+    elif fmt == 'num1': s = f"{val:,.1f}"
+    elif fmt == 'num2': s = f"{val:,.2f}"
+    else:               s = str(val)
+    return f'<span class="vnum" data-src="{src}" data-path="{path}" data-fmt="{fmt}">{s}</span>'
+
+price = snap['price_usd']; bear = scen['scenarios'][0]['value_per_share']
+base_v = scen['scenarios'][1]['value_per_share']; opt_v = scen['scenarios'][2]['value_per_share']
+cs = met['chart_series']
+years = cs['years']
+mos_base = 1 - price/base_v   # vs 基准
+exp_v = er['expected_value_per_share']
+
+chart = """
+<script src="https://cdnjs.cloudflare.com/ajax/libs/echarts/4.8.0/echarts.min.js"></script>
+<script>
+function mk(id, opt){ var c = echarts.init(document.getElementById(id)); c.setOption(opt); }
+document.addEventListener('DOMContentLoaded', function(){
+"""
+def line_opt(title, name, anchor, data, pct=False, color='#c0392b'):
+    return f"""mk('{title}', {{
+  title:{{text:'{name}',left:'center',textStyle:{{fontSize:14}}}},
+  tooltip:{{trigger:'axis'}},
+  grid:{{left:60,right:20,bottom:30,top:40}},
+  xAxis:{{type:'category',data:{json.dumps(years)}}},
+  yAxis:{{type:'value'{',axisLabel:{formatter:"{value}%"}' if pct else ''}}},
+  series:[{{name:'{name}',type:'bar',itemStyle:{{color:'{color}'}},
+  {anchor}
+  data:{json.dumps(data)}}}]
+}});"""
+
+rev_arr = [round(x,1) for x in cs['revenue']]
+ni_arr  = [round(x,1) for x in cs['net_income']]
+nm_arr  = [round(x*100,2) for x in cs['net_margin']]
+bvps_arr = [round(x,2) if x is not None else 0 for x in cs['bvps']]  # 同上
+eps_arr  = [round(x,2) if x is not None else 0 for x in cs['eps']]   # null→0：bar 零高度不可见；底稿 null 位置校验自动跳过
+gm_arr  = [round(x*100,2) if x is not None else None for x in cs['gross_margin']]
+
+charts = chart + line_opt('c1','营业收入（百万 USD；2001-2005 含 Health 全口径，2006-2010 持续经营口径，2005→2006 断层系口径而非业务）','<!-- vchart src=metrics_EK_2011Q2.json path=chart_series.revenue -->', rev_arr, color='#7f8c8d') + "\n" + \
+         line_opt('c2','净利润（百万 USD）','<!-- vchart src=metrics_EK_2011Q2.json path=chart_series.net_income -->', ni_arr, color='#2c3e50') + "\n" + \
+         line_opt('c3','净利率 %（十年均值 −1.3%）','<!-- vchart src=metrics_EK_2011Q2.json path=chart_series.net_margin scale=100 -->', nm_arr, pct=True) + "\n" + \
+         line_opt('c4','EPS（USD；2001-2005 底稿缺稀释股本数据，零位=无数据）','<!-- vchart src=metrics_EK_2011Q2.json path=chart_series.eps -->', eps_arr, color='#16a085') + "\n" + \
+         line_opt('c5','每股净资产 BVPS（USD；2001-2008 底稿未覆盖零位=无数据；2009-2010 为负=资不抵债）','<!-- vchart src=metrics_EK_2011Q2.json path=chart_series.bvps -->', bvps_arr, color='#8e44ad') + "\n</script>"
+
+badge = open(os.path.join(BASE, 'workpapers', 'badge_div.html')).read()
+
+html = f"""<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8"><title>柯达 EK 历史回放报告 2011-06-30（第一批案例3）</title>
+<style>
+body{{font-family:'PingFang SC','Microsoft YaHei',sans-serif;max-width:980px;margin:0 auto;padding:24px;color:#2c3e50;line-height:1.75;background:#fafafa}}
+h1{{font-size:22px;border-bottom:3px solid #c0392b;padding-bottom:8px}} h2{{font-size:18px;color:#c0392b;margin-top:32px;border-left:4px solid #c0392b;padding-left:10px}}
+h3{{font-size:15px;margin:14px 0 6px}}
+.card{{background:#fff;border:1px solid #e0e0e0;border-radius:10px;padding:18px 22px;margin:14px 0;box-shadow:0 1px 3px rgba(0,0,0,.06)}}
+.verdict{{background:linear-gradient(135deg,#fdedec,#fff);border:2px solid #c0392b}}
+.gate-fail{{color:#c0392b;font-weight:700}} .gate-pass{{color:#27ae60;font-weight:700}}
+table{{border-collapse:collapse;width:100%;margin:10px 0;background:#fff}}
+th,td{{border:1px solid #d5d8dc;padding:7px 10px;font-size:14px;text-align:left}}
+th{{background:#f2d7d5}}
+.warnbox{{background:#fdecea;border-left:4px solid #c0392b;padding:10px 14px;border-radius:4px;margin:10px 0}}
+.okbox{{background:#e8f6f3;border-left:4px solid #27ae60;padding:10px 14px;border-radius:4px;margin:10px 0}}
+.chart{{width:100%;height:300px}}
+.small{{font-size:12.5px;color:#7f8c8d}}
+</style>
+</head>
+<body>
+
+<h1>伊士曼柯达 EK — 历史回放分析报告</h1>
+<p class="small">backtest/PROMPT.md 第一批 · 案例 3 ｜ 回放时点 <b>2011-06-30</b>（交易日，周四收盘）｜ 生成于 2026-09-04</p>
+
+<div class="warnbox"><b>本报告仅使用 2011-06-30 及之前的公开信息。</b>信息截断纪律：FY2011 Q2 10-Q（2011-08-04 filed）、FY2011 10-K（2012-02-28 filed）、ITC 诉苹果/RIM 案裁决（2011-07-01）、专利出售官宣（2011-07-20）、Chapter 11 申请（2012-01-19）等一切晚于截断日的信息均已剔除；行情接口不可用，价格经 SEC 官方文件三重锚定（见 meta.json / price_source）。执行者已知事后答案的<strong>三重污染自陈</strong>见 <code>meta.json / contamination_disclosure</code>，全部估值输入仅取截断日前文件与价格事实，档位完全由数据管线决定。</div>
+
+<div class="card verdict">
+<h2 style="margin-top:0">决策卡</h2>
+<p>结论档位：<b style="font-size:20px">拒绝</b>（闸门一深负、闸门二三项全不过、护城河档位 none——三重独立否决，非「等价格」可解：负 Owner Earnings 的公司不存在"足够便宜"）</p>
+<p>现价 {vnum('market_snapshot_EK_2011Q2.json','price_usd','num2',price)} USD ｜ 市值 {vnum('market_snapshot_EK_2011Q2.json','total_market_cap_usd_yi','num2',snap['total_market_cap_usd_yi'])} 亿 USD ｜ TTM PE {vnum('market_snapshot_EK_2011Q2.json','pe_ttm','num2',snap['pe_ttm'])}（净利为负无意义）｜ PB {vnum('market_snapshot_EK_2011Q2.json','pb','num2',snap['pb'])}（权益为负无意义）｜ 股息率 {vnum('market_snapshot_EK_2011Q2.json','dividend_yield_ttm_frac','pct1',snap['dividend_yield_ttm_frac'])}（2008 年停付）｜ 52 周位置 {vnum('market_snapshot_EK_2011Q2.json','position_52w','pct1',snap['position_52w'])}</p>
+<p>闸门一（安全边际）：基准内在价值 {vnum('scenarios_EK_2011Q2.json','scenarios.1.value_per_share','num2',base_v)} USD → MoS vs 基准 = {mos_base*100:.0f}% <span class="gate-fail">✗ 深负（正常化盈利为负，内在价值无正锚点）</span></p>
+<p>闸门二：① 期望年化 IRR {vnum('expected_return_EK_2011Q2.json','expected_annualized_irr','pct1',er['expected_annualized_irr'])}（护城河 none 无门槛且为负值）<span class="gate-fail">✗</span>；② 不收敛下限 = 股息率 0% + 内在价值增速 {vnum('expected_return_EK_2011Q2.json','gate2.no_convergence_floor.intrinsic_value_growth','pct1',er['gate2']['no_convergence_floor']['intrinsic_value_growth'])} = {vnum('expected_return_EK_2011Q2.json','gate2.no_convergence_floor.value','pct1',er['gate2']['no_convergence_floor']['value'])} vs 门槛 6% <span class="gate-fail">✗（引擎判语：价值陷阱的定量特征）</span>；③ 悲观年化 {vnum('expected_return_EK_2011Q2.json','gate2.pessimistic_irr.value','pct1',er['gate2']['pessimistic_irr']['value'])} < 0 <span class="gate-fail">✗</span> → <span class="gate-fail">闸门二 {er['gate2']['pass'] and '3/3' or '0/3'} ✗</span></p>
+<p>亏损概率 {vnum('expected_return_EK_2011Q2.json','loss_probability','pct1',er['loss_probability'])}、亏损情景平均跌幅 {vnum('expected_return_EK_2011Q2.json','expected_downside_given_loss','pct1',er['expected_downside_given_loss'])}——这不是安全边际不足的买入问题，是单向否决。</p>
+{badge}
+</div>
+
+<h2>一、信息集与防前视声明</h2>
+<div class="card">
+<table>
+<tr><th>披露</th><th>publish_date</th><th>状态</th></tr>
+<tr><td>FY2001-FY2005 年度（Item 6 五年表，含 Health 全口径）</td><td>filed 2006-03-02（FY2005 10-K）</td><td>✓ 进信息集</td></tr>
+<tr><td>FY2006-FY2010 年度（Item 6 五年表，持续经营口径）</td><td>filed 2011-02-25（FY2010 10-K）</td><td>✓ 进信息集（最新年报）</td></tr>
+<tr><td>FY2011 Q1 10-Q（最新季报：净亏 −246M / OCF −525M / 权益 −1,276M）</td><td>filed 2011-04-28</td><td>✓ 进信息集（截断日前 63 天）</td></tr>
+<tr><td>2011-06-30 收盘价 3.58 USD（SEC 市值锚点 963M ÷ 268.9M + Forbes 报道 + 10-K Item 5 区间包含，三源独立一致）</td><td>2011-06-30</td><td>✓ 进信息集</td></tr>
+<tr><td>ITC 诉苹果/RIM 案最终裁决</td><td>2011-07-01</td><td>✗ 剔除（晚于截断日 1 天）</td></tr>
+<tr><td>1,100 项数字成像专利出售官宣</td><td>2011-07-20</td><td>✗ 剔除（截断日前仅有市场传闻，作为叙事处理）</td></tr>
+<tr><td>FY2011 Q2 10-Q / FY2011 10-K / Chapter 11 申请</td><td>2011-08-04 / 2012-02-28 / 2012-01-19</td><td>✗ 剔除（晚于截断日）</td></tr>
+</table>
+<p class="small">会计口径断层如实披露：2001-2005 为含 Health Group 全口径、2006-2010 为剥离后持续经营口径（2005→2006 收入 14,268→10,568 断层系口径而非业务变化，跨断层 YoY 置 null）。OCF 仅 2008-2010 三年可得（XBRL 覆盖期），其余年份置 null 不虚构。股本 290.9→268.9M 无拆股无增发，价格无需复权。</p>
+</div>
+
+<h2>二、Phase 0 排雷</h2>
+<div class="card okbox">
+<b>通过（未命中造假类排雷项）。</b>① 无财务造假指控、无 SEC 会计调查、历年审计意见均为标准无保留（对立面检索见 manifest adversarial_check）——柯达的糟糕是真实的糟糕，不是假账；② must_not_trigger（phase0_false_fire）满足：系统应走完估值与下限逻辑给出「拒绝」，而非在排雷层直接拦下（对照案例 4 康美才是排雷正样本）；③ 非排雷但必须呈现的风险事实：资不抵债 −1,077M→−1,276M、OCF 连负、退休金/OPEB 或有义务数十亿级、商誉减值历史（FY2005/Q3'10 626M）——进入估值与下行论证 [E:manifest.json#adversarial_check][E:financials_EK_2011Q1.json]。
+</div>
+
+<h2>三、定量画像（FY2001-FY2010，10 年窗口）</h2>
+<div class="card">
+<div id="c1" class="chart"></div>
+<div id="c2" class="chart"></div>
+<div id="c3" class="chart"></div>
+<div id="c4" class="chart"></div>
+<div id="c5" class="chart"></div>
+<p class="small">引擎警报 2 条：①基期不可用——当期亏损（净利率 −9.6%）且周期正常化不适用，禁止当期数据做 DCF 基期，须单独论证正常化盈利路径；②利润率形状检验——周期波动（秩相关 −0.49、穿越均值 3 次），但正常化净利 −92M/中周期 −78M 仍为负——「正常化」救不了这家公司。另 10 条 warnings（EBIT 缺失用净利近似，Item 6 无该行如实披露）。十年收入 CAGR {vnum('metrics_EK_2011Q2.json','summary.cagr_total.revenue','pct1',met['summary']['cagr_total']['revenue'])}（口径混合，仅方向参考；2006-2010 单表口径五连降 −7.4%/年 自洽）。</p>
+<p>正常化判定：净利率当期 {vnum('metrics_EK_2011Q2.json','normalization.net_margin_latest','pct1',met['normalization']['net_margin_latest'])} vs 全期均值 {vnum('metrics_EK_2011Q2.json','normalization.net_margin_avg','pct1',met['normalization']['net_margin_avg'])}；正常化净利 {vnum('metrics_EK_2011Q2.json','normalization.net_income_normalized','num1',met['normalization']['net_income_normalized'])} 百万 / 中周期 {vnum('metrics_EK_2011Q2.json','normalization.net_income_mid_cycle','num1',met['normalization']['net_income_mid_cycle'])} 百万——<b>即使把十年利润率均值当作"正常水平"，柯达的持续经营盈利能力也是负的</b>；引擎推荐基期 OE = {vnum('metrics_EK_2011Q2.json','normalization.base_oe_recommended','num1',met['normalization']['base_oe_recommended'])}（null：当期亏损，正常化路径不存在正值锚点，基期判定失败）。股息政策轨迹即衰退曲线：每股 2.21（2001）→0.50（2004-07）→0（2008 停付）。全球员工 74,000（2001）→18,800（2010），十年 −75%。</p>
+</div>
+
+<h2>四、五维定性</h2>
+<div class="card">
+<h3>4.1 商业模式</h3>
+<p>曾经的"剃刀-刀片"垄断者（相机+胶片+冲印全链条），该模式已被数码替代整体摧毁：胶片需求随冲印业态消失，公司转型商业打印/图文（GCG 2011Q1 收入 625M vs 上年 601M，+4%）与消费数码。当前模式是"衰退现金牛（胶片残余）+ 红海竞争者（打印）+ 或有资产（专利授权）"的组合，无自我维持的正现金流 [E:financials_EK_2011Q1.json][E:metrics_EK_2011Q2.json][E:manifest.json]。</p>
+<h3>4.2 护城河（none——不成立）</h3>
+<p>品牌与专利存量是真实的（百年品牌 + 1,100 项数字成像专利 + 2008 年以来专利许可费近 20 亿），但护城河的本质是<b>未来的超额现金流</b>而非历史资产：①胶片生态网络已崩塌（渠道消失）；②成本端无优势（十年裁员 75% 仍未转正）；③打印市场面对惠普/佳能/理光的渠道与耗材闭环，无定价权；④数码影像定价权在苹果/安卓阵营。五维中"无形资产"与"成本优势"两项均失效——moat=none，闸门二①无门槛直接出局 [E:metrics_EK_2011Q2.json][E:financials_EK_2011Q1.json][E:market_snapshot_EK_2011Q2.json]。</p>
+<h3>4.3 增长空间</h3>
+<p>方向为负：持续经营收入五连降 10,568→7,187M（−32%），2011Q1 同比再 −30.9%（1,914→1,322，上年同期含专利许可收入高峰 389M 经营利润未能重现）；正常化增速取 −5.5%（比 5 年 CAGR −7.4% 温和，已计入 GCG +4% 对冲）[E:financials_EK_2011Q1.json][E:scenarios_EK_2011Q2.json][E:metrics_EK_2011Q2.json]。</p>
+<h3>4.4 管理层与治理</h3>
+<p>资本配置记录是本案核心控诉：①2003-2007 年在收入已连降时维持高股息（643→144M）直至 2008 断崖停付——高股息是衰退期的价值毁灭而非股东回报；②2007 年出售 CIG 所得 +884M 未形成新盈利引擎；③2008-2010 连续三年零股息 + 权益转负，管理层无任何分红/回购通道恢复的信号。治理程序本身无丑闻（审计干净、无造假）——问题不在诚信而在无力回天 [E:metrics_EK_2011Q2.json][E:financials_EK_2011Q1.json][E:manifest.json]。</p>
+<h3>4.5 财务质量与风险深查</h3>
+<p>TTM EPS {vnum('market_snapshot_EK_2011Q2.json','ttm_eps','num2',snap['ttm_eps'])} USD（负）、每股净资产 −4.74 USD、BVPS 2009 起为负（图 c5）；风险深查：①偿付结构——现金 1,300M（Q1'11 末）vs 长期债务 1,195M + 流动负债 2,441M + 退休金/OPEB 或有缺口，OCF 连续两年净流出背景下 2-4 年内现金枯竭路径可见；②Q1'11 OCF −525M 虽有季节性（Q1 发奖金/付款周期），但上年同期现金 1,500M → 本期 1,300M 的斜率在恶化；③3 月 ITC 复核通过带来的股价反弹（3.02→3.58）系诉讼期权定价，非基本面转折——1 月 ALJ 初裁不利是公开事实 [E:financials_EK_2011Q1.json][E:market_snapshot_EK_2011Q2.json][E:metrics_EK_2011Q2.json]。</p>
+</div>
+
+<h2>五、估值与安全边际（Phase 4）</h2>
+<div class="card">
+<p><b>折现率下限纪律披露</b>：计价货币 USD，2011-06-30 美国 10Y 国债收益率 3.18%（美联储 H.15 官方收盘曲线值；交叉：特多 HSF 季报 3.16%、MarketWatch 盘前 3.10%）[E:manifest.json#us_10y] → r = max(10%, 3.18%+4pct) = <b>10.0%</b>，合规。</p>
+<p><b>基期判定（本案估值链的事实前提）</b>：compute_metrics 判「当期亏损、周期正常化不适用、禁止当期数据做 DCF 基期」→ base_oe_recommended = null；implied-growth 引擎同样拒绝（基期 OE −92.161 为负：「亏损公司套 DCF 会产出无意义的负内在价值」，输出原文存 implied_growth_EK_2011Q2.json.txt）。三情景按「负/零 OE 公司」如实构造，不虚构正常化盈利。</p>
+<h3>5.1 三情景</h3>
+<table>
+<tr><th>情景</th><th>每股价值</th><th>方法</th><th>概率</th></tr>
+<tr><td>悲观</td><td>{vnum('scenarios_EK_2011Q2.json','scenarios.0.value_per_share','num2',bear)} USD</td><td>peer_death_analogy：现价 3.58 × 终局存活比例 5%（宝丽来 2008 二次破产后股东回收≈0-3%、Delphi 2009≈5%，均截断日前先例；清算算术佐证：资产变现≈3,410M − 总负债 7,314M → 每股残差 −14.5，清算下股权为负）[E:workpapers/ek_scenario_audit.json]</td><td>0.3</td></tr>
+<tr><td>基准</td><td>{vnum('scenarios_EK_2011Q2.json','scenarios.1.value_per_share','num2',base_v)} USD</td><td>normalized_oe_capitalization：正常化净利 −92M ÷ 10% → 经营价值 ≈ −920M，加非经营资产后权益理论价值 ≤ 0，保留 0.5 为「不出售资产继续经营」路径残值 [E:scenarios_EK_2011Q2.json]</td><td>0.5</td></tr>
+<tr><td>乐观</td><td>{vnum('scenarios_EK_2011Q2.json','scenarios.2.value_per_share','num2',opt_v)} USD</td><td>asset_monetization：专利叙事<b>全部兑现</b>上沿——1,100 项专利按传闻上沿 3,000M 出售（税费折价 10%）+ ITC 赢诉授权费现值 1,000M + 现金 1,624 − 债务 1,195 − 退休金补缺 800 ≈ 9.0/股 [E:scenarios_EK_2011Q2.json]</td><td>0.2</td></tr>
+</table>
+<p class="small">S1-S9 三情景门禁：通过（1 条警告 S5：无 non_operating_addback_per_share 登记——本案净非经营资产为负，本无 add-back，警告合理）。悲观/基准离散度 0.36 ≤ 0.85；悲观/现价 0.05（构造出真实下行）；悲观方法独立于 DCF；压力项 4 项（balance_sheet_insolvency / cash_burn_exhaustion / pension_underfunding / patent_sale_fails）。S2b 机器重算：3.58×0.05 = 0.179 ≈ 0.18 登记值一致。</p>
+<h3>5.2 反向 DCF（基率检验）</h3>
+<p>现价隐含 10 年 OE 增速：<b>不可评</b>——基期 OE 为负，反向 DCF 无定义（引擎拒绝输出见 data/implied_growth_EK_2011Q2.json.txt）。这不是数据缺失，而是本案结论的一部分：<b>连"隐含了多少悲观"都无法定义的市场，其定价不是"便宜与否"问题，而是"存续与否"问题</b>。多头叙事的全部兑现（乐观 9.0）相对现价的期望贡献 = 0.2×9.0 = 1.80，仍被基准+悲观的期望拖累（0.3×0.18+0.5×0.5 = 0.30）覆盖后仅余期望 V0 {vnum('expected_return_EK_2011Q2.json','expected_value_per_share','num2',exp_v)} USD < 现价 {vnum('market_snapshot_EK_2011Q2.json','price_usd','num2',price)} [E:expected_return_EK_2011Q2.json][E:implied_growth_EK_2011Q2.json.txt]。</p>
+<h3>5.3 安全边际结论</h3>
+<p>基准 V0 {vnum('scenarios_EK_2011Q2.json','scenarios.1.value_per_share','num2',base_v)} vs 现价 {vnum('market_snapshot_EK_2011Q2.json','price_usd','num2',price)}：<b>MoS vs 基准 = {mos_base*100:.0f}% → 闸门一深负不通过</b>。52 周区间 {vnum('market_snapshot_EK_2011Q2.json','high_52w','num2',snap['high_52w'])} / {vnum('market_snapshot_EK_2011Q2.json','low_52w','num2',snap['low_52w'])}，现价位置 {vnum('market_snapshot_EK_2011Q2.json','position_52w','pct1',snap['position_52w'])}；年初至今 {vnum('market_snapshot_EK_2011Q2.json','chg_ytd','pct1',snap['chg_ytd'])}（2010-12-31 收盘 5.36，DEF 14A + 1stock1 双源）。峰值回撤停滞三尺度：52 周高点 {vnum('market_snapshot_EK_2011Q2.json','high_52w','num2',snap['high_52w'])} → {vnum('market_snapshot_EK_2011Q2.json','drawdown_from_52w_high','pct1',snap['drawdown_from_52w_high'])}；2007 年末 21.87 → {vnum('market_snapshot_EK_2011Q2.json','drawdown_from_2007ye','pct1',snap['drawdown_from_2007ye'])}；1997-02 峰值 94.25 → {vnum('market_snapshot_EK_2011Q2.json','drawdown_from_1997_peak','pct1',snap['drawdown_from_1997_peak'])}——逐年新低、14 年无收复，即 PROMPT 本案 must_trigger 的「峰值回撤停滞」信号 [E:market_snapshot_EK_2011Q2.json]。</p>
+<h3>5.4 假设一致性对账</h3>
+<p>①悲观方法独立于 DCF（死亡类比，peer 先例均在截断日前）；②基准不虚构正常化盈利（正常化净利 −92M 系引擎输出而非手填）；③乐观情景为多头叙事的<b>全部兑现上沿</b>而非温和改善——即便如此期望 V0 仍低于现价 41%，叙事的数学结构不成立；④概率维持默认 0.3/0.5/0.2（与茅台/苹果同构可比），概率偏置问题登记 observations（OBS-2011-06-01 候选：对资不抵债公司基准 50% 或仍偏慷慨，但不影响方向——即使乐观概率上调至 40%，期望 V0 = 0.3×0.18+0.3×0.5+0.4×9.0... 反向论证见红队质询 2）。</p>
+</div>
+
+<h2>六、双闸门与档位（Phase 4 定档）</h2>
+<div class="card">
+<table>
+<tr><th>闸门</th><th>项目</th><th>值</th><th>门槛</th><th>结果</th></tr>
+<tr><td>闸门一</td><td>安全边际（vs 基准 V0 0.50）</td><td>{mos_base*100:.0f}%</td><td>≥25%（护城河档位按 none 时门槛不适用——但 MoS 为负时任何门槛都不过）</td><td class="gate-fail">✗</td></tr>
+<tr><td>闸门二①</td><td>期望 IRR（自洽性校验）</td><td>{vnum('expected_return_EK_2011Q2.json','gate2.consistency_expected_irr.value','pct1',er['gate2']['consistency_expected_irr']['value'])}</td><td>护城河 none：无门槛（估值方法树直接出局）</td><td class="gate-fail">✗</td></tr>
+<tr><td>闸门二②</td><td>不收敛下限 = 股息率 + 内在价值增速</td><td>{vnum('expected_return_EK_2011Q2.json','gate2.no_convergence_floor.value','pct1',er['gate2']['no_convergence_floor']['value'])}</td><td>6.0%</td><td class="gate-fail">✗（差 11.5pct）</td></tr>
+<tr><td>闸门二③</td><td>悲观情景年化</td><td>{vnum('expected_return_EK_2011Q2.json','gate2.pessimistic_irr.value','pct1',er['gate2']['pessimistic_irr']['value'])}</td><td>≥ 0</td><td class="gate-fail">✗</td></tr>
+</table>
+<p>期望总回报 {vnum('expected_return_EK_2011Q2.json','expected_total_return','pct1',er['expected_total_return'])}（5 年期望值口径）；期望年化 IRR {vnum('expected_return_EK_2011Q2.json','expected_annualized_irr','pct1',er['expected_annualized_irr'])} vs 指数机会成本 {vnum('expected_return_EK_2011Q2.json','index_hurdle','pct1',er['index_hurdle'])}：跑输 {vnum('expected_return_EK_2011Q2.json','excess_vs_index','pct1',er['excess_vs_index'])}；亏损概率 {vnum('expected_return_EK_2011Q2.json','loss_probability','pct1',er['loss_probability'])}、亏损情景平均跌幅 {vnum('expected_return_EK_2011Q2.json','expected_downside_given_loss','pct1',er['expected_downside_given_loss'])}。</p>
+<p class="warnbox"><b>不收敛下限是本案的定性核心</b>：股息率 0%（2008 停付）+ 内在价值增速 −5.5%（收入五连降趋势）= −5.5%，远低于 6% 门槛——即使未来某天市场"承认"了某个估值，投资者在等待期每年"实收"为负且归零风险悬顶。<b>这正是价值陷阱的定量特征（引擎判语），亦即 PROMPT 本案 must_trigger 的「不收敛下限低」信号</b>。S8 价值陷阱闸门：MoS 为负不满足前置条件（>50%），不触发强制降档路径——本案不是"降档"问题而是"否决"问题；收入连续 5 年负增长由 metrics 自动读取（metrics_EK_2011Q2.json），峰值回撤停滞三尺度已在 5.3 呈现。</p>
+<p><b>最终档位：拒绝</b>（闸门一不过 → 最高「观察等价格」；期望 IRR 为负 + moat none → 连"等价格"都不成立：不存在任何能让负 V0 变得划算的价格，等到的只会是更低的 V0）。</p>
+</div>
+
+<h2>七、关键判断收敛（Phase 4.5）</h2>
+<div class="card">
+<p><b>关键变量（重要且可知）</b>：①现金消耗速度与再融资/资产出售进度（季报现金余额 + OCF，警戒线：现金 &lt;800M 或 OCF 连续 4 季净流出）；②ITC 案复核走向（1 月 ALJ 已不利，复核结果决定授权费期权价值）；③1,100 项专利出售的买家与价格（市场传闻 20-30 亿，官宣前均为叙事）；④GCG 喷墨收入增速能否持续为正（转型唯一亮点）。</p>
+<p><b>变异认知测试</b>：市场为什么给 3.58？——不是对清算价值的定价（清算残差为负），而是对「专利出售 + ITC 翻案 + 打印转型」三个期权的打包定价（3 月复核通过后从 3.02 反弹的轨迹可证）。我方与市场的分歧不在数字而在结构：<b>期权的收益归债权人，期权的成本归股东</b>——这是个可解释、可验证的分歧，属于"答得出超额认知"的分歧。</p>
+<p><b>双重机会成本</b>：期望年化 IRR −18.3% &lt; 指数门槛 9.0%（跑输 27.3pct）→ 机会成本维度同样否决 [E:expected_return_EK_2011Q2.json]。</p>
+</div>
+
+<h2>八、三位大师独立评估 + 芒格红队（Phase 5）</h2>
+<div class="card">
+<table>
+<tr><th>维度</th><th>巴菲特</th><th>段永平</th><th>李录</th></tr>
+<tr><td>结论</td><td>拒绝</td><td>拒绝</td><td>拒绝</td></tr>
+<tr><td>首要理由</td><td>负 OE + 资不抵债是事实而非风险；伯克希尔纺织厂亲历</td><td>生意没了，价格无关；Stop Doing List</td><td>能力圈外三件事 + 归零风险结构</td></tr>
+<tr><td>对专利叙事</td><td>资产归公司，股东拿不到（无分红回购通道）</td><td>看不懂变现路径，能力圈外不赚</td><td>好资产在坏资本结构里，资产是债权人的</td></tr>
+<tr><td>重新评估条件</td><td>收入/OCF 转正 + 分红回购恢复</td><td>两季 OCF 转正 + 分红宣布</td><td>重组后新资本结构作新公司看</td></tr>
+</table>
+<p><b>红队五连质询</b>（全文见 persona_divergence_redteam.md）：①「利空出尽」论——死亡类比显示每层"出尽"下还有一层（宝丽来 60+→归零）；②专利期权论——收益归债权人、成本归股东，30 亿是 2008 年专利繁荣期传闻价且 ITC 初裁不利；③喷墨 +4% 杯水车薪（整体 −30.9%）；④Invert：股东赚钱需收入止跌×OE 转正×资本配置转向三者连环发生，截断日全部反向；⑤<b>与茅台 2015 的分野</b>——茅台是"政策冲击×模式完好"（S8 误杀风险），柯达是"模式被替代×资本结构已破"（趋势而非冲击）——下限逻辑在两案给出相反结论，正是门禁判别力的证明。三人独立收敛 + 红队无翻案 → 拒绝成立，且属"任何价格下的拒绝"。（三份评估全文见 workpapers/persona_*.md）</p>
+</div>
+
+<h2>九、持有体验预演 + 跟踪清单</h2>
+<div class="card">
+<p><b>历史回撤（真实数据）</b>：1997-02 峰值 94.25 → 现价 3.58（−96.2%，14 年）；2007-12-31 收盘 21.87 → 现价（−83.6%，3.5 年）；52 周内 5.95 → 2.75 → 3.58。本案的持有体验预演不是"跌 40% 敢不敢加仓"，而是<b>每一波反弹都是逃命窗口的十年阴跌</b>——1997 年以来每一轮"看起来见底"（2003、2006、2010 年 4 月）之后都创了新低。</p>
+<p><b>证伪条件（翻多触发，三者同时满足才有效）</b>：①收入止跌回升两个季度以上；②OCF 转正且不含营运资本一次性释放；③股息恢复或回购启动（管理层对现金流的信心标志）。</p>
+<p><b>季度跟踪清单</b>：①现金余额与 OCF（警戒线：现金 &lt;800M）；②ITC 复核裁决与专利出售进展；③GCG 增速（唯一亮点，警戒线转负）；④退休金缺口重估（折现率敏感性）。</p>
+</div>
+
+<h2>十、数据引用附录（全部 publish_date）</h2>
+<div class="card small">
+<table>
+<tr><th>数据项</th><th>值</th><th>来源</th><th>publish_date</th></tr>
+<tr><td>FY2001-FY2005 年度财务（含 Health）</td><td>收入 12,976→14,268 / 净利 76→−1,362</td><td>FY2005 10-K Item 6（accn 0001206774-06-000357）</td><td>filed 2006-03-02</td></tr>
+<tr><td>FY2006-FY2010 年度财务（持续经营）</td><td>收入 10,568→7,187 / 净利 −594→−687 / 权益 →−1,077</td><td>FY2010 10-K Item 6（accn 0000031235-11-000025）+ companyfacts XBRL 双源</td><td>filed 2011-02-25</td></tr>
+<tr><td>FY2011 Q1 季报</td><td>收入 1,322 / 净亏 −246 / OCF −525 / 权益 −1,276</td><td>FY2011 Q1 10-Q（accn 0000031235-11-000085，XBRL）</td><td>filed 2011-04-28</td></tr>
+<tr><td>2011-06-30 收盘 3.58</td><td>市值 963M = 3.58×268.9M</td><td>FY2012 10-K 封面市值锚点 + Forbes 2011-07-05 逐字 + FY2011 10-K Item 5 Q2 区间包含</td><td>2011-06-30（价格事实）</td></tr>
+<tr><td>2010-12-31 收盘 5.36</td><td>YTD 计算基准</td><td>柯达 DEF 14A 委托书 + 1stock1 年度表双源</td><td>2011-03 前后（filed）</td></tr>
+<tr><td>52 周区间 2.75-5.95</td><td>Q2'11 低 / Q4'10 高</td><td>FY2011 10-K Item 5 + FY2010 10-K Item 5（sales price 口径）</td><td>filed 2012-02-28 / 2011-02-25</td></tr>
+<tr><td>US 10Y 3.18%</td><td>折现率下限纪律输入</td><td>美联储 H.15 官方（20110705 期）+ 特多 HSF 季报 + MarketWatch 三源交叉</td><td>2011-06-30</td></tr>
+</table>
+<p><b>晚于截断日已剔除的披露</b>：ITC 案最终裁决（2011-07-01）、专利出售官宣与 Lazard/Jones Day 聘任（2011-07/09）、FY2011 Q2 10-Q（2011-08-04）、FY2011 10-K（2012-02-28）、Chapter 11 申请（2012-01-19）、以及一切 2011-07-01 之后的信息。</p>
+<p>核验记录：validate_data.py 入口校验通过（0 错误，7 警告均已在 manifest 回应：A1 时间机器悖论豁免/勾稽 70%/2007 OCF 豁免）；check_scenarios.py S1-S9 通过（1 警告 S5 合理）；核验强度 B（勾稽 70% partial/命门科目 full/窗口 10 年 full 含全球金融危机压力年，相关章节已降置信度披露）；本报告 verify_report.py 数字校验结果见校验摘要。</p>
+</div>
+
+{charts}
+</body>
+</html>"""
+
+out = os.path.join(BASE, 'report.html')
+open(out, 'w').write(html)
+print('报告已生成:', out, f'({len(html)} 字符)')

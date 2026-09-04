@@ -1,0 +1,8 @@
+usage: reverse_dcf.py implied-growth [-h] --market-cap MARKET_CAP --base-oe
+                                     BASE_OE [--discount-rate DISCOUNT_RATE]
+                                     [--terminal-growth TERMINAL_GROWTH]
+                                     [--years YEARS] [--fade]
+                                     [--deduct DEDUCT]
+                                     [--terminal-growth-cap TERMINAL_GROWTH_CAP]
+                                     [--min-spread MIN_SPREAD]
+reverse_dcf.py implied-growth: error: the following arguments are required: --market-cap, --base-oe

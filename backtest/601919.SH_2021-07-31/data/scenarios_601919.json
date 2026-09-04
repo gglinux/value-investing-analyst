@@ -1,0 +1,54 @@
+{
+  "company": "中远海控（原中国远洋）",
+  "ticker": "601919.SH",
+  "currency": "CNY",
+  "price": 17.66,
+  "price_source": "market_snapshot_601919_2021.json（腾讯行情+通联+同花顺三源仲裁）",
+  "moat": "none",
+  "moat_basis": "Phase 3 五源全缺+定价权三项硬测试全失败+ROIC 0.65% 定量证伪 [E:data/workpapers/phase3_qualitative_601919.json]",
+  "discount_rate": 0.10,
+  "discount_rate_note": "10Y 国债 2.84% 三源 [E:data/manifest.json] + 高周期波动/高杠杆风险溢价，且与两段式 DCF 内部一致",
+  "hold_years": 5,
+  "dividend_yield": 0.0,
+  "dividend_yield_note": "2011-2020 十个分红年度全部为零；2020 年度不分配 [E:filings/zhyk_AR2020.txt:1473]",
+  "intrinsic_value_growth": 0.0,
+  "iv_growth_evidence_note": "正常化基期下内在价值增速取 0：量增长期靠并购（稀释对冲）、价增长即周期波动无趋势——S7b 不适用（值为零），下限=股息率 0% + 0%",
+  "default_probabilities": {"悲观": 0.3, "基准": 0.5, "乐观": 0.2},
+  "scenarios": [
+    {
+      "name": "悲观",
+      "value_per_share": 2.79,
+      "probability": 0.3,
+      "method": "pb_trough",
+      "method_note": "历史 PB 谷底 0.75 倍（2016 年真实亏损年定价）× 2021Q1 末 BPS 3.714 元（=归母净资产 594.72 亿 ÷ 160.13 亿股）[E:data/market_snapshot_601919_2021.json][E:data/financials_601919_2021Q1.json interim]",
+      "method_inputs": {
+        "trough_pb": 0.75,
+        "bvps": 3.714
+      },
+      "stressed_assumptions": [
+        "运价立即崩回：SCFI 2022 起回落至 2015-2019 均值区（约 900 点，较现价 4196 点 −79%）",
+        "盈利转亏：2022-2023 重演 2016 式亏损（新船 2023 交付潮压价），净资产被侵蚀",
+        "估值坍缩：PB 从 4.26 倍历史最高分位回归 0.75 倍历史最低分位"
+      ],
+      "probability_evidence": "[E:data/workpapers/phase4_valuation_derivation_601919.json] 2011-2020 十年扣非累计 -279 亿：运价回归即亏损是基率事实而非尾部想象"
+    },
+    {
+      "name": "基准",
+      "value_per_share": 10.54,
+      "probability": 0.5,
+      "method": "dcf_owner_earnings",
+      "method_note": "两段式（过渡期不外推为永续）：2021 全年 740 亿（=H1 公告 370.93 亿×2 零增长外推，仅用截断日前信息）+2022 长协重定价 550 亿+2023 新船交付压价 300 亿；2024 起回归中周期 OE 35 亿（g=2%、r=10%）。全部推导 [E:data/workpapers/phase4_valuation_derivation_601919.json]",
+      "probability_evidence": "[E:data/workpapers/phase4_valuation_derivation_601919.json] 中周期锚=2017-2019 综合单箱收入均值 4906 元×正常运量 2634 万 TEU；2016-2020 单箱收入区间 3351-5945 元"
+    },
+    {
+      "name": "乐观",
+      "value_per_share": 14.38,
+      "probability": 0.2,
+      "method": "dcf_owner_earnings",
+      "method_note": "结构性改善论全盘接受：过渡期同基准或更好（740/600/400 亿），联盟化+端到端+成本优势把中周期 OE 抬至 70 亿、g=3%（r=9.5%）——该盈利水平为行业历史任何 3 年窗口所未见 [E:data/workpapers/phase4_valuation_derivation_601919.json]",
+      "probability_evidence": "[E:data/workpapers/phase3_qualitative_601919.json] ROIC 五年均值 0.65%、十年扣非累计 -279 亿：结构性改善需行业结构断裂式改变，基率上属低概率事件"
+    }
+  ],
+  "non_operating_addback_note": "本案无重大非经营资产加回项（码头分部利润已并入 OE 推导；OCF 现金 528 亿被 1384 亿有息负债抵消后为净债务 −856 亿，不适用 S5 加回）",
+  "value_trap_note": "S8 不适用：安全边际为负（现价高于全部情景价值），非价值陷阱形态而是周期高位透支形态"
+}

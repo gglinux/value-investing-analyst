@@ -1,0 +1,116 @@
+{
+  "company": "福耀玻璃",
+  "ticker": "600660.SH / 3606.HK",
+  "currency": "CNY",
+  "price": 22.78,
+  "price_source": "market_snapshot_600660_2018.json（CSMAR 不复权+东方财富双源 22.78；H 股 24.85 HKD 智通 AH 统计，A/H 溢价 4.67% 双向佐证）",
+  "moat": "narrow",
+  "moat_basis": "Phase 3 四源三缺一（成本优势+客户绑定+有效规模强、无形资产部分）+定价权三测试 2.5/3（结构性提价通过、成本转嫁部分通过、毛利率稳定性通过）[E:data/workpapers/phase3_qualitative_600660.json]；OEM 年降机制+车市 β 使其不达 wide",
+  "discount_rate": 0.1,
+  "discount_rate_note": "折现率下限纪律：max(10%, 10Y国债+4pct)——10Y 国债 3.23%（2018-12-28）[E:data/manifest.json cn_10y] + 4pct = 7.23%，低利率环境下限仍为 10%，故取 10.0%；不再额外上调原因：强护城河+财务质量优（十年 OCF/NI 141%）对冲车市下行周期+债务短期化+72 岁交接班风险，取下限而非中高位",
+  "hold_years": 5,
+  "dividend_yield": 0.033,
+  "dividend_yield_note": "2017 年度分红 18.81 亿（每股 0.75 元，2018-06 已实施）/市值 566.3 亿 = 3.32%；分红率 60%（18.81/31.49），十年分红率 66.4%——分红有 OCF 支撑（十年 OCF/NI 141%），但引擎分红幻觉警报（FCF 覆盖 0.58x）要求在报告中区分『OCF 撑起的分红』与『FCF 撑起的分红』，扩张期资本开支是覆盖缺口主因",
+  "intrinsic_value_growth": 0.025,
+  "base_oe": {
+    "value": 3050,
+    "unit": "百万元",
+    "basis": "引擎 normalization 输出：十年净利率均值 16.30% × 2017 收入 187.13 亿 = 30.50 亿 [E:data/metrics_600660.json normalization.net_income_normalized]；维持性 capex ≈ D&A（12 亿），扩张性 capex（美国工厂已转固、欧洲未落地）不进基期 OE——机械中立口径，避免用 2018 前三季扣非年化（28.15×4/3=37.5 亿，含车市 Q4 下行未落地风险）或 TTM 剔一次性 37 亿的乐观偏差",
+    "alternative_noted": "2018 内生口径约 34-36 亿（前三季扣非 28.15 亿+Q4 传统旺季但车市单月 -13.9% 下行）——作为乐观情景基期下界使用，报告中披露两种基期的敏感性"
+  },
+  "default_probabilities": {
+    "悲观": 0.3,
+    "基准": 0.5,
+    "乐观": 0.2
+  },
+  "scenarios": [
+    {
+      "name": "悲观",
+      "value_per_share": 15.8,
+      "probability": 0.3,
+      "method": "pb_trough",
+      "method_note": "独立方法：历史 PB 谷底 × 压力 BPS——与基准 DCF 完全脱钩（不用任何 DCF 假设）。谷底倍数取 1.8 倍：东方财富不复权月线+CSMAR 日线重建六次熊市谷底实证——2012-01 恐慌 7.65 元/3.11=2.46、2012-09 熊尾 6.68/3.11=2.15、2013-06 钱荒 6.68/3.48=1.92、2014-01 7.26/3.48=2.09、2015-08 股灾 10.58/约6.4=1.66、2016-01 熔断 12.48/6.54=1.91；与 2018 年末高 BPS（8.21）可比的是 2015 增发后状态（BPS 6.4-6.6），其两次谷底 1.66/1.91 取中值偏下 1.8（车市下行叠加深压）；BPS 全部可溯源至年报 [E:data/financials_600660_2018Q3.json annual equity_parent/shares_diluted]",
+      "method_inputs": {
+        "trough_pb": 1.8,
+        "bvps": 8.8,
+        "bvps_now_2018q3": 8.21,
+        "trough_pb_evidence": "六次熊市谷底完整实证（不复权价/当时最新披露年报 BPS）：2015-08 股灾 1.66 与 2016-01 熔断 1.91 是增发后高 BPS 状态唯二可比样本（2018Q3 BPS 8.21 同属增发后），取中值偏下 1.8——车市下行叠加盈利压力支持向深端取值；增发前状态（BPS 3.1-3.9）四次谷底 1.92-2.46 仅作区间上界参考；行情源：东方财富不复权月线（fqt=0）+ CSMAR 日线 2012-01-09 低点 7.65 互证",
+        "bvps_path_note": "2018Q3 BPS 8.21 元（205.89 亿/25.086 亿股）[E:data/financials_600660_2018Q3.json interim] + 压力年留存（低盈利 24-26 亿 - 分红 18.8 亿 ≈ +6 亿/年）→ 2020 压力 BPS 约 8.8 元"
+      },
+      "stressed_assumptions": [
+        "车市连续两年负增长：2019/2020 国内汽车产量 -5%~-8%（2018 年 1-11 月已 -2.6% 且 11 月单月 -13.9% 降幅扩大）[E:data/manifest.json industry_context]",
+        "盈利下滑：净利率回落至 13.5%（历史区间 14.9%-21.0% 下沿外推，非 2008 极端 4.3%），2019 净利约 24-26 亿（较 2017 的 31.49 亿 -20%）[E:data/financials_600660_2018Q3.json phase0_arithmetic]",
+        "估值坍缩：PB 从 2.75 倍回归 1.8 倍增发后熊市谷底（2015 股灾 1.66/2016 熔断 1.91 中值偏下）——较 2018-12-28 的 2.75 倍压缩 35%",
+        "分红维持每股 0.75 元，股息率升至 4.7%（15.8 元股价下）——分红不减是估值托底项而非加密项"
+      ],
+      "probability_evidence": "基率事实：①中国汽车工业 28 年来首次负增长已在 2018 年落地（1-10 月 -0.1%），且降幅逐月扩大（11 月 -13.9%）；②购置税优惠 2018 年完全退出——政策退出的次年效应在 2011（购置税退出后 2011 增速 2.5% vs 2010 32%）与 2018 已两次实证；③公司 2017 年报自述『销量增速放缓面临更大挑战』——悲观情景不是尾部想象而是可见路径的延伸",
+      "sources": "[E:filings/fy_AR2017.txt#L700-L702][E:data/manifest.json industry_context][E:data/financials_600660_2018Q3.json]",
+      "non_operating_addback_per_share": 0
+    },
+    {
+      "name": "基准",
+      "value_per_share": 19.66,
+      "probability": 0.5,
+      "method": "dcf_oe_fade",
+      "method_note": "两段式 OE 折现：基期 OE 30.50 亿（引擎 normalization [E:data/metrics_600660.json]）→ 5 年名义增长 6.5%（量 +3%/年：全球车市 3-4% × 市占率微升、2019 下行一年后回归；价 +3.5%/年：产品升级延续 [E:data/business_drivers_600660.json]）→ 永续 2.5%；r = 10%（下限纪律）",
+      "method_inputs": {
+        "base_oe_mn": 3050,
+        "growth_5y": 0.065,
+        "growth_terminal": 0.025,
+        "discount_rate": 0.1,
+        "pv_stage1_mn": 13855,
+        "tv_mn": 57110,
+        "pv_tv_mn": 35461,
+        "equity_value_mn": 49316,
+        "shares_mn": 2508.6
+      },
+      "stressed_assumptions": [
+        "2019 车市单年负增长（-3%）后 2020-2023 回归 4-5% 全球增速——国内量承压由美国爬坡+欧洲出口+售后对冲",
+        "净利率维持 16.3% 十年均值（年降与升级对冲、汇兑中性化）",
+        "维持性 capex ≈ D&A（12 亿），扩张性 capex 不侵蚀 OE（美国工厂已投产、欧洲建厂为乐观情景内容）",
+        "分红率 60% 维持，股息随盈利同速增长"
+      ],
+      "probability_evidence": "十年量价分解（量 +6-8%/价 +4-5%）在车市下行年自动衰减至基准假设（2015 年实证：车市 +4.7% 年福耀销量仅 +1.2% 但 ASP +4.4% 撑住收入）——基准情景的核心是产品升级引擎独立于车市 β",
+      "sources": "[E:data/metrics_600660.json][E:data/business_drivers_600660.json]",
+      "non_operating_addback_per_share": 0
+    },
+    {
+      "name": "乐观",
+      "value_per_share": 24.89,
+      "probability": 0.2,
+      "method": "dcf_oe_upside",
+      "method_note": "DCF 提速：基期 OE 33 亿（2018 内生口径下界，前三季扣非 28.15 亿+Q4 旺季衰减 [E:data/financials_600660_2018Q3.json interim]）→ 5 年名义增长 9%（量 +5%：欧洲市占率 10%→15% 落地+美国满产+车市复苏；价 +4%：HUD/天幕渗透加速）→ 永续 3%；r = 10%（下限纪律）",
+      "method_inputs": {
+        "base_oe_mn": 3300,
+        "growth_5y": 0.09,
+        "growth_terminal": 0.03,
+        "discount_rate": 0.1,
+        "pv_stage1_mn": 16056,
+        "tv_mn": 74711,
+        "pv_tv_mn": 46390,
+        "equity_value_mn": 62445,
+        "shares_mn": 2508.6
+      },
+      "stressed_assumptions": [
+        "2019 年车市快速复苏（对比 2011 年购置税退出后温和路径更强的 V 型反弹）",
+        "欧洲本地产能决策落地（复制美国工厂路径：4 年建设到盈利 2.2 亿/年爬坡）",
+        "高附加值产品（HUD/天幕/包边总成）渗透率超预期，ASP 增速维持 4-5%",
+        "净利率向 18% 区间上沿修复（美国工厂满产规模效应+汇兑正常化）"
+      ],
+      "probability_evidence": "美国工厂实证：7.68 亿美元投资 4 年内从建设到盈利 2.2 亿/年爬坡——欧洲复制的执行证据存在但未承诺；2018 前三季海外收入 +19.4%（2017 年报）显示全球份额提升动能真实",
+      "sources": "[E:filings/fy_AR2017.txt#L1686-L1690][E:filings/fy_AR2017.txt#L1375]",
+      "non_operating_addback_per_share": 0
+    }
+  ],
+  "expected_value_per_share": 19.55,
+  "expected_value_calc": "0.3×15.8 + 0.5×19.66 + 0.2×24.89 = 4.74 + 9.83 + 4.98 = 19.55 元",
+  "margin_of_safety": {
+    "vs_base": -0.159,
+    "vs_base_calc": "1 − 22.78/19.66 = −15.9%（现价高于基准内在价值）",
+    "vs_expected": -0.165,
+    "vs_expected_calc": "1 − 22.78/19.55 = −16.5%"
+  },
+  "non_operating_addback_note": "无重大非经营资产加回：2018Q3 末货币资金 85.95 亿 vs 有息负债 104.79 亿（净债务 18.84 亿）已在基期 OE 口径中通过折现率体现；商誉近零；无闲置投资资产",
+  "value_trap_note": "价值陷阱检验：PB 2.75× 不属深度低估（历史谷底 2.0×（2012 年初/2014 年中两次熊市实证）），PE 13.3× 含一次性收益（剔后约 16×）——本案不是『便宜到烂大街』的价值股，而是『优质公司合理价格』形态；防陷阱论证依赖 ROIC 18.9%（5 年均值）与再投资回报实证（美国工厂 4 年转正），而非静态估值折价",
+  "iv_growth_evidence": "永续增长锚定名义 GDP 下沿：量（全球汽车产量长期 3-4%，2017 年报 OICA 引用 [E:filings/fy_AR2017.txt#L609-L614]）× 价（ASP +3-5% 产品升级，2014-2017 实测 CAGR +3.8%，136.8→158.6 元/㎡ [E:data/business_drivers_600660.json]）扣除再投资需求与车企年降侵蚀，取 2.5%——高于 0 的证据是产品升级引擎（HUD/天幕/镀膜渗透早期）与全球市占率提升路径（美国 25% 爬坡/欧洲 10%）；保守于 2014-2017 实际 OE 复合增速"
+}

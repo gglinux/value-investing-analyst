@@ -1,0 +1,102 @@
+{
+ "case": "backtest/PROMPT.md 第一批案例2：苹果 AAPL @ 2016-04-30",
+ "backtest_note": "历史回放底稿：全部数据严格截止 2016-04-30 已公开披露。最新年报=FY2015 10-K(新闻稿 2015-10-27/EDGAR filed 2015-10-28)；最新季报=FY2016 Q2 10-Q(新闻稿 2016-04-26 盘后/EDGAR filed 2016-04-27，截断日前 3 天)。FY2016 Q3 10-Q(2016-07-26)/FY2016 10-K(2016-10-27)晚于截断日，防前视剔除",
+ "latest_quarter_checked": "FY2016 Q2 10-Q(2016-04-26 盘后发布/filed 2016-04-27)为最新已披露财报，已纳入底稿 half_year_2016q2 并双源核对(XBRL+官方新闻稿)。核对结论：单 Q2 收入 −12.8%/净利 −22.5%(iPhone 首次双位数下滑)+服务收入 +20%+回购加速至 500 亿美元/年+股息上调 10%——增长恐慌与股东回报强化并存，为回放时点核心市场背景；财报后 3 个交易日股价 104.35→93.74(−10.2%)",
+ "official_filing_missing": {
+  "years": [2016],
+  "reason": "历史回放场景：底稿严格截止回放日 2016-04-30 已披露数据，FY2016 10-K 在回放日尚未披露(filed 2016-10-27，且 FY2016 财年本身在回放日尚未结束)，属防前视回放设计而非申报缺失；校验器以真实当前时间判定死线，对回放底稿为时间机器悖论"
+ },
+ "reconciliation_coverage_waiver": {},
+ "annual_row_inheritance_note": "FY2007 缺 total_assets/total_liabilities 沿袭 2016-05-13 回放底稿原状(该版已过门禁，警告级)：equity 列为 FY2009 10-K VIE 追溯并表口径，TA/TL 未单独回填，三表勾稽 8/9 年覆盖(89%)；equity 值不进本次估值链(估值用 OE 法而非 BV)，风险已披露",
+ "data_sources": {
+  "AAPL": "SEC EDGAR companyfacts XBRL(机器核对级：FY2015 10-K accn 0001193125-15-356351 + FY16Q2 10-Q accn 0001193125-16-559625) + Apple 官方新闻稿(FY16Q1 2016-01-26/FY16Q2 2016-04-26 双期)双源核对",
+  "heritage": "FY2007-FY2015 年度行来源与 2016-05-13 回放底稿同源同值(SEC XBRL，已过当时双源核对+validate_data 门禁)"
+ },
+ "price_sources": "腾讯行情接口 web.ifzq.gtimg.cn 不复权日K(底稿 _backtest/data/aapl_price_full.csv，1984-2026 全序列)：2016-04-29 收盘 93.74 USD(4-30 为周六取最近交易日)；52 周区间(2015-05-01~2016-04-29)高 132.97@2015-05-22/低 92.00@2015-08-24(全球股灾日)，现价位置 4.2%；自 2015 年盘中高点 134.54 回撤 −30.3%；苹果 2014-06-09 1:7 拆股后无再拆股，历史价格直接可比",
+ "us_10y": {
+  "date": "2016-04-29",
+  "value": 0.0183,
+  "source": "美国 10Y 国债 1.83%(中国银行 2016-04-29 每日资讯 1.831% + 工商银行 4 月末外币利率概览 1.833% + Quint Wealth 2016-05 月报 1.83% 三源交叉)"
+ },
+ "discount_rate_discipline": "r = max(10%, 1.83% + 4pct) = max(10%, 5.83%) = 10%，合规(2026-09-03 新增折现率下限纪律，计价货币 USD)",
+ "files": [
+  {
+   "file": "financials_AAPL_2016Q2.json",
+   "source": "年度行 FY2007-FY2015 沿用 2016-05-13 回放底稿(SEC XBRL 已过门禁)；FY16Q2 半年报 XBRL+官方新闻稿双源；净现金口径修正 2,500M(登记 net_cash_reconciliation_note)",
+   "grade": "A",
+   "coverage": "FY2007-FY2015 年度 + FY2016 H1 半年度",
+   "crosscheck": "FY2013/FY2014/FY2015 年度(XBRL 原始申报+重述双口径)已登记"
+  },
+  {
+   "file": "market_snapshot_AAPL_2016Q2.json",
+   "source": "腾讯行情接口不复权日K(2016-04-29 收盘 93.74)+FY16Q2 10-Q 权益 130,457M/摊薄股本 5,540.886M/TTM 净利 50,678M+TTM 股息 11,724M(FY15 实付 11,431−FY15H1 5,484+FY16H1 5,777)",
+   "grade": "A",
+   "coverage": "2016-04-29 时点"
+  },
+  {
+   "file": "scenarios_AAPL_2016Q2.json",
+   "source": "worst_year_margin 法(历史最差净利率 FY2007=14.6%×FY2015 收入 233,715×危机倍数 10x)+DCF OE fade 基准/乐观(add-back 修正口径 153,056M)",
+   "grade": "A",
+   "coverage": "2016-04-30 回放口径"
+  },
+  {
+   "file": "expected_return_AAPL_2016Q2.json",
+   "source": "reverse_dcf.py expected-return 引擎输出(口径全部取自已过门禁的 scenarios.json)",
+   "grade": "A",
+   "coverage": "2016-04-30 回放口径"
+  },
+  {
+   "file": "metrics_AAPL_2016Q2.json",
+   "source": "compute_metrics.py 引擎输出(FY2007-FY2015 窗口)",
+   "grade": "A",
+   "coverage": "FY2007-FY2015"
+  },
+  {
+   "file": "implied_growth.json",
+   "source": "reverse_dcf.py implied-growth stdout 逐字转写",
+   "grade": "A",
+   "coverage": "2016-04-30 时点"
+  },
+  {
+   "file": "verification_strength.json",
+   "source": "verification_strength.py 引擎输出",
+   "grade": "A",
+   "coverage": "底稿核验强度"
+  },
+  {
+   "file": "workpapers/aapl_fwd_base.json",
+   "source": "forward-value 基准情景(3% fade，add-back 153,056M)",
+   "grade": "A",
+   "coverage": "2016-04-30"
+  },
+  {
+   "file": "workpapers/aapl_fwd_opt.json",
+   "source": "forward-value 乐观情景(8% fade，add-back 153,056M)",
+   "grade": "A",
+   "coverage": "2016-04-30"
+  },
+  {
+   "file": "workpapers/aapl_scenario_audit.json",
+   "source": "check_scenarios 审计(如产出)",
+   "grade": "A",
+   "coverage": "S1-S9"
+  },
+  {
+   "file": "manifest.json",
+   "source": "本清单(数据来源等级/对立面检索/10Y 国债收益率登记)",
+   "grade": "A",
+   "coverage": "案例全程"
+  }
+ ],
+ "adversarial_check": {
+  "search_date": "2026-09-04（回放语境限定信息集≤2016-04-30）",
+  "queries": "Apple+做空报告/财务造假/监管处罚/集体诉讼/审计保留意见（以 2016-04-30 前公开信息为准）",
+  "findings": [
+   "无针对苹果的做空报告或财务造假指控（截至 2016-04-30 公开信息），历年审计意见均为标准无保留意见",
+   "已知监管事项：欧盟委员会 2014-06 起对爱尔兰税务安排调查（State aid 案，2016-04-30 时点未裁决，2016-08-30 才作出 130 亿欧元补税裁决——截断日前仅存在调查事实）；2014-07 司法部电子书价格操纵反垄断案已和解（9.5 亿美元，2015-06 法院批准），属历史事项",
+   "FBI-Apple 解锁争议（2016-02 圣贝纳迪诺案）为品牌/隐私立场争议，非财务排雷项； iCloud/供应链劳工议题（富士康）2012 年起经 Fair Labor Association 审计持续整改，非排雷命中",
+   "需留意的对立面：FY16Q2 大中华区收入 −26%（渠道去库存+汇率），与 iPhone 6s 周期透支叠加构成增长恐慌核心——记入 Phase 0 观察与定性五维「周期性/成长性」论证，非排雷命中"
+  ],
+  "conclusion": "未命中排雷项，Phase 0 通过"
+ }
+}

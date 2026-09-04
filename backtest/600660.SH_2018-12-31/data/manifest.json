@@ -1,0 +1,233 @@
+{
+  "case": "backtest/PROMPT.md 第一批案例6：福耀玻璃 600660.SH @ 2018-12-31（排雷负样本对照）",
+  "backtest_note": "历史回放底稿：全部数据严格截止 2018-12-31 已公开披露。最新年报=2017年报（2018-03-17 披露）；最新季报=2018三季报（2018-10-26 披露）。2018年报（2019-03-16 披露）/2019年1月车市数据（2019-01-14 发布）/SAM 收购公告（2019-01-15）晚于截断日，防前视剔除",
+  "latest_quarter_checked": "2018三季报（2018-10-26 披露）为最新已披露财报，已纳入底稿 interim 并双源核对（原文逐项+巨潮官方 PDF）。核对结论：前三季归母 +52.18% 但含一次性收益约 7.55 亿税前（出售北京福通 4.51 亿+汇兑摆动 6.08 亿），扣非 +35.0%；应收/存货增速低于营收；经营现金流 +42.1%——无未消化剧变，但估值基期必须剔除一次性项。行业面：中汽协 2018-12-11 发布 1-11 月产销 -2.6%/-1.7%（28 年首次负增长），12 月单月数据在截断日未发布",
+  "official_filing_missing": {
+    "years": [
+      2018
+    ],
+    "reason": "历史回放场景：底稿严格截止回放日 2018-12-31 已披露数据，2018 年报在回放日尚未披露（2019-03-16），属防前视回放设计而非申报缺失；校验器以真实当前时间判定死线，对回放底稿为时间机器悖论。2018 年度财务仅以三季报 interim 形式入信息集"
+  },
+  "reconciliation_coverage_waiver": {},
+  "data_sources": {
+    "600660": "巨潮资讯网 cninfo 官方年报 PDF 直链（finalpage/2010-03-10/57671593 2009年报、finalpage/2012-04-25/60900726 2011年报、finalpage/2014-02-25/63602401 2013年报、finalpage/2016-03-21/1202059514 2015年报）+ fuyaogroup.com 官网 2017 年报（港版 IFRS）+ 巨潮 2018 三季报官方 PDF——全部为法定披露原文，pdftotext -layout 转文本后逐项核对",
+    "caam": "中汽协 2018-12-11 信息发布会（1-11 月产销数据）——caam.org.cn 原文+山东发改委/青岛工信局转发三源一致",
+    "sellside": "海通证券 2018-10-26 三季报点评（18-20 EPS 1.67/1.67/1.83 元）——截断日前发布；2019-01 后研报一律不入信息集"
+  },
+  "price_sources": "A 股 2018-12-28 收盘 22.78 元不复权（CSMAR 日行情 Dclsprc + 东方财富财富号『2018 年报收 22.78』双源）；H 股 24.85 HKD（智通财经 AH 统计，溢价率 4.67%）；腾讯历史行情 13.08 元为前复权价不可用；总股本 2,508,617,532 股（A 2,003,403,132 + H 505,214,400，三季报股东表+2017 年报分红基数双源）；市值 A/H 分计价 566.3 亿 CNY，CSMAR 总市值口径 571.46 亿交叉核对",
+  "cn_10y": {
+    "date": "2018-12-28",
+    "value": 0.0323,
+    "source": "中国 10 年期国债收益率 3.23%（东方财富财经早餐 2018-12-29：『10 年期国债利率跌 3.94BP，至 3.23%』；10 年期国债期货 T1903 同日 +0.45% 互证）"
+  },
+  "fx": {
+    "date": "2018-12-28",
+    "usd_cny": 6.8632,
+    "eur_cny": 7.8473,
+    "hkd_cny": 0.8762,
+    "source": "中国人民银行授权中国外汇交易中心公布中间价（国家外汇管理局官网转发原文）"
+  },
+  "industry_context": {
+    "auto_market": "中汽协 2018-12-11 发布：1-11 月汽车产销 2532.5/2542 万辆（-2.6%/-1.7%），乘用车 -2.8%，11 月单月 -13.9%，1-10 月累计 -0.1% 为 28 年来首次负增长；全年预计约 2800 万辆（-3%）、2019 预计 2800 万辆持平",
+    "market_share": "按 2017 年销售额口径：全球汽车玻璃约 25%、国内约 65%、美国约 25%、欧洲约 10%（研报通行口径，截断日前可查）"
+  },
+  "files": [
+    {
+      "file": "financials_600660_2018Q3.json",
+      "source": "年度行 2008-2015 CAS 口径从巨潮年报原文逐项提取；2016-2017 部分字段 IFRS 口径（2017 年报港版，已注明）；interim 2018Q3 三季报官方原文",
+      "grade": "A",
+      "coverage": "2008-2017 十个年度 + 2018Q1-Q3",
+      "crosscheck": "十年逐年双源核对（相邻年报对比列互证）+ 官方股本三源（股东表/分红基数/股本变动表）"
+    },
+    {
+      "file": "filings/fy_AR2009.txt",
+      "source": "巨潮 cninfo finalpage/2010-03-10/57671593.PDF",
+      "grade": "A",
+      "coverage": "2009+2008+2007 三年主要数据；2008/2009 capex/折旧/借款/现金"
+    },
+    {
+      "file": "filings/fy_AR2011.txt",
+      "source": "巨潮 cninfo finalpage/2012-04-25/60900726.PDF",
+      "grade": "A",
+      "coverage": "2011+2010 capex/折旧/TL/TE/现金/借款/股本"
+    },
+    {
+      "file": "filings/fy_AR2013.txt",
+      "source": "巨潮 cninfo finalpage/2014-02-25/63602401.PDF",
+      "grade": "A",
+      "coverage": "2013+2012 全套 CAS（扣非/OCF/NA/TA/capex/折旧/借款/现金）"
+    },
+    {
+      "file": "filings/fy_AR2015.txt",
+      "source": "巨潮 cninfo finalpage/2016-03-21/1202059514.PDF",
+      "grade": "A",
+      "coverage": "2015+2014 capex/折旧/TL/TE/现金/借款/分红"
+    },
+    {
+      "file": "filings/fy_AR2017.txt",
+      "source": "fuyaogroup.com 官网 2017 年报（港版，IFRS+A 股披露混排）",
+      "grade": "A",
+      "coverage": "2017+2016 IFRS 借款/现金/债务净额/汇兑/周转天数/2018 年经营计划"
+    },
+    {
+      "file": "filings/fy_Q3_2018.txt",
+      "source": "巨潮 cninfo 2018 年第三季度报告官方 PDF",
+      "grade": "A",
+      "coverage": "2018Q1-Q3 全套 + Q3 末资产负债细项 + 前十大股东质押"
+    },
+    {
+      "file": "market_snapshot_600660_2018.json",
+      "source": "CSMAR 日线不复权 22.78 + 东方财富互证；H 股 24.85 HKD 智通 AH 统计；市值 A/H 分计价 566.3 亿",
+      "grade": "A",
+      "coverage": "2018-12-28 收盘",
+      "cross_check": "CSMAR 总市值口径 571.46 亿差 0.9%（H 计价方式），两口径均登记"
+    },
+    {
+      "file": "metrics_600660.json",
+      "source": "compute_metrics.py 引擎输出（ROIC/OE/normalization/capital_allocation/alerts）",
+      "grade": "A",
+      "coverage": "2008-2017 十年 + 2018Q3",
+      "cross_check": "market-cap 56630 百万修正后重跑（初版 10 倍错位已修正并登记 unit_error_note）"
+    },
+    {
+      "file": "business_drivers_600660.json",
+      "source": "年报经营数据逐项提取（销量/ASP/分区域收入）",
+      "grade": "A",
+      "coverage": "2014-2017 四年量价分解 + 单车价值量",
+      "cross_check": "量价分解与收入勾稽（OEM 96.81 百万㎡×均价+售后）"
+    },
+    {
+      "file": "scenarios_600660.json",
+      "source": "三情景底稿（悲观 pb_trough 独立方法/基准 dcf_oe_fade/乐观 dcf_oe_upside）",
+      "grade": "A",
+      "coverage": "2018-12-31 回放口径 r=10% 纪律下限",
+      "cross_check": "谷底 PB 六次熊市实证（东方财富不复权月线+CSMAR 日线）"
+    },
+    {
+      "file": "scenario_audit_600660.json",
+      "source": "check_scenarios.py 门禁输出（十一项检验）",
+      "grade": "A",
+      "coverage": "全部通过（passed=true, 0 errors 0 warnings）",
+      "cross_check": "S2b 悲观机器重算 15.84 vs 底稿 15.8 偏差 0.25%"
+    },
+    {
+      "file": "workpapers/phase0_screening_600660.json",
+      "source": "Phase 0 排雷底稿（V1-V6 硬否决/R1-R20 红旗/中国特色清单）",
+      "grade": "A",
+      "coverage": "0/6+0/20+0/4 全不命中（负样本验证）",
+      "cross_check": "V1 普华永道标准无保留原文 L20；V4 存贷形态现金<有息负债与康美相反"
+    },
+    {
+      "file": "workpapers/phase3_qualitative_600660.json",
+      "source": "Phase 3 五维定性底稿（商业模式/护城河/增长/管理层/财务质量）",
+      "grade": "A",
+      "coverage": "moat strong 四源三缺一；定价权三测试 2.5/3",
+      "cross_check": "mirror 对照康美案"
+    },
+    {
+      "file": "workpapers/phase45_expected_return_600660.json",
+      "source": "reverse_dcf.py expected-return 输出（双闸门对照）",
+      "grade": "A",
+      "coverage": "期望 IRR 6.47%/悲观 2.24%/机会成本 13%",
+      "cross_check": "口径全部取自已过门禁的 scenarios_600660.json（单一事实源）"
+    },
+    {
+      "file": "workpapers/verification_strength_600660.json",
+      "source": "verification_strength.py 输出",
+      "grade": "A",
+      "coverage": "核验强度 A（勾稽 100%/原文 full/窗口 10/10）",
+      "cross_check": "V2 命门科目官方原文年份 [2015,2016,2017]"
+    },
+    {
+      "file": "workpapers/persona_巴菲特.md",
+      "source": "三 persona 分离生成评估",
+      "grade": "A",
+      "coverage": "观察等价格（质量-价格边际路径）",
+      "cross_check": "仅用截断日前信息"
+    },
+    {
+      "file": "workpapers/persona_段永平.md",
+      "source": "三 persona 分离生成评估",
+      "grade": "A",
+      "coverage": "观察等价格（生意模式+机会成本路径）",
+      "cross_check": "仅用截断日前信息"
+    },
+    {
+      "file": "workpapers/persona_李录.md",
+      "source": "三 persona 分离生成评估",
+      "grade": "A",
+      "coverage": "观察等价格（能力圈+安全边际路径）",
+      "cross_check": "仅用截断日前信息"
+    },
+    {
+      "file": "workpapers/persona_divergence_redteam.md",
+      "source": "芒格式红队（反演质询/心理误判/最强多头 steelman/pre-mortem/盲区）",
+      "grade": "A",
+      "coverage": "5 条证据抽查全过",
+      "cross_check": "负样本镜像：steelman 最强多头逻辑"
+    },
+    {
+      "file": "filings/fy_AR2009.pdf",
+      "source": "巨潮直链下载（2008 年报，补 2008-2009 缺口）",
+      "grade": "A",
+      "coverage": "2008 年度",
+      "cross_check": "与 2009/2010 年报对比列互证"
+    },
+    {
+      "file": "filings/fy_AR2011.pdf",
+      "source": "巨潮直链下载（2010 年报）",
+      "grade": "A",
+      "coverage": "2010 年度",
+      "cross_check": "相邻年报对比列互证"
+    },
+    {
+      "file": "filings/fy_AR2013.pdf",
+      "source": "巨潮直链下载（2012 年报）",
+      "grade": "A",
+      "coverage": "2012 年度",
+      "cross_check": "相邻年报对比列互证"
+    },
+    {
+      "file": "filings/fy_AR2015.pdf",
+      "source": "巨潮直链下载（2014 年报）",
+      "grade": "A",
+      "coverage": "2014 年度",
+      "cross_check": "相邻年报对比列互证"
+    },
+    {
+      "file": "filings/fy_AR2017.pdf",
+      "source": "巨潮直链下载（2017 年报 A+H）",
+      "grade": "A",
+      "coverage": "2017 年度",
+      "cross_check": "IFRS/CAS 双口径 2017 归母 31.49/31.56 亿互证"
+    },
+    {
+      "file": "filings/fy_Q3_2018.pdf",
+      "source": "巨潮直链下载（2018 三季报）",
+      "grade": "A",
+      "coverage": "2018Q1-Q3",
+      "cross_check": "利润总额 39.47 亿/汇兑收益 3.04 亿/北京福通 51% 转让原文"
+    },
+    {
+      "file": "manifest.json",
+      "source": "信息集登记+对立面检索+豁免登记（自登记以支持 [E:manifest.json] 指针）",
+      "grade": "A",
+      "coverage": "2018-12-31",
+      "cross_check": "-"
+    }
+  ],
+  "adversarial_check": {
+    "search_date": "2026-09-04（回放执行日）",
+    "queries": [
+      "福耀玻璃 做空报告/财务造假/证监会处罚/审计非标/集体诉讼",
+      "新浪财经 600660 违规记录"
+    ],
+    "findings": [
+      "截断日 2018-12-31 前唯一违规记录：2015-06-05 上交所对财务总监左敏通报批评——2015-02~06 短线交易（操作失误误卖 5.6 万股，收益 13.2 万元上缴公司），属高管个人证券违规，与财务报告真实性无关，金额占公司市值可忽略",
+      "无做空报告、无财务造假指控、无集体诉讼、无审计非标记录",
+      "审计意见：普华永道中天 2009-2017 连续标准无保留（各年年报原文可查）",
+      "事后对照（仅 diff 用）：2018 年报（2019-03-16）普华永道仍为标准无保留，2018 年报摘要原文核实"
+    ],
+    "conclusion": "对立面检索未发现任何造假类信号——与『本案为排雷负样本』的案例定位一致；检索记录归档备 Phase 0 引用"
+  }
+}
