@@ -5,3 +5,7 @@ __pycache__/
 cases/*/data/filings/
 cases/*/data/raw_finance_*.json
 cases/*/data/edgar_raw/
+# 历史回放测试资产（对齐 cases 惯例：年报原件与原始抓取不入库，manifest 登记来源可复现）
+_backtest/
+backtest/*/data/filings/
+backtest/*/data/*companyfacts*.json
