@@ -106,5 +106,10 @@
       "股本 10 转 3 + 2018 年可转债转股 + 定增的每股口径连续性",
       "中国远洋时代（2011-2015）与中远海控时代（2016 后）的业务可比性——2016 重组并入中远海运集运"
     ]
-  }
+  },
+  "replay_date": "2021-07-31",
+  "information_cutoff": "2021-07-31",
+  "batch": 1,
+  "frozen_at": "2026-09-04",
+  "schema_note": "2026-09-05 补齐 PROMPT 第九节必需字段（replay_date/information_cutoff/batch/frozen_at）。本案原用 analysis_date/price_date 命名，与其余案例 schema 不一致，导致 `run_backtest_assertions.py --batch 1` 漏收本案。analysis_date 与 replay_date 同值；price_date 为该回放日的最后交易日，保留以说明取价口径。"
 }

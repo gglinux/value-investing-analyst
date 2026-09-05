@@ -46,8 +46,12 @@ compute_metrics.py — 价值投资分析统一口径指标计算器（Phase 2 �
 """
 import argparse
 import json
+import os
 import math
 import sys
+
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from alert_codes import AlertBag  # 告警码注册表：唯一事实源
 
 DEFAULT_TAX = 0.25
 
@@ -679,28 +683,30 @@ def compute(data, market_cap=None):
         None if alloc["fcf_cover_shareholder_return"] is None
         else alloc["fcf_cover_shareholder_return"] >= 1.0)
 
-    # 自动警报
-    alerts = []
+    # 自动警报（AlertBag 同时维护中文文本与稳定机器码）
+    alerts = AlertBag()
     rt, rp = summary["cagr_total"]["revenue"], summary["cagr_per_share"]["rev_ps"]
     if rt is not None and rp is not None and (rt - rp) > 0.02:
-        alerts.append(f"稀释警报：收入总量CAGR {rt:.1%} 显著高于每股CAGR {rp:.1%}，增长被增发摊薄")
+        alerts.add("M_DILUTION", f"稀释警报：收入总量CAGR {rt:.1%} 显著高于每股CAGR {rp:.1%}，增长被增发摊薄")
     scc = summary["share_count_change"]
     if scc is not None and scc > 1.3:
-        alerts.append(f"股本膨胀警报：期间股本增至 {scc:.2f} 倍")
+        alerts.add("M_SHARE_INFLATION", f"股本膨胀警报：期间股本增至 {scc:.2f} 倍")
 
     # 分红幻觉警报（v2.12，所有者视角核心）：股东回报未被自由现金流覆盖
     cov = alloc.get("fcf_cover_shareholder_return")
     if cov is not None and cov < 1.0:
         _fcf = alloc.get("cum_fcf")
         _ret = alloc.get("cum_shareholder_return")
-        alerts.append(
+        alerts.add(
+            "M_DIVIDEND_ILLUSION",
             f"分红幻觉警报：全期股东回报（分红+回购）{_ret:,.0f} 超过累计自由现金流 "
             f"{_fcf:,.0f}（覆盖 {cov:.2f}x < 1.0）——这份回报不是经营挣出来的，"
             "而是靠融资/举债/消耗存量现金维持。高股息率在此情形下是幻觉，"
             "对所有者的意义与自由现金流充沛公司的同等股息率完全不同，"
             "报告必须明确区分并质询可持续性")
     elif cov is not None and cov < 1.5:
-        alerts.append(
+        alerts.add(
+            "M_SHAREHOLDER_RETURN_THIN_COVER",
             f"股东回报覆盖偏薄：累计自由现金流仅覆盖股东回报 {cov:.2f}x（<1.5x），"
             "分红/回购的安全垫较薄，经营现金流波动即可能迫使削减")
     if alloc.get("cum_dividends") is None and alloc.get("cum_buyback") in (None, 0.0):
@@ -712,10 +718,10 @@ def compute(data, market_cap=None):
             "『购买子公司少数股权/回购股份』补齐")
     bad_fcf_years = [s["year"] for s in series[-5:] if s["fcf_to_ni"] is not None and s["fcf_to_ni"] < 0.6]
     if len(bad_fcf_years) >= 3:
-        alerts.append(f"利润含金量警报：近5年中 {bad_fcf_years} 年 FCF/净利润 < 0.6")
+        alerts.add("M_FCF_QUALITY", f"利润含金量警报：近5年中 {bad_fcf_years} 年 FCF/净利润 < 0.6")
     low_roiic = [s["year"] for s in series if s["roiic_3y"] is not None and s["roiic_3y"] < 0.08]
     if low_roiic and low_roiic[-1] == last["year"]:
-        alerts.append(f"增长质量警报：最新滚动3年 ROIIC < 8%，增量资本回报低下")
+        alerts.add("M_ROIIC_LOW", f"增长质量警报：最新滚动3年 ROIIC < 8%，增量资本回报低下")
 
     normalization = compute_normalization(series)
     if normalization and normalization.get("status") == "ok":
@@ -731,14 +737,16 @@ def compute(data, market_cap=None):
                 rng_txt = "不可用（正常化基期为非正值）"
             pct = safe_div(rec, normalization["oe_current"])
             pct_txt = f"（推荐值为当期的 {pct:.0%}）" if pct is not None else ""
-            alerts.append(
+            alerts.add(
+                "NORM_CYCLE_PEAK",
                 f"周期高位警报：最新净利率 {normalization['net_margin_latest']:.1%} 是全期均值 "
                 f"{normalization['net_margin_avg']:.1%} 的 {normalization['margin_ratio_latest_vs_avg']:.2f} 倍，"
                 f"当期 Owner Earnings 禁止直接作为 DCF 基期；正常化基期区间 {rng_txt}{pct_txt}"
             )
             if normalization.get("base_oe_dual_track"):
                 dt = normalization["base_oe_dual_track"]
-                alerts.append(
+                alerts.add(
+                    "NORM_DUAL_TRACK",
                     f"双轨基期提示（{'；'.join(dt['trigger_reasons'])}）："
                     f"'周期高位'可能是结构性变化的误报——主轨正常化 {dt['main']['value']:,.0f}"
                     f" / 交叉轨当期 {dt['cross']['value']:,.0f}，报告须并列两轨估值并论证利润率来源"
@@ -747,13 +755,15 @@ def compute(data, market_cap=None):
         elif cyc == "周期低位":
             rec = normalization.get("base_oe_recommended")
             rec_txt = f"；向上正常化基期 {rec:,.0f}" if rec is not None else ""
-            alerts.append(
+            alerts.add(
+                "NORM_CYCLE_TROUGH",
                 f"周期低位提示：最新净利率仅为全期均值的 {normalization['margin_ratio_latest_vs_avg']:.2f} 倍，"
                 f"当期利润低估长期盈利能力，用当期基期会低估内在价值{rec_txt}"
             )
             dt = normalization.get("base_oe_dual_track")
             if dt and dt.get("trigger") == "structural_deterioration":
-                alerts.append(
+                alerts.add(
+                    "NORM_STRUCTURAL_DECLINE",
                     f"结构性衰退警报（{'；'.join(dt['trigger_reasons'])}）："
                     f"利润率单向下行且未回归均值，'周期低位'可能是结构性衰退而非周期低谷。"
                     f"向上正常化基期 {dt['main']['value']:,.0f} 会系统性高估内在价值"
@@ -761,7 +771,8 @@ def compute(data, market_cap=None):
                     f"给不出则用交叉轨。这是价值陷阱最常见的入口"
                 )
         elif "亏损" in cyc:
-            alerts.append(
+            alerts.add(
+                "NORM_BASE_UNUSABLE",
                 f"基期不可用警报：{cyc}（当期净利率 "
                 f"{normalization['net_margin_latest']:.1%}，全期均值 {normalization['net_margin_avg']:.1%}），"
                 f"周期正常化不适用，禁止直接用当期数据做 DCF 基期，须单独论证正常化盈利路径"
@@ -770,7 +781,8 @@ def compute(data, market_cap=None):
         # 因为"中性区间 + 结构性改善/恶化"同样影响基期是否可外推。
         mtrend = normalization.get("margin_trend")
         if mtrend and mtrend["pattern"] != "趋势不明确":
-            alerts.append(
+            alerts.add(
+                "NORM_MARGIN_SHAPE",
                 f"利润率形状检验：{mtrend['pattern']}（秩相关 {mtrend['spearman_rho']:+.2f}、"
                 f"穿越均值 {mtrend['mean_crossings']} 次、末端连续{mtrend['trailing_side']} "
                 f"{mtrend['trailing_same_side_years']} 年，置信度{mtrend['confidence']}）"
@@ -834,7 +846,8 @@ def compute(data, market_cap=None):
                 f"所有者收益率不可落袋：累计自由现金流对股东回报覆盖仅 {cov_:.2f}x"
                 f"（<1.0），Owner Earnings 未转化为可分配现金，"
                 f"该收益率与回本年数仅为账面推算，禁止据此判断低估")
-            alerts.append(
+            alerts.add(
+                "M_OWNER_YIELD_NOT_CASH_BACKED",
                 f"所有者收益率含金量警报：OE 收益率 {oy:.1%}（回本 "
                 f"{owner_yield['payback_years']:.1f} 年）看似可观，但股东回报的"
                 f"自由现金流覆盖仅 {cov_:.2f}x——这份'所有者收益'并未变成"
@@ -849,7 +862,9 @@ def compute(data, market_cap=None):
         "capital_allocation": alloc,
         "owner_yield": owner_yield,
         "chart_series": chart_series,
-        "alerts": alerts,
+        "alerts": alerts.messages,
+        "alert_codes": alerts.codes,
+        "alerts_structured": alerts.structured,
         "warnings": sorted(set(warnings)),
     }
 

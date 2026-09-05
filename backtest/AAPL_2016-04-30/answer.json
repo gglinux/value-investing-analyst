@@ -1,0 +1,21 @@
+{
+  "expected_verdict_set": [
+    4
+  ],
+  "expected_gate1": true,
+  "expected_gate2": true,
+  "must_trigger": [
+    "GATE1_PASSED",
+    "GATE2_ALL_PASSED"
+  ],
+  "must_trigger_any": [],
+  "must_not_trigger": [],
+  "actual_5y_total_return": 4.609,
+  "actual_3y_total_return": null,
+  "actual_max_drawdown": null,
+  "earnings_driven_return": null,
+  "multiple_driven_return": null,
+  "outcome_note": "iPhone 首次同比下滑、市场认定硬件无护城河，伯克希尔同期建仓；4×131.46/93.74 = 5.61x（含 1:4 拆股还原）",
+  "answer_source": "PROMPT 第七节 + diff.md 第 33 行",
+  "case": "AAPL_2016-04-30"
+}

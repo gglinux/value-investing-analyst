@@ -1658,6 +1658,76 @@ with tempfile.TemporaryDirectory() as td:
     r = _vr("frag", _vn)
     check("片段 HTML 不强制徽章（不误伤）", r.returncode == 0, r.stdout[-160:])
 
+# ═══════════════════════════════════════════════════════════════════
+print("== 11 告警码注册表与回放断言基础设施 ==")
+# 第一批复核结论：回放协议承诺的「一键重跑全部断言」此前无实现，根因是告警
+# 为自由文本、无稳定代号。本节守护新建的基础设施——它是后续一切判别逻辑改动
+# 的验收前提（没有秤就不能调重量）。
+sys.path.insert(0, SCRIPTS)
+import alert_codes as AC
+
+check("注册表非空", len(AC.ALERTS) > 40, str(len(AC.ALERTS)))
+check("Phase 0 代号数 = 6 否决 + 20 红旗 + 4 A股 = 30",
+      sum(1 for c, (layer, _) in AC.ALERTS.items()
+          if layer.startswith("phase0")) == 31,  # 含 V4A 利率倒挂加强验证器
+      str(sum(1 for c, (l, _) in AC.ALERTS.items() if l.startswith("phase0"))))
+check("每个断言组的代号都已注册",
+      all(not AC.unknown_codes(codes) for codes in AC.ASSERTIONS.values()),
+      str({k: AC.unknown_codes(v) for k, v in AC.ASSERTIONS.items() if AC.unknown_codes(v)}))
+check("档位序数表五档齐全", sorted(AC.VERDICT_ORDINAL.values()) == [0, 1, 2, 3, 4])
+
+# 海控案的等价关系（复核发现 F4）：引擎输出「全期平均亏损」而非「周期高位」，
+# 断言不得因此漏判——这个等价必须是显式且被测试锁定的。
+check("周期高位断言可由 NORM_BASE_UNUSABLE 满足（海控 F4 等价关系）",
+      AC.assertion_satisfied("CYCLE_PEAK", ["NORM_BASE_UNUSABLE"]))
+check("周期高位断言也可由 NORM_CYCLE_PEAK 满足",
+      AC.assertion_satisfied("CYCLE_PEAK", ["NORM_CYCLE_PEAK"]))
+check("无相关代号时周期高位断言不满足",
+      not AC.assertion_satisfied("CYCLE_PEAK", ["M_DILUTION"]))
+# 福耀负样本：观察级/非造假形态的代号绝不能让「造假类告警」断言误触发
+check("准则切换不计入造假类告警（福耀负样本零误杀）",
+      not AC.assertion_satisfied("ANY_FRAUD_ALERT", ["M_ACCOUNTING_STANDARD_SWITCH"]))
+check("分红幻觉不计入造假类告警",
+      not AC.assertion_satisfied("ANY_FRAUD_ALERT", ["M_DIVIDEND_ILLUSION"]))
+check("存贷双高计入造假类告警",
+      AC.assertion_satisfied("ANY_FRAUD_ALERT", ["P0_V4_DEPOSIT_LOAN_DOUBLE_HIGH"]))
+
+# AlertBag：未注册代号必须当场炸掉，而不是静默产生一个查不到的告警
+try:
+    AC.AlertBag().add("NO_SUCH_CODE", "x")
+    check("AlertBag 拒绝未注册代号", False, "未抛异常")
+except KeyError:
+    check("AlertBag 拒绝未注册代号", True)
+bag = AC.AlertBag().add("M_DILUTION", "稀释了")
+check("AlertBag 同时产出文本与代号",
+      bag.messages == ["稀释了"] and bag.codes == ["M_DILUTION"])
+try:
+    AC.assertion_satisfied("NO_SUCH_ASSERTION", [])
+    check("未注册断言当场报错", False, "未抛异常")
+except KeyError:
+    check("未注册断言当场报错", True)
+
+# 引擎三脚本必须真的输出代号字段（回归保护：谁把字段删了立刻暴露）
+_r = cm.compute(base(mk_rows([0.10] * 11)))
+check("compute_metrics 输出 alert_codes 字段", "alert_codes" in _r)
+check("compute_metrics 输出 alerts_structured 字段", "alerts_structured" in _r)
+check("alerts 与 alert_codes 等长",
+      len(_r["alerts"]) == len(_r["alert_codes"]),
+      f"{len(_r['alerts'])} vs {len(_r['alert_codes'])}")
+check("所有产出代号均已注册", not AC.unknown_codes(_r["alert_codes"]),
+      str(AC.unknown_codes(_r["alert_codes"])))
+
+# 断言 runner 端到端：第一批六案例应为 5 全绿 + 1 已知失败（茅台），0 回归
+_rr = subprocess.run([sys.executable, os.path.join(SCRIPTS, "run_backtest_assertions.py"),
+                      "--batch", "1"], capture_output=True, text=True, cwd=ROOT)
+check("断言 runner 可运行且无回归失败", _rr.returncode == 0,
+      (_rr.stdout + _rr.stderr)[-300:])
+check("断言 runner 复现第一批战绩（5 全绿 + 1 已知失败）",
+      "5/6 全绿" in _rr.stdout and "1 已知失败" in _rr.stdout,
+      _rr.stdout[-300:])
+check("茅台档位轨失败被识别为已知失败而非回归",
+      "已知失败：档位轨未命中" in _rr.stdout, _rr.stdout[-300:])
+
 print()
 if FAILED:
     print(f"结果：{len(FAILED)} 项失败 → {FAILED}")

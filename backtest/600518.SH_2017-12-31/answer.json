@@ -1,0 +1,21 @@
+{
+  "expected_verdict_set": [
+    0
+  ],
+  "expected_gate1": null,
+  "expected_gate2": null,
+  "must_trigger": [
+    "CASH_INTEREST_CONTRADICTION",
+    "OCF_PROFIT_DIVERGENCE"
+  ],
+  "must_trigger_any": [],
+  "must_not_trigger": [],
+  "actual_5y_total_return": null,
+  "actual_3y_total_return": null,
+  "actual_max_drawdown": null,
+  "earnings_driven_return": null,
+  "multiple_driven_return": null,
+  "outcome_note": "2018-12-28 立案调查，2019-04 更正披露虚增货币资金 299.44 亿（账面 327.67 亿的 91.4%）；Phase 0 一票否决不进估值，gate 记 null",
+  "answer_source": "PROMPT 第七节 + 2019 年更正公告",
+  "case": "600518.SH_2017-12-31"
+}
