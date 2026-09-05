@@ -1,0 +1,22 @@
+{
+  "expected_verdict_set": [
+    1,
+    2
+  ],
+  "expected_gate1": false,
+  "expected_gate2": false,
+  "must_trigger": [
+    "CYCLE_PEAK",
+    "CURRENT_BASE_FORBIDDEN"
+  ],
+  "must_trigger_any": [],
+  "must_not_trigger": [],
+  "actual_5y_total_return": null,
+  "actual_3y_total_return": null,
+  "actual_max_drawdown": null,
+  "earnings_driven_return": null,
+  "multiple_driven_return": null,
+  "outcome_note": "2021 全年归母 892.96 亿后 2022 断崖至 109.59 亿（-87.7%）；SCFI 5109.6→1061.14（-79%）。注：引擎输出 NORM_BASE_UNUSABLE（均值路径失效、拒绝给标签）而非 NORM_CYCLE_PEAK，二者在 ASSERTIONS 中显式等价",
+  "answer_source": "PROMPT 第七节 + 公司年报",
+  "case": "601919.SH_2021-07-31"
+}

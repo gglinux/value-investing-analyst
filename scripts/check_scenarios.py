@@ -108,6 +108,25 @@ import os
 import re
 import sys
 
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from alert_codes import unknown_codes  # 告警码注册表：唯一事实源
+
+# S 前缀 -> 注册表代号。长前缀必须排在短前缀之前（S2b 先于 S2、S7b 先于 S7），
+# derive_codes 按本列表顺序做首次匹配。
+_S_PREFIX_TO_CODE = [
+    ("S2b", "S2B_BEAR_ARITHMETIC"),
+    ("S7b", "S7B_IV_GROWTH_EVIDENCE"),
+    ("S1", "S1_SCHEMA"),
+    ("S2", "S2_BEAR_METHOD_INDEPENDENCE"),
+    ("S3", "S3_STRESS_SUFFICIENCY"),
+    ("S4", "S4_DISPERSION"),
+    ("S5", "S5_NON_OPERATING_STRESS"),
+    ("S6", "S6_NO_REAL_DOWNSIDE"),
+    ("S7", "S7_PROBABILITY_EVIDENCE"),
+    ("S8", "S8_VALUE_TRAP"),
+    ("S9", "S9_DIVIDEND_YIELD_DIMENSION"),
+]
+
 # 独立方法白名单：共同特征是**不经过基准情景那套 DCF**，而是另起一条推导路径。
 INDEPENDENT_METHODS = {
     "liquidation": "清算/净资产变现价值（有形净资产、净现金 + 可变现投资并施加更狠折价）",
@@ -579,6 +598,33 @@ def check(path, metrics_path=None, snapshot_path=None):
     return d, errors, warnings, info
 
 
+def derive_codes(errors, warnings, info):
+    """把 S1–S9 消息前缀提取为稳定告警码，供回放断言机器判定。
+
+    十一项检查的编号本来就是每条消息的第一个 token，此处只做提取而非新增
+    事实源——保持「编号定义在检查逻辑处」这一唯一性。任何前缀无法映射的消息
+    都会被收入 unmapped 并大声报出：漏映射意味着回放断言会漏判该规则，
+    必须当成 bug 修，而不是静默放过。
+
+    注意 `value_trap_triggered` 是独立布尔字段而非错误消息——S8 的 errors
+    说的是「缺催化剂字段」，闸门真正触发看的是这个字段，两者不可混淆。
+    """
+    codes, unmapped = [], []
+    for msg in list(errors) + list(warnings):
+        for prefix, code in _S_PREFIX_TO_CODE:  # 长前缀在前：S2b 必须先于 S2
+            if msg.startswith(prefix):
+                codes.append(code)
+                break
+        else:
+            unmapped.append(msg[:80])
+    if info.get("value_trap_triggered"):
+        codes.append("S8_VALUE_TRAP")
+    unknown = unknown_codes(codes)
+    if unknown:
+        raise KeyError(f"未注册的告警码 {unknown}，请先在 scripts/alert_codes.py 登记")
+    return sorted(set(codes)), unmapped
+
+
 def main():
     ap = argparse.ArgumentParser(description="三情景底稿门禁（Phase 4 出口关卡）")
     ap.add_argument("scenarios", help="data/scenarios.json 路径")
@@ -609,7 +655,16 @@ def main():
     for e in errors:
         print(f"  [FAIL] {e}")
 
+    codes, unmapped = derive_codes(errors, warnings, info)
+    if unmapped:
+        print("  [BUG] 以下消息无法映射到告警码（回放断言将漏判该规则，必须修）：")
+        for m in unmapped:
+            print(f"        {m}")
+    if codes:
+        print(f"  告警码：{' '.join(codes)}")
+
     result = {"file": args.scenarios, "errors": errors, "warnings": warnings,
+              "codes": codes, "unmapped_messages": unmapped,
               "diagnostics": info, "passed": not errors}
     if args.output:
         with open(args.output, "w", encoding="utf-8") as f:

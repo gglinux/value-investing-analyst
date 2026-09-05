@@ -23,7 +23,10 @@
       "累计融资 > 分红+回购 3 倍：股权融资约 148 亿 vs 分红约 41 亿 ≈ 3.6 倍（敏感性口径 4.0 倍）",
       "短债长投：短期有息负债 190.66 亿占有息负债 69.6%，短融滚动支撑长周期资产"
     ],
-    "red_flag_undetermined": ["存货增速（序列未采集）", "应收增速（序列未采集）"],
+    "red_flag_undetermined": [
+      "存货增速（序列未采集）",
+      "应收增速（序列未采集）"
+    ],
     "rule_note": "一票否决命中任一即排除（本案 2 条）；红旗 ≥3 默认排除（本案硬命中 3 条）——两条独立路径同向"
   },
   "must_trigger_evidence": {
@@ -71,5 +74,31 @@
   "position_guidance": "零仓位。不存在『跌到 X 元就值得买』的价位——当存贷双高+利率倒挂表明报表货币资金真实性坍塌时，任何基于报表的估值分母都不存在；重新评估的前提不是价格而是事实（造假尘埃落定后的资产重述与责任认定）。",
   "verification_strength": "B（勾稽覆盖 100% full / 命门科目原文登记 full / 数据窗口 6 年 partial，含 A 股股灾与去杠杆）",
   "contamination_disclosure": "已暴露于 PROMPT 第七节答案与公共事件记忆（2018-12 立案、2019-04 虚增 299.44 亿），无法真盲测。缓解：结论完全由 Phase 0 机械条款+公司自己披露的三季报/年报算术决定；三条证据链（存贷双高/利率倒挂/现金流背离）全部为截断日前官方文件数字；diff.md 显式评估污染方向。",
-  "frozen_at": "2026-09-04"
+  "frozen_at": "2026-09-04",
+  "codes": [
+    "M_DILUTION",
+    "M_SHARE_INFLATION",
+    "P0_R11_FINANCING_VS_RETURN",
+    "P0_R1_OCF_PROFIT_DIVERGENCE",
+    "P0_R9_SHORT_DEBT_LONG_ASSET",
+    "P0_V3_PLEDGE_HIGH",
+    "P0_V4A_INTEREST_INVERSION",
+    "P0_V4_DEPOSIT_LOAN_DOUBLE_HIGH"
+  ],
+  "codes_provenance": {
+    "engine_derived": [
+      "M_DILUTION",
+      "M_SHARE_INFLATION"
+    ],
+    "manually_recorded": [
+      "P0_R11_FINANCING_VS_RETURN",
+      "P0_R1_OCF_PROFIT_DIVERGENCE",
+      "P0_R9_SHORT_DEBT_LONG_ASSET",
+      "P0_V3_PLEDGE_HIGH",
+      "P0_V4A_INTEREST_INVERSION",
+      "P0_V4_DEPOSIT_LOAN_DOUBLE_HIGH"
+    ],
+    "note": "engine_derived 由 compute_metrics/check_scenarios/reverse_dcf 重跑产出；manually_recorded 为 Phase 0 排雷与闸门一（无脚本层），代号必须取自 scripts/alert_codes.py"
+  },
+  "verdict_ordinal": 0
 }

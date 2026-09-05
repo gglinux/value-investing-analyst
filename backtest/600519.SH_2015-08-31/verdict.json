@@ -9,7 +9,7 @@
     "moat": "wide",
     "required_margin_of_safety": 0.25,
     "base_intrinsic_value_per_share": 208.66,
-    "margin_of_safety_vs_price": 0.0680,
+    "margin_of_safety_vs_price": 0.068,
     "margin_of_safety_vs_value": 0.0637,
     "pass": false,
     "gap_to_pass": "现价需跌至 166.93 元（再跌 14.5%）才达 25% 折扣线",
@@ -21,38 +21,116 @@
     "index_hurdle": 0.13,
     "beats_index": false,
     "excess_vs_index": -0.0718,
-    "consistency_check": {"expected_irr": 0.0582, "hurdle": 0.1651, "pass": false},
-    "no_convergence_floor": {"dividend_yield": 0.0203, "iv_growth": 0.06, "value": 0.0803, "hurdle": 0.06, "pass": true},
-    "pessimistic_irr": {"value": -0.0973, "hurdle": 0.0, "pass": false},
+    "consistency_check": {
+      "expected_irr": 0.0582,
+      "hurdle": 0.1651,
+      "pass": false
+    },
+    "no_convergence_floor": {
+      "dividend_yield": 0.0203,
+      "iv_growth": 0.06,
+      "value": 0.0803,
+      "hurdle": 0.06,
+      "pass": true
+    },
+    "pessimistic_irr": {
+      "value": -0.0973,
+      "hurdle": 0.0,
+      "pass": false
+    },
     "loss_probability": 0.3,
     "expected_downside_given_loss": -0.401,
     "pass": false,
     "pass_ratio": "1/3"
   },
-  "scenario_values_per_share": {"悲观": 72.71, "基准": 208.66, "乐观": 244.68},
-  "scenario_method": {"悲观": "worst_year_margin（0.315×32,217.21×9x÷1,256.1978，独立推导）", "基准": "dcf_owner_earnings（15,349.8×8% fade 10y，r=10%）", "乐观": "dcf_owner_earnings（12% fade）"},
+  "scenario_values_per_share": {
+    "悲观": 72.71,
+    "基准": 208.66,
+    "乐观": 244.68
+  },
+  "scenario_method": {
+    "悲观": "worst_year_margin（0.315×32,217.21×9x÷1,256.1978，独立推导）",
+    "基准": "dcf_owner_earnings（15,349.8×8% fade 10y，r=10%）",
+    "乐观": "dcf_owner_earnings（12% fade）"
+  },
   "implied_growth_10y": 0.0636,
   "implied_vs_base_note": "现价隐含 6.36% vs 我方基准 8%：市场略保守，分歧温和，无显著超额认知",
-  "discount_rate": 0.10,
+  "discount_rate": 0.1,
   "discount_rate_discipline": "r=max(10%, 2015-08-31 中国10Y 3.33%+4pct)=10% 合规，已披露来源",
   "alerts_triggered": [
     "稀释警报：收入CAGR 26.5% vs 每股CAGR 23.6%（2012-2014 连续三年 10 转 1 股本转增，非股权融资稀释）",
     "利润含金量警报：2012-2014 FCF/净利 < 0.6（扩产高峰主动投入，非盈利质量问题）",
     "利润率形状检验：周期波动（秩相关 +0.87、穿越 3 次）——正常化判定成立"
   ],
-  "value_trap_S8": {"triggered": false, "reason": "MoS 6.4% < 50% 且收入无连续3年负增长、无峰值停滞——价值陷阱闸门前提不成立"},
+  "value_trap_S8": {
+    "triggered": false,
+    "reason": "MoS 6.4% < 50% 且收入无连续3年负增长、无峰值停滞——价值陷阱闸门前提不成立"
+  },
   "check_scenarios": "通过（悲观/基准离散度 0.35 ≤ 0.85；压力项 margin/multiple/demand；独立推导确认）",
   "validate_data": "通过（0 错误；2 警告均已在 manifest 回应：latest_quarter_checked + A1 回放豁免）",
   "verify_report": "41/41 通过（正文数字 27 + 图表数组 5 + 证据指针 9）",
   "verification_strength_grade": "B",
-  "persona_verdicts": {"buffett": "观察等价格（质量最高档、价格纪律支持等待）", "duan": "小仓位试探或以上（唯一想推翻系统的点：生意模式应压过价格纪律）", "li_lu": "观察等价格（2 个季度观察期：批价+预收款两锚确认）"},
+  "persona_verdicts": {
+    "buffett": "观察等价格（质量最高档、价格纪律支持等待）",
+    "duan": "小仓位试探或以上（唯一想推翻系统的点：生意模式应压过价格纪律）",
+    "li_lu": "观察等价格（2 个季度观察期：批价+预收款两锚确认）"
+  },
   "key_variables": [
-    {"name": "一批价 vs 出厂价 819 元价差", "call": "企稳回升（周期性冲击判定的核心证据）", "proxy": "渠道批价月度跟踪", "falsify": "一批价跌破 800 元", "check_by": "2016-04-30", "data_source": "渠道调研/白酒行业月度数据"},
-    {"name": "预收款持续性", "call": "连续 2 季度不回落即确认渠道补库存为真需求", "proxy": "季报预收款余额及同比", "falsify": "连续 2 季度回落且同比转负", "check_by": "2016-04-30", "data_source": "季报资产负债表"}
+    {
+      "name": "一批价 vs 出厂价 819 元价差",
+      "call": "企稳回升（周期性冲击判定的核心证据）",
+      "proxy": "渠道批价月度跟踪",
+      "falsify": "一批价跌破 800 元",
+      "check_by": "2016-04-30",
+      "data_source": "渠道调研/白酒行业月度数据"
+    },
+    {
+      "name": "预收款持续性",
+      "call": "连续 2 季度不回落即确认渠道补库存为真需求",
+      "proxy": "季报预收款余额及同比",
+      "falsify": "连续 2 季度回落且同比转负",
+      "check_by": "2016-04-30",
+      "data_source": "季报资产负债表"
+    }
   ],
-  "falsifiers": ["预收款连续 2 季度回落且同比转负", "一批价跌破 800 元", "2016Q1 收入同比负增长（剔除春节因素）"],
-  "quarterly_watchlist": ["预收款余额与同比（警戒：环比降>30%）", "一批价（警戒：<800元）", "茅台酒收入增速（警戒：<0%）", "OCF/净利（警戒：<0.5）"],
+  "falsifiers": [
+    "预收款连续 2 季度回落且同比转负",
+    "一批价跌破 800 元",
+    "2016Q1 收入同比负增长（剔除春节因素）"
+  ],
+  "quarterly_watchlist": [
+    "预收款余额与同比（警戒：环比降>30%）",
+    "一批价（警戒：<800元）",
+    "茅台酒收入增速（警戒：<0%）",
+    "OCF/净利（警戒：<0.5）"
+  ],
   "trigger_price_for_upgrade": 166.93,
   "frozen_before_diff": true,
-  "frozen_at": "2026-09-04"
+  "frozen_at": "2026-09-04",
+  "codes": [
+    "GATE1_FAIL",
+    "GATE2_1_IRR_FAIL",
+    "GATE2_3_BEAR_FAIL",
+    "GATE2_FAIL",
+    "M_DILUTION",
+    "M_FCF_QUALITY",
+    "NORM_MARGIN_SHAPE",
+    "S5_NON_OPERATING_STRESS"
+  ],
+  "codes_provenance": {
+    "engine_derived": [
+      "GATE2_1_IRR_FAIL",
+      "GATE2_3_BEAR_FAIL",
+      "GATE2_FAIL",
+      "M_DILUTION",
+      "M_FCF_QUALITY",
+      "NORM_MARGIN_SHAPE",
+      "S5_NON_OPERATING_STRESS"
+    ],
+    "manually_recorded": [
+      "GATE1_FAIL"
+    ],
+    "note": "engine_derived 由 compute_metrics/check_scenarios/reverse_dcf 重跑产出；manually_recorded 为 Phase 0 排雷与闸门一（无脚本层），代号必须取自 scripts/alert_codes.py"
+  },
+  "verdict_ordinal": 2
 }

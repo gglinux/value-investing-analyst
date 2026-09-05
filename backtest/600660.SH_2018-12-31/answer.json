@@ -1,0 +1,18 @@
+{
+  "expected_verdict_set": null,
+  "expected_gate1": null,
+  "expected_gate2": null,
+  "must_trigger": [],
+  "must_trigger_any": [],
+  "must_not_trigger": [
+    "ANY_FRAUD_ALERT"
+  ],
+  "actual_5y_total_return": null,
+  "actual_3y_total_return": 1.856,
+  "actual_max_drawdown": null,
+  "earnings_driven_return": -0.297,
+  "multiple_driven_return": 2.91,
+  "outcome_note": "官方不约束档位，仅要求不排雷。事后 2019 归母 -29.7%（证明 22.78 非便宜价），至 2021-01-26 峰值 65.05（+185.6%，主体为 PE 13.3→52 的倍数扩张）；证伪条件『≤16-17 元』于 2020-03-23 在 16.36 实际触发，触发后至高点 +297%",
+  "answer_source": "PROMPT 第七节 + diff.md 第 54/60 行；回报已按盈利驱动/倍数驱动拆分",
+  "case": "600660.SH_2018-12-31"
+}

@@ -27,6 +27,10 @@ base-oe = 基期 Owner Earnings（来自 compute_metrics.py 输出，保持口�
 import argparse
 import json
 import sys
+import os
+
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from alert_codes import unknown_codes  # 告警码注册表：唯一事实源
 
 
 def dcf_value(base_oe, growth, discount, terminal_g, years, fade=False, split=False,
@@ -366,6 +370,27 @@ def expected_return(price, scenarios, hold_years, index_hurdle=0.09,
     if moat == "none":
         gate2["pass"] = False
         gate2["note"] = "无护城河不给买入结论（valuation-guide 第四步），闸门二直接不过"
+
+    # 闸门结果的稳定告警码（供回放断言机器判定，见 scripts/alert_codes.py）。
+    # 注意 evaluable=False 时输出 GATE2_UNRATED 而非 GATE2_FAIL——「不可评」
+    # 与「不过」在纪律上是两件事，前者禁止被当作通过，也不等于已判不过。
+    codes = []
+    if gate2["pass"] is True:
+        codes.append("GATE2_PASS")
+    elif gate2["pass"] is False:
+        codes.append("GATE2_FAIL")
+    if not gate2["evaluable"]:
+        codes.append("GATE2_UNRATED")
+    if gate2["consistency_expected_irr"]["pass"] is False:
+        codes.append("GATE2_1_IRR_FAIL")
+    if gate2["no_convergence_floor"]["pass"] is False:
+        codes.append("GATE2_2_FLOOR_FAIL")
+    if gate2["pessimistic_irr"]["pass"] is False:
+        codes.append("GATE2_3_BEAR_FAIL")
+    unknown = unknown_codes(codes)
+    if unknown:
+        raise KeyError(f"未注册的告警码 {unknown}，请先在 scripts/alert_codes.py 登记")
+    gate2["codes"] = codes
 
     return {
         "price": price, "hold_years": hold_years,

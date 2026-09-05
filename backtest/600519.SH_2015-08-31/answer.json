@@ -1,0 +1,25 @@
+{
+  "expected_verdict_set": [
+    3,
+    4
+  ],
+  "expected_gate1": true,
+  "expected_gate2": true,
+  "must_trigger": [],
+  "must_trigger_any": [],
+  "must_not_trigger": [
+    "VALUE_TRAP"
+  ],
+  "actual_5y_total_return": 8.062,
+  "actual_3y_total_return": 2.375,
+  "actual_max_drawdown": -0.32,
+  "earnings_driven_return": null,
+  "multiple_driven_return": null,
+  "outcome_note": "政策冲击（反腐+限制三公消费）导致的暂时性下滑，非商业模式衰退；2020-08-31 收盘 1770.58 / 195.37 = 9.06x",
+  "answer_source": "PROMPT 第七节第一批答案 + diff.md 第 22 行价格口径推导",
+  "case": "600519.SH_2015-08-31",
+  "known_failures": [
+    "verdict_track"
+  ],
+  "known_failures_note": "第一批记录在案的真实假阴性：官方预期核心买入/小仓位试探，系统输出观察等价格，事后 5 年 9.06x。根因经复核不在闸门阈值而在基准内在价值本身（208.66 vs 现价 195.37 仅 +6.8%）——详见 backtest/REPORT_FACTCHECK_AND_ACTIONS.md 第二·补节。修好后应从本字段移除登记。"
+}

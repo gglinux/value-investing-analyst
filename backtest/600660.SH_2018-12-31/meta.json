@@ -98,7 +98,7 @@
       "fx": {
         "usd_cny": 6.8632,
         "eur_cny": 7.8473,
-        "hkd_cny": 0.87620,
+        "hkd_cny": 0.8762,
         "note": "2018-12-28 中国人民银行中间价（外管局转发）"
       },
       "ttm_net_income": 42.67,
@@ -122,12 +122,38 @@
     }
   },
   "files": [
-    {"file": "meta.json", "role": "信息集与先验冻结（本文件）"},
-    {"file": "data/filings/fy_AR2017.txt", "role": "2017 年报（IFRS，港版）"},
-    {"file": "data/filings/fy_Q3_2018.txt", "role": "2018 三季报"},
-    {"file": "data/filings/fy_AR2015.txt", "role": "2015 年报（CAS）"},
-    {"file": "data/filings/fy_AR2013.txt", "role": "2013 年报（CAS）"},
-    {"file": "data/filings/fy_AR2011.txt", "role": "2011 年报（CAS）"},
-    {"file": "data/filings/fy_AR2009.txt", "role": "2009 年报（CAS，含 2008/2007）"}
-  ]
+    {
+      "file": "meta.json",
+      "role": "信息集与先验冻结（本文件）"
+    },
+    {
+      "file": "data/filings/fy_AR2017.txt",
+      "role": "2017 年报（IFRS，港版）"
+    },
+    {
+      "file": "data/filings/fy_Q3_2018.txt",
+      "role": "2018 三季报"
+    },
+    {
+      "file": "data/filings/fy_AR2015.txt",
+      "role": "2015 年报（CAS）"
+    },
+    {
+      "file": "data/filings/fy_AR2013.txt",
+      "role": "2013 年报（CAS）"
+    },
+    {
+      "file": "data/filings/fy_AR2011.txt",
+      "role": "2011 年报（CAS）"
+    },
+    {
+      "file": "data/filings/fy_AR2009.txt",
+      "role": "2009 年报（CAS，含 2008/2007）"
+    }
+  ],
+  "replay_date": "2018-12-31",
+  "information_cutoff": "2018-12-31",
+  "batch": 1,
+  "frozen_at": "2026-09-04",
+  "schema_note": "2026-09-05 补齐 PROMPT 第九节必需字段（replay_date/information_cutoff/batch/frozen_at）。本案原用 analysis_date/price_date 命名，与其余案例 schema 不一致，导致 `run_backtest_assertions.py --batch 1` 漏收本案。analysis_date 与 replay_date 同值；price_date 为该回放日的最后交易日，保留以说明取价口径。"
 }

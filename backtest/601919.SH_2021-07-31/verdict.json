@@ -44,15 +44,27 @@
     "gate1_safety_margin": {
       "value": -0.6755,
       "requirement": "护城河档位 none——无宽/窄门槛映射，但负值本身即不过",
-      "scenarios": {"悲观": 2.79, "基准": 10.54, "乐观": 14.38},
+      "scenarios": {
+        "悲观": 2.79,
+        "基准": 10.54,
+        "乐观": 14.38
+      },
       "bear_method": "pb_trough（独立白名单方法，S2b 机器重算偏差 0.16%）",
       "verdict": "不过——现价 17.66 元为基准情景的 2.9 倍、高于乐观情景 22.8%"
     },
     "gate2_expected_return": {
       "expected_irr": -0.0646,
-      "no_convergence_floor": {"value": 0.0, "hurdle": 0.06, "verdict": "不过（股息率 0 + 内在价值增速 0）——『安全边际再大，回报也全押在市场哪天承认我对』"},
-      "bear_case_irr": {"value": -0.2395, "hurdle": 0.0, "verdict": "不过"},
-      "loss_probability": 0.80,
+      "no_convergence_floor": {
+        "value": 0.0,
+        "hurdle": 0.06,
+        "verdict": "不过（股息率 0 + 内在价值增速 0）——『安全边际再大，回报也全押在市场哪天承认我对』"
+      },
+      "bear_case_irr": {
+        "value": -0.2395,
+        "hurdle": 0.0,
+        "verdict": "不过"
+      },
+      "loss_probability": 0.8,
       "loss_scenarios_avg_drawdown": -0.304,
       "opportunity_cost_hurdle": 0.13,
       "shortfall_vs_index": -0.1946,
@@ -61,18 +73,79 @@
     "implied_growth": "无解：中周期 OE 35 亿基期（r=10%/tg=2%/10 年）在 -50%~+60% 全增速域无法支撑现价 2535 亿——市场定价隐含『运价永久化』或情绪"
   },
   "key_variables": [
-    {"name": "运价均值回归", "call": "必然（基率），时点不可知", "proxy": "SCFI/CCFI 周度", "falsify": "SCFI 连续 4 周高于 3500 点且 2022 长协价 2 倍以上履约率 >90% → 中周期锚需重估", "check_by": "2022-04-30", "data_source": "上海航运交易所周报（SSE 官网/航运界转载）"},
-    {"name": "新船交付潮压价", "call": "2023 起供给压力上升", "proxy": "季度行业运力增速 vs 货量增速", "falsify": "交付延期 1 年以上且拆解量超预期 → 悲观情景推迟", "check_by": "2023-06-30", "data_source": "Alphaliner/Clarksons 月度（C 级转载）"},
-    {"name": "分红制度化", "call": "概率高但无历史背书", "proxy": "中报/年报分红方案", "falsify": "分红率 ≥30% → 触发『不收敛下限』重算与档位复核", "check_by": "2022-03-31", "data_source": "公司分红公告（巨潮）"}
+    {
+      "name": "运价均值回归",
+      "call": "必然（基率），时点不可知",
+      "proxy": "SCFI/CCFI 周度",
+      "falsify": "SCFI 连续 4 周高于 3500 点且 2022 长协价 2 倍以上履约率 >90% → 中周期锚需重估",
+      "check_by": "2022-04-30",
+      "data_source": "上海航运交易所周报（SSE 官网/航运界转载）"
+    },
+    {
+      "name": "新船交付潮压价",
+      "call": "2023 起供给压力上升",
+      "proxy": "季度行业运力增速 vs 货量增速",
+      "falsify": "交付延期 1 年以上且拆解量超预期 → 悲观情景推迟",
+      "check_by": "2023-06-30",
+      "data_source": "Alphaliner/Clarksons 月度（C 级转载）"
+    },
+    {
+      "name": "分红制度化",
+      "call": "概率高但无历史背书",
+      "proxy": "中报/年报分红方案",
+      "falsify": "分红率 ≥30% → 触发『不收敛下限』重算与档位复核",
+      "check_by": "2022-03-31",
+      "data_source": "公司分红公告（巨潮）"
+    }
   ],
   "falsifiers": [
     "SCFI <1500 点 + 制度化分红（≥30%）+ PB <1.2 → 『观察』档位作废，重评资产价值型机会",
     "中周期 OE >70 亿连续 3 年 → 中周期锚重估",
     "2022 运价回落但公司仍巨亏 → 悲观情景概率上调（杠杆放大器）"
   ],
-  "persona_verdicts": {"buffett": "不买（周期高点低 PE 陷阱+十年持有测试不过）", "duan": "不买（无差异化生意模式一票否决+私有化测试 1-1.4%/年）", "li_lu": "观察等价格（方向可判时点不可判——等 SCFI≈1000 点+PB≈1 倍+盈利连续两季中周期区间）"},
+  "persona_verdicts": {
+    "buffett": "不买（周期高点低 PE 陷阱+十年持有测试不过）",
+    "duan": "不买（无差异化生意模式一票否决+私有化测试 1-1.4%/年）",
+    "li_lu": "观察等价格（方向可判时点不可判——等 SCFI≈1000 点+PB≈1 倍+盈利连续两季中周期区间）"
+  },
   "user_prior": "官方先验（meta.json）：拒绝或观察等价格；must_trigger=周期高位+强制禁用当期基期",
   "motivation": "回放检验 normalization：验证管线能否识别周期高位并强制禁用当期基期（PROMPT：『案例 5 是最锋利的一个』）",
   "verification_strength_grade": "B",
-  "conclusion_note": "结论与先验一致：观察等价格。本案的完整管线通过证明：① 引擎在净利率均值为负时正确失效而非误判；② 大宗商品路径（中周期运价×正常运量）在脚本无推荐基期时可作为合法接管路径并全程落盘；③ 双闸门在『三情景全部低于现价』的极端形态下给出一致的拒绝信号；④ 事后利润断崖（2022 运价崩、2023 净利 -78%）将验证基期纪律的价值——见 diff.md"
+  "conclusion_note": "结论与先验一致：观察等价格。本案的完整管线通过证明：① 引擎在净利率均值为负时正确失效而非误判；② 大宗商品路径（中周期运价×正常运量）在脚本无推荐基期时可作为合法接管路径并全程落盘；③ 双闸门在『三情景全部低于现价』的极端形态下给出一致的拒绝信号；④ 事后利润断崖（2022 运价崩、2023 净利 -78%）将验证基期纪律的价值——见 diff.md",
+  "codes": [
+    "GATE1_FAIL",
+    "GATE2_2_FLOOR_FAIL",
+    "GATE2_3_BEAR_FAIL",
+    "GATE2_FAIL",
+    "GATE2_UNRATED",
+    "M_ACCOUNTING_STANDARD_SWITCH",
+    "M_DIVIDEND_ILLUSION",
+    "M_FCF_QUALITY",
+    "NORM_BASE_UNUSABLE",
+    "NORM_MARGIN_SHAPE",
+    "P0_R11_FINANCING_VS_RETURN",
+    "P0_R4_NONRECURRING_PROP",
+    "S5_NON_OPERATING_STRESS"
+  ],
+  "codes_provenance": {
+    "engine_derived": [
+      "GATE2_2_FLOOR_FAIL",
+      "GATE2_3_BEAR_FAIL",
+      "GATE2_FAIL",
+      "GATE2_UNRATED",
+      "M_DIVIDEND_ILLUSION",
+      "M_FCF_QUALITY",
+      "NORM_BASE_UNUSABLE",
+      "NORM_MARGIN_SHAPE",
+      "S5_NON_OPERATING_STRESS"
+    ],
+    "manually_recorded": [
+      "GATE1_FAIL",
+      "M_ACCOUNTING_STANDARD_SWITCH",
+      "P0_R11_FINANCING_VS_RETURN",
+      "P0_R4_NONRECURRING_PROP"
+    ],
+    "note": "engine_derived 由 compute_metrics/check_scenarios/reverse_dcf 重跑产出；manually_recorded 为 Phase 0 排雷与闸门一（无脚本层），代号必须取自 scripts/alert_codes.py"
+  },
+  "verdict_ordinal": 2
 }

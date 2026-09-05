@@ -1,0 +1,25 @@
+{
+  "expected_verdict_set": [
+    1
+  ],
+  "expected_gate1": false,
+  "expected_gate2": false,
+  "must_trigger": [],
+  "must_trigger_any": [
+    [
+      "NOT_CONVERGING_FLOOR_LOW",
+      "PEAK_DRAWDOWN_STAGNANT"
+    ]
+  ],
+  "must_not_trigger": [
+    "PHASE0_VETO_FIRED"
+  ],
+  "actual_5y_total_return": -1.0,
+  "actual_3y_total_return": -1.0,
+  "actual_max_drawdown": -1.0,
+  "earnings_driven_return": null,
+  "multiple_driven_return": null,
+  "outcome_note": "2012-01-19 申请破产保护，2013 旧股归零；回放后 6 个月 -81.9%。官方 must_trigger 为二选一",
+  "answer_source": "PROMPT 第七节 + diff.md 第 25-27 行",
+  "case": "EK_2011-06-30"
+}
