@@ -1884,6 +1884,96 @@ _r = _vr3(_watch_html.replace("结论档位",
 check("声明触发价但缺带内分位被逮住",
       _r.returncode == 1 and "trigger:band" in _r.stdout, _r.stdout[-200:])
 
+# ═══════════════════════════════════════════════════════════════════
+print("== 14 S2c 最差年必须是实证压力年（阶段四） ==")
+# 两案例硬证据：茅台悲观取 2006 年 31.5%（序列最早年、公司幼年期，而真实政策
+# 冲击期 2013-14 净利率仅从 50.3% 降到 47.6%）；苹果取 FY2007 的 14.6%
+#（iPhone 刚发布、仍是 Mac+iPod 公司，实际压力年 FY2013 是 21.7%）。
+# 判据：worst_year 是序列最早年 **且** 利润率秩相关 > 0.5 ⇒ 该年低是规模/
+# 阶段效应，不是危机。这是本轮唯一的判别逻辑改动，故双向锁定。
+import check_scenarios as CS
+
+_mt_scen = os.path.join(ROOT, "backtest", "600519.SH_2015-08-31", "data",
+                        "scenarios_MAOTAI_2015H1.json")
+_mt_met = os.path.join(ROOT, "backtest", "600519.SH_2015-08-31", "data",
+                       "metrics_MAOTAI_2015H1.json")
+
+def _s2c(mi_over, scen=_mt_scen, met=_mt_met):
+    d = json.load(open(scen, encoding="utf-8"))
+    b = [s for s in d["scenarios"] if s["name"] == "悲观"][0]
+    b["method_inputs"].update(mi_over)
+    fp = os.path.join(tempfile.mkdtemp(prefix="s2c_"), "s.json")
+    json.dump(d, open(fp, "w", encoding="utf-8"), ensure_ascii=False)
+    _, errs, _, _ = CS.check(fp, metrics_path=met)
+    return [e for e in errs if e.startswith("S2c")]
+
+# 现状（已修正为 2014 实证压力年）应无 S2c 报错
+check("茅台修正后（2014 实证压力年）S2c 通过", not _s2c({}))
+# 退回幼年期取值应被逮住
+check("worst_year=2006（序列最早年+长期上行）被逮住",
+      any("规模/阶段效应" in e for e in _s2c(
+          {"worst_year": 2006, "worst_margin": 0.315})),
+      str(_s2c({"worst_year": 2006, "worst_margin": 0.315}))[:200])
+check("报错含剔除首年后的实际最差年提示",
+      any("剔除首年后" in e for e in _s2c(
+          {"worst_year": 2006, "worst_margin": 0.315})))
+# 字段缺失
+check("缺 worst_year 被逮住",
+      any("缺 `method_inputs.worst_year`" in e for e in _s2c({"worst_year": None})))
+check("缺压力事件证据被逮住",
+      any("worst_year_stress_evidence" in e for e in
+          _s2c({"worst_year_stress_evidence": "无指针的说明"})))
+# worst_margin 与该年实际净利率不符
+check("worst_margin 与该年实际净利率不符被逮住",
+      any("与 2014 年实际净利率" in e for e in _s2c({"worst_margin": 0.20})),
+      str(_s2c({"worst_margin": 0.20}))[:200])
+# worst_year 不在序列内
+check("worst_year 不在序列年份内被逮住",
+      any("不在 metrics 净利率序列年份" in e for e in _s2c({"worst_year": 1999})))
+# 苹果同根因
+_ap_scen = os.path.join(ROOT, "backtest", "AAPL_2016-04-30", "data",
+                        "scenarios_AAPL_2016Q2.json")
+_ap_met = os.path.join(ROOT, "backtest", "AAPL_2016-04-30", "data",
+                       "metrics_AAPL_2016Q2.json")
+check("苹果修正后（FY2013 实证压力年）S2c 通过",
+      not _s2c({}, _ap_scen, _ap_met))
+check("苹果退回 FY2007 幼年期被逮住（同根因第 2 案例）",
+      any("规模/阶段效应" in e for e in _s2c(
+          {"worst_year": 2007, "worst_margin": 0.146}, _ap_scen, _ap_met)))
+
+# 不误伤：S2c 只管 worst_year_margin，其余独立方法不受影响
+for _c, _mth in (("EK_2011-06-30", "peer_death_analogy"),
+                 ("600660.SH_2018-12-31", "pb_trough"),
+                 ("601919.SH_2021-07-31", "pb_trough")):
+    _f = sorted(glob.glob(os.path.join(ROOT, "backtest", _c, "data",
+                                       "scenarios*.json")))
+    _d = json.load(open(_f[0], encoding="utf-8"))
+    _bm = [s for s in _d["scenarios"] if s["name"] == "悲观"][0]["method"]
+    _mp = sorted(glob.glob(os.path.join(ROOT, "backtest", _c, "data",
+                                        "metrics*.json")))
+    _, _errs, _, _ = CS.check(_f[0], metrics_path=_mp[0] if _mp else None)
+    check(f"{_c} 用 {_bm}，S2c 不适用（不误伤拒绝样本）",
+          _bm == _mth and not [e for e in _errs if e.startswith("S2c")],
+          str([e for e in _errs if e.startswith("S2c")])[:150])
+
+# 有效门槛披露（纯披露，不改判定）
+_eh = subprocess.run([sys.executable, os.path.join(SCRIPTS, "reverse_dcf.py"),
+    "expected-return", "--scenarios-file", _mt_scen, "--moat", "wide",
+    "--iv-growth", "0.06", "-o", os.path.join(tempfile.mkdtemp(), "e.json")],
+    capture_output=True, text=True)
+_eh_o = json.load(open(os.path.join(
+    os.path.dirname(_eh.args[-1]), "e.json"), encoding="utf-8"))["gate2"]
+check("闸门二输出 effective_hurdle 区块", "effective_hurdle" in _eh_o)
+_e = _eh_o.get("effective_hurdle") or {}
+check("有效门槛严于名义门槛（悲观按权重进入①，与闸门一不同源）",
+      _e.get("effective_margin_of_safety_required", 0) >
+      _e.get("nominal_margin_of_safety_required", 1),
+      f"有效 {_e.get('effective_margin_of_safety_required')} vs 名义 {_e.get('nominal_margin_of_safety_required')}")
+check("落差 >5pct 时输出披露代号",
+      "GATE_EFFECTIVE_HURDLE_GAP" in _eh_o["codes"], str(_eh_o["codes"]))
+check("披露代号不参与任何断言判定（纯披露）",
+      not [k for k, v in AC.ASSERTIONS.items() if "GATE_EFFECTIVE_HURDLE_GAP" in v])
+
 print()
 if FAILED:
     print(f"结果：{len(FAILED)} 项失败 → {FAILED}")

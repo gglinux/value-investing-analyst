@@ -27,7 +27,7 @@ check_scenarios.py — 三情景底稿门禁（Phase 4 出口关卡，expected-r
 
 因此本脚本把"悲观情景必须由独立方法推导"从文档纪律升级为机器门禁。
 
-═══ 十一项检查 ═══
+═══ 十二项检查 ═══
 S1 schema：必填字段齐全、概率和为 1、现价为正、护城河档位合法。
 S2 悲观情景方法独立性：`method` 必须属独立方法白名单（不走 DCF 的另一条路），
    禁止 dcf_* 系列。基准/乐观可以用 DCF。
@@ -36,6 +36,16 @@ S2b 悲观值算术重算：`method` 只是标签，标签与数字之间此前�
    故白名单方法必须登记 `method_inputs`（结构化输入），脚本按该方法的公式重算
    每股价值并与 `value_per_share` 比对，容差 2%，对不上即 FAIL。
    悲观值必须是「算出来的」，不是「填出来的」。
+S2c 最差年必须是实证压力年：`worst_year_margin` 原实现只重算算术、不问
+   worst_margin 从哪来，于是机械取了序列最小值。对利润率长期上行的公司，
+   序列最早那年必然最低——但那年低是因为**公司当年还小**，不是因为危机。
+   实证：茅台取 2006 年 31.5%（序列首年、幼年期），而真实政策冲击只让净利率
+   从 2012 的 50.3% 降到 2014 的 47.6%；苹果取 FY2007 的 14.6%（iPhone 刚发布、
+   仍是 Mac+iPod 公司），实际压力年 FY2013 是 21.7%。故须登记 `worst_year` +
+   含 [E:] 的 `worst_year_stress_evidence`；worst_margin 须与该年实际净利率相符；
+   若 worst_year 是序列最早年且秩相关 >0.5（长期上行）即 FAIL。
+   方向不对称正是它长期没被发现的原因：拒绝侧高估悲观值无害（柯达档位不变），
+   买入侧则会误杀（茅台悲观年化 -9.73% 直接打死闸门二③）。
 S3 压力项充分性：悲观情景 `stressed_assumptions` ≥2 项且不得只有 growth——
    "只调增速"正是本次要消灭的做法。
 S4 离散度哨兵：悲观/基准 每股价值比 > 0.85 即报错（下行不是独立估计，只是轻微打折）。
@@ -115,6 +125,7 @@ from alert_codes import unknown_codes  # 告警码注册表：唯一事实源
 # derive_codes 按本列表顺序做首次匹配。
 _S_PREFIX_TO_CODE = [
     ("S2b", "S2B_BEAR_ARITHMETIC"),
+    ("S2c", "S2C_WORST_YEAR_NOT_STRESS"),
     ("S7b", "S7B_IV_GROWTH_EVIDENCE"),
     ("S1", "S1_SCHEMA"),
     ("S2", "S2_BEAR_METHOD_INDEPENDENCE"),
@@ -349,6 +360,13 @@ def check(path, metrics_path=None, snapshot_path=None):
     with open(path, "r", encoding="utf-8") as f:
         d = json.load(f)
 
+    # metrics 提前加载：S2c（最差年校验）与 S8（收入萎缩判定）都要用，
+    # 原先只在 S8 处就地读取，S2c 位置更前故上提为共享变量。
+    metrics = None
+    if metrics_path and os.path.exists(metrics_path):
+        with open(metrics_path, "r", encoding="utf-8") as f:
+            metrics = json.load(f)
+
     # ---- S1 schema ----
     for key in ("price", "scenarios", "moat", "discount_rate"):
         if d.get(key) is None:
@@ -423,6 +441,69 @@ def check(path, metrics_path=None, snapshot_path=None):
                         f"两者必须一致：要么 method_inputs 登记的科目/倍数与实际推导不符，"
                         f"要么 value_per_share 不是由该方法算出——悲观值必须是算出来的，"
                         f"不是填出来的")
+
+    # ---- S2c 最差年必须是实证压力年（阶段四，茅台+苹果两案例硬证据）----
+    # `worst_year_margin` 原实现只重算算术、不问 worst_margin 从哪来，于是它
+    # 机械地取了序列最小值。对利润率长期上行的公司，序列最早那年必然最低——
+    # 但那年低是因为**公司当年还小**，不是因为危机。
+    #   茅台：取 2006 年 31.5%（序列首年、公司幼年期）。而真实政策冲击
+    #         （塑化剂+三公消费）只让净利率从 2012 的 50.3% 降到 2014 的 47.6%。
+    #         悲观情景假设降 19pct，是实证压力的 7 倍 → 悲观年化 -9.73%，
+    #         直接打死闸门二③。
+    #   苹果：取 FY2007 的 14.6%（iPhone 刚发布、仍是 Mac+iPod 公司）。
+    #         实际压力年 FY2013 是 21.7%。
+    # 判据（客观、不拍阈值）：worst_year 是序列最早年 **且** 利润率秩相关 > 0.5
+    # （长期上行）⇒ 该年低利润率是规模/阶段效应，不是危机形态。
+    # 方向不对称正是它长期没被发现的原因：拒绝侧高估悲观值无害（柯达档位不变），
+    # 买入侧则会误杀（茅台）。
+    if m == "worst_year_margin" and bear.get("method_inputs"):
+        mi = bear["method_inputs"]
+        wy = mi.get("worst_year")
+        if wy is None:
+            errors.append(
+                "S2c `worst_year_margin` 缺 `method_inputs.worst_year`：必须登记"
+                "最差利润率取自哪一年，否则无法判断那年是「危机」还是「公司当年还小」")
+        if not E_PTR.search(str(mi.get("worst_year_stress_evidence") or "")):
+            errors.append(
+                "S2c `worst_year_margin` 缺 `method_inputs.worst_year_stress_evidence`"
+                "（含 [E:] 指针）：必须说明该年份发生了什么可指认的外部压力事件。"
+                "「序列里最低的一年」不等于「危机年」——利润率长期上行的公司，"
+                "最早那年必然最低，但那是规模/阶段效应")
+        if wy is not None and metrics:
+            _ser = metrics.get("series") or []
+            _yrs = [s.get("year") for s in _ser if s.get("net_margin") is not None]
+            _nm = {s.get("year"): s.get("net_margin") for s in _ser
+                   if s.get("net_margin") is not None}
+            if _yrs and wy not in _nm:
+                errors.append(
+                    f"S2c `worst_year` = {wy} 不在 metrics 净利率序列年份 "
+                    f"{_yrs[0]}~{_yrs[-1]} 内，无法核验")
+            elif _yrs:
+                _actual = _nm[wy]
+                _claim = float(mi.get("worst_margin") or 0)
+                info["worst_year"] = wy
+                info["worst_year_actual_margin"] = round(_actual, 6)
+                if _actual and abs(_claim - _actual) / abs(_actual) > 0.05:
+                    errors.append(
+                        f"S2c `worst_margin` = {_claim:.1%} 与 {wy} 年实际净利率 "
+                        f"{_actual:.1%} 不符（偏差 >5%）——数字必须取自该年真实报表")
+                _rho = ((metrics.get("normalization") or {}).get("margin_trend")
+                        or {}).get("spearman_rho")
+                info["margin_spearman_rho"] = _rho
+                if wy == _yrs[0] and _rho is not None and _rho > 0.5:
+                    _worst_late = min(
+                        ((y, v) for y, v in _nm.items() if y != _yrs[0]),
+                        key=lambda kv: kv[1], default=None)
+                    _hint = ""
+                    if _worst_late:
+                        _hint = (f"；剔除首年后的实际最差年为 {_worst_late[0]} 年 "
+                                 f"{_worst_late[1]:.1%}，若该年确有压力事件应改用它")
+                    errors.append(
+                        f"S2c `worst_year` = {wy} 是净利率序列最早年，且序列长期上行"
+                        f"（秩相关 {_rho:+.2f} > 0.5）——该年低利润率是规模/阶段效应，"
+                        f"不是危机形态。公司不会退回十年前的商业形态，用它做悲观情景"
+                        f"会系统性低估悲观值并误杀买入档位（茅台 2006 / 苹果 FY2007 "
+                        f"两案实证）{_hint}")
 
     # ---- S3 压力项充分性 ----
     stressed = bear.get("stressed_assumptions") or []
@@ -523,11 +604,9 @@ def check(path, metrics_path=None, snapshot_path=None):
     if metrics_path:
         if not os.path.exists(metrics_path):
             warnings.append(f"S8 metrics 文件不存在：{metrics_path}，收入萎缩判定无法自动核验")
-        else:
-            with open(metrics_path, "r", encoding="utf-8") as f:
-                _m = json.load(f)
-            rev_streak = revenue_decline_streak(_m)
-            stag = revenue_peak_stagnation(_m)
+        elif metrics is not None:
+            rev_streak = revenue_decline_streak(metrics)
+            stag = revenue_peak_stagnation(metrics)
     decline = max([x for x in (streak, rev_streak) if x is not None], default=None)
     info["revenue_decline_streak"] = rev_streak
     info["core_driver_decline_years"] = streak

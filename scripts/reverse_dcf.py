@@ -387,6 +387,36 @@ def expected_return(price, scenarios, hold_years, index_hurdle=0.09,
         codes.append("GATE2_2_FLOOR_FAIL")
     if gate2["pessimistic_irr"]["pass"] is False:
         codes.append("GATE2_3_BEAR_FAIL")
+    # ---- 名义门槛 vs 有效门槛（纯披露，不改任何 pass/fail 判定）----
+    # SKILL.md 曾称闸门二①「与闸门一同源，只是自洽性校验」——该说法不准确：
+    # 闸门一只用**基准情景**算折价，而①用的是**概率加权**期望 IRR，悲观情景
+    # 以其概率权重进入。两者不同源，且①严于闸门一。
+    # 茅台实测：基准 IRR 11.46% → 加权 5.82%（悲观拖累 5.64pct），要让加权值
+    # 达门槛 16.51% 需基准 IRR 22.15%，对应折价 40.8% —— 而闸门一名义只要求
+    # 25%，有效门槛被悄悄抬高 15.8pct。苹果旁证：折价 42.2% 而期望 IRR 仅超
+    # 门槛 0.58pct。名义门槛写在报告里会误导读者，故必须并列披露。
+    base_irr = next((s["annualized_irr"] for s in rows
+                     if s["name"] in ("基准", "base")), None)
+    if base_irr is not None and irr_hurdle is not None and mos_req is not None:
+        drag = base_irr - exp_irr
+        need_base = irr_hurdle + drag
+        vp = ((1 + need_base) / (1 + discount_rate)) ** hold_years
+        eff_mos = 1 - 1 / vp if vp > 0 else None
+        gate2["effective_hurdle"] = {
+            "nominal_margin_of_safety_required": mos_req,
+            "base_scenario_irr": base_irr,
+            "expected_irr_weighted": exp_irr,
+            "pessimistic_drag_pct": drag,
+            "base_irr_needed_to_clear": need_base,
+            "effective_margin_of_safety_required": eff_mos,
+            "gap_vs_nominal_pct": (eff_mos - mos_req) if eff_mos is not None else None,
+            "basis": "闸门二①按概率加权，悲观情景以其权重拖累期望 IRR；"
+                     "使①刚好通过所需的折价率即有效门槛。名义门槛只反映闸门一"
+                     "（仅用基准情景），二者差额 = 情景离散度与概率赋值的代价",
+        }
+        if eff_mos is not None and eff_mos - mos_req > 0.05:
+            codes.append("GATE_EFFECTIVE_HURDLE_GAP")
+
     unknown = unknown_codes(codes)
     if unknown:
         raise KeyError(f"未注册的告警码 {unknown}，请先在 scripts/alert_codes.py 登记")

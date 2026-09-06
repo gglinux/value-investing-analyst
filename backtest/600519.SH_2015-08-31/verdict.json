@@ -112,6 +112,7 @@
     "GATE2_1_IRR_FAIL",
     "GATE2_3_BEAR_FAIL",
     "GATE2_FAIL",
+    "GATE_EFFECTIVE_HURDLE_GAP",
     "M_DILUTION",
     "M_FCF_QUALITY",
     "NORM_MARGIN_SHAPE",
@@ -122,6 +123,7 @@
       "GATE2_1_IRR_FAIL",
       "GATE2_3_BEAR_FAIL",
       "GATE2_FAIL",
+      "GATE_EFFECTIVE_HURDLE_GAP",
       "M_DILUTION",
       "M_FCF_QUALITY",
       "NORM_MARGIN_SHAPE",
@@ -130,7 +132,10 @@
     "manually_recorded": [
       "GATE1_FAIL"
     ],
-    "note": "engine_derived 由 compute_metrics/check_scenarios/reverse_dcf 重跑产出；manually_recorded 为 Phase 0 排雷与闸门一（无脚本层），代号必须取自 scripts/alert_codes.py"
+    "note": "engine_derived 由 compute_metrics/check_scenarios/reverse_dcf 重跑产出；manually_recorded 为 Phase 0 排雷与闸门一（无脚本层），代号必须取自 scripts/alert_codes.py",
+    "change_log": [
+      "2026-09-06 阶段四：新增 GATE_EFFECTIVE_HURDLE_GAP（名义门槛 vs 有效门槛落差 >5pct 的纯披露代号，不参与任何断言判定）"
+    ]
   },
   "verdict_ordinal": 2
 }

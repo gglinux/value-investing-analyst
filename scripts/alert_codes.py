@@ -129,6 +129,12 @@ ALERTS = {
     "S1_SCHEMA": ("scenarios", "schema：必填字段/概率和/现价/护城河档位"),
     "S2_BEAR_METHOD_INDEPENDENCE": ("scenarios", "悲观情景方法必须属独立方法白名单，禁 dcf_*"),
     "S2B_BEAR_ARITHMETIC": ("scenarios", "悲观值算术重算与登记值偏差 > 2%"),
+    # 阶段四：worst_year_margin 的「最差年」必须是实证压力年，不是序列最小值。
+    # 两案例硬证据：茅台悲观取 2006 年 31.5%（序列最早年、公司幼年期，而真实
+    # 政策冲击期 2013-14 净利率仅从 50.3% 降到 47.6%）；苹果悲观取 FY2007 的
+    # 14.6%（iPhone 刚发布、仍是 Mac+iPod 公司，而实际压力年 FY2013 是 21.7%）。
+    # 该方法机械取序列最小值，对利润率长期上行的公司会把「幼年期」当「危机」。
+    "S2C_WORST_YEAR_NOT_STRESS": ("scenarios", "worst_year_margin 的最差年选取不合规：是序列最早年且利润率长期上行（该年低利润率是规模/阶段效应而非危机），或缺 worst_year / 压力事件证据 / 与序列实际利润率不符"),
     "S3_STRESS_SUFFICIENCY": ("scenarios", "压力项 ≥2 且不得只压增速"),
     "S4_DISPERSION": ("scenarios", "离散度哨兵：悲观/基准 > 0.85"),
     "S5_NON_OPERATING_STRESS": ("scenarios", "非经营资产悲观折价未比基准更狠"),
