@@ -1980,20 +1980,30 @@ print("== 15 脚本接入完整性（元测试） ==")
 # 但**忘了在 SKILL.md 里引用它**——脚本存在 ≠ agent 会执行。SKILL.md 是 agent
 # 的唯一行动依据，没被它引用的脚本就是死代码。本节从根上防止此类疏漏。
 _SKILL = open(os.path.join(ROOT, "SKILL.md"), encoding="utf-8").read()
+_REFS = "".join(
+    open(os.path.join(ROOT, "references", _r), encoding="utf-8").read()
+    for _r in os.listdir(os.path.join(ROOT, "references")) if _r.endswith(".md"))
+_DOCS = _SKILL + _REFS
 # 例外清单及豁免理由（新增例外必须在此显式登记，否则测试失败）
 _EXEMPT = {
-    "alert_codes.py": "被其他脚本 import 的共享模块，不由 agent 直接调用",
+    "alert_codes.py": "被 5 个脚本 import 的共享模块，不由 agent 直接调用",
     "run_backtest_assertions.py": "回放测试资产，属 backtest/ 协议而非分析主流程",
     "install-hooks.sh": "仓库开发工具（git hooks 安装），非分析流程",
-    "extract_edgar_annual.py": "美股 EDGAR 抓取辅助工具，按需调用（data-sourcing 有说明）",
 }
 _scripts = sorted(f for f in os.listdir(SCRIPTS)
                   if f.endswith((".py", ".sh")) and not f.startswith("_"))
-_orphans = [f for f in _scripts
-            if f not in _EXEMPT and f"scripts/{f}" not in _SKILL]
-check("无孤儿脚本（未被 SKILL.md 引用且未登记豁免）",
+# 引用可写成 `scripts/xxx.py` 或裸文件名 `xxx.py`（后者见 SKILL.md 9.5 与
+# references/data-sources.md 对 extract_edgar_annual.py 的引用），两种都算接入。
+_orphans = [f for f in _scripts if f not in _EXEMPT and f not in _DOCS]
+check("无孤儿脚本（未被 SKILL.md/references 引用且未登记豁免）",
       not _orphans,
-      f"孤儿脚本 {_orphans} —— 要么在 SKILL.md 接入，要么在 _EXEMPT 登记理由")
+      f"孤儿脚本 {_orphans} —— 要么在文档接入，要么在 _EXEMPT 登记理由")
+# 豁免理由必须非空且说明「为何不由 agent 在分析流程中直接调用」——
+# 被文档提及不等于会被调用（alert_codes 是 import 的共享模块、
+# install-hooks 是仓库开发工具），故不以「文档是否提及」作为判据。
+check("每个豁免项都有非空理由",
+      all(isinstance(v, str) and len(v) >= 10 for v in _EXEMPT.values()),
+      str({k: v for k, v in _EXEMPT.items() if not (isinstance(v, str) and len(v) >= 10)}))
 for _f, _why in _EXEMPT.items():
     check(f"豁免脚本仍存在：{_f}", os.path.exists(os.path.join(SCRIPTS, _f)),
           "豁免清单引用了不存在的脚本，应清理")
@@ -2012,6 +2022,34 @@ check("保险管道文档与代码一致",
       not (os.path.exists(os.path.join(SCRIPTS, "compute_metrics_insurance.py"))
            and "保险/券商暂无脚本管道" in _SKILL),
       "compute_metrics_insurance.py 存在但 SKILL.md 仍称『保险暂无脚本管道』")
+
+# ---- 回放协议一致性：PROMPT.md 不得含答案，且与代码约定同步 ----
+_PROMPT = open(os.path.join(ROOT, "backtest", "PROMPT.md"), encoding="utf-8").read()
+_ANSWERS_FP = os.path.join(ROOT, "backtest", "ANSWERS.md")
+check("答案已移出 PROMPT.md（存在 ANSWERS.md）", os.path.exists(_ANSWERS_FP))
+# 答案特征串必须只在 ANSWERS.md、不在 PROMPT.md——PROMPT 要求「全文投喂」，
+# 答案留在里面等于第一批 6/6 结构性污染的根源。
+_ANS_MARKERS = ["事后 5 年约 8 倍", "核心买入 / 小仓位试探",
+                "事后 300 亿现金造假", "事后长期下跌超 80%"]
+_leaked = [m for m in _ANS_MARKERS if m in _PROMPT]
+check("PROMPT.md 中无答案明文残留", not _leaked, f"泄漏 {_leaked}")
+if os.path.exists(_ANSWERS_FP):
+    _ANS = open(_ANSWERS_FP, encoding="utf-8").read()
+    check("ANSWERS.md 保有三批答案",
+          all(b in _ANS for b in ("**第一批**", "**第二批**", "**第三批**")))
+    check("ANSWERS.md 带禁止提前阅读的警示", "Step 4 之前禁止打开" in _ANS)
+# PROMPT 的档位序数须与 alert_codes.VERDICT_ORDINAL 一致
+for _v, _o in AC.VERDICT_ORDINAL.items():
+    check(f"PROMPT 档位序数与代码一致：{_v}={_o}",
+          f"{_v}={_o}" in _PROMPT.replace(" ", ""),
+          "第九节档位序数与 alert_codes.VERDICT_ORDINAL 不同步")
+check("PROMPT 已写入断言 runner 用法",
+      "run_backtest_assertions.py" in _PROMPT)
+check("PROMPT 已写入 answer.json 与 meta.json 分离",
+      "answer.json" in _PROMPT and "不含任何答案" in _PROMPT)
+check("PROMPT 元问题含假阳性（第 4 问）", "假阳性成本" in _PROMPT)
+check("PROMPT 已写入 2 案例门槛按「档位不匹配」计",
+      "档位不匹配的案例数" in _PROMPT)
 
 print()
 if FAILED:

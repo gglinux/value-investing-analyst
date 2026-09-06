@@ -19,6 +19,13 @@
 - 每份报告开头自陈「本报告仅使用 YYYY-MM-DD 及之前的公开信息」，结尾列出全部引用数据的 `publish_date`，晚于截断日的自行标红作废。
 - 拉不到截断日之前的历史财报时，**如实报告「数据不可得」并跳过**，绝不用当前数据近似替代。这条比跑完案例重要。
 
+- **文献时点 vs 事实时点**：允许用晚于截断日的文献**回取**截断日之前的客观事实（收盘价、
+  已披露报表数字），但必须：① 在 `information_set` 标注「事实时点 X，载体文献 Y（晚于
+  截断日）」；② 只取该文献中的**客观历史数字**，禁止使用其中的前瞻表述、管理层讨论、
+  后续事件描述；③ 优先寻找截断日之前的原始载体，回取仅作兜底。
+  （第一批柯达案实际用了 FY2012 10-K 的封面市值锚点回取 2011-06-30 收盘价——事实本身
+  当日可知、不构成红线违反，但原协议未定义该边界。）
+
 ## 二、第一批案例（6 个，跑通再扩展）
 
 覆盖正向发现、价值陷阱、造假排雷、周期顶部、正确拒绝、排雷负样本六类，且事后答案无争议。
@@ -47,8 +54,18 @@
 | 批次 | 主题 | 案例数 | 建议时点 | 前置条件 |
 |---|---|---|---|---|
 | 第一批 | 五类基础判别力 + 排雷对照 | 6 | 立即 | 无 |
-| 第二批 | 混合样本与结构性误判 | 6 | 第一批全部落盘且元问题已回答 | 第一批引入的引擎改动已过全量回归 |
+| 第二批 | 混合样本与结构性误判 | 6 | 第一批全部落盘且元问题已回答 | **硬前置**（见下） |
 | 第三批 | 行业专属口径与极端情绪 | 6 | 第二批完成后 | 第二批未遗留未定级的 observations |
+
+**第二批的硬前置（已全部就位，2026-09-06）**：
+
+- [x] 答案已移出 PROMPT.md → `ANSWERS.md`（本文件可安全全文投喂）
+- [x] 告警码注册表 `scripts/alert_codes.py` + 引擎输出稳定代号
+- [x] 断言 runner `scripts/run_backtest_assertions.py`（断言 + 漂移 + 基线）
+- [x] 6 个存量案例已回填 `answer.json` 与 `codes`，基线建立、0 回归
+- [x] 第一批裁决的工程类改动已实施（量纲哨兵 / 快照三角校验 / 护城河一致性 / 触发器承接与可达性 / S2c 最差年 / S2e 折现率下限 / 有效门槛披露）
+
+**软前置（明确不作为第二批前置）**：判别逻辑的放松性改动（原 R1 家族、基准增速、折现率下限对宽护城河的适用性）。理由：这些均只有茅台 1 例档位不匹配，未达第五节的 2 案例门槛；且第二批在「未放松」状态下跑，还能为它们提供对照基线。详见 `observations.md` 的 OBS-STAGE4-03。
 
 ## 四、第二批案例：混合样本与结构性误判
 
@@ -82,89 +99,155 @@
 
 ## 六、执行流程（每案例严格照做）
 
-**Step 1 — 建档冻结**
-在 `backtest/<ticker>_<replay_date>/` 下创建 `meta.json`，登记回放时点、信息截断日，以及你**在跑分析之前**的先验预期档位。写入后不得修改，用于事后检验你有没有被答案带偏。
+**Step 1 — 建档冻结（不得含任何答案）**
+在 `backtest/<ticker>_<replay_date>/` 下创建 `meta.json`，**只**登记：`ticker` / `company` / `replay_date` / `information_cutoff` / `batch` / `case_id` / `purpose` / `prior_expectation`（你在跑分析之前的先验档位与理由）/ `contamination_disclosure` / `information_set` / `frozen_at`。写入后不得修改，用于事后检验你有没有被答案带偏。
+
+**禁止**写入 `expected_verdict` / `must_trigger` / `actual_*` 等任何答案字段——它们属于 `answer.json`（Step 4 才创建）。第一批的教训：第九节原格式把答案字段与先验混在一个「跑前冻结」的文件里，自相矛盾，执行者只能把答案字段全留空，结果 6 个案例的 `actual_*` 与 `outcome_note` 全是 `null`，断言库实质为空。
 
 **Step 2 — 完整跑一遍 skill**
 不走捷径、不简化、不跳 Phase。Phase 0 排雷 → 数据采集与双源核对 → 定量画像 → 五维定性 → 估值与安全边际 → 双闸门定档 → 三人独立评估 + 芒格红队。产出标准 HTML 报告并通过 `verify_report.py`。
 
-**Step 3 — 落盘存档结论**
-把最终档位、闸门一/闸门二结果、触发的全部告警、三情景每股价值、期望年化 IRR 写入 `verdict.json`。**此步完成后才允许进入 Step 4。**
+**Step 3 — 落盘存档结论 + 时序存证**
+把以下内容写入 `verdict.json`：`final_verdict` 与 `verdict_ordinal`（档位序数）、闸门一/闸门二结果、`codes`（本次触发的全部告警代号，取自 `scripts/alert_codes.py` 注册表）、`codes_provenance`（区分 engine_derived 与 manually_recorded）、三情景每股价值、期望年化 IRR、`frozen_before_diff: true` 与 `frozen_at`。
+
+**落盘后立即单独提交**：`git add <case>/verdict.json && git commit -m "verdict(<case>): 结论落盘，未读答案"`。git 历史即时序证据，机器可验、事后无法伪造——第一批只有 3/6 案例有自陈的 `frozen_before_diff` 字段，文件 mtime 又会被 git 检出覆盖，「先落盘再看答案」这条纪律没有任何可验证痕迹。**此步完成后才允许进入 Step 4。**
 
 **Step 4 — 比对答案**
-此时才读取事后答案，填写 `diff.md`，逐项回答：档位是否匹配 `expected_verdict`；`must_trigger` 是否真的触发；`must_not_trigger` 是否被误触发；若不匹配，根因是数据错、阈值错、逻辑错还是方法论错，必须落到具体文件与具体行。
+此时才允许打开 [`ANSWERS.md`](ANSWERS.md) 的**当前案例段**（禁止通读全文），据此创建 `answer.json`（格式见第九节）。然后跑 `python3 scripts/run_backtest_assertions.py --case <case>` 做机器判定，并填写 `diff.md` 逐项回答：档位序数是否落入 `expected_verdict_set`；`must_trigger` 是否出现在 `verdict.json` 的 `codes` 中；`must_not_trigger` 是否被误触发；若不匹配，根因是数据错、阈值错、逻辑错还是方法论错，**必须落到具体文件与稳定条款号**（如 `S2c`、`[P4-G2c]`；若根因在 `references/` 而非 `SKILL.md`，须指向真实定义处——第一批唯一的行级定位就把 `references/moat-framework.md:33` 的 25% 门槛错记成了 `SKILL.md:110`，而后者根本不含该数字）。
+
+`answer.json` 与 `diff.md` 在**后续 commit** 中提交，与 Step 3 的 verdict 提交分开。
 
 **Step 5 — 判定是否需要改引擎**
-只有同一根因在 **≥2 个案例**中重现，才允许改代码。单案例不匹配先记入 `observations.md` 观察，防止为拟合个案破坏通用性。改动前后必须跑全量回归（含既有 `cases/` 目录）。
+只有同一根因在 **≥2 个案例**中重现，才允许改代码。**门槛按「档位不匹配的案例数」计，不按「观察到该机制的案例数」计**——第一批的 R1 修法曾用两个**完全命中**的案例（苹果、柯达）凑够 2 案例门槛，实际只有茅台 1 例产生档位错误，事后验算证明该修法对任何案例都无效。单案例不匹配先记入 `observations.md` 观察，防止为拟合个案破坏通用性。
 
-## 七、事后答案（Step 4 之前禁止阅读）
+改动前后必须跑：① `python3 tests/run_tests.py`；② `python3 scripts/run_backtest_assertions.py --rerun --baseline backtest/assertion_baseline.json`（断言 + 引擎代号漂移 + 基线比对，**只有「回归失败」才是红灯**，已登记的 `known_failures` 不阻塞）；③ 既有 `cases/` 目录的报告校验。判别逻辑改动尤其要确认**四个该拒绝的样本不破防**（柯达/康美/海控/福耀）。
 
-<details>
-<summary>展开前请确认 verdict.json 已落盘</summary>
+## 七、事后答案
 
-**第一批**
-- 茅台 2015-08：核心买入 / 小仓位试探；`must_not_trigger` = S8 价值陷阱。事后 5 年约 8 倍。收入负增长源于反腐与限制三公消费，属政策冲击而非模式衰退。
-- 苹果 2016-04：核心买入。事后 5 年约 5 倍。iPhone 首次同比下滑、市场认定硬件无护城河，伯克希尔同期建仓。
-- 柯达 2011-06：拒绝；`must_trigger` = 不收敛下限低 或 峰值回撤停滞。2012-01 申请破产保护，股东权益归零。
-- 康美 2017-12：Phase 0 直接排雷，不进入估值；`must_trigger` = 现金与利息支出矛盾、经营现金流与利润长期背离。事后 300 亿现金造假。
-- 中远海控 2021-07：拒绝 或 观察等价格；`must_trigger` = 周期高位、强制禁用当期基期。事后利润断崖回落。
-- 福耀玻璃 2018-12：不应排雷，应正常进入估值；`must_not_trigger` = 全部造假类告警。财务真实、分红连续。
+**答案已移出本文件**，存于 [`backtest/ANSWERS.md`](ANSWERS.md)（按批次与案例分段）。
 
-**第二批**
-- 中国神华 2015-12：核心买入 或 小仓位试探。低成本煤 + 一体化运输，属真周期底部，事后 5 年含息显著跑赢。
-- 鞍钢 2015-12：拒绝 或 观察等价格。无成本优势，盈利长期在盈亏线附近震荡。
-- Netflix 2016-12：小仓位试探 或以上；`must_not_trigger` = 烧钱型现金流告警的误触发。事后 5 年约 3 倍。
-- 软银 2019-06：观察等价格（可接受拒绝）；`must_trigger` = 治理折价 / 非经营资产主导。后续 WeWork 减值重创。
-- Zoom 2021-10：拒绝。事后长期下跌超 80%。
-- 双汇 2019-06：观察等价格。猪价周期挤压毛利，净利率法判周期位置会失真。
+**Step 4 之前禁止打开。** Step 4 时只读当前案例那一段，不得通读全文——
+读一个案例会污染同批其余案例。
 
-**第三批**
-- 招行 2014-12：核心买入。事后长期复利显著跑赢同业。
-- 平安 2018-12：小仓位试探 或 观察等价格。此后寿险改革承压，结论正确性看安全边际是否留足。
-- 长和 2015-12：观察等价格。长期折价未收敛。
-- Meta 2022-11：核心买入；`must_not_trigger` = 因情绪与叙事给出的拒绝。事后 2 年约 4 倍。
-- 恒大 2020-06：Phase 0 直接排雷；`must_trigger` = 杠杆与资金链风险。2021 年违约。
-- 伊利 2013-12：小仓位试探 或以上。事后长期复利可观，测保守度是否吞掉机会。
+移出原因：原先答案与任务书同在一个文件，而本文件的复用方式是「全文投喂给 AI」，
+于是执行者要读案例清单就必然读到答案。第一批 6/6 案例因此全部结构性污染
+（每份 meta.json 的 `contamination_disclosure` 都记录了这一点），
+「制造一次真正的失败」这个目标无法被验证。
 
-</details>
+**第二批起的隔离协议**：每个案例派独立执行上下文（subagent），其上下文中从未出现
+答案；持有答案的主上下文只在 Step 4 做比对。神华/鞍钢这类成对案例必须**分别独立**
+执行、互不知晓对方存在——否则第二个必然被第一个锚定，成对比对的判别力检验失效。
 
-## 八、必须回答的三个元问题
+## 八、必须回答的四个元问题
 
-每批跑完后在 `backtest/REPORT.md` 中回答：
+每批跑完后在 `backtest/REPORT.md` 中回答。**统计口径必须与第九节的两条计分轨一致，同一案例不得同时计入互斥的两个桶。**
 
-1. **假阴性成本**：正向案例中有几个被判「观察等价格」而错过？若正向案例全部没敢给正面结论，说明双闸门 + 折现率下限 + 基率检验叠加后**过度保守，这是系统性缺陷而非谨慎**，必须给出具体的阈值放松方案。
-2. **判别力而非保守度**：系统是靠「一律拒绝」拿高分的吗？统计「正确拒绝」与「错误拒绝」的比例，后者不低于前者则系统价值接近于零。
+1. **假阴性成本**：统计正向案例中被判「观察等价格」或更低而错过的比例。**假阴性率 ≥1/3 即视为保守度超标**（不再要求「全部错过」才触发——第一批正向案例只有 2 个，原判据要 2/2 全错才成立，几乎不可能触发），须给出具体到字段与阈值的放松方案。每批须保证 **≥3 个正向案例**，否则本项统计不具判别意义。
+   错过成本按 `earnings_driven_return` 与 `multiple_driven_return` 拆分陈述，**只有盈利驱动部分计入系统错误**，倍数扩张部分单列为「未捕获的情绪溢价」。第一批实证：福耀错过的 +185.6% 主体是 PE 13.3→52 的倍数扩张，而 2019 年归母实际 −29.7%——事前算术是对的。
+   **判断正确 + 触发器事后真的触发**的案例（如福耀 2020-03-23 于 16.36 触发、触发后 +297% 优于回放日买入）应计**正确拒绝**，不得计入错过。
+
+2. **判别力而非保守度**：统计正确拒绝与错误拒绝的比例，后者不低于前者则系统价值接近于零。三分法：
+   - **判断错误**：档位错，且事后价格从未回到系统要求的区间 → 计错误拒绝（茅台：触发价 166.93 五年未触及）
+   - **判断正确 + 触发器有效**：档位说贵，价格事后确实回落到触发区间 → 计**正确拒绝**
+   - **判断正确 + 触发器失效**：价格未回落但基本面也未恶化 → 单列「机会成本」，不计错误
+
 3. **有没有制造出一次真正的失败**：若整批全过，明确写出「本批案例强度不足」，并提出下一批更锋利的候选。
+
+4. **假阳性成本**：统计「官方期望拒绝/观察，系统给出小仓位试探或核心买入」的案例数。若 ≥1，须定位是哪一道闸门放行、放行依据的证据强度是否真的达标。放松性改动实施后本项**必须为 0**，否则放松过度须回滚。
+   **注意**：若本批案例结构中不存在「看起来该买、实际该拒」的样本，须明确写出「本批无法暴露假阳性」，**不得以本项为 0 作为系统无假阳性的证据**——第一批 6 案例中 4 个是明确的该拒/该排雷样本，假阳性在结构上不可能暴露，而 REPORT.md 曾据此宣称「0 反向错误」。
 
 ## 九、案例登记文件格式
 
+**两个文件，创建时点严格分离。** 第一批的教训：原格式把答案字段（`expected_verdict` / `actual_*` / `outcome_note`）与「跑前冻结的先验」混在同一个 `meta.json` 里，而 Step 1 要求跑分析前冻结——自相矛盾。执行者只能把答案字段全留空，于是 6 个案例的 `actual_*` 与 `outcome_note` 全是 `null`，第九节承诺的「可自动判定的断言」实质为空。
+
+### `meta.json`（Step 1 跑前冻结，**不含任何答案**）
+
 ```json
 {
-  "ticker": "600519.SH",
-  "replay_date": "2015-08-31",
-  "information_cutoff": "2015-08-31",
-  "batch": 1,
-  "expected_verdict": "核心买入",
-  "expected_gate1": true,
-  "expected_gate2": true,
-  "must_trigger": [],
-  "must_not_trigger": ["S8_value_trap"],
-  "actual_3y_total_return": 4.2,
-  "actual_5y_total_return": 8.1,
-  "actual_max_drawdown": -0.32,
-  "outcome_note": "政策冲击导致的暂时性下滑，非商业模式衰退",
-  "frozen_at": "2026-09-04"
+  "ticker": "601088.SH",
+  "company": "中国神华",
+  "replay_date": "2015-12-31",
+  "information_cutoff": "2015-12-31",
+  "batch": 2,
+  "case_id": "B2-07",
+  "purpose": "周期低位 vs 结构衰退混合：煤价谷底 + 能源转型叙事，正常化该不该抬基期",
+  "prior_expectation": {
+    "verdict_ordinal": 2,
+    "gate1": false,
+    "gate2": null,
+    "reasoning": "跑管线前的先验与依据（只用截断日前可见事实）"
+  },
+  "contamination_disclosure": "执行上下文是否读过答案、是否分析过同一标的同一时点",
+  "information_set": {"latest_annual": "2014 年报（publish 2015-03-xx）", "latest_quarter": "..."},
+  "frozen_at": "2026-09-xx"
 }
 ```
 
-`must_trigger` 与 `must_not_trigger` 是整套回放的核心——它们把「系统当时该不该报警」变成可自动判定的断言，而不靠人事后解读。每次改引擎都应能一键重跑全部断言，立刻知道有没有把修好的东西弄坏。
+### `answer.json`（Step 4 才创建，**全部是答案**）
+
+```json
+{
+  "case": "601088.SH_2015-12-31",
+  "expected_verdict_set": [3, 4],
+  "expected_gate1": true,
+  "expected_gate2": true,
+  "must_trigger": ["CYCLE_PEAK"],
+  "must_trigger_any": [["NOT_CONVERGING_FLOOR_LOW", "PEAK_DRAWDOWN_STAGNANT"]],
+  "must_not_trigger": ["VALUE_TRAP"],
+  "known_failures": [],
+  "actual_3y_total_return": 0.42,
+  "actual_5y_total_return": 1.15,
+  "earnings_driven_return": 0.60,
+  "multiple_driven_return": 0.55,
+  "actual_max_drawdown": -0.32,
+  "outcome_note": "低成本煤+一体化运输，真周期底部",
+  "answer_source": "ANSWERS.md 第二批 + 行情复核来源"
+}
+```
+
+### 档位序数
+
+`排除=0 / 拒绝=1 / 观察等价格=2 / 小仓位试探=3 / 核心买入=4`（定义见 `scripts/alert_codes.py` 的 `VERDICT_ORDINAL`）。官方不约束档位时 `expected_verdict_set: null` → 档位轨不计分，但**错过成本仍进入元问题 1 的统计**。
+
+### 断言 ID 铁律
+
+`must_trigger` / `must_trigger_any` / `must_not_trigger` 只能取自 `scripts/alert_codes.py` 的 `ASSERTIONS` 注册表，**自然语言断言不被接受**。第一批出现过 5 种命名风格并存（`S8_value_trap` / `cash_interest_contradiction` / `not_converging_floor_low` / `gate1_wide_moat_25pct` / 中文「周期高位」），导致 17 条观察全部只能人工解读。
+
+注册表同时定义**等价关系**：一个断言映射到**一组**代号，任一命中即满足。这不是放水——海控案官方要求断言「周期高位」，而引擎实际输出 `NORM_BASE_UNUSABLE`（全期均值为负、均值路径数学失效，引擎拒绝给标签，比硬给错标签更严格）。该等价现已显式写入 `ASSERTIONS["CYCLE_PEAK"]` 并被测试锁定，不再靠人工「两层合读」裁定。
+
+反向同样重要：**观察级、非造假形态的代号绝不能进造假类断言组**（如 IFRS16 准则切换、分红幻觉），否则「负样本零误杀」这类断言会产生假阳性。
+
+### 两条独立计分轨（不得互相抵扣、不得合并为单一「命中」）
+
+- **告警轨**：`must_trigger` 命中数 / 漏判数 / `must_not_trigger` 误触发数
+- **档位轨**：`verdict_ordinal` 是否落入 `expected_verdict_set`
+
+第一批曾把福耀同时计入「命中」（总览表）与「错误拒绝」（元问题 2）两个互斥的桶，头条战绩因此偏乐观。分轨计分是对该问题的结构性修正。
+
+### `known_failures`
+
+登记**已知且已记录在案**的失败类型（`verdict_track` / `must_trigger` / `must_not_trigger` / `engine_drift`）。只有未登记的失败才算回归——否则门禁永远是红的、无法当回归闸使用。若某项登记的失败已消失，runner 会提示「登记过期」要求移除，防止拿旧登记掩盖新问题。
+
+### 一键重跑
+
+```bash
+python3 scripts/run_backtest_assertions.py --batch 2            # 断言判定
+python3 scripts/run_backtest_assertions.py --rerun              # 附带引擎代号漂移检测
+python3 scripts/run_backtest_assertions.py --rerun --baseline backtest/assertion_baseline.json
+```
+
+每次改引擎后必须重跑并对比基线。**无法一键重跑的批次，其战绩统计不得写入 REPORT.md 作为结论依据。**
 
 ## 十、交付物清单
 
-- `backtest/<ticker>_<date>/meta.json`（先验预期，冻结）
+- `backtest/<ticker>_<date>/meta.json`（Step 1 跑前冻结，**不含答案**）
 - `backtest/<ticker>_<date>/report.html`（完整报告，过 `verify_report.py`）
-- `backtest/<ticker>_<date>/verdict.json`（结论落盘）
-- `backtest/<ticker>_<date>/diff.md`（逐项比对与根因定位）
-- `backtest/REPORT.md`（批次汇总 + 三个元问题）
-- `backtest/observations.md`（未达改代码门槛的观察记录）
-- 若改引擎：改动说明 + 全量回归结果
+- `backtest/<ticker>_<date>/verdict.json`（Step 3 结论落盘，含 `codes` / `verdict_ordinal` / `frozen_before_diff`，**单独 commit**）
+- `backtest/<ticker>_<date>/answer.json`（Step 4 才创建，答案与断言）
+- `backtest/<ticker>_<date>/diff.md`（逐项比对与根因定位，落到稳定条款号）
+- `backtest/REPORT.md`（批次汇总 + **四个**元问题，统计口径按两条计分轨）
+- `backtest/observations.md`（观察记录，含未达改码门槛的裁决理由）
+- 断言 runner 的运行输出（`--rerun --baseline` 全绿或仅已知失败）
+- 若改引擎：改动说明 + **断言基线对比**（改动前后逐案例代号变化）+ `cases/` 全量回归结果
+
+**目录约定**（第一批的 schema 分裂教训）：案例目录名统一 `<ticker>_<replay_date>`；底稿统一放 `data/`；底稿命名 `financials_*` / `metrics_*` / `scenarios_*` / `market_snapshot_*`；工作底稿放 `data/workpapers/`（第一批有 3 个案例放在案例根目录的 `workpapers/`，不一致但不影响判定，第二批统一到 `data/workpapers/`）。
