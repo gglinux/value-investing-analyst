@@ -135,6 +135,11 @@ ALERTS = {
     # 14.6%（iPhone 刚发布、仍是 Mac+iPod 公司，而实际压力年 FY2013 是 21.7%）。
     # 该方法机械取序列最小值，对利润率长期上行的公司会把「幼年期」当「危机」。
     "S2C_WORST_YEAR_NOT_STRESS": ("scenarios", "worst_year_margin 的最差年选取不合规：是序列最早年且利润率长期上行（该年低利润率是规模/阶段效应而非危机），或缺 worst_year / 压力事件证据 / 与序列实际利润率不符"),
+    # 与 S2c 同类的「方法只重算算术、不问输入口径」缺陷（OBS-600660-02）：
+    # pb_trough 的 trough_pb 若用前复权价 ÷ 当年账面 BPS，前复权价已扣除后续
+    # 分红除权影响、与当年 BPS 不可比，系统性低估谷底 PB 约 15-20%（福耀案实证：
+    # 初版取 2.0-2.2，按不复权价重建后真实区间为 1.66-2.46）。
+    "S2D_TROUGH_PB_BASIS": ("scenarios", "pb_trough 的谷底 PB 缺口径声明（不复权/前复权、BPS 时点）或未标注为期间最低点"),
     "S3_STRESS_SUFFICIENCY": ("scenarios", "压力项 ≥2 且不得只压增速"),
     "S4_DISPERSION": ("scenarios", "离散度哨兵：悲观/基准 > 0.85"),
     "S5_NON_OPERATING_STRESS": ("scenarios", "非经营资产悲观折价未比基准更狠"),

@@ -126,6 +126,7 @@ from alert_codes import unknown_codes  # 告警码注册表：唯一事实源
 _S_PREFIX_TO_CODE = [
     ("S2b", "S2B_BEAR_ARITHMETIC"),
     ("S2c", "S2C_WORST_YEAR_NOT_STRESS"),
+    ("S2d", "S2D_TROUGH_PB_BASIS"),
     ("S2e", "S_DISCOUNT_RATE_FLOOR"),
     ("S7b", "S7B_IV_GROWTH_EVIDENCE"),
     ("S1", "S1_SCHEMA"),
@@ -414,7 +415,17 @@ def check(path, metrics_path=None, snapshot_path=None):
         errors.append(f"S2 悲观情景方法 `{m}` 不在白名单内。独立方法："
                       f"{'、'.join(sorted(INDEPENDENT_METHODS))}；"
                       f"如确需新增方法，先在 valuation-guide.md 论证并同步白名单")
-    if not E_PTR.search(bear.get("method_note", "") or ""):
+    # R4-c：字段类型防御。实测 method_note 写成 list 会让 re 匹配抛 TypeError
+    # 并以退出码 3 崩掉——报错信息对执行者毫无指引（第一批福耀案 scenarios 底稿
+    # 三次被门禁拒绝，其中一次就是这个）。改为结构化提示。
+    _mn = bear.get("method_note", "")
+    if not isinstance(_mn, (str, type(None))):
+        errors.append(
+            f"S2 悲观情景 `method_note` 期望字符串，实为 {type(_mn).__name__}"
+            f"——若需分点说明请合并为单个字符串（用「；」分隔），"
+            f"schema 不接受 list/dict")
+        _mn = ""
+    if not E_PTR.search(_mn or ""):
         errors.append("S2 悲观情景 `method_note` 必须含 [E:] 证据指针 —— "
                       "独立方法的输入（清算科目/历史最差年/危机期倍数）必须可溯源")
 
@@ -472,6 +483,30 @@ def check(path, metrics_path=None, snapshot_path=None):
                 f'S2e 折现率 {float(r_):.2%} 低于下限 {floor_r:.2%}（{floor_src}）'
                 f'——该纪律单向生效：只在高利率环境抬高门槛、不会放松 10%。'
                 f'折现率直接决定内在价值，调松 1pct 可抬高估值 15-20%')
+
+    # ---- S2d pb_trough 的谷底 PB 口径纪律（OBS-600660-02）----
+    # 与 S2c 同类缺陷：_rc_pb_trough 只重算 trough_pb x bvps，不问 trough_pb 从哪来。
+    # 福耀案实证：初版用**前复权价 ÷ 当年账面 BPS** 得 2.0-2.2 倍——前复权价已扣除
+    # 后续分红除权影响，与当年 BPS 不可比，系统性低估谷底 PB 约 15-20%；按不复权价
+    # 重建后真实区间为 1.66-2.46。谷底 PB 直接决定悲观值，口径错等于下行保护虚高。
+    # 门禁只要求「说清口径」，不替执行者判断数值对错（避免过拟合个案）。
+    if m == 'pb_trough' and bear.get('method_inputs'):
+        _mi = bear['method_inputs']
+        _ev = str(_mi.get('trough_pb_evidence') or '')
+        if not E_PTR.search(_ev):
+            errors.append(
+                'S2d `pb_trough` 缺 `method_inputs.trough_pb_evidence`（含 [E:] 指针）：'
+                '须逐条列出谷底 PB 的样本（日期 + 价格 + 当时 BPS）')
+        _low = _ev.replace(' ', '')
+        if not any(k in _low for k in ('不复权', '未复权', '后复权')):
+            errors.append(
+                'S2d `trough_pb_evidence` 未声明行情口径：必须写明「不复权」'
+                '（前复权价已扣除后续分红除权影响，与当年账面 BPS 不可比，'
+                '会系统性低估谷底 PB——福耀案实证低估约 15-20%）')
+        if not any(k in _low for k in ('最低', '谷底', '低点')):
+            errors.append(
+                'S2d `trough_pb_evidence` 未标明价格样本为期间最低点：'
+                '福耀案初版曾误引当年上涨段价格当作谷底')
 
     # ---- S2c 最差年必须是实证压力年（阶段四，茅台+苹果两案例硬证据）----    # `worst_year_margin` 原实现只重算算术、不问 worst_margin 从哪来，于是它
     # 机械地取了序列最小值。对利润率长期上行的公司，序列最早那年必然最低——

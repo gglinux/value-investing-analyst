@@ -1941,6 +1941,36 @@ check("苹果退回 FY2007 幼年期被逮住（同根因第 2 案例）",
       any("规模/阶段效应" in e for e in _s2c(
           {"worst_year": 2007, "worst_margin": 0.146}, _ap_scen, _ap_met)))
 
+# ---- S2d pb_trough 谷底 PB 口径纪律（OBS-600660-02，与 S2c 同类缺陷）----
+# 福耀案实证：初版用前复权价 ÷ 当年账面 BPS 得 2.0-2.2，按不复权价重建后真实
+# 区间为 1.66-2.46——前复权价已扣除后续分红除权影响，系统性低估谷底 PB。
+_fy_scen = os.path.join(ROOT, "backtest", "600660.SH_2018-12-31", "data",
+                        "scenarios_600660.json")
+_fy_met = os.path.join(ROOT, "backtest", "600660.SH_2018-12-31", "data",
+                       "metrics_600660.json")
+
+def _s2d(mi_over, scen=_fy_scen, met=_fy_met):
+    d = json.load(open(scen, encoding="utf-8"))
+    b = [s for s in d["scenarios"] if s["name"] == "悲观"][0]
+    b["method_inputs"].update(mi_over)
+    fp = os.path.join(tempfile.mkdtemp(prefix="s2d_"), "s.json")
+    json.dump(d, open(fp, "w", encoding="utf-8"), ensure_ascii=False)
+    _, errs, _, _ = CS.check(fp, metrics_path=met)
+    return [e for e in errs if e.startswith("S2d")]
+
+check("福耀回填口径后 S2d 通过", not _s2d({}))
+check("缺 trough_pb_evidence 被逮住",
+      any("缺 `method_inputs.trough_pb_evidence`" in e
+          for e in _s2d({"trough_pb_evidence": None})))
+check("未声明不复权口径被逮住",
+      any("未声明行情口径" in e for e in _s2d(
+          {"trough_pb_evidence": "2015 年谷底 PB 1.66 [E:x.json]"})))
+check("未标明期间最低点被逮住",
+      any("未标明价格样本为期间最低点" in e for e in _s2d(
+          {"trough_pb_evidence": "不复权价 10.58 ÷ BPS 6.4 = 1.66 [E:x.json]"})))
+check("S2d 只管 pb_trough，worst_year_margin 不受影响",
+      not [e for e in _s2c({}) if e.startswith("S2d")])
+
 # 不误伤：S2c 只管 worst_year_margin，其余独立方法不受影响
 for _c, _mth in (("EK_2011-06-30", "peer_death_analogy"),
                  ("600660.SH_2018-12-31", "pb_trough"),
