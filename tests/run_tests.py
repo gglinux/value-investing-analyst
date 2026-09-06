@@ -1728,6 +1728,83 @@ check("断言 runner 复现第一批战绩（5 全绿 + 1 已知失败）",
 check("茅台档位轨失败被识别为已知失败而非回归",
       "已知失败：档位轨未命中" in _rr.stdout, _rr.stdout[-300:])
 
+# ═══════════════════════════════════════════════════════════════════
+print("== 12 量纲哨兵 / 护城河一致性 / 快照三角校验（阶段二） ==")
+# 实证依据：OBS-600660-01（福耀 566294→56630、海控 2535137→253514 两例 10 倍错位）
+# 与 moat-framework.md:35（11 案例仅 4 例用标准评级词）。
+
+def _ms(case, mc):
+    fin = os.path.join(ROOT, "backtest", case, "data")
+    f = [x for x in os.listdir(fin) if x.startswith("financials")][0]
+    o = os.path.join(tempfile.mkdtemp(prefix="ms_"), "out.json")
+    subprocess.run([sys.executable, os.path.join(SCRIPTS, "compute_metrics.py"),
+                    os.path.join(fin, f), "--market-cap", str(mc), "-o", o],
+                   capture_output=True)
+    return json.load(open(o, encoding="utf-8"))
+
+_r_ok = _ms("600660.SH_2018-12-31", 56630)
+check("量纲哨兵不误伤正确市值（福耀 56630 百万）",
+      "M_UNIT_SUSPECT" not in _r_ok["alert_codes"])
+check("owner_yield 现带 pb 字段", "pb" in (_r_ok.get("owner_yield") or {}))
+_r_bad = _ms("600660.SH_2018-12-31", 566294)
+check("量纲哨兵逮住 10 倍错位（福耀 566294）",
+      "M_UNIT_SUSPECT" in _r_bad["alert_codes"])
+_r_hk = _ms("601919.SH_2021-07-31", 2535137)
+check("量纲哨兵逮住海控历史错位（2535137）",
+      "M_UNIT_SUSPECT" in _r_hk["alert_codes"])
+
+# 护城河一致性：报告 data-moat 与底稿 scenarios.moat
+_case_dir = os.path.join(ROOT, "backtest", "600519.SH_2015-08-31")
+_rpt = open(os.path.join(_case_dir, "report.html"), encoding="utf-8").read()
+_ddir = os.path.join(_case_dir, "data")
+
+def _moat_run(html):
+    fp = os.path.join(tempfile.mkdtemp(prefix="moat_"), "case.html")
+    open(fp, "w", encoding="utf-8").write(html)
+    return subprocess.run([sys.executable, os.path.join(SCRIPTS, "verify_report.py"),
+                           fp, "--data-dir", _ddir], capture_output=True, text=True)
+
+_r = _moat_run(_rpt)
+check("data-moat 与底稿一致的报告通过", "moat" not in _r.stdout or _r.returncode == 0,
+      _r.stdout[-200:])
+_r = _moat_run(_rpt.replace('data-moat="wide"', 'data-moat="narrow"'))
+check("篡改 data-moat 为 narrow 被逮住",
+      _r.returncode == 1 and "moat:rating" in _r.stdout, _r.stdout[-200:])
+_r = _moat_run(_rpt.replace('data-moat="wide"', 'data-moat="极强"'))
+check("自造词（极强）被逮住",
+      _r.returncode == 1 and "moat:rating" in _r.stdout, _r.stdout[-200:])
+_r = _moat_run(_rpt.replace(' data-moat="wide"', ""))
+check("完整报告缺 data-moat 标记被逮住",
+      _r.returncode == 1 and "moat:rating" in _r.stdout, _r.stdout[-200:])
+_r = _moat_run("<html><body><p>片段</p></body></html>")
+check("片段 HTML 不强制护城河标记（不误伤）",
+      _r.returncode == 0 or "moat" not in _r.stdout, _r.stdout[-120:])
+
+# 快照三角校验
+_ms_ok = subprocess.run([sys.executable, os.path.join(SCRIPTS, "check_market_snapshot.py"),
+    os.path.join(ROOT, "backtest", "600519.SH_2015-08-31", "data",
+                 "market_snapshot_MAOTAI_2015H1.json")], capture_output=True, text=True)
+check("茅台快照三角校验通过", _ms_ok.returncode == 0, _ms_ok.stdout[-200:])
+_ms_ah = subprocess.run([sys.executable, os.path.join(SCRIPTS, "check_market_snapshot.py"),
+    os.path.join(ROOT, "backtest", "601919.SH_2021-07-31", "data",
+                 "market_snapshot_601919_2021.json")], capture_output=True, text=True)
+check("海控 A/H 分计价快照修正后通过（不误伤双重上市）",
+      _ms_ah.returncode == 0, (_ms_ah.stdout + _ms_ah.stderr)[-300:])
+# 负向：把海控快照临时改回错位值应 FAIL
+_hk_fp = os.path.join(ROOT, "backtest", "601919.SH_2021-07-31", "data",
+                      "market_snapshot_601919_2021.json")
+_hk_orig = open(_hk_fp, encoding="utf-8").read()
+try:
+    open(_hk_fp, "w", encoding="utf-8").write(
+        _hk_orig.replace('"value_cny_million": 253514', '"value_cny_million": 2535137'))
+    _ms_bad = subprocess.run([sys.executable, os.path.join(SCRIPTS, "check_market_snapshot.py"),
+                              _hk_fp], capture_output=True, text=True)
+    check("10 倍单位错位被三角校验逮住（海控 2535137）",
+          _ms_bad.returncode == 1 and "SNAPSHOT_TRIANGLE" in _ms_bad.stdout,
+          _ms_bad.stdout[-200:])
+finally:
+    open(_hk_fp, "w", encoding="utf-8").write(_hk_orig)
+
 print()
 if FAILED:
     print(f"结果：{len(FAILED)} 项失败 → {FAILED}")

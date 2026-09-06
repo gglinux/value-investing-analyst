@@ -36,10 +36,16 @@ verify_report.py — 报告数字校验脚本（Phase 5 交付前强制运行）
 退出码：0 全部通过；1 存在不一致或无法溯源。
 """
 import argparse
+import glob
 import json
 import os
 import re
 import sys
+
+# 护城河评级与闸门一安全边际门槛的映射（references/moat-framework.md 第 33 行）。
+# 两道闸门的门槛直接挂在这个评级词上，故报告正文的用词必须可与底稿机器比对。
+MOAT_WORDS = ("wide", "narrow", "none")
+MOAT_MOS = {"wide": "≥25%", "narrow": "≥40%", "none": "不给买入结论"}
 
 
 def get_by_path(obj, path):
@@ -302,7 +308,24 @@ def main():
     #   ③ 片段/测试用 HTML（无上述结构）→ 仅提示，不拦截。
     vs_fp = os.path.join(args.data_dir, "verification_strength.json")
     badge = re.search(r'data-verification-strength="1"([^>]*)>', html)
-    is_full_report = bool(re.search(r'class="(?:report-header|verdict-banner)"', html))
+    # is_full_report 判定（v2.16 加固）：原判定只认 class="report-header" 与
+    # class="verdict-banner" 两个精确串，实测 6 份回放报告中 5 份、以及部分
+    # cases/ 正式报告都被判为「片段」→ 完整报告的强制校验（徽章、护城河评级）
+    # 被整体绕过。判定脆弱等于门禁失效，故改为多信号投票：
+    #   任一强信号命中，或 ≥2 个弱信号命中，即视为完整报告。
+    # 强信号 = 只可能出现在成品报告里的结构；弱信号 = 单独出现可能是片段，
+    # 但两个以上同时出现则几乎不可能是测试片段。
+    _strong = (
+        r'data-verdict=', r'class="[^"]*verdict-banner',
+        r'class="[^"]*report-header', r'class="[^"]*decision-card',
+    )
+    _weak = (
+        r'<h1', r'data-verification-strength', r'class="[^"]*section',
+        r'安全边际', r'闸门一', r'闸门二', r'三情景',
+    )
+    _hit_strong = [s for s in _strong if re.search(s, html)]
+    _hit_weak = [w for w in _weak if re.search(w, html)]
+    is_full_report = bool(_hit_strong) or len(_hit_weak) >= 2
     if badge:
         if not os.path.exists(vs_fp):
             failed.append(("verification_strength.json", "core-verification",
@@ -338,6 +361,46 @@ def main():
                        "首屏决策卡内——核验强度必须与结论同屏，不得只写在附录", ""))
     else:
         print("提示：未检测到核验强度徽章（当前 HTML 不含完整报告结构，按片段处理）。")
+
+    # ---- 护城河评级一致性校验（报告正文 vs scenarios 底稿）----
+    # 缺口实证（references/moat-framework.md 第 35 行）：归档 11 案例中只有 4 例用了
+    # 标准词（宽/窄/无），5 例用自造词（"中强"/"中级"/"极强"/"强"），2 例报告里根本
+    # 找不到明确评级。而 moat-framework 第 33 行明确：两道闸门的门槛直接挂在这个词上
+    # （宽 ≥25% / 窄 ≥40%；IRR 门槛 16.5% / 21.8%），差 15 个百分点。
+    #
+    # `check_scenarios.py` 的 S1 已强制 scenarios.json 的 moat ∈ {wide,narrow,none}，
+    # 所以底稿侧不会有自造词；缺的是**报告正文与底稿的一致性**——底稿填 narrow、
+    # 正文写"极强"没有任何机制会发现，读者据此以为门槛是 25% 而系统执行的是 40%。
+    # 故要求报告护城河章节携带机器可比对标记，与底稿逐字比对（同徽章机制）。
+    moat_tag = re.search(r'data-moat="([^"]*)"', html)
+    scen_files = sorted(glob.glob(os.path.join(args.data_dir, "scenarios*.json")))
+    doc_moat = None
+    if scen_files:
+        try:
+            with open(scen_files[0], "r", encoding="utf-8") as f:
+                doc_moat = json.load(f).get("moat")
+        except (OSError, ValueError):
+            doc_moat = None
+    if moat_tag:
+        got = moat_tag.group(1)
+        if got not in MOAT_WORDS:
+            failed.append(("report", "moat:rating",
+                    f"护城河标记非标准词，只许 {sorted(MOAT_WORDS)}"
+                    f"——自造词无法映射到闸门门槛", got))
+        elif doc_moat is None:
+            failed.append(("scenarios.json", "moat:rating",
+                    "报告含 data-moat 标记但底稿缺 scenarios*.json "
+                    "或其 moat 字段，无法核验一致性", got))
+        elif got != doc_moat:
+            failed.append(("scenarios.json", "moat:rating",
+                    f"报告护城河评级与底稿不一致：底稿={doc_moat}"
+                    f"（安全边际门槛 {MOAT_MOS.get(doc_moat)}）", got))
+    elif is_full_report and doc_moat is not None:
+        failed.append(("report", "moat:rating",
+                f"完整报告缺护城河机器标记 data-moat（底稿为 {doc_moat}）。"
+                f"两道闸门门槛直接挂在该评级上，正文用词必须可与底稿机器"
+                f"比对——在护城河章节标题或结论处加 "
+                f'data-moat="{doc_moat}"', ""))
 
     # ---- 文本完整性校验（乱码/损坏字符防护）----
     # 实证教训（腾讯/PDD 报告）：长文本生成偶发乱码段落，肉眼难查。

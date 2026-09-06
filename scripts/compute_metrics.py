@@ -853,6 +853,36 @@ def compute(data, market_cap=None):
                 f"自由现金流覆盖仅 {cov_:.2f}x——这份'所有者收益'并未变成"
                 f"可落袋现金，不得据此判断低估")
 
+        # ---- 量纲哨兵（v2.16）：市值单位错位的机器捕捉 ----
+        # 实证（observations OBS-600660-01）：福耀案 market_cap 填 566294 百万
+        #（应为 56630），海控案 value_cny_million=2535137（应为 253514）——两案同为
+        #「数值按亿填写、单位标注 million」的 10 倍混淆。福耀靠荒谬值（回本 179.8 年）
+        # 被肉眼发现，海控的荒谬值（OE 收益率 0.39%）被周期叙事掩盖未发现。
+        # 哨兵不修数值、只报警：荒谬派生值出现 ⇒ 输入大概率错位。
+        oy_c = owner_yield.get('owner_yield_current')
+        pb_ = None
+        _bv = series[-1].get('book_value') or series[-1].get('equity')
+        if _bv and _bv > 0:
+            pb_ = market_cap / _bv
+        owner_yield['pb'] = pb_
+        unit_suspects = []
+        if oy_c is not None and oy_c < 0.01:
+            unit_suspects.append(f'当期 OE 收益率仅 {oy_c:.2%}')
+        elif (owner_yield.get('owner_yield_normalized') is not None
+              and owner_yield['owner_yield_normalized'] < 0.01):
+            unit_suspects.append(
+                f'正常化 OE 收益率仅 {owner_yield["owner_yield_normalized"]:.2%}')
+        pbk = owner_yield.get('payback_years')
+        if pbk is not None and pbk > 50:
+            unit_suspects.append(f'回本年数 {pbk:.0f} 年')
+        if pb_ is not None and not (0.1 <= pb_ <= 50):
+            unit_suspects.append(f'PB={pb_:.1f} 越出 [0.1, 50] 合理带')
+        if unit_suspects:
+            alerts.add("M_UNIT_SUSPECT",
+                "量纲哨兵：" + "；".join(unit_suspects) + "——这类派生值出现时，"
+                "market_cap 的单位错位（亿/百万混淆）是最常见原因，"
+                "请先核对 market_cap ≈ 股价 × 股本 是否自洽，再谈估值")
+
     return {
         "company": data.get("company"), "ticker": data.get("ticker"),
         "currency": data.get("currency"), "unit": data.get("unit"),
