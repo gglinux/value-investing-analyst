@@ -101,6 +101,22 @@ ALERTS = {
     # 会让「负样本零误杀」这类断言产生假阳性。
     "M_ACCOUNTING_STANDARD_SWITCH": ("observation", "会计准则强制切换致跨年不可比（如 IFRS16），非主动政策变更、非造假形态"),
 
+    # ---- 触发器可达性（trigger_reachability.py 自动；阶段三）----
+    # 实证（OBS-2015-08-01 / OBS-600660-04）：茅台触发价 166.93 元在 2014-11 之后
+    # 至 2020 年从未被触及——「观察等价格」退化为永不触发的观察；福耀触发价
+    # 2020-03-23 真实触发且触发后 +297%，但触发后无承接流程。两个问题同一根源：
+    # 触发器没有被当作一等公民——既不校验它给的价格在现实价格分布中的位置，
+    # 也不定义触发后做什么。
+    "TRIGGER_OUT_OF_HISTORY": ("trigger", "触发价低于 52 周最低价（历史区间之外）——观察等价格实质是永不触发的观察"),
+    "TRIGGER_LOW_REACHABILITY": ("trigger", "触发价在 52 周价格带底部 10% 分位以内——可达性低，须显式披露"),
+    "TRIGGER_REACHABLE": ("trigger", "触发价位于 52 周价格带内且可达性正常"),
+    "TRIGGER_REEVAL_MISSING": ("trigger", "观察等价格档位缺重评触发器（触发后载入哪个 checklist 未定义）"),
+    "SNAPSHOT_LEGACY_SCHEMA": ("snapshot", "行情快照使用旧命名（单位塞在字段名里），应迁移到规范 schema"),
+    "SNAPSHOT_SCHEMA": ("snapshot", "行情快照缺规范字段"),
+    "SNAPSHOT_TRIANGLE": ("snapshot", "市值三角不自洽：market_cap ≠ price × shares（偏差 >3%）"),
+    "SNAPSHOT_FX_MISSING": ("snapshot", "报价币种与报表币种不一致但缺 fx 换算依据"),
+    "SNAPSHOT_FX_SUSPECT": ("snapshot", "fx 汇率值越出合理带，疑似方向填反"),
+
     # ---- 周期正常化与基期纪律（compute_metrics.py 自动）----
     "NORM_CYCLE_PEAK": ("normalization", "周期高位：当期净利率显著高于全期均值，禁止当期 OE 作 DCF 基期"),
     "NORM_CYCLE_TROUGH": ("normalization", "周期低位：当期利润低估长期盈利能力"),
@@ -199,6 +215,9 @@ ASSERTIONS = {
 
     # ---- 输入校验 ----
     "UNIT_SUSPECT": {"M_UNIT_SUSPECT"},
+
+    # ---- 触发器（阶段三）----
+    "TRIGGER_UNREACHABLE": {"TRIGGER_OUT_OF_HISTORY", "TRIGGER_LOW_REACHABILITY"},
 }
 
 

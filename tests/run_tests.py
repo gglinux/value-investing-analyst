@@ -1805,6 +1805,85 @@ try:
 finally:
     open(_hk_fp, "w", encoding="utf-8").write(_hk_orig)
 
+# ═══════════════════════════════════════════════════════════════════
+print("== 13 触发价可达性 + 重评承接（阶段三） ==")
+# 实证：茅台 166.93 五年未触及（OBS-2015-08-01）、福耀触发价真实触发无人接手
+# （OBS-600660-04）。两例同根源：触发器不是一等公民。
+
+def _trig(trigger, snap=None, **kw):
+    cmd = [sys.executable, os.path.join(SCRIPTS, "trigger_reachability.py"),
+           "--trigger", str(trigger)]
+    if snap:
+        cmd += ["--snapshot", snap]
+    for k, v in kw.items():
+        cmd += [f"--{k}", str(v)]
+    return subprocess.run(cmd, capture_output=True, text=True)
+
+_mt_snap = os.path.join(ROOT, "backtest", "600519.SH_2015-08-31", "data",
+                        "market_snapshot_MAOTAI_2015H1.json")
+_r = _trig(166.93, snap=_mt_snap)
+check("茅台触发价 166.93 判为带内可达", _r.returncode == 0, _r.stdout[-200:])
+check("茅台带内位置约 14.8%", "14.8%" in _r.stdout, _r.stdout[-200:])
+check("贴近下沿时提示自查更长窗口", "52 周窗口无法识别" in _r.stdout,
+      _r.stdout[-200:])
+_r = _trig(100, snap=_mt_snap)
+check("触发价低于 52 周最低判为历史区间之外",
+      _r.returncode == 1 and "out_of_history" in _r.stdout, _r.stdout[-200:])
+_r = _trig(146.5, snap=_mt_snap)  # (146.5-145.5)/144.5 = 0.7% < 10%
+check("带内底部 10% 以内判为可达性低",
+      _r.returncode == 1 and "low_reachability" in _r.stdout, _r.stdout[-200:])
+_r = _trig(166.93, low52w=145.5, high52w=290.0, price=195.37)
+check("无快照时 CLI 参数可用", _r.returncode == 0, _r.stdout[-200:])
+_r = _trig(166.93)
+check("缺 52 周区间时如实拒绝判定（退出码 2）", _r.returncode == 2,
+      _r.stdout[-200:])
+
+# 承接门禁：观察等价格必须有 data-reeval-trigger
+# 注意：迷你 HTML 必须带至少一个合法 vnum 标签——verify_report 对「完整报告
+# 无任何 vnum」会提前退出，触发器检查就执行不到了（提前退出本身是合理的，
+# 无数字报告先死在溯源这一关）。
+_VNUM = ('<span class="vnum" data-src="market_snapshot_MAOTAI_2015H1.json" '
+         'data-path="price_cny" data-fmt="num2">195.37</span>')
+_watch_html = ('<html><body><div class="report-header">x</div>'
+               f'<p>结论档位：<b style="font-size:20px">观察等价格</b></p>'
+               f'<p>现价 {_VNUM} 元。</p>'
+               '<span data-moat="wide"></span></body></html>')
+def _vr3(html):
+    fp = os.path.join(tempfile.mkdtemp(prefix="trig_"), "r.html")
+    open(fp, "w", encoding="utf-8").write(html)
+    return subprocess.run([sys.executable, os.path.join(SCRIPTS, "verify_report.py"),
+                           fp, "--data-dir", _ddir], capture_output=True, text=True)
+_r = _vr3(_watch_html)
+check("观察等价格缺承接标记被逮住",
+      _r.returncode == 1 and "trigger:reeval" in _r.stdout, _r.stdout[-200:])
+_r = _vr3(_watch_html.replace("结论档位",
+                              '<span data-reeval-trigger="watchlist_v1"></span>结论档位'))
+check("带承接标记后该门禁通过", "trigger:reeval" not in _r.stdout, _r.stdout[-200:])
+# 拒绝档位提及「观察等价格」不得误伤（柯达案实证）
+_reject_html = ('<html><body><div class="report-header">x</div>'
+                f'<p>结论档位：<b style="font-size:20px">拒绝</b></p>'
+                f'<p>现价 {_VNUM} 元。</p>'
+                '<p>最终档位：拒绝（闸门一不过 → 最高「观察等价格」）</p>'
+                '<span data-moat="none"></span></body></html>')
+_r = _vr3(_reject_html)
+check("拒绝档位提及观察等价格不误伤（柯达形态）",
+      "trigger:reeval" not in _r.stdout, _r.stdout[-200:])
+# 触发价带内位置与快照一致性机器校验
+_r = _vr3(_watch_html.replace("结论档位",
+    '<span data-reeval-trigger="w1" data-trigger-price="166.93" '
+    'data-trigger-band-pct="14.8"></span>结论档位'))
+check("触发价带内位置与快照一致时通过", "trigger:band" not in _r.stdout,
+      _r.stdout[-200:])
+_r = _vr3(_watch_html.replace("结论档位",
+    '<span data-reeval-trigger="w1" data-trigger-price="166.93" '
+    'data-trigger-band-pct="80"></span>结论档位'))
+check("触发价带内位置谎报被逮住（80% vs 实际 14.8%）",
+      _r.returncode == 1 and "trigger:band" in _r.stdout, _r.stdout[-200:])
+_r = _vr3(_watch_html.replace("结论档位",
+    '<span data-reeval-trigger="w1" data-trigger-price="166.93"></span>结论档位'))
+check("声明触发价但缺带内分位被逮住",
+      _r.returncode == 1 and "trigger:band" in _r.stdout, _r.stdout[-200:])
+
 print()
 if FAILED:
     print(f"结果：{len(FAILED)} 项失败 → {FAILED}")

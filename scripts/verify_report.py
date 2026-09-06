@@ -402,6 +402,71 @@ def main():
                 f"比对——在护城河章节标题或结论处加 "
                 f'data-moat="{doc_moat}"', ""))
 
+    # ---- 触发器承接门禁（阶段三，OBS-2021-07-03 / OBS-600660-04 两案例重现裁决）----
+    # 实证：海控案证伪条件三要素 2023 年内全部满足、福耀案价格触发器 2020-03-23
+    # 实际触发——两次触发后均无承接流程。报告写出的证伪条件是对用户的承诺，
+    # 承诺必须有承接。故「观察等价格」档位的完整报告必须带 data-reeval-trigger
+    # 机器标记：触发后载入哪个重评 checklist、重评结论如何分轨登记。
+    # 档位判定：只认档位声明本身（「结论档位：/最终档位：<b>观察等价格</b>」），
+    # 不认解释性文字里的提及——柯达案「最终档位：拒绝」的说明文字中出现
+    # 「最高观察等价格」曾导致误伤（该报告档位是拒绝，不是观察等价格）。
+    _is_watch = bool(re.search(
+        r"(?:最终档位|结论档位)[：:][^。]{0,120}?<b[^>]*>\s*观察等价格\s*</b>"
+        r"|(?:最终档位|结论档位)[：:]\s*观察等价格", html))
+    _reeval = re.search(r'data-reeval-trigger="([^"]*)"', html)
+    if is_full_report and _is_watch and not _reeval:
+        failed.append(("report", "trigger:reeval",
+                       "档位为「观察等价格」但缺重评触发器标记 data-reeval-trigger。"
+                       "该档位的全部价值押在触发器上——触发后载入哪个 checklist、"
+                       "重评结论如何登记必须写明，否则等于承诺「永不买入」。"
+                       "在证伪条件/跟踪章节加 data-reeval-trigger=\"<checklist名>\"", ""))
+
+    # 触发价可达性：报告声明了触发价（data-trigger-price）就必须披露它在
+    # 52 周价格带中的位置（data-trigger-band-pct），并与快照机器重算一致。
+    # 茅台案实证：166.93 元触发价在回放后 5 年从未触及——不披露可达性，
+    # 「观察等价格」就会退化为永不触发的观察而用户不自知。
+    _tp = re.search(r'data-trigger-price="([0-9.]+)"', html)
+    if _tp:
+        _tb = re.search(r'data-trigger-band-pct="([0-9.]+)"', html)
+        if not _tb:
+            failed.append(("report", "trigger:band",
+                           "声明了 data-trigger-price 但缺 data-trigger-band-pct"
+                           "（触发价在 52 周价格带中的分位）。"
+                           "跑 scripts/trigger_reachability.py 生成", ""))
+        else:
+            _snaps = sorted(glob.glob(os.path.join(args.data_dir,
+                                                   "market_snapshot*.json")))
+            _low = _high = None
+            if _snaps:
+                with open(_snaps[0], "r", encoding="utf-8") as f:
+                    _sd = json.load(f)
+                _low = _sd.get("low_52w")
+                _high = _sd.get("high_52w")
+                if _low is None:
+                    _rng = _sd.get("range_52w")
+                    if isinstance(_rng, (list, tuple)) and len(_rng) == 2:
+                        _low, _high = _rng
+                    elif isinstance(_rng, dict):
+                        _low, _high = _rng.get("low"), _rng.get("high")
+            if _low is not None and _high is not None and _high > _low:
+                _band = (float(_tp.group(1)) - float(_low)) / (float(_high) - float(_low))
+                _got = float(_tb.group(1))
+                if abs(_band * 100 - _got) > 1.0:
+                    failed.append(("market_snapshot", "trigger:band",
+                                   f"触发价带内位置与快照不符：重算 {_band * 100:.1f}%"
+                                   f"（52周 [{_low}, {_high}]）", f"{_got}%"))
+                if _band < 0:
+                    if "历史区间之外" not in html and "罕见事件" not in html:
+                        failed.append(("report", "trigger:band",
+                                       "触发价低于 52 周最低价（历史区间之外），报告必须"
+                                       "显式承认「等它」按罕见事件定价", ""))
+                elif _band < 0.10 and "可达性低" not in html:
+                    failed.append(("report", "trigger:band",
+                                   f"触发价在 52 周价格带底部 {_band * 100:.1f}% 分位，"
+                                   "报告必须显式披露「该触发器实际可达性低」", ""))
+            else:
+                print("提示：快照缺 52 周区间数值字段，触发价可达性仅检查声明存在性。")
+
     # ---- 文本完整性校验（乱码/损坏字符防护）----
     # 实证教训（腾讯/PDD 报告）：长文本生成偶发乱码段落，肉眼难查。
     # U+FFFD 替换符、CJK 正文中夹杂的连续拉丁扩展/西里尔等异常序列均视为损坏。
