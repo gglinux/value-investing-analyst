@@ -126,6 +126,7 @@ from alert_codes import unknown_codes  # 告警码注册表：唯一事实源
 _S_PREFIX_TO_CODE = [
     ("S2b", "S2B_BEAR_ARITHMETIC"),
     ("S2c", "S2C_WORST_YEAR_NOT_STRESS"),
+    ("S2e", "S_DISCOUNT_RATE_FLOOR"),
     ("S7b", "S7B_IV_GROWTH_EVIDENCE"),
     ("S1", "S1_SCHEMA"),
     ("S2", "S2_BEAR_METHOD_INDEPENDENCE"),
@@ -442,8 +443,37 @@ def check(path, metrics_path=None, snapshot_path=None):
                         f"要么 value_per_share 不是由该方法算出——悲观值必须是算出来的，"
                         f"不是填出来的")
 
-    # ---- S2c 最差年必须是实证压力年（阶段四，茅台+苹果两案例硬证据）----
-    # `worst_year_margin` 原实现只重算算术、不问 worst_margin 从哪来，于是它
+    # ---- S2e 折现率下限纪律（R4 遗漏项补齐）----
+    # SKILL.md 早有该纪律（r >= max(10%, 计价货币 10Y 国债 + 4pct)，单向：只在
+    # 高利率环境抬高门槛、不会放松 10%），但第一批复核发现**两个脚本都没实现**
+    # ——它一直只是文档纪律。折现率直接决定内在价值，无门禁等于可随手调松。
+    # 硬下限 10% 无条件校验；快照提供无风险利率时按 max(10%, rf+4pct) 校验。
+    r_ = d.get('discount_rate')
+    if r_ is not None:
+        floor_r, floor_src = 0.10, '硬下限 10%'
+        rf = None
+        if snapshot_path and os.path.exists(snapshot_path):
+            try:
+                with open(snapshot_path, 'r', encoding='utf-8') as _f:
+                    _sd = json.load(_f)
+                rf = _sd.get('risk_free') or _sd.get('yield_10y') or _sd.get('rf_10y')
+                if isinstance(rf, dict):
+                    rf = rf.get('value') or rf.get('yield')
+            except (OSError, ValueError):
+                rf = None
+        if isinstance(rf, (int, float)):
+            rf = rf / 100.0 if rf > 1 else rf
+            if rf + 0.04 > floor_r:
+                floor_r, floor_src = rf + 0.04, f'10Y {rf:.2%} + 4pct'
+        info['discount_rate_floor'] = round(floor_r, 6)
+        info['discount_rate_floor_basis'] = floor_src
+        if float(r_) < floor_r - 1e-9:
+            errors.append(
+                f'S2e 折现率 {float(r_):.2%} 低于下限 {floor_r:.2%}（{floor_src}）'
+                f'——该纪律单向生效：只在高利率环境抬高门槛、不会放松 10%。'
+                f'折现率直接决定内在价值，调松 1pct 可抬高估值 15-20%')
+
+    # ---- S2c 最差年必须是实证压力年（阶段四，茅台+苹果两案例硬证据）----    # `worst_year_margin` 原实现只重算算术、不问 worst_margin 从哪来，于是它
     # 机械地取了序列最小值。对利润率长期上行的公司，序列最早那年必然最低——
     # 但那年低是因为**公司当年还小**，不是因为危机。
     #   茅台：取 2006 年 31.5%（序列首年、公司幼年期）。而真实政策冲击

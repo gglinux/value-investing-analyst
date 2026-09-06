@@ -1974,6 +1974,45 @@ check("落差 >5pct 时输出披露代号",
 check("披露代号不参与任何断言判定（纯披露）",
       not [k for k, v in AC.ASSERTIONS.items() if "GATE_EFFECTIVE_HURDLE_GAP" in v])
 
+# ═══════════════════════════════════════════════════════════════════
+print("== 15 脚本接入完整性（元测试） ==")
+# 教训：阶段二写了 check_market_snapshot.py、跑通了、验证它能逮住海控存量错误，
+# 但**忘了在 SKILL.md 里引用它**——脚本存在 ≠ agent 会执行。SKILL.md 是 agent
+# 的唯一行动依据，没被它引用的脚本就是死代码。本节从根上防止此类疏漏。
+_SKILL = open(os.path.join(ROOT, "SKILL.md"), encoding="utf-8").read()
+# 例外清单及豁免理由（新增例外必须在此显式登记，否则测试失败）
+_EXEMPT = {
+    "alert_codes.py": "被其他脚本 import 的共享模块，不由 agent 直接调用",
+    "run_backtest_assertions.py": "回放测试资产，属 backtest/ 协议而非分析主流程",
+    "install-hooks.sh": "仓库开发工具（git hooks 安装），非分析流程",
+    "extract_edgar_annual.py": "美股 EDGAR 抓取辅助工具，按需调用（data-sourcing 有说明）",
+}
+_scripts = sorted(f for f in os.listdir(SCRIPTS)
+                  if f.endswith((".py", ".sh")) and not f.startswith("_"))
+_orphans = [f for f in _scripts
+            if f not in _EXEMPT and f"scripts/{f}" not in _SKILL]
+check("无孤儿脚本（未被 SKILL.md 引用且未登记豁免）",
+      not _orphans,
+      f"孤儿脚本 {_orphans} —— 要么在 SKILL.md 接入，要么在 _EXEMPT 登记理由")
+for _f, _why in _EXEMPT.items():
+    check(f"豁免脚本仍存在：{_f}", os.path.exists(os.path.join(SCRIPTS, _f)),
+          "豁免清单引用了不存在的脚本，应清理")
+# 关键门禁必须带强制措辞，否则 agent 可能当成可选建议
+for _f, _kw in (("check_market_snapshot.py", "强制"),
+                ("check_scenarios.py", "强制"),
+                ("verify_report.py", "强制"),
+                ("compute_metrics.py", "强制")):
+    _idx = _SKILL.find(f"scripts/{_f}")
+    _ctx = _SKILL[max(0, _idx - 300):_idx + 300] if _idx >= 0 else ""
+    check(f"{_f} 在 SKILL.md 中带强制措辞",
+          _idx >= 0 and any(k in _ctx for k in ("强制", "必须", "才允许", "禁止")),
+          f"上下文未见强制措辞，agent 可能视为可选")
+# 保险管道：脚本存在则文档不得称「暂无」
+check("保险管道文档与代码一致",
+      not (os.path.exists(os.path.join(SCRIPTS, "compute_metrics_insurance.py"))
+           and "保险/券商暂无脚本管道" in _SKILL),
+      "compute_metrics_insurance.py 存在但 SKILL.md 仍称『保险暂无脚本管道』")
+
 print()
 if FAILED:
     print(f"结果：{len(FAILED)} 项失败 → {FAILED}")
