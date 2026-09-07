@@ -97,7 +97,7 @@ th{{background:#eef2f8}}
 
 <h2 style="margin-top:0">决策卡</h2>
 <div class="card">
-<p><b>结论：观察等价格（档位 1/4）——现价不买；本案为"参数不可达"型：任何可辩护锚都在现价下方，等待语义是"等估值坍塌"而非"等回调"</b></p>
+<p><b>结论：拒绝（观察等价格）（档位 1/4）——现价不买；本案为"参数不可达"型：任何可辩护锚都在现价下方，等待语义是"等估值坍塌"而非"等回调"（档位表述对齐 Netflix 先例）</b></p>
 <p>现价 {v("market_snapshot_ZM_2021.json", "price.value", "num2")} USD ｜ 市值 {v("market_snapshot_ZM_2021.json", "market_cap.value", "num0")} 百万 USD ｜ 流通股 {v("market_snapshot_ZM_2021.json", "shares.value", "num1")} 百万股 ｜ PE(TTM) {v("market_snapshot_ZM_2021.json", "valuation_multiples.pe_ttm", "num1")}x ｜ PS(TTM) {v("market_snapshot_ZM_2021.json", "valuation_multiples.ps_ttm", "num1")}x ｜ 距峰值 588.84 −53.4% ｜ 股息率 {v("scenarios_ZM_2021.json", "dividend_yield", "pct1")}</p>
 <p>闸门一（安全边际，narrow 档要求 40%）：基准内在价值 {v("scenarios_ZM_2021.json", "scenarios.1.value_per_share", "num2")} → MoS = {v("mos_calc_ZM_2021.json", "mos_vs_base", "pct1")} <span class="gate-fail">✗ 深度不过</span>；乐观极限口径 {v("mos_calc_ZM_2021.json", "mos_vs_bull", "pct1")}（现价高于乐观极限值）；悲观口径 {v("mos_calc_ZM_2021.json", "mos_vs_bear", "pct1")}。触发价 {v("mos_calc_ZM_2021.json", "trigger_price_base_40pct", "num2")} USD（低于上市以来全部成交区间——等待极端深）</p>
 <p>闸门二（期望回报，护城河 narrow）：①期望 IRR {v("expected_return_ZM_2021.json", "expected_annualized_irr", "pct1")} vs 门槛 21.8% <span class="gate-fail">✗</span>；②不收敛下限 {v("expected_return_ZM_2021.json", "gate2.no_convergence_floor.value", "pct1")} vs 6% <span class="gate-fail">✗</span>；③悲观年化 {v("expected_return_ZM_2021.json", "gate2.pessimistic_irr.value", "pct1")} vs 0% <span class="gate-fail">✗</span> → <span class="gate-fail">闸门二 0/3，整体不过</span>（亏损概率 {v("expected_return_ZM_2021.json", "loss_probability", "pct0")}、亏损情景平均跌幅 {v("expected_return_ZM_2021.json", "expected_downside_given_loss", "pct1")}）</p>
@@ -185,7 +185,7 @@ th{{background:#eef2f8}}
 <tr><td>②不收敛下限</td><td>{v("expected_return_ZM_2021.json", "gate2.no_convergence_floor.value", "pct1")}（0+0）</td><td>≥6%</td><td class="bad">✗</td></tr>
 <tr><td>③悲观年化</td><td>{v("expected_return_ZM_2021.json", "gate2.pessimistic_irr.value", "pct1")}</td><td>≥0</td><td class="bad">✗</td></tr>
 </table>
-<p><b>档位判定：观察等价格（1/4）</b>——闸门一深度不过（−329.3%）、闸门二 0/3、触发价 38.38 在上市以来全部成交区间之外。与 Netflix（档位 1）同档但疾病不同：Netflix 三情景全低于现价且生意失血（OE 为负+FCF 连续 6 年负+融资依赖），Zoom 单元经济全绿+FCF 大正+零负债——同为参数不可达，一个死于现金流，一个死于价格。与软银（档位 2）的区别：软银基准/乐观锚在现价上方且触发价 52 周内真实出现过（等待可及），Zoom 的等待语义是"等估值坍塌" [E:expected_return_ZM_2021.json][E:mos_calc_ZM_2021.json]。</p>
+<p><b>档位判定：拒绝（观察等价格）（1/4）</b>——闸门一深度不过（−329.3%）、闸门二 0/3、触发价 38.38 在上市以来全部成交区间之外。与 Netflix（同档位 1，同型复合表述）同档但疾病不同：Netflix 三情景全低于现价且生意失血（OE 为负+FCF 连续 6 年负+融资依赖），Zoom 单元经济全绿+FCF 大正+零负债——同为参数不可达，一个死于现金流，一个死于价格。与软银（档位 2）的区别：软银基准/乐观锚在现价上方且触发价 52 周内真实出现过（等待可及），Zoom 的等待语义是"等估值坍塌" [E:expected_return_ZM_2021.json][E:mos_calc_ZM_2021.json]。</p>
 
 <h2>七、关键判断收敛（Phase 4.5）</h2>
 <p>三师与红队核心收敛点：①公司质量无争议（NRR>130%×13 季+毛利率 73-81%+递延沉淀+净现金 5.1bn——近十年 SaaS 最干净的单元经济之一）；②"参数不可达"是算术不是观点（隐含增速 33.5%>指引方向>利润率物理上限，极限测试 220.91 仍差 19.6%）；③增长断崖已被市场半定价但远不够（指引次日 −16.7% vs PE_TTM 仍 83.6x）；④SBC 是本案的隐性税率（每股口径增长比报表口径低 78pct）；⑤观察等价格的等待语义="等估值坍塌"，可及性依赖增长陷阱兑现 [E:phase5_workpaper.json]。</p>

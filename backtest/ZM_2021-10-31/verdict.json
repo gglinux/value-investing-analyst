@@ -11,9 +11,15 @@
     "forbidden_data_encountered_and_registered": true,
     "note": "Q3 FY2022 财报（2021-11-22）与 FY2022 10-K（filed 2022-03-07）为 forbidden——companyfacts 中对应 filed 帧（2021-11-23/2022-03-07）全程禁用；训练语料中 Zoom 2022 年增长坍塌与股价路径属后见之明已剔除。行情取 2021-10-29 收盘（10-31 周日休市）"
   },
-  "final_verdict": "观察等价格",
+  "final_verdict": "拒绝（观察等价格）",
   "verdict_ordinal": 1,
-  "verdict_ordinal_scale": {"0": "排除", "1": "拒绝", "2": "观察等价格", "3": "小仓位试探", "4": "核心买入"},
+  "verdict_ordinal_scale": {
+    "0": "排除",
+    "1": "拒绝",
+    "2": "观察等价格",
+    "3": "小仓位试探",
+    "4": "核心买入"
+  },
   "gate1": {
     "pass": false,
     "margin_of_safety": -3.2933,
@@ -26,11 +32,31 @@
     "pass": false,
     "expected_irr": -0.1664,
     "moat_prerequisite": "窄护城河（narrow）——闸门二①门槛 21.8%（由闸门一 40% 反推，r=10%/H=5）",
-    "item1_consistency_irr": {"value": -0.1664, "hurdle": 0.2183, "pass": false, "note": "期望 IRR 为负：三情景加权（30/50/20）下 80% 概率亏损、亏损情景平均跌幅 −69.9%——现价买入的期望回报为负值，跑输指数门槛 9.0% 达 25.64pct"},
-    "item2_no_convergence_floor": {"value": 0.0, "components": "股息率 0 + iv_growth 0", "hurdle": 0.06, "pass": false, "note": "iv_growth=0 的推导：基准 DCF 永续段 OE 增速 2.5% − SBC 稀释 2-3%/年 ≈ 0（每股口径）——与 ADJ2'SBC 是真实成本'裁决一致。零分红+零每股内在价值增速=折价永不收敛时回报为零，而现价根本没有折价"},
-    "item3_pessimistic_irr": {"value": -0.2933, "hurdle": 0.0, "pass": false, "note": "悲观情景（pe_trough_multiple 独立方法，15×SBC 后 OE 612.58=30.06）年化 −29.33%——'错了会怎样'的独立答案：5 年持有年化亏 29.3%。三独立项全负，闸门二 0/3"}
+    "item1_consistency_irr": {
+      "value": -0.1664,
+      "hurdle": 0.2183,
+      "pass": false,
+      "note": "期望 IRR 为负：三情景加权（30/50/20）下 80% 概率亏损、亏损情景平均跌幅 −69.9%——现价买入的期望回报为负值，跑输指数门槛 9.0% 达 25.64pct"
+    },
+    "item2_no_convergence_floor": {
+      "value": 0.0,
+      "components": "股息率 0 + iv_growth 0",
+      "hurdle": 0.06,
+      "pass": false,
+      "note": "iv_growth=0 的推导：基准 DCF 永续段 OE 增速 2.5% − SBC 稀释 2-3%/年 ≈ 0（每股口径）——与 ADJ2'SBC 是真实成本'裁决一致。零分红+零每股内在价值增速=折价永不收敛时回报为零，而现价根本没有折价"
+    },
+    "item3_pessimistic_irr": {
+      "value": -0.2933,
+      "hurdle": 0.0,
+      "pass": false,
+      "note": "悲观情景（pe_trough_multiple 独立方法，15×SBC 后 OE 612.58=30.06）年化 −29.33%——'错了会怎样'的独立答案：5 年持有年化亏 29.3%。三独立项全负，闸门二 0/3"
+    }
   },
-  "scenarios_value_per_share": {"悲观": 30.06, "基准": 63.97, "乐观": 220.91},
+  "scenarios_value_per_share": {
+    "悲观": 30.06,
+    "基准": 63.97,
+    "乐观": 220.91
+  },
   "expected_irr": -0.1664,
   "normalized_base_oe": {
     "judgment": "OE/DCF 通道保留但基期全面重裁（ADJ1-ADJ5）：引擎均值锚 154.68 被拒绝（ρ+0.90 结构性改善下均值=公司幼年期盈利能力——鞍钢'结构性恶化禁主轨'的镜像'结构性改善拒均值'），主锚采纳 SBC 后口径 612.58（ADJ2：TTM 净利 1,003.9−SBC 391.3），基准/乐观按情景输入 721.8/1,002.5（ADJ5：FY2022F 4,010×18%/25%）",
@@ -46,11 +72,38 @@
   "company_type": "经营公司（轻资产 SaaS，净现金型资产负债表）——OE 框架适用、基期裁决是关键",
   "discount_rate": 0.1,
   "discount_rate_basis": "max(10%, UST 10Y 1.56%+4pct=5.56%)=10% 纪律下限；增长不确定性与侵蚀压力支持不放松",
-  "codes": ["M_DILUTION", "M_SHARE_INFLATION", "M_ROIIC_LOW", "NORM_CYCLE_PEAK", "NORM_DUAL_TRACK", "NORM_MARGIN_SHAPE", "M_UNIT_SUSPECT", "GATE1_FAIL", "GATE2_FAIL", "GATE2_1_IRR_FAIL", "GATE2_2_FLOOR_FAIL", "GATE2_3_BEAR_FAIL", "NORM_ADJ_MEAN_REJECTED", "NORM_ADJ_SBC_MAIN_ANCHOR"],
+  "codes": [
+    "M_DILUTION",
+    "M_SHARE_INFLATION",
+    "M_ROIIC_LOW",
+    "NORM_CYCLE_PEAK",
+    "NORM_DUAL_TRACK",
+    "NORM_MARGIN_SHAPE",
+    "M_UNIT_SUSPECT",
+    "GATE1_FAIL",
+    "GATE2_FAIL",
+    "GATE2_1_IRR_FAIL",
+    "GATE2_2_FLOOR_FAIL",
+    "GATE2_3_BEAR_FAIL"
+  ],
   "codes_provenance": {
-    "engine_derived": ["M_DILUTION", "M_SHARE_INFLATION", "M_ROIIC_LOW", "NORM_CYCLE_PEAK", "NORM_DUAL_TRACK", "NORM_MARGIN_SHAPE", "M_UNIT_SUSPECT", "GATE1_FAIL", "GATE2_FAIL", "GATE2_1_IRR_FAIL", "GATE2_2_FLOOR_FAIL", "GATE2_3_BEAR_FAIL"],
-    "manually_recorded": ["NORM_ADJ_MEAN_REJECTED", "NORM_ADJ_SBC_MAIN_ANCHOR"],
-    "note": "engine_derived 前 7 项来自 compute_metrics alert_codes（metrics_ZM_2021.json），后 5 项来自 check_scenarios/reverse_dcf 闸门判定（expected_return_ZM_2021.json gate2）。manually_recorded 两项为语义扩展登记：NORM_ADJ_MEAN_REJECTED——拒绝的不止均值锚数值，而是'利润率单向上行序列的均值=正常化基期'这一引擎假设（ADJ1，含 ADJ4 ROIIC 失真归因）；NORM_ADJ_SBC_MAIN_ANCHOR——主锚采纳 SBC 后口径（ADJ2），SBC 从'非现金加回项'重定义为'真实成本'，与 dilution 警报构成同一证据链"
+    "engine_derived": [
+      "M_DILUTION",
+      "M_SHARE_INFLATION",
+      "M_ROIIC_LOW",
+      "NORM_CYCLE_PEAK",
+      "NORM_DUAL_TRACK",
+      "NORM_MARGIN_SHAPE",
+      "M_UNIT_SUSPECT",
+      "GATE2_FAIL",
+      "GATE2_1_IRR_FAIL",
+      "GATE2_2_FLOOR_FAIL",
+      "GATE2_3_BEAR_FAIL"
+    ],
+    "manually_recorded": [
+      "GATE1_FAIL"
+    ],
+    "note": "engine_derived 前 7 项来自 compute_metrics alert_codes（metrics_ZM_2021.json），后 4 项来自 reverse_dcf 闸门判定（expected_return_ZM_2021.json gate2）。manually_recorded：GATE1_FAIL（mos_calc 派生判定，与中远海控先例同源）。⚠️ 裁决语义登记（无注册表等价物，铁律禁止杜撰 ID 故不进 codes）：ADJ1'结构性改善拒均值锚'与 ADJ2'SBC 真实成本主锚'两项人工裁决在 alert_codes 注册表内无等价代号——NORM_ADJ_HYBRID_REJECTED 特指 hybrid（NI×conv）向上锚的拒绝（Netflix B2-09 新设），本案拒绝的是向下均值锚（方向相反、结构不同）。单案例不改码，登记 OBS-2016-12-01 改码候选证据：若后续再出现'利润率单向上行公司均值锚过苛'案例（合计 2 例）候选注册 NORM_ADJ_MEAN_REJECTED；SBC 主锚裁决已由 M_DILUTION+M_SHARE_INFLATION 组合承载定量面，裁决语义留痕于 normalization_ZM_2021.json ADJ1-ADJ5"
   },
   "codes_note": "关键项解读：M_UNIT_SUSPECT（owner yield 0.80%/回本 543 年）经人工核对为真实量纲（market_cap 83,948=274.65×305.653 自洽，偏差 0.00%）——哨兵触发但未发现错位，该派生值本身是'贵'的量纲化表达；M_ROIIC_LOW 经 ADJ4 裁决失真（负权益/轻资产 IC 分母下 ROIIC 无意义），不作为定性结论；NORM_CYCLE_PEAK 的引擎措辞'周期高位'对本案不完全适用（不是景气周期而是疫情需求脉冲），但告警方向正确地阻止了当期 OE 直接作基期；GATE2_3_BEAR_FAIL 命中（悲观 −29.33%）——悲观值由独立方法（pe_trough_multiple）给出，该项是真正独立的下行信息而非基准换算",
   "falsification_conditions": [
@@ -87,7 +140,7 @@
   ],
   "prior_expectation_comparison": {
     "prior_verdict_ordinal_frozen_meta": 1,
-    "prior_note": "meta.json 冻结先验（任何数据抓取前）='疫情受益股增速断崖+估值透支'叙事、档位 1（拒绝/观察），confidence=medium——预登记'OBS-2016-12-01 参数不可达型复检场'身份与改码激励披露",
+    "prior_note": "meta.json 冻结先验（任何数据抓取前）='疫情受益股增速断崖+估值透支'叙事、档位 1（拒绝（观察等价格）——'三情景全低于现价+触发价极端深'复合表述对齐 Netflix 先例），confidence=medium——预登记'OBS-2016-12-01 参数不可达型复检场'身份与改码激励披露",
     "prior_verdict_ordinal_decision_log": null,
     "prior_gate1": null,
     "prior_gate2": null,
