@@ -1,0 +1,133 @@
+{
+  "case": "B2-09",
+  "company": "Netflix",
+  "ticker": "NFLX",
+  "as_of": "2016-12-31",
+  "analysis_generated": "2026-09-07",
+  "information_cutoff_discipline": {
+    "latest_annual": "FY2015 10-K（filed 2016-01-28）",
+    "latest_interim": "Q3'16 10-Q（filed 2016-10-20）+ Q3'16 股东信（2016-10-17，含 Q4'16F 指引）",
+    "forbidden_used": false,
+    "forbidden_data_encountered_and_registered": true,
+    "note": "FY2016 10-K（2017-01-27）与 Q4'16 股东信（2017-01-19）为 forbidden data 未进任何底稿；2016 全年以 9M'16 实际+Q4'16F 指引推算（estimate 标注，仅作正常化锚不作序列值）。检索中出现的 FY2016 实际业绩一律未采信。污染披露见 meta.json prior_expectation（'高成长烧钱'叙事，confidence=low），结论由管线定量输出唯一决定",
+    "meta_frozen_before_any_fetch": true
+  },
+  "final_verdict": "拒绝（观察等价格）",
+  "verdict_ordinal": 1,
+  "verdict_ordinal_scale": {"0": "排除", "1": "拒绝", "2": "观察等价格", "3": "小仓位试探", "4": "核心买入"},
+  "gate1": {
+    "pass": false,
+    "margin_of_safety": -0.8892,
+    "moat_rating": "窄",
+    "required_margin_of_safety": 0.40,
+    "trigger_price": 5.57,
+    "note": "安全边际 = (13.71−123.80)/123.80 = −88.9%（现价是基准价值的 9.0 倍、乐观情景的 3.2 倍）。闸门一数学达标价 = 主锚 EPV 9.28×(1−40%) = 5.57 美元，为现价的 4.5%。反向 DCF implied-growth 无解（±60% 十年增速带内现价无法被解释）——131x OE 静态倍数下即使 OE 十年 25% 复合（超历史 17.4%），静态合理市值仍低于现价 28%。本案不适用 S8 价值陷阱闸门（MoS 深度为负未进入保护区间）——风险形态是'贵的成长陷阱'而非'便宜的价值陷阱'：不收敛下限 0% 意味着即使增长兑现、市场不认可时无现金流兜底"
+  },
+  "gate2": {
+    "pass": false,
+    "expected_irr": -0.3356,
+    "moat_prerequisite": "窄护城河（trend 改善）——闸门一①门槛 21.83% 正常评估（由窄护城河 40% 安全边际要求反推）",
+    "item1_consistency_irr": {"value": -0.3356, "hurdle": 0.2183, "pass": false, "note": "三情景概率加权 IRR −33.56%，为门槛 21.83% 的负 1.5 倍——不是差一步而是方向相反"},
+    "item2_no_convergence_floor": {"value": 0.0, "hurdle": 0.06, "pass": false, "note": "股息率 0% + iv_growth 0%（基准 fade 10 年后稳态增速=0，成长期权已在乐观情景定价不进下限）——折价永不收敛时年化回报 0%，价值陷阱的定量特征以'成长陷阱'形态出现：买在 131x OE 上，若增长兑现但市场不认可，没有现金流回报兜底"},
+    "item3_pessimistic_irr": {"value": -0.5462, "hurdle": 0.0, "pass": false, "note": "悲观情景由独立方法（worst_year_margin：2012 净利率 0.4752%×20x 成熟倍数）推导：5 年年化 −54.62%。悲观/基准离散度 0.11（独立方法把成长股塌陷形态压到基准的 1/9）；口径警示已登记（PE 对低基数失真，2012 真实恐慌底 PE 180x/P-S 0.86 不可比），但档位对悲观方法不敏感（退回 DCF 口径 7.38 档位不变）"},
+    "loss_probability": 1.0,
+    "expected_downside_given_loss": -0.8052,
+    "effective_hurdle_gap": null,
+    "note": "GATE_EFFECTIVE_HURDLE_GAP 登记但无操作意义：即使市场重估到基准价值，5 年 IRR 仍为 −89%/5≈负——'再跌 X% 就能买'的 X 是 −89%（跌到 13.71），等待均值回归式达标与等待'现价跌 9 倍'等价，直接拒绝并观察"
+  },
+  "scenarios_value_per_share": {
+    "pessimistic": 1.48,
+    "base": 13.71,
+    "optimistic": 38.36,
+    "probabilities": {"悲观": 0.3, "基准": 0.5, "乐观": 0.2},
+    "bear_method": "worst_year_margin（独立方法：2012 实证压力年净利率 0.4752%——Qwikster+内容采购前置+国际启动三重叠加、九年最低且塌陷持续两年——×2015 实际收入 6,779.5×危机倍数 20x（成熟媒体 PE 15-20x 上界）÷436.456 百万股 = 1.48 美元；S2c 校验器核对 2012 真实净利率通过）",
+    "dispersion_bear_over_base": 0.11,
+    "method_note": "悲观/基准 0.11 的深度离散由成长股塌陷形态决定（周期股如鞍钢悲观/基准 0.36 且清算值可高于盈利值；本案 worst_year 重现+倍数成熟化双重打击）；基准=主锚 404.86（ADJ3 降档裁决：OE 利润率均值口径）+10% fade（历史 OE CAGR 17.4% 打折）；乐观=hybrid 交叉锚 775.83+20% fade——即使全兑现仍比现价低 69%，乐观情景自身不过闸门一是本案最强结论"
+  },
+  "expected_irr": -0.3356,
+  "normalized_base_oe": {
+    "judgment": "投入期结构性低利润率（非周期低位）——引擎'周期低位+hybrid 向上正常化'路径被部分拒绝：方向（向上正常化）保留，量（hybrid 775.8）拒绝",
+    "engine_main_track_oe_million": 775.83,
+    "engine_main_track_rejection_reason": "hybrid = 正常化净利 321.96 × conv 2.41；conv = OE/NI = 295.53/122.64 完全由 wc 释放驱动（引擎 mc 全序列被 D&A 封顶 → OE=NI−wc_change，2015 递延收入释放 172.9）——预付沉淀是会员增速的函数而非利润率的函数，把单年 conv 2.41 永久化等于假设预付沉淀与利润同比例永续；2016E 交叉验证（9M'16 ocf_raw −916.8 现金口径恶化）证伪 conv 稳态",
+    "adopted_base_oe_million": 404.86,
+    "adopted_derivation": "引擎区间下界：历史 OE 利润率均值 5.97%×6,779.5（已知噪音：2010-2011 内容投入低谷年+DVD 现金牛尾巴拉高均值，404.86 已属偏乐观锚）；悲观锚=NI 口径正常化 321.96（wc 释放归零保守极限）；'周期低位'判定本身裁决为误判（ADJ1 四证据：收入九年逐年正增长/毛利率带内平稳/净利率波动与内容支出比精确同步/2012 为事故年非周期底）",
+    "sensitivity": "EPV 口径：321.96→7.38 / 404.86→9.28 / 775.83→17.78；fade 口径 g=8-15%→12.69-16.59；r±1pct→12.37-15.35——全锚位与现价缺口 −86%~-94%，拒绝结论对锚完全不敏感",
+    "engine_dual_track_disclosed": true
+  },
+  "moat_rating": "窄",
+  "moat_trend": "改善",
+  "company_type": "高成长再投入型（流媒体订阅）",
+  "discount_rate": 0.10,
+  "discount_rate_basis": "max(10%, 10Y UST 2.45% + 4pct) = 10%（对高波动成长股属宽容下限）",
+  "codes": [
+    "M_DIVIDEND_ILLUSION",
+    "M_FCF_QUALITY",
+    "M_UNIT_SUSPECT",
+    "M_OWNER_YIELD_NOT_CASH_BACKED",
+    "NORM_CYCLE_TROUGH",
+    "NORM_MARGIN_SHAPE",
+    "NORM_ADJ_HYBRID_REJECTED",
+    "GATE1_FAIL",
+    "GATE2_FAIL",
+    "GATE2_1_IRR_FAIL",
+    "GATE2_2_FLOOR_FAIL",
+    "GATE2_3_BEAR_FAIL"
+  ],
+  "codes_provenance": {
+    "engine_derived": ["M_DIVIDEND_ILLUSION", "M_FCF_QUALITY", "M_UNIT_SUSPECT", "M_OWNER_YIELD_NOT_CASH_BACKED", "NORM_CYCLE_TROUGH", "NORM_MARGIN_SHAPE", "GATE1_FAIL", "GATE2_FAIL", "GATE2_1_IRR_FAIL", "GATE2_2_FLOOR_FAIL", "GATE2_3_BEAR_FAIL"],
+    "manually_recorded": ["NORM_ADJ_HYBRID_REJECTED"]
+  },
+  "codes_note": "全部取自 scripts/alert_codes.py 注册表（manually_recorded 一项除外）。engine_derived 关键项解读修正：M_DIVIDEND_ILLUSION（累计股东回报 1,034 对累计 FCF −647.5 覆盖 −0.63x）在本案的实质不是分红幻觉（Netflix 零分红）而是'九年 OCF 一分未落袋全砸内容库+倒贴 647M'的再投入信号；M_UNIT_SUSPECT 引擎担忧与本案 unit_economics 实证（每会员月内容成本 7.67 vs 收入 8.32）并存——担忧成立但已被 US 分部 44% 贡献利润率部分证伪，属'未证完毕'而非'证伪'。manually_recorded：NORM_ADJ_HYBRID_REJECTED——正常化裁决拒绝引擎 hybrid 推荐值（ADJ2），属引擎对高成长公司适配问题的实证（与茅台 OBS-STAGE4-03 候选同型反方向，合计 2 案例）",
+  "falsification_conditions": [
+    "股价跌至 ≤38.36（乐观情景以下，重开估值；闸门一数学达标价 5.57）",
+    "OE 利润率连续两年 >9% 且 Intl 贡献利润率转正（正常化锚上调）",
+    "内容支出/收入比回落至 70% 以下且会员增长不减（规模效应兑现）",
+    "头部内容方大规模收回授权自建平台（护城河根基受损，降档确认）",
+    "利息覆盖跌破 2x 或发债间隔显著缩短（滚动依赖恶化）"
+  ],
+  "review_checkpoints": {
+    "next_review": "2017-01-19（Q4'16 股东信，回放外事件，仅用于答案比对）",
+    "tracking": "季度 Intl 贡献利润率与会员增长、内容支出/收入比、内容义务增速（14.4B 基线）、FCF 与发债节奏、US ARPU 提价复制；复盘触发：2021-12-31 后任一时点再触达 NFLX 先做复盘校准（对照 key_variables 实际走向/证伪线是否触发/期望 IRR −33.56% vs 实际/三师谁最准/pre-mortem '动量错过'形态是否兑现）"
+  },
+  "persona_verdicts": {
+    "buffett": "拒绝（好公司坏价格——'用合理价格买好生意'的纪律在 $123.80 无从谈起；十年可测性检验不过：内容品味竞猜超圈）",
+    "duan": "拒绝（市场先生已把'长成金矿'当成确定价入账；错过不是错误，付错价才是）",
+    "li_lu": "拒绝（趋势/生意/管理层三项全对也救不回透支的价格——'观察等价格'是能力圈内唯一正确动作）"
+  },
+  "verification": {
+    "validate_data": "通过（0 错误 / 4 警告，警告均由 manifest 回应）",
+    "crosscheck_official": "通过（0 错误 / 5 警告；2 科目豁免已登记：方案 B 口径分叉+拆股，官方原值留扩展字段）",
+    "check_scenarios": "通过（S1-S9，0 错误 0 警告；S2c worst_margin 与 2012 真实净利率核对通过）",
+    "verification_strength_grade": "B",
+    "verify_report_exit_code": 0,
+    "verify_report_summary": "92/92 通过（正文数字 72 + 图表数组 5 + 证据指针 15）"
+  },
+  "data_availability_notes": [
+    "数据窗口 9 年 < 一般要求 10 年（核验强度 B 的 V3 partial）：2007 为 DVD 时代序列起点，更早年份数据不可得；窗口含 2008 金融危机",
+    "FY2007-FY2009 资产负债表三表勾稽缺 TA/TL（勾稽覆盖率 8/9 年）",
+    "2016 全年为推算值（9M'16 实际+Q4'16F 指引），全部标注 estimate，不进年度序列",
+    "维持性 capex 全部为引擎启发式估算（capex/收入比中位数封顶 D&A）——本案实际全序列被 D&A 封顶（内容支出巨量），OE=NI−wc_change 口径",
+    "方案 B 口径（内容支出=维持性 capex、ocf_adj=OCF+内容流出重分类）为分析师口径裁决，与官方原值并存（扩展字段留官方原值，豁免已登记）",
+    "竞对财年错位（Disney 9 月/Fox 6 月）按 duration 350-380 天+fy_end_month 匹配，按财年标签对齐不硬转日历年"
+  ],
+  "prior_expectation_comparison": {
+    "prior_verdict_ordinal_frozen_meta": 1,
+    "prior_note": "meta.json 冻结先验（任何数据抓取前）='高成长烧钱'叙事、档位 1（拒绝），confidence=low——方向一致但机理不同：管线拒绝不是因为'烧钱误判'（方案 B 恒等式已区分主动投入与烧钱、US 单元经济已证），而是'主动投入的价格也太高'",
+    "prior_verdict_ordinal_decision_log": null,
+    "prior_gate1": false,
+    "prior_gate2": false,
+    "actual_verdict_ordinal": 1,
+    "actual_gate1": false,
+    "actual_gate2": false,
+    "consistent_with_prior": true,
+    "increment": "管线定量落点：档位 1（拒绝），三情景 1.48/13.71/38.36 全部低于现价 123.80、双闸全灭、亏损概率 100%；管线给出的先验未能量化的事实——implied-growth 无解（131x OE）、hybrid conv 2.41 不可持续的拆解、护城河'窄且改善'（先验叙事里没有'公司可能是好公司'这一面）、不收敛下限 0% 的成长陷阱形态"
+  },
+  "frozen_before_diff": true,
+  "frozen_at": "2026-09-07",
+  "key_artifacts": {
+    "report": "Netflix_价值投资分析报告_20161231.html",
+    "decision_log": "decision-log.md",
+    "data_dir": "data/",
+    "persona_workpapers": "workpapers/persona_{buffett,duan,lilu}.md"
+  }
+}
