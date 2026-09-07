@@ -1,0 +1,35 @@
+{
+  "case": "601088.SH_2015-12-31",
+  "expected_verdict_set": [3, 4],
+  "expected_gate1": true,
+  "expected_gate2": true,
+  "must_trigger": [],
+  "must_trigger_any": [],
+  "must_not_trigger": [],
+  "known_failures": [
+    "verdict_track"
+  ],
+  "known_failures_note": "第二批记录在案的真实假阴性：官方预期小仓位试探/核心买入，系统输出观察等价格，事后 5 年含息 +46.0%。根因初判为护城河评级'窄'的双重门槛传导（闸门一 40% vs 实际 37.7% 差 2.3pct；闸门二① 21.83% vs 期望 IRR 17.84%），单例不改引擎，待同批鞍钢对照后裁决——详见 diff.md 第三节与 observations.md。",
+  "actual_3y_total_return": 0.352,
+  "actual_5y_total_return": 0.460,
+  "earnings_driven_return": 0.650,
+  "multiple_driven_return": -0.271,
+  "actual_max_drawdown": -0.256,
+  "dividend_contribution": 0.214,
+  "price_basis": {
+    "replay_close_a": 14.97,
+    "close_2018_12_28": 17.96,
+    "close_2020_12_31": 18.01,
+    "bhfq_2015_12_31": 20.40,
+    "bhfq_2018_12_28": 27.59,
+    "bhfq_2020_12_31": 29.78,
+    "pe_ttm_at_replay": 12.55,
+    "eps_ttm_at_replay": 1.193,
+    "pe_2020": 9.15,
+    "eps_2020": 1.969,
+    "total_return_check": "1.650(EPS) × 0.729(PE) = 1.203(价格) × 1.214(股息再投资) = 1.460 ≈ 29.78/20.40",
+    "source": "东方财富 push2his 日K/月K（fqt=0 不复权、fqt=2 后复权），WebFetch 代理获取 2026-09-07"
+  },
+  "outcome_note": "低成本煤+一体化运输，属真周期底部：环渤海指数 2015-12 已从 853 峰值跌至 371（-56.5%），行业亏损面 90%，而神华 2015 前三季仍盈利 165.6 亿。事后验证：供给侧改革后 2016H2 煤价反转（秦港回到 600+），持有 5 年含息 +46.0%，最大回撤 -25.6%（2018-01 峰值至 2020-06），期间 2017-2018 年还经历一轮估值扩张（后复权 20.4→35.1，+72%）；收益主体是盈利修复与股息，倍数因素为负。A股回放日 PE TTM 仅 12.5 倍、PB 1.01、股息率 4.9%，H 股更低（折价 32%）。",
+  "answer_source": "ANSWERS.md 第二批（中国神华 2015-12 段）+ 东方财富后复权行情复核 2026-09-07"
+}
