@@ -1,0 +1,55 @@
+{
+  "window": [
+    "2019-06-28",
+    "2024-06-28"
+  ],
+  "price_return": -0.045,
+  "price_annualized": -0.0092,
+  "total_return_post": 0.187,
+  "total_return_annualized": 0.0349,
+  "dividend_reinvest_factor": 1.2429,
+  "adj_method_bias": 0.2691,
+  "exdiv_in_window": [
+    {
+      "date": "2020-06-30",
+      "amount": 1.0
+    },
+    {
+      "date": "2020-11-30",
+      "amount": 0.64
+    },
+    {
+      "date": "2021-05-31",
+      "amount": 1.68
+    },
+    {
+      "date": "2022-04-29",
+      "amount": 1.3
+    },
+    {
+      "date": "2022-09-30",
+      "amount": 0.6
+    },
+    {
+      "date": "2023-04-28",
+      "amount": 1.0
+    },
+    {
+      "date": "2023-09-28",
+      "amount": 0.75
+    },
+    {
+      "date": "2024-04-30",
+      "amount": 0.7
+    }
+  ],
+  "exdiv_total": 7.67,
+  "low_close": {
+    "date": "2019-08-30",
+    "price": 22.36
+  },
+  "high_close": {
+    "date": "2020-08-31",
+    "price": 63.5
+  }
+}
