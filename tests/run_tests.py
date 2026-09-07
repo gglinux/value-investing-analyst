@@ -2065,8 +2065,20 @@ _leaked = [m for m in _ANS_MARKERS if m in _PROMPT]
 check("PROMPT.md 中无答案明文残留", not _leaked, f"泄漏 {_leaked}")
 if os.path.exists(_ANSWERS_FP):
     _ANS = open(_ANSWERS_FP, encoding="utf-8").read()
-    check("ANSWERS.md 保有三批答案",
-          all(b in _ANS for b in ("**第一批**", "**第二批**", "**第三批**")))
+    _RUNNER_SRC = open(os.path.join(SCRIPTS, "run_backtest_assertions.py"),
+                       encoding="utf-8").read()
+    check("ANSWERS.md 保有四批答案",
+          all(b in _ANS for b in ("**第一批**", "**第二批**", "**第三批**")) and "第四批" in _ANS)
+    check("PROMPT 已写入第四批假阳性专项",
+          "第四批" in _PROMPT and "假阳性专项" in _PROMPT)
+    check("PROMPT 已写入三条计分轨",
+          "三条独立计分轨" in _PROMPT and "假阳性轨" in _PROMPT)
+    check("PROMPT 已写入放松性改动红灯规则",
+          "红灯规则" in _PROMPT)
+    check("PROMPT 隔离协议不硬依赖 subagent（三档降级）",
+          all(x in _PROMPT for x in ("A 档", "B 档", "C 档")))
+    check("runner 已实现假阳性轨且不接受 known_failures 豁免",
+          "false_positive_track" in _RUNNER_SRC and "假阳性绕过 known_failures 豁免" in _RUNNER_SRC)
     check("ANSWERS.md 带禁止提前阅读的警示", "Step 4 之前禁止打开" in _ANS)
 # PROMPT 的档位序数须与 alert_codes.VERDICT_ORDINAL 一致
 for _v, _o in AC.VERDICT_ORDINAL.items():

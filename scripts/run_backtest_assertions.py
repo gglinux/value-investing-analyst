@@ -174,6 +174,24 @@ def check_case(case, do_rerun=False):
         res["verdict_track"] = f"未命中（实际 {ORDINAL_TO_VERDICT.get(got)}，期望 {[ORDINAL_TO_VERDICT.get(e) for e in exp]}）"
         res["failures"].append("档位轨未命中")
 
+    # ---- 假阳性轨（第三轨：独立计分，不接受 known_failures 豁免）----
+    # 只统计「官方期望拒绝/观察，系统却给出正面档位（序数 >=3）」。
+    # 单独成轨的理由见 PROMPT.md 第九节：错买与错过的代价不对称，合并进总分会让
+    # 「救回 2 个错过 + 新增 2 个错买」显示为战绩不变，而系统实际已显著变危险。
+    # 与另两轨的**不对称设计**：假阳性一旦出现即红灯，刻意不允许登记豁免。
+    POSITIVE_ORDINAL = 3
+    if exp is None or got is None:
+        res["false_positive_track"] = "不计分（无档位期望或缺 verdict_ordinal）"
+        res["false_positive"] = False
+    elif got >= POSITIVE_ORDINAL and max(exp) < POSITIVE_ORDINAL:
+        res["false_positive_track"] = (
+            f"假阳性（实际 {ORDINAL_TO_VERDICT.get(got)}，官方期望最高 "
+            f"{ORDINAL_TO_VERDICT.get(max(exp))}）")
+        res["false_positive"] = True
+    else:
+        res["false_positive_track"] = "无假阳性"
+        res["false_positive"] = False
+
     # ---- 引擎漂移检测 ----
     if do_rerun:
         actual, notes = rerun_engine(case)
@@ -204,6 +222,13 @@ def check_case(case, do_rerun=False):
                          "must_not_trigger" if "误触发" in f else
                          "engine_drift" if "漂移" in f else "other")
                    for f in res["failures"]))
+
+    # 假阳性绕过 known_failures 豁免：无论是否登记，一律计入 regressions（红灯）。
+    # 这是刻意的不对称——错买不可逆，不允许用"已知"把它变成不阻塞。
+    if res.get("false_positive"):
+        msg = f"假阳性轨红灯：{res['false_positive_track']}"
+        res["failures"].append(msg)
+        res["regressions"].append(msg)
     return res
 
 
@@ -234,24 +259,36 @@ def main():
     results = [check_case(c, do_rerun=args.rerun) for c in cases]
 
     w = max(len(r["name"]) for r in results) + 2
-    print(f"{'案例':<{w}} {'档位轨':<34} {'告警轨':<26} 结果")
-    print("-" * (w + 74))
+    print(f"{'案例':<{w}} {'档位轨':<34} {'告警轨':<26} {'假阳性轨':<12} 结果")
+    print("-" * (w + 88))
     for r in results:
         at = f"命中{len(r.get('assert_hits', []))} 漏{len(r.get('assert_misses', []))} 误触发{len(r.get('assert_false_fires', []))}"
+        fp = "假阳性" if r.get("false_positive") else "-"
         if r["regressions"]:
             ok = "回归失败"
         elif r["known"]:
             ok = "已知失败"
         else:
             ok = "通过"
-        print(f"{r['name']:<{w}} {r.get('verdict_track', '-'):<34} {at:<26} {ok}")
-    print("-" * (w + 74))
+        print(f"{r['name']:<{w}} {r.get('verdict_track', '-'):<34} {at:<26} {fp:<12} {ok}")
+    print("-" * (w + 88))
     clean = sum(1 for r in results if not r["failures"])
     known_only = sum(1 for r in results if r["known"] and not r["regressions"])
     regressed = [r for r in results if r["regressions"]]
+    fps = [r["name"] for r in results if r.get("false_positive")]
     print(f"{clean}/{len(results)} 全绿" +
           (f"，{known_only} 已知失败（登记在 answer.json known_failures）" if known_only else "") +
           (f"，{len(regressed)} 回归失败" if regressed else ""))
+    # 三轨分行陈述，禁止合并为单一战绩数字（PROMPT.md 第九节权重纪律）
+    scored = sum(1 for r in results if r.get("false_positive_track", "").startswith(("无假阳性", "假阳性")))
+    if fps:
+        print(f"假阳性轨：{len(fps)} 例红灯 → {fps}")
+        print("  ⛔ 放松性改动出现假阳性即否决，不得用『救回 N 个假阴性』抵扣。")
+    elif scored:
+        print(f"假阳性轨：0 例（本轮 {scored} 个案例参与该轨判定）")
+    else:
+        print("假阳性轨：未被检验（本轮无『官方期望拒绝/观察』的可判定案例）"
+              "——不得表述为『无假阳性』。")
 
     for r in results:
         if r["failures"] or r["notes"] or r.get("stale_known"):
