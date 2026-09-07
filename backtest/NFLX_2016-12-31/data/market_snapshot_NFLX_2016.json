@@ -1,0 +1,58 @@
+{
+  "company": "Netflix, Inc.",
+  "ticker": "NFLX",
+  "snapshot_date": "2016-12-31",
+  "currency_report": "USD",
+  "price": {
+    "value": 123.80,
+    "currency": "USD",
+    "note": "2016-12-31 为周六休市，取最后交易日 2016-12-30 收盘价"
+  },
+  "shares": {
+    "value": 429.145,
+    "unit": "million_shares",
+    "note": "429,145,023 股（Q3'16 10-Q dei EntityCommonStockSharesOutstanding，2016-10-20 申报，2016 年内无股份发行事件——2012 起无回购、SBC 增发为加权摊薄口径）；FD 股本 438.4M（Q3'16 股东信，含期权/RSU 摊薄），估值主口径用 dei 在外股本，敏感性提示 FD 口径 −1.6% 股本差"
+  },
+  "market_cap": {
+    "value": 53128,
+    "unit": "million",
+    "currency": "USD",
+    "note": "123.80 × 429.145M = 53,128.2M"
+  },
+  "valuation_multiples": {
+    "pe_ttm": 325.9,
+    "pe_ttm_note": "TTM 净利 = FY2015 122.641 − 9M'15 79.641 + 9M'16 119.9 = 162.9M（9M'15 NI 由 FY2015 − Q4'15 43 反推，Q4'15 NI 43 来自 Q3'16 股东信季表 Total including DVD 行）；PE_TTM = 53,128.2/162.9 = 325.9x",
+    "pe_fy2015": 433.3,
+    "pe_fy2015_note": "53,128.2/122.641 = 433.3x",
+    "pb_mrq": 21.0,
+    "pb_mrq_note": "53,128.2/2,529.0（Q3'16 末权益）= 21.0x",
+    "ps_fy2015": 7.84,
+    "ps_fy2015_note": "53,128.2/6,779.511（FY2015 收入）= 7.84x",
+    "ev_sales_fy2015": 7.53,
+    "ev_sales_note": "EV = 53,128.2 + 2,374.0（长期债）− 969.2（Q3'16 现金，不含短期投资）= 54,533；54,533/6,779.5 = 8.04x——此处 ev_sales 字段修正：EV/ FY2015 sales = 8.04x，含短期投资 501.4 后 EV = 54,031.6 → 7.97x；正式 EV 口径见 Phase 2",
+    "warning": "PE 326x / PB 21x / PS 7.8x——价格隐含的是对收入 CAGR 30%+ 与终局盈利能力的极端外推，任何常规盈利倍数锚在此均无意义，估值只能走收入驱动框架（reverse DCF / 远期情景）"
+  },
+  "source_prices": {
+    "daily_close": "东方财富 push2his 美股日K（secid=105.NFLX，fqt=0 不复权）：2016-12-30 收盘 123.800 美元（21 个交易日完整序列已存 workpapers）",
+    "52w_range": "东方财富日K与月K交叉：52 周低 79.95（2016-02 盘中）、高 129.29（2016-10 盘中）；2016-12-28 盘中高点 129.07 为次高"
+  },
+  "kline_2016_dec": {
+    "avg_close_20d": 124.347,
+    "avg_close_20d_note": "2016-12-02 至 2016-12-30 共 20 个交易日收盘算术均值（东财日K）",
+    "avg_volume_20d_shares_million": 5.987,
+    "avg_turnover_20d_pct": 1.395,
+    "turnover_note": "20 日均量 5.987M 股/日 ÷ 在外股本 429.145M ≈ 1.40%/日",
+    "position_in_52w_range_pct": 88.9,
+    "position_note": "现价 123.80 位于 52 周区间 [79.95, 129.29] 的 88.9% 分位——接近历史高位区",
+    "note": "2016 年 NFLX +8.2%（年初 114.4 → 123.80，经 2 月低点 79.95 的 V 型反转）；较 52 周低点 +54.8%、较高点 −4.2%"
+  },
+  "risk_free": {
+    "us_10y_treasury_yield_pct": 2.45,
+    "source": "2016-12-30 美国 10 年期国债收益率约 2.45%（UST 年末水平；美联储 H.15 口径 2.448%），2016 年内区间 [1.36, 2.62]",
+    "note": "折现率下限 r ≥ max(10%, 10Y + 4pct) = max(10%, 6.45%) = 10%"
+  },
+  "market_context": {
+    "note": "2016 年末美股处于 post-election rally（标普 2016 年 +9.5%，11 月大选后高波动上行）；流媒体赛道竞争格局：Amazon Prime Video 扩张、HBO Now、Hulu（Disney/Fox/Comcast 合资）；Netflix 2016 年国际扩张 130+ 国、净增会员 19M+ 主动投入期",
+    "forbidden_data_warning": "2017 年及以后实际行情（含 2017-2021 大涨）为 forbidden data，不进入任何分析输入"
+  }
+}

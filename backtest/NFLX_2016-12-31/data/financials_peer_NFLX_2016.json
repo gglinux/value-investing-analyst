@@ -1,0 +1,38 @@
+{
+  "company": "NFLX 同业对照（2016 时点）",
+  "ticker": "DIS / CMCSA / FOXA",
+  "is_peer": true,
+  "currency": "USD",
+  "unit": "million",
+  "accounting_standard": "US GAAP",
+  "fiscal_year_end": "DIS 9月末（FY标签）/ CMCSA 12-31 / FOXA 6月末（FY标签）",
+  "data_notes": [
+    "同业对照底稿（竞对仅用于五维定性中的规模/利润率量级对照，不进估值管线，跳过双源核对）。",
+    "来源：SEC companyfacts XBRL API（DIS CIK0001001039 / CMCSA CIK0001166691 / FOX CIK0001308161）原报值；Disney FY2015 用官方 Q4 FY15 财报 PDF（investors.thewaltdisneycompany.com）补齐：FY2015 rev 52,465 / NI attributable 8,382 / EPS 4.90。",
+    "⚠️ 财年错位：Disney FY = 10月至次年9月（FY2015 = 2014-10~2015-09，含额外一周 53 周）；Fox FY = 上年7月至当年6月。与 Netflix（12-31）对照时按'财年'标签对齐，不硬转日历年。",
+    "⚠️ Fox NI 口径：21CF 的 XBRL 无 NetIncomeLoss 年度归母标签，用 ProfitLoss（含少数股东权益）近似；FY2013 含 News Corp 拆分相关一次性收益（量级失真）；FY2016（2015-07~2016-06）为 2016-08 申报、时点内可用。",
+    "TWX（Time Warner Inc，HBO/Turner/WB 母公司，Netflix 最直接内容竞对）XBRL 数据在 EDGAR 不可得（ticker 已随 2018 AT&T 收购退市移除，老 CIK 无 XBRL），以 Disney+Fox 覆盖'内容巨头'维度、Comcast 覆盖'分发+内容'维度。",
+    "定位：Netflix 2016 年收入 6.8B vs 竞对 27-75B——规模差距一个数量级；但 Netflix 净利率 0.5-7% vs 竞对 9-16%，差距根因是内容支出费用化节奏（Netflix 买内容当期全额费用化摊销、收入滞后确认）+ 主动扩张期，非商业模式盈利能力缺陷。"
+  ],
+  "annual": [
+    {"year": "FY2012", "entity": "Disney", "revenue": 42278, "net_income": 5682, "net_margin_pct": 13.4, "note": "含 ESPN 媒体网络+乐园+影视；净利率 13.4%", "publish_date": null},
+    {"year": "FY2012", "entity": "Comcast", "revenue": 55842, "net_income": 4160, "net_margin_pct": 7.4, "note": "有线电视+NBC环球（2011 年完成收购 NBCU）；净利率 7.4%（收购摊销拖累）", "publish_date": null},
+    {"year": "FY2012", "entity": "Fox", "revenue": 33706, "net_income": null, "note": "FY2012（2011-07~2012-06）为 News Corp 拆分前整体口径，与拆分后 21CF 不可比，仅列作规模参考", "publish_date": null},
+    {"year": "FY2013", "entity": "Disney", "revenue": 45041, "net_income": 6136, "net_margin_pct": 13.6, "note": "", "publish_date": null},
+    {"year": "FY2013", "entity": "Comcast", "revenue": 62570, "net_income": 6203, "net_margin_pct": 9.9, "note": "", "publish_date": null},
+    {"year": "FY2013", "entity": "Fox", "revenue": 27675, "net_income": 7323, "net_margin_pct": 26.5, "note": "ProfitLoss 含少数；2013-06 分拆 News Corp 年，含大额一次性，量级失真仅作参考", "publish_date": null},
+    {"year": "FY2014", "entity": "Disney", "revenue": 48813, "net_income": 7501, "net_margin_pct": 15.4, "note": "冰雪奇缘年", "publish_date": null},
+    {"year": "FY2014", "entity": "Comcast", "revenue": 64657, "net_income": 6816, "net_margin_pct": 10.5, "note": "", "publish_date": null},
+    {"year": "FY2014", "entity": "Fox", "revenue": 31867, "net_income": 4646, "net_margin_pct": 14.6, "note": "ProfitLoss 含少数；分拆后 21CF 口径", "publish_date": null},
+    {"year": "FY2015", "entity": "Disney", "revenue": 52465, "net_income": 8382, "net_margin_pct": 16.0, "note": "官方财报：rev 52,465（53 周）/ NI attributable 8,382；市值 ~$150B（2015 年报），2016-12-30 市值 ~$178B", "publish_date": null},
+    {"year": "FY2015", "entity": "Comcast", "revenue": 74510, "net_income": 8163, "net_margin_pct": 11.0, "note": "", "publish_date": null},
+    {"year": "FY2015", "entity": "Fox", "revenue": 28987, "net_income": 8537, "net_margin_pct": 29.5, "note": "ProfitLoss 含少数（归母 ~8,313）；含一次性项目，持续经营口径更低", "publish_date": null},
+    {"year": "FY2016", "entity": "Fox", "revenue": 27326, "net_income": null, "note": "2015-07~2016-06，filed 2016-08-11 时点内；NI 未提取（ProfitLoss FY2016 未跑）", "publish_date": null}
+  ],
+  "peer_summary": {
+    "revenue_scale_2015": "Netflix 6.8B ≈ Disney 52.5B 的 13%、Comcast 74.5B 的 9%、Fox 29.0B 的 23%",
+    "margin_contrast": "Netflix 2015 净利率 1.8%（GAAP）/ 2012-2015 均值 2.4% vs Disney 13.4-16.0% / Comcast 7.4-12.2% / Fox 14.6%+（持续经营口径）",
+    "growth_contrast": "Netflix 2011-2015 收入 CAGR 20.6%（3,204.6→6,779.5）；2007-2015 CAGR 24.1% vs Disney FY2012-FY2015 ~7.5% / Comcast 2011-2015 ~7.5%",
+    "moat_lens": "内容库网络效应与规模化的双刃剑：竞对靠品牌+IP 多窗口变现（影院→家庭→授权→乐园），Netflix 单窗口（订阅）但边际成本低；2016 时点的关键问题是内容军备竞赛下的融资依赖（2015 发债 1.5B）与利润率拐点时点"
+  }
+}

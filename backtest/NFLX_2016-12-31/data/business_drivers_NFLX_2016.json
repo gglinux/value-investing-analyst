@@ -1,0 +1,71 @@
+{
+  "company": "Netflix, Inc.",
+  "ticker": "NFLX",
+  "company_type": "高成长再投入型（与 financials 底稿一致）",
+  "unit_note": "量纲说明：volume=平均总付费会员(百万，=(期初+期末)/2，streaming paid + DVD paid 合计)；price=每付费会员年收入(美元/年，推导值=当年总收入/平均总付费会员，含分部结构摊薄——streaming vs DVD、US vs International 价差与汇率影响均混入推导价，与营收同源——量×价勾稽恒等。分部 ASP 原始值见 drivers 各行 note：US streaming 2015 $8.50/月、International $7.48/月、DVD $10.30/月)。收入的首要驱动因子为付费会员数（订阅模式收入=会员数×月费×12，公式级恒等）。",
+  "drivers": [
+    {
+      "year": 2012,
+      "volume": 35.117,
+      "price": 102.78,
+      "volume_label": "平均总付费会员(百万；期末38,412千=Domestic streaming 25,471+International 4,892+DVD 8,049；期初31,821千=20,153+629+11,039)",
+      "price_label": "每付费会员年收入(美元/年，=3,609.282M/35.117M，推导值；月均$8.57)",
+      "source": "FY2012 10-K（filed 2013-02-01）与 FY2014 10-K MD&A 分部会员表（filed 2015-01-29）",
+      "source_level": "A",
+      "note": "Qwikster 危机年：净利率 0.48%；streaming 净增 5,475 千（Domestic）+4,263 千（International，首次完整年度）；DVD 净减 2,941 千——转型实质推进。ASP 分部：US streaming $7.97/月（2013 表回溯）、Intl $7.80/月、DVD $10.21/月"
+    },
+    {
+      "year": 2013,
+      "volume": 43.306,
+      "price": 101.02,
+      "volume_label": "平均总付费会员(百万；期末48,199千=31,712+9,722+6,765)",
+      "price_label": "每付费会员年收入(美元/年，=4,374.562M/43.306M，推导值；月均$8.42)",
+      "source": "FY2015 10-K MD&A 分部会员表（filed 2016-01-28，Domestic/International/DVD 三段均含 2013 列）",
+      "source_level": "A",
+      "note": "国际扩张元年（2013-01 起欧洲多国上线）：International paid 净增 4,830 千（+99%）；US streaming 净增 6,241 千；ASP 分部：US $7.97/Intl $8.26/DVD $10.25"
+    },
+    {
+      "year": 2014,
+      "volume": 54.172,
+      "price": 101.62,
+      "volume_label": "平均总付费会员(百万；期末60,144千=37,698+16,778+5,668)",
+      "price_label": "每付费会员年收入(美元/年，=5,504.656M/54.172M，推导值；月均$8.47)",
+      "source": "FY2015 10-K MD&A 分部会员表（filed 2016-01-28）",
+      "source_level": "A",
+      "note": "国际提速年：International paid 净增 7,347 千（+73%）、期末 16,778 千首次显著放量；US streaming 净增 5,986 千；ASP 分部：US $8.14（+2%）/Intl $8.34/DVD $10.29"
+    },
+    {
+      "year": 2015,
+      "volume": 67.885,
+      "price": 99.87,
+      "volume_label": "平均总付费会员(百万；期末75,626千=43,401+27,438+4,787)",
+      "price_label": "每付费会员年收入(美元/年，=6,779.511M/67.885M，推导值；月均$8.32——同比降因低ASP国际会员占比上升)",
+      "source": "FY2015 10-K MD&A 分部会员表（filed 2016-01-28）",
+      "source_level": "A",
+      "note": "全球互联网电视定位年：期末总 paid 75.63M 中 International 27,438 千（占 streaming 39%）；期末总会员 70,839 千 streaming paid 与 Q3'16 股东信 Q4'15 列 70.84M 完美互证 ✓；ASP 分部：US $8.50（+4%，提价+计划结构）/Intl $7.48（−10%，汇率拖累——公司口径确认 unfavorable FX）/DVD $10.30；国内贡献利润率 33%（目标 2020 年 40%）"
+    },
+    {
+      "year": 2016,
+      "volume": 83.663,
+      "price": 105.56,
+      "volume_label": "平均总付费会员(百万，估算；streaming paid 期末 91.94M 总/87.78M paid（Q4'16F 股东信）+ DVD paid ~3.9E；期初 75.63M)",
+      "price_label": "每付费会员年收入(美元/年，=8,832.1E/83.663E，推导值；月均$8.80E)",
+      "source": "Q3'16 股东信 8-K EX-99.1（filed 2016-10-17）Q4'16F 表 + DVD 趋势外推",
+      "source_level": "A（指引）/B（DVD 外推与全年平均为估算）",
+      "note": "全年为推算锚（不进年度序列）：9M'16 净增 paid streaming 12.44M（77.71−83.28 期末环比+Q1 净增 6.74M 中含 US 1.19M）；Q4'16F 净增 5.20M；9M'16 streaming 收入 5,937（US 3,673 + Intl 2,264）；量价结构：全球量增 +30%、价格企稳回升（Intl ASP 2016 恢复 + 汇率回稳）"
+    }
+  ],
+  "unit_economics": {
+    "metric": "每会员内容成本（月）",
+    "value": 7.15,
+    "trend": "上升",
+    "note": "2015 全年内容支出 5,771.7M ÷ 平均 streaming paid 会员 62.66M ÷ 12 = $7.67/月（现金口径）；摊销口径 3,484.8 ÷ 62.66 ÷ 12 = $4.64/月。对比每会员月收入 $8.32：现金口径下内容成本已占收入 92%——增长依赖持续融资（2015 发债 1.5B、2016-10 股东信预告再发债）的关键量化证据。US 分部贡献利润率 33%（正）、International −17%（补贴换规模），边际盈利结构健康但整体仍处投入期",
+    "source": "FY2015 10-K R5 现金流量表 + FY2015 10-K MD&A 分部表"
+  },
+  "crosscheck": {
+    "segment_revenue_identity_2015": "Domestic streaming 4,180.3 + International streaming 1,953.4 + DVD 645.7 = 6,779.4 ≈ 总收入 6,779.5 ✓（FY2015 10-K 分部贡献利润表）",
+    "segment_revenue_identity_2014": "3,431.4 + 1,308.1 + 765.2 = 5,504.7 ✓",
+    "membership_letter_tieout": "2015 期末 streaming paid 70,839 千（10-K 分部加总 43,401+27,438）≡ 股东信 Q4'15 70.84M ✓",
+    "unique_subscriber_bridge_2008_2012": "unique subscribers（去重）期末：2008 9,390 → 2009 12,268 → 2010 20,010 → 2011 26,253 → 2012 35,489 千（FY2012 10-K MD&A 合并表）——2012 起分部口径改为 streaming+DVD 付费订阅（不去重），2012 unique 35,489 vs 分部加总 38,412 差 2,923 千为 DVD+streaming 双订阅重叠，两口径用途已区分"
+  }
+}

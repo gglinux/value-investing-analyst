@@ -1,0 +1,92 @@
+{
+  "workpaper": "phase0_forensic",
+  "case": "NFLX_2016-12-31",
+  "prepared_on": "2026-09-07",
+  "information_cutoff": "2016-12-31（FY2016 10-K filed 2017-01-27 与 Q4'16 股东信 2017-01-19 为 forbidden data，本次检索已排除该窗口内的官方文件）",
+  "purpose": "Phase 0 排雷：对立检索（空头论据）、监管/审计红旗核查、OCF vs 净利长期背离定性。结论：不触发一票否决，进入正常管线。",
+  "search_rounds": [
+    {
+      "round": 1,
+      "query": "Netflix 2016 short seller bear case content amortization accounting criticism cash burn",
+      "found": [
+        "NewConstructs 空头分析（时点内）",
+        "Ovum 2016 两篇：'aggressive content accounting'（时点内）",
+        "Seeking Alpha 摊销判断分析（时点内）",
+        "Investing.com 内容费用 vs 现金支付差额（时点内）"
+      ]
+    },
+    {
+      "round": 2,
+      "query": "Netflix SEC settlement 2010 RegFD Facebook Reed Hastings disclosure violation / Netflix 10-K 2015 Ernst Young audit opinion material weakness",
+      "found": [
+        "SEC 2012-07 Wells Notice（Hastings Facebook 帖）→ 2013-04 SEC Section 21(a) 调查报告，未认定违规、未执法、未罚款",
+        "FY2015 10-K（accession 0001065280-16-000047，filed 2016-01-28）：Ernst & Young LLP 标准无保留意见，签署地 San Jose 2016-01-28；管理层 ICFR 年报存在；检索未见 material weakness"
+      ]
+    }
+  ],
+  "forensic_checklist": [
+    {
+      "item": "做空报告/财务造假指控",
+      "finding": "存在系统性空头叙事（NewConstructs/Ovum 等 4 组，见 adversarial_findings），集中于内容摊销会计与现金烧钱，无收入确认造假指控",
+      "verdict": "红旗但非排雷：空头论据与方案 B 口径同源（揭会计面纱看现金），由管线独立验证"
+    },
+    {
+      "item": "SEC 处罚/调查",
+      "finding": "2012-07 Hastings 个人 Facebook 帖披露'6 月流媒体观看超 10 亿小时'未走 8-K/新闻稿 → 2012-12 Wells Notice → 2013-04 SEC 发布 Section 21(a) 调查报告：未认定违规、不执法、不罚款，顺势发布社交媒体 RegFD 指引",
+      "verdict": "披露渠道合规争议（RegFD 适配先驱案），与财务数据真实性无关，不构成红旗",
+      "note": "manifest 初稿误记为'2010 年'，本轮检索更正为 2012-07 事件"
+    },
+    {
+      "item": "审计意见",
+      "finding": "FY2015 10-K：EY LLP 标准无保留意见 + 管理层 ICFR 年报（Item 9A）；无 material weakness 记录；历年审计机构稳定",
+      "verdict": "无红旗"
+    },
+    {
+      "item": "未解决员工评论/集体诉讼/监管和解",
+      "finding": "无公开的未解决 SEC 员工评论（Item 1B）红旗记录；无财务造假集体诉讼；2010 年前后的诉讼（版权/价格案）与财务真实性无关",
+      "verdict": "无红旗"
+    },
+    {
+      "item": "OCF vs 净利长期背离（forensic 核心项）",
+      "finding": "2010-2015 六年中四年 OCF 低于净利（2015: OCF 1,644.9 vs NI 122.6 为正背离；2011-2013 OCF 显著低于 NI），叠加 FCF 长期为负",
+      "diagnosis": {
+        "form": "订阅预收现模式下的主动再投入形态，非收入确认造假形态",
+        "evidence": [
+          "收入端：月费订阅预收现（先收钱后确认收入），应收账款极小、无渠道压货载体——造假形态的典型入口（虚增收入）在此商业模式下天然缺乏抓手",
+          "费用端：争议全部在内容摊销速度（管理层判断空间 6 个月-5 年），摊销<现金支出的差额是内容资产在积累（资本化扩张）而非费用隐瞒——资产科目膨胀伴随真实现金流出，审计与现金流勾稽可验证",
+          "列报证据：2010 年起内容采购由投资段移入经营段，ocf_adj−capex 恒等于公司股东信 FCF 口径（2015: 5,022.2−5,940.9=−918.6 ≡ −749.4−91.2−78.0=−918.6 ✓；9M'16 −1,021 ✓）——现金缺口全量可见，无隐藏通道"
+        ],
+        "verdict": "背离根因定性为内容支出会计列报+主动扩张，进入 Phase 2 正常化裁决（主动投入型低利润率 vs 周期区分）"
+      }
+    }
+  ],
+  "adversarial_findings": [
+    {
+      "id": "AF1",
+      "source": "NewConstructs（时点内空头分析）",
+      "claim": "ROIC 现金口径从约 55%（会计口径）跌至约 5%；内容成本 2011-2015 CAGR 约 53% 远超收入增速 30%；TTM FCF 约 −1.4B；2011-2014 累计烧钱约 2B",
+      "response": "方向与本案方案 B 一致（揭开会计面纱看现金再投资）。ROIC 恶化与 FCF 缺口将由 Phase 2 管线以 fcf_true / worst_year_margin 独立验证，不作为输入。数字量级与本案底稿自洽（2015 方案 B FCF −918.6M、2016E FCF_E −1,485M）"
+    },
+    {
+      "id": "AF2",
+      "source": "Ovum 2016 两篇（时点内）",
+      "claim": "'激进的的内容会计'：streaming 内容摊销期最长 5 年（vs DVD 时代 1-3 年加速摊销），直线摊销与观看模式错配致费用后置抬高当期净利；9M'16 每付费会员月 FCF 约 −$1.33；2016-10 再发债 $1B",
+      "response": "空头指控方向为'摊销太慢'，与方案 B 相反但同源——方案 B 不改摊销假设，直接把内容支出从经营段移回投资段用现金口径消除摊销政策争议；管线 NormalizedEarnings 用全期平均净利率，对摊销期变更不敏感。每会员月 FCF −$1.33 与本案 unit_economics（每会员内容成本 $7.67/月现金 vs 收入 $8.32/月）自洽，属扩张期融资依赖证据而非造假证据。再发债对应底稿债务序列（2016-10 $1B）已记录"
+    },
+    {
+      "id": "AF3",
+      "source": "Seeking Alpha（时点内）",
+      "claim": "内容摊销期 6 个月-5 年依赖管理层判断；Q3'16 摊销方法变更致 OP 减少 $19.8M",
+      "response": "摊销方法变更已含于 9M'16 实际数（进序列），幅度 <0.3% 收入，被管线全期平均法吸收；底稿 data_notes 已注明摊销政策敏感性"
+    },
+    {
+      "id": "AF4",
+      "source": "Investing.com（时点内）",
+      "claim": "9M'16 内容费用（摊销）约 3.4B vs 现金支付约 4.1B，差额持续扩大=未付现金费用计入利润；'内容库价值缩水 40%'指控",
+      "response": "摊销<现金支出正是再投入扩张期的会计特征（内容资产净额在积累而非耗竭）。同一批空头既指控'摊销太慢'又指控'内容库缩水 40%'，两个论据互斥（摊销慢→库膨胀；库缩水→摊销过快），内部矛盾削弱其证据力。方案 B 恒等式已证明现金缺口全量可见"
+    }
+  ],
+  "crosscheck_bonus": "第二轮检索附带获得 FY2015 利润表原值：Revenues 6,779,511K / Net income 122,641K / Operating income 305,826K / Diluted shares 436,456K / Interest expense 132,716K——与底稿 financials_NFLX_2016.json 2015 行全部吻合，构成底稿外的独立交叉验证",
+  "conclusion": "Phase 0 排雷完成：存在空头叙事但均属'再投入烧钱'维度而非造假维度；监管事件（RegFD）与财务真实性无关；审计无保留。不触发一票否决，进入 Phase 2 compute_metrics。",
+  "forbidden_data_note": "检索结果中如出现 FY2016 实际业绩（Q4'16 财报 2017-01-19 后数据），一律未采信、未进序列；2016 全年以 9M'16 实际 + Q4'16F 公司指引推算（estimate 标注，仅作正常化锚）"
+}

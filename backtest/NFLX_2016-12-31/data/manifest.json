@@ -1,0 +1,164 @@
+{
+  "company": "Netflix, Inc.",
+  "ticker": "NFLX",
+  "analysis_as_of": "2016-12-31",
+  "case": "B2-09（backtest，第二批案例9）",
+  "information_cutoff": {
+    "date": "2016-12-31",
+    "rules": [
+      "仅使用 2016-12-31 当日或之前公开发布的信息",
+      "最新年度报表 = FY2015 10-K（filed 2016-01-28）；最新季度报表 = Q3'16 10-Q（filed 2016-10-20）+ Q3'16 股东信 8-K EX-99.1（filed 2016-10-17）",
+      "FY2016 10-K（filed 2017-01-27）与 Q4'16 股东信（2017-01-19）为 forbidden data",
+      "2016 全年收入/净利以 9M 实际 + Q4'16F 指引推算，仅作正常化锚交叉验证，不进年度序列",
+      "不使用模型对 2017 年及之后事件（内容支出转向、利润率拐点、股价大涨）的记忆"
+    ],
+    "forbidden_data_encountered": "companyfacts JSON 含 2016-12-31 之后全部年度数据（FY2016-FY2025），提取脚本以 end<=2015-12-31 + 原报优先规则硬性截断；FY2016 10-K 值（收入 8,830.7M、净利 558.9M 等）未读取未记录；SEC FilingSummary/R 文件仅使用 FY2015 10-K 及更早申报。东财行情接口仅取 2016-12-31 前月K/日K。"
+  },
+  "official_filing_missing": {
+    "years": [
+      2016
+    ],
+    "reason": "回测信息截断纪律：分析基准日 2016-12-31，FY2016 10-K 于 2017-01-27 才申报，属截断后信息，禁止使用。可用最新信息为 FY2015 10-K + Q3'16 10-Q + Q3'16 股东信（含 Q4'16F 指引，已计入正常化锚推算）。"
+  },
+  "latest_quarter_checked": {
+    "period": "2016Q3（2016-07-01 至 2016-09-30，9M 累计）",
+    "publish_date": "2016-10-17（股东信）/ 2016-10-20（10-Q）",
+    "finding": "9M'16 收入 6,353.1M（YoY +28.2%）、净利 119.9M、OCF −916.8M、FCF（公司口径）−1,021M；Q3 单季 streaming 收入 2,158M、贡献利润 407M（margin 18.8%）、净利 52M（vs 指引 22M）；付费会员 83.28M（净增 3.57M）；内容义务 10.4→14.4B；'计划未来几周再发债'；债务/总资本化 ~5%。属主动扩张投入形态（内容支出加速+国际亏损补贴），非盈利质量恶化。",
+    "checked_on": "2026-09-07"
+  },
+  "adversarial_check": {
+    "checked_on": "2026-09-07",
+    "queries": [
+      "Netflix 2016 short seller bear case content amortization accounting criticism cash burn",
+      "Netflix SEC settlement RegFD Facebook Reed Hastings disclosure violation",
+      "Netflix 10-K 2015 Ernst Young audit opinion internal control material weakness"
+    ],
+    "findings": [
+      "空头叙事存在（时点内）：NewConstructs（ROIC 现金口径 55%→5%、内容成本 CAGR 53% vs 收入 30%、TTM FCF −1.4B）、Ovum（'激进内容会计'：摊销期最长 5 年 vs DVD 1-3 年、每会员月 FCF −$1.33）、Seeking Alpha（摊销期管理层判断空间、Q3'16 方法变更 −$19.8M OP）、Investing.com（9M'16 摊销 3.4B vs 现金支付 4.1B）——全部属'再投入烧钱'维度，无收入确认造假指控。",
+      "【应答】空头指控与本案方案 B 口径同源（揭会计面纱看现金再投资），由管线 fcf_true / worst_year_margin 独立验证，不作输入；方案 B 恒等式（ocf_adj−capex ≡ 公司股东信 FCF，2015 −918.6M ✓）证明现金缺口全量可见。空头内部矛盾：既指控摊销太慢又指控内容库缩水 40%，互斥。",
+      "监管记录：2012-07 Hastings Facebook 帖（1B 小时观看量）→ Wells Notice → 2013-04 SEC 21(a) 报告未认定违规、未执法、未罚款，顺势发布社交媒体 RegFD 指引——披露渠道合规争议，与财务数据真实性无关。（初稿误记 2010 年，已更正为 2012-07）",
+      "审计记录：FY2015 10-K（filed 2016-01-28）EY LLP 标准无保留意见 + 管理层 ICFR 年报，无 material weakness；无财务造假集体诉讼。",
+      "OCF vs 净利长期背离定性：订阅预收现模式（先收钱后确认收入、应收极小、无压货载体）下内容支出列报+主动扩张所致，非收入确认造假形态——详细论证见 data/workpapers/phase0_forensic_20260907.json。",
+      "附带交叉验证：第二轮检索获得 FY2015 利润表原值（rev 6,779,511K / NI 122,641K / diluted 436,456K）与底稿全部吻合。"
+    ],
+    "workpaper": "data/workpapers/phase0_forensic_20260907.json",
+    "status": "Phase 0 完成：不触发一票否决，进入 Phase 2"
+  },
+  "data_sources": {
+    "financials": {
+      "primary": "SEC EDGAR companyfacts API（CIK0001065280），end<=2015-12-31 截断、10-K 原报值优先",
+      "supplement_10k_R_files": [
+        "FY2015 10-K accession 0001065280-16-000047：R2 利润表 / R5 现金流量表 / R6 资产负债表 / R39 内容资产明细（2013-2015 全年内容支出/摊销/债务/权益）",
+        "FY2012 10-K accession 0001065280-13-000008：R2 利润表 / R3 综合收益 / R4 现金流量表（2010-2012 内容支出/摊销）/ R5 资产负债表（2011/2012 债务含 related party 200M）",
+        "FY2010 10-K accession 0001193125-11-040217：R2.xml 资产负债表（2010/2009 债务 200M）",
+        "FY2009 10-K accession 0001193125-10-036181：R6.xml 现金流量表（2007-2009 内容采购在投资段/内容摊销/ΔWC）"
+      ],
+      "interim": "Q3'16 10-Q（filed 2016-10-20，XBRL 9M 数据 + dei 股本 429,145,023）",
+      "guidance": "Q3'16 股东信 8-K EX-99.1（filed 2016-10-17）：Q4'16F 指引 + 季度 OCF/FCF/内容义务表 + 9M'16 现金流量表附表"
+    },
+    "market": {
+      "price": "东方财富 push2his 美股日K（secid=105.NFLX，fqt=0）：2016-12-30 收盘 123.80 美元 + 2016-12 全月 21 个交易日（工作区 workpapers 留存）",
+      "risk_free": "美国 10 年期国债 2016 年末 ~2.45%（折现率下限规则 max(10%, 10Y+4pct)=10%）"
+    },
+    "peers": "SEC companyfacts（DIS CIK0001001039 / CMCSA CIK0001166691 / FOX CIK0001308161）+ Disney 官方 FY2015 Q4 财报 PDF；TWX 无 XBRL 弃用"
+  },
+  "accounting_policies_reviewed": {
+    "content_amortization": "内容支出全额资本化、按 PV 授权/自制资产摊销（10-K Note：内容摊销 2015 3,484.8M vs 现金支出 5,849.6M）——损益滞后确认是 OCF 长期低于净利的根本原因，属会计政策形态而非造假形态；内容负债 4,815.4M 与内容义务 ~14.4B（Q3'16，含未入表承诺）并列披露",
+    "oe_calibration": "方案 B（内容支出并入 capex、OCF 对应调整）与公司股东信 FCF 口径恒等（2015：−918.6M ≡ −918.6M）已机器验证",
+    "split_adjustment": "7:1 拆股（2015-07-15 生效）：2007-2012 摊薄股本 ×7 调整，序列平滑性验证通过"
+  },
+  "workpapers": "data/workpapers/（行情原始返回、R 文件、股东信原文、EDGAR 申报索引）",
+  "next_steps": [
+    "Phase 0 排雷正式记录（forensic-checklist + 对立检索）",
+    "Phase 2 定量画像：compute_metrics → 正常化裁决（主动投入型低利润率 vs 周期的区分）",
+    "Phase 3 五维定性（护城河宽/窄/无裁决——OBS-STAGE4-03 复检关键输入）",
+    "Phase 4 估值双闸门 + scenarios + 三师红队",
+    "Phase 5 HTML 报告 + verify_report 119 项"
+  ],
+  "files": {
+    "data/financials_NFLX_2016.json": {
+      "source": "EDGAR companyfacts + 4份10-K R文件 + Q3'16股东信",
+      "level": "A",
+      "fetched": "2026-09-07",
+      "coverage": "2007-2015 年度 + 2016 9M/指引",
+      "validated": "validate_data 通过（0错/5警）+ crosscheck_official 通过（0错/5警，豁免2科目已登记）+ check_transcription 通过（口径豁免26项）"
+    },
+    "data/market_snapshot_NFLX_2016.json": {
+      "source": "东方财富 push2his 美股日K（secid=105.NFLX）+ UST 10Y",
+      "level": "A",
+      "fetched": "2026-09-07",
+      "coverage": "2016-12-30 收盘 + 52周区间",
+      "validated": "check_market_snapshot 三角校验通过（偏差0.00%）"
+    },
+    "data/business_drivers_NFLX_2016.json": {
+      "source": "FY2012/FY2014/FY2015 10-K MD&A 分部会员表 + Q3'16股东信",
+      "level": "A",
+      "fetched": "2026-09-07",
+      "coverage": "2012-2016 量价分解 + 单位经济",
+      "validated": "分部收入勾稽恒等 + 会员数与股东信互证（70.84M≡70.84M）"
+    },
+    "data/financials_peer_NFLX_2016.json": {
+      "source": "SEC companyfacts（DIS/CMCSA/FOX）+ Disney 官方财报",
+      "level": "A/B",
+      "fetched": "2026-09-07",
+      "coverage": "FY2012-FY2016",
+      "validated": "竞对跳过双源核对（is_peer）"
+    },
+    "data/raw/companyfacts.json": {
+      "source": "EDGAR companyfacts API CIK0001065280",
+      "level": "A",
+      "fetched": "2026-09-07",
+      "coverage": "全历史（end<=2015-12-31 截断使用）",
+      "validated": "crosscheck_official 比对源"
+    },
+    "data/raw/companyfacts_dis.json / _cmcsa.json / _fox.json": {
+      "source": "EDGAR companyfacts API",
+      "level": "A",
+      "fetched": "2026-09-07",
+      "coverage": "竞对 FY2012-2016",
+      "validated": "竞对用途"
+    },
+    "data/raw_edgar_annual.json": {
+      "source": "extract_edgar_annual.py 抽取产物",
+      "level": "A",
+      "fetched": "2026-09-07",
+      "coverage": "2007-2015",
+      "validated": "check_transcription 比对源"
+    },
+    "data/filings/tenk_2015_R2/R5/R6/R39.htm + tenk_2015_main.htm": {
+      "source": "FY2015 10-K accession 0001065280-16-000047",
+      "level": "A",
+      "fetched": "2026-09-07",
+      "coverage": "2013-2015 三表+内容明细+MD&A",
+      "validated": "与 companyfacts 交叉一致"
+    },
+    "data/filings/tenk_2012_R3/R4/R5.htm + tenk_2012_main.htm + tenk_2012_R2.htm": {
+      "source": "FY2012 10-K accession 0001065280-13-000008",
+      "level": "A",
+      "fetched": "2026-09-07",
+      "coverage": "2010-2012",
+      "validated": "OCF 2011/2010 与 companyfacts 一致"
+    },
+    "data/filings/tenk_2010_R2.xml + tenk_2009_R6.xml": {
+      "source": "FY2010 10-K 0001193125-11-040217 / FY2009 10-K 0001193125-10-036181",
+      "level": "A",
+      "fetched": "2026-09-07",
+      "coverage": "2007-2010",
+      "validated": "OCF/NI/回购三列与 companyfacts 一致"
+    },
+    "data/filings/tenk_2014_main.htm": {
+      "source": "FY2014 10-K accession 0001065280-15-000006",
+      "level": "A",
+      "fetched": "2026-09-07",
+      "coverage": "2013/2014 分部会员表",
+      "validated": "与 FY2015 10-K 对照列一致"
+    },
+    "data/filings/q3_2016_shareholder_letter.htm": {
+      "source": "Q3'16 8-K EX-99.1（filed 2016-10-17）",
+      "level": "A",
+      "fetched": "2026-09-07",
+      "coverage": "Q4'16F 指引 + 季度 OCF/FCF/内容义务 + 9M 现金流量表",
+      "validated": "9M OCF 与 10-Q XBRL 一致（−916.8）"
+    }
+  }
+}
