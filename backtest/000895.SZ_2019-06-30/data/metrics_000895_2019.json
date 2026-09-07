@@ -1,0 +1,425 @@
+{
+  "company": "双汇发展",
+  "ticker": "000895.SZ",
+  "currency": "CNY",
+  "unit": "million",
+  "definitions": {
+    "NOPAT": "EBIT × (1 − 税率)；EBIT 缺失时用 归母净利润 + 利息费用×(1−税率) 近似，并在 warnings 中标注",
+    "InvestedCapital": "归母净资产 + 有息负债 − 货币资金（剔除超额现金的简化口径）",
+    "ROIC": "NOPAT ÷ 期初期末平均 InvestedCapital",
+    "ROIIC": "滚动3年：ΔNOPAT ÷ Δ平均InvestedCapital（增量资本回报率，衡量增长质量）",
+    "OwnerEarnings": "净利润 + 折旧摊销 − 维持性capex − 营运资本增加；维持性capex 缺失时兜底用近5年 D&A 均值近似（warnings 标注）",
+    "FCF": "经营现金流净额 − 资本开支",
+    "ROE": "归母净利润 ÷ 期初期末平均归母净资产",
+    "每股口径": "全部使用当年摊薄股本；CAGR 用期初/期末值几何年化",
+    "NormalizedEarnings": "正常化盈利 = 全期平均利润率 × 最新一期收入。用于消除周期位置对基期的扭曲；另给中位数口径（mid-cycle）作交叉验证。周期性判定见 normalization.cyclicality",
+    "周期位置": "最新一期利润率 ÷ 全期平均利润率。>1.25 判为周期高位（当期利润不可直接外推），<0.75 判为周期低位（当期利润低估长期能力）。这是**水平**维度，必须与 margin_trend 的**形状**维度合读",
+    "利润率形状检验": "margin_trend：利润率序列对时间的秩相关（单调性）+ 穿越全期均值次数（均值回复证据）+ 末端连续同侧年数（确认年数）。单向漂移（|rho|≥0.7 且穿越≤1）判结构性改善/恶化，穿越≥3 判周期波动。作用：防止把'利润率结构性改善'误判为'周期高位'而强制下调基期，以及把'结构性衰退'误判为'周期低谷'而向上正常化",
+    "Capex拆分": "维持性 vs 扩张性资本开支。底稿可给 maintenance_capex（披露口径）或 growth_capex（扩张性）；两者都给则 capex_split 输出确定性拆分。缺省时按收入增速启发式估算并标注 capex_split_basis",
+    "真实FCF区间": "fcf_true_range = [ocf−全部capex（悲观，视同全是保命钱）, ocf−维持性capex（乐观，扩张性是可裁量再投资）]。真实盈利含金量夹在此区间；扩张性占比高且 ROIIC 高 → 偏乐观端，维持性占比高 → 偏悲观端"
+  },
+  "series": [
+    {
+      "year": 2014,
+      "revenue": 45695.7,
+      "net_income": 4039.9,
+      "nopat": 4010.275,
+      "invested_capital": 13737.299999999997,
+      "equity": 16360.8,
+      "roic": null,
+      "roe": null,
+      "gross_margin": 0.19929665154489373,
+      "net_margin": 0.08840875618493645,
+      "owner_earnings": 4039.8999999999996,
+      "capex_total": 2488.9,
+      "maintenance_capex_used": 682.8,
+      "growth_capex_used": 1806.1000000000001,
+      "capex_split_basis": "启发式估算（capex/收入比中位数，封顶D&A）",
+      "fcf": 2223.1,
+      "fcf_true_range": [
+        2223.1,
+        4029.2
+      ],
+      "fcf_to_ni": 0.5502858981657961,
+      "ocf_to_ni": 1.166365504096636,
+      "shares_diluted": 2200.58,
+      "rev_ps": 20.765298239555026,
+      "eps": 1.8358341891683103,
+      "oe_ps": 1.83583418916831,
+      "bvps": 7.434767197738778,
+      "roiic_3y": null
+    },
+    {
+      "year": 2015,
+      "revenue": 44696.7,
+      "net_income": 4255.5,
+      "nopat": 4252.65,
+      "invested_capital": 15865.999999999996,
+      "equity": 17686.6,
+      "roic": 0.2873091851246314,
+      "roe": 0.24997503480441977,
+      "gross_margin": 0.20769542270458446,
+      "net_margin": 0.09520837108779844,
+      "owner_earnings": 4362.574574315354,
+      "capex_total": 2256.0,
+      "maintenance_capex_used": 772.6254256846458,
+      "growth_capex_used": 1483.374574315354,
+      "capex_split_basis": "启发式估算（capex/收入比中位数，封顶D&A）",
+      "fcf": 3510.3,
+      "fcf_true_range": [
+        3510.3,
+        4993.674574315354
+      ],
+      "fcf_to_ni": 0.8248854423686993,
+      "ocf_to_ni": 1.3550229115262602,
+      "shares_diluted": 3300.87,
+      "rev_ps": 13.540884675858182,
+      "eps": 1.289205573076189,
+      "oe_ps": 1.3216438618653126,
+      "bvps": 5.358163150926877,
+      "roiic_3y": null
+    },
+    {
+      "year": 2016,
+      "revenue": 51822.4,
+      "net_income": 4405.1,
+      "nopat": 4391.75,
+      "invested_capital": 12826.2,
+      "equity": 15068.7,
+      "roic": 0.3061284948522595,
+      "roe": 0.26897021245416775,
+      "gross_margin": 0.18105684028528202,
+      "net_margin": 0.08500378214826021,
+      "owner_earnings": 4455.5,
+      "capex_total": 895.8,
+      "maintenance_capex_used": 895.8,
+      "growth_capex_used": 0.0,
+      "capex_split_basis": "启发式估算（capex/收入比中位数，封顶D&A）",
+      "fcf": 4650.2,
+      "fcf_true_range": null,
+      "fcf_to_ni": 1.055640053574266,
+      "ocf_to_ni": 1.2589952554993076,
+      "shares_diluted": 3299.56,
+      "rev_ps": 15.705851689316152,
+      "eps": 1.335056795451515,
+      "oe_ps": 1.3503315593594298,
+      "bvps": 4.566881644825371,
+      "roiic_3y": null
+    },
+    {
+      "year": 2017,
+      "revenue": 50447.3,
+      "net_income": 4319.3,
+      "nopat": 4360.625,
+      "invested_capital": 11252.099999999999,
+      "equity": 15467.3,
+      "roic": 0.36220372700730535,
+      "roe": 0.28289887346083314,
+      "gross_margin": 0.18911220223877195,
+      "net_margin": 0.08562004309447681,
+      "owner_earnings": 4404.069925360463,
+      "capex_total": 526.6,
+      "maintenance_capex_used": 872.030074639538,
+      "growth_capex_used": -345.430074639538,
+      "capex_split_basis": "启发式估算（capex/收入比中位数，封顶D&A）",
+      "fcf": 5123.4,
+      "fcf_true_range": [
+        4777.969925360462,
+        5123.4
+      ],
+      "fcf_to_ni": 1.1861644247910539,
+      "ocf_to_ni": 1.3080823281550251,
+      "shares_diluted": 3299.56,
+      "rev_ps": 15.28909915261429,
+      "eps": 1.3090533283225643,
+      "oe_ps": 1.3347446099966245,
+      "bvps": 4.687685630811381,
+      "roiic_3y": null
+    },
+    {
+      "year": 2018,
+      "revenue": 48767.4,
+      "net_income": 4914.5,
+      "nopat": 4955.975,
+      "invested_capital": 13708.900000000001,
+      "equity": 13999.2,
+      "roic": 0.39709747205640805,
+      "roe": 0.3335652350974836,
+      "gross_margin": 0.21415535788251985,
+      "net_margin": 0.10077428774140101,
+      "owner_earnings": 5047.308611720029,
+      "capex_total": 515.2,
+      "maintenance_capex_used": 842.9913882799715,
+      "growth_capex_used": -327.79138827997144,
+      "capex_split_basis": "启发式估算（capex/收入比中位数，封顶D&A）",
+      "fcf": 4679.6,
+      "fcf_true_range": [
+        4351.808611720029,
+        4679.6
+      ],
+      "fcf_to_ni": 0.9522026655814427,
+      "ocf_to_ni": 1.057035303693153,
+      "shares_diluted": 3299.56,
+      "rev_ps": 14.779970662755035,
+      "eps": 1.4894410163779412,
+      "oe_ps": 1.5296914169525722,
+      "bvps": 4.242747517850865,
+      "roiic_3y": null
+    }
+  ],
+  "summary": {
+    "period": "2014–2018（4 年）",
+    "cagr_total": {
+      "revenue": 0.01639745021486627,
+      "net_income": 0.05021249507736014,
+      "owner_earnings": 0.057236896623118705
+    },
+    "cagr_per_share": {
+      "rev_ps": -0.08149008283084147,
+      "eps": -0.05093170820174864,
+      "oe_ps": -0.044583814982817715,
+      "bvps": -0.13084956177842977
+    },
+    "share_count_change": 1.4994047023966408,
+    "roic_avg_5y": 0.3381847197601511,
+    "roic_min_max_5y": [
+      0.2873091851246314,
+      0.39709747205640805
+    ]
+  },
+  "normalization": {
+    "status": "ok",
+    "basis_period": "2014–2018（5 年利润率样本）",
+    "latest_revenue": 48767.4,
+    "net_margin_latest": 0.10077428774140101,
+    "net_margin_avg": 0.09100304805137457,
+    "net_margin_median": 0.08840875618493645,
+    "margin_ratio_latest_vs_avg": 1.107372663875063,
+    "cyclicality": "中性区间",
+    "net_income_current": 4914.5,
+    "net_income_normalized": 4437.982045540604,
+    "net_income_mid_cycle": 4311.46517637327,
+    "oe_margin_avg": 0.09255740940514058,
+    "oe_current": 5047.308611720029,
+    "oe_normalized": 4513.784207424253,
+    "oe_mid_cycle": 4311.465176373269,
+    "shares_diluted": 3299.56,
+    "margin_trend": {
+      "spearman_rho": 0.19999999999999996,
+      "mean_crossings": 3,
+      "trailing_same_side_years": 1,
+      "trailing_side": "高于均值",
+      "pattern": "周期波动",
+      "confidence": "不适用",
+      "note": "利润率反复穿越均值，均值可作周期中枢，正常化判定成立",
+      "thresholds": {
+        "rho": 0.7,
+        "max_crossings": 1,
+        "min_confirm_years": 3
+      }
+    },
+    "mean_distortion": {
+      "distorted": false,
+      "years": [],
+      "note": "序列平稳，均值可作周期中枢"
+    },
+    "oe_normalized_vs_current": 0.8942952679657998,
+    "oe_to_ni_conversion_latest": 1.02702382983417,
+    "oe_normalized_hybrid": 4557.9133171463955,
+    "oe_normalized_hybrid_vs_current": 0.9030383651522238,
+    "base_oe_recommended": 5047.308611720029,
+    "base_oe_range": null,
+    "base_oe_recommended_basis": "当期（周期位置：中性区间）"
+  },
+  "capital_allocation": {
+    "cum_ocf": 26869.1,
+    "cum_capex": 6682.5,
+    "cum_dividends": 25114.8,
+    "cum_buyback": null,
+    "cum_equity_raised": null,
+    "dividends_basis": "dividends_paid",
+    "cum_shareholder_return": 25114.8,
+    "cum_fcf": 20186.6,
+    "fcf_cover_shareholder_return": 0.80377307404399,
+    "shareholder_return_funded_by_fcf": false
+  },
+  "owner_yield": {
+    "market_cap": 82126.0,
+    "owner_earnings_latest": 5047.308611720029,
+    "owner_yield_current": 0.06145810841536212,
+    "owner_earnings_normalized": 5047.308611720029,
+    "owner_yield_normalized": 0.06145810841536212,
+    "payback_years": 16.27124598826799,
+    "basis": "normalized",
+    "cash_backed": false,
+    "caveat": "所有者收益率不可落袋：累计自由现金流对股东回报覆盖仅 0.80x（<1.0），Owner Earnings 未转化为可分配现金，该收益率与回本年数仅为账面推算，禁止据此判断低估",
+    "pb": 5.866478084461969
+  },
+  "chart_series": {
+    "years": [
+      2014,
+      2015,
+      2016,
+      2017,
+      2018
+    ],
+    "revenue": [
+      45695.7,
+      44696.7,
+      51822.4,
+      50447.3,
+      48767.4
+    ],
+    "net_income": [
+      4039.9,
+      4255.5,
+      4405.1,
+      4319.3,
+      4914.5
+    ],
+    "net_margin": [
+      0.08840875618493645,
+      0.09520837108779844,
+      0.08500378214826021,
+      0.08562004309447681,
+      0.10077428774140101
+    ],
+    "gross_margin": [
+      0.19929665154489373,
+      0.20769542270458446,
+      0.18105684028528202,
+      0.18911220223877195,
+      0.21415535788251985
+    ],
+    "roe": [
+      null,
+      0.24997503480441977,
+      0.26897021245416775,
+      0.28289887346083314,
+      0.3335652350974836
+    ],
+    "roic": [
+      null,
+      0.2873091851246314,
+      0.3061284948522595,
+      0.36220372700730535,
+      0.39709747205640805
+    ],
+    "roiic_3y": [
+      null,
+      null,
+      null,
+      null,
+      null
+    ],
+    "owner_earnings": [
+      4039.8999999999996,
+      4362.574574315354,
+      4455.5,
+      4404.069925360463,
+      5047.308611720029
+    ],
+    "fcf": [
+      2223.1,
+      3510.3,
+      4650.2,
+      5123.4,
+      4679.6
+    ],
+    "fcf_low": [
+      2223.1,
+      3510.3,
+      4650.2,
+      4777.969925360462,
+      4351.808611720029
+    ],
+    "fcf_high": [
+      4029.2,
+      4993.674574315354,
+      4650.2,
+      5123.4,
+      4679.6
+    ],
+    "eps": [
+      1.8358341891683103,
+      1.289205573076189,
+      1.335056795451515,
+      1.3090533283225643,
+      1.4894410163779412
+    ],
+    "oe_ps": [
+      1.83583418916831,
+      1.3216438618653126,
+      1.3503315593594298,
+      1.3347446099966245,
+      1.5296914169525722
+    ],
+    "bvps": [
+      7.434767197738778,
+      5.358163150926877,
+      4.566881644825371,
+      4.687685630811381,
+      4.242747517850865
+    ],
+    "shares_diluted": [
+      2200.58,
+      3300.87,
+      3299.56,
+      3299.56,
+      3299.56
+    ]
+  },
+  "alerts": [
+    "稀释警报：收入总量CAGR 1.6% 显著高于每股CAGR -8.1%，增长被增发摊薄",
+    "股本膨胀警报：期间股本增至 1.50 倍",
+    "分红幻觉警报：全期股东回报（分红+回购）25,115 超过累计自由现金流 20,187（覆盖 0.80x < 1.0）——这份回报不是经营挣出来的，而是靠融资/举债/消耗存量现金维持。高股息率在此情形下是幻觉，对所有者的意义与自由现金流充沛公司的同等股息率完全不同，报告必须明确区分并质询可持续性",
+    "利润率形状检验：周期波动（秩相关 +0.20、穿越均值 3 次、末端连续高于均值 1 年，置信度不适用）——利润率反复穿越均值，均值可作周期中枢，正常化判定成立",
+    "所有者收益率含金量警报：OE 收益率 6.1%（回本 16.3 年）看似可观，但股东回报的自由现金流覆盖仅 0.80x——这份'所有者收益'并未变成可落袋现金，不得据此判断低估"
+  ],
+  "alert_codes": [
+    "M_DILUTION",
+    "M_SHARE_INFLATION",
+    "M_DIVIDEND_ILLUSION",
+    "NORM_MARGIN_SHAPE",
+    "M_OWNER_YIELD_NOT_CASH_BACKED"
+  ],
+  "alerts_structured": [
+    {
+      "code": "M_DILUTION",
+      "level": "ALERT",
+      "msg": "稀释警报：收入总量CAGR 1.6% 显著高于每股CAGR -8.1%，增长被增发摊薄"
+    },
+    {
+      "code": "M_SHARE_INFLATION",
+      "level": "ALERT",
+      "msg": "股本膨胀警报：期间股本增至 1.50 倍"
+    },
+    {
+      "code": "M_DIVIDEND_ILLUSION",
+      "level": "ALERT",
+      "msg": "分红幻觉警报：全期股东回报（分红+回购）25,115 超过累计自由现金流 20,187（覆盖 0.80x < 1.0）——这份回报不是经营挣出来的，而是靠融资/举债/消耗存量现金维持。高股息率在此情形下是幻觉，对所有者的意义与自由现金流充沛公司的同等股息率完全不同，报告必须明确区分并质询可持续性"
+    },
+    {
+      "code": "NORM_MARGIN_SHAPE",
+      "level": "ALERT",
+      "msg": "利润率形状检验：周期波动（秩相关 +0.20、穿越均值 3 次、末端连续高于均值 1 年，置信度不适用）——利润率反复穿越均值，均值可作周期中枢，正常化判定成立"
+    },
+    {
+      "code": "M_OWNER_YIELD_NOT_CASH_BACKED",
+      "level": "ALERT",
+      "msg": "所有者收益率含金量警报：OE 收益率 6.1%（回本 16.3 年）看似可观，但股东回报的自由现金流覆盖仅 0.80x——这份'所有者收益'并未变成可落袋现金，不得据此判断低估"
+    }
+  ],
+  "warnings": [
+    "2014: EBIT 缺失，NOPAT 用净利润+税后利息近似",
+    "2014: capex未披露拆分，按启发式估算（capex/收入比中位数，封顶D&A）估维持性 ≈682.8",
+    "2015: EBIT 缺失，NOPAT 用净利润+税后利息近似",
+    "2015: capex未披露拆分，按启发式估算（capex/收入比中位数，封顶D&A）估维持性 ≈772.6",
+    "2016: EBIT 缺失，NOPAT 用净利润+税后利息近似",
+    "2016: capex未披露拆分，按启发式估算（capex/收入比中位数，封顶D&A）估维持性 ≈895.8",
+    "2017: EBIT 缺失，NOPAT 用净利润+税后利息近似",
+    "2017: capex未披露拆分，按启发式估算（capex/收入比中位数，封顶D&A）估维持性 ≈872.0",
+    "2018: EBIT 缺失，NOPAT 用净利润+税后利息近似",
+    "2018: capex未披露拆分，按启发式估算（capex/收入比中位数，封顶D&A）估维持性 ≈843.0"
+  ]
+}

@@ -46,7 +46,7 @@ for col, year in [('20141231', 2014), ('20151231', 2015), ('20161231', 2016), ('
         'total_equity': m(r['total_equity']),
         'total_debt': m(r['total_debt']),
         'cash': m(r['cash']),
-        'shares_diluted': round(r['paid_in_capital'] / 1, 0),  # 股数(元), 1元面值
+        'shares_diluted': round(r['paid_in_capital'] / 1e6, 2),  # 百万股(对齐鞍钢管线: 1元面值股本元/1e6)
         'dividends_paid': m(r['dividends_paid']),
         'publish_date': '2019-03-16' if year == 2018 else ('2015-03~2018-03各年年报(3月底前惯例,未逐年直核)' if year == 2014 else None),
         'note': NOTES[year],
@@ -97,7 +97,7 @@ fin = {
             'total_assets': m(q1['total_assets']),
             'equity_parent': m(q1['equity_parent']),
             'cash': m(q1['cash']),
-            'shares_diluted': q1['paid_in_capital'],
+            'shares_diluted': round(q1['paid_in_capital'] / 1e6, 2),
             'publish_date': '2019-04-30',
             'note': '净利率10.70%(同比+1.83pct)、毛利率21.00%(同比+1.28pct)——猪价上行初期冻肉库存红利期；屠宰472.7万头(+20.71%)。OCF 3.3亿异常低(季节性+冻肉备货)，Q1 OCF非年化基准。',
             'eps_basic': q1['eps_basic'],
