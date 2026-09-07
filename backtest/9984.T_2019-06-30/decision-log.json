@@ -1,0 +1,71 @@
+{
+  "date": "2019-06-30",
+  "price_as_of": "2019-06-28（回放日周日休市，取最近交易日收盘）",
+  "company": "软银集团",
+  "ticker": "9984.T",
+  "price": 5165,
+  "market_cap_trillion_jpy": 10.886,
+  "verdict": "观察等价格（档位2）",
+  "verdict_ordinal": 2,
+  "gate1": {"pass": false, "margin_of_safety_vs_base": 0.2213, "requirement": "≥40%（无护城河档；实际纪律为 none 档不给买入结论）", "trigger_price": 3980, "conservative_center_mos": 0.1325, "bear_mos": -0.1568},
+  "gate2": {"pass": false, "expected_irr": 0.1387, "no_convergence_floor": 0.0543, "floor_hurdle": 0.06, "pessimistic_irr": 0.0684, "pessimistic_irr_no_convergence_basis": -0.010, "codes": ["GATE2_FAIL", "GATE2_1_IRR_FAIL", "GATE2_2_FLOOR_FAIL"], "note": "①none 档结构性不过（13.87% 亦低于 none 参照门槛 21.8%）；③悲观 +6.84% 为工具收敛口径（内在价值按折现率增值），价格不收敛口径 −1.0%/年双轨披露"},
+  "margin_of_safety": 0.2213,
+  "expected_irr": 0.1387,
+  "loss_probability": 0.0,
+  "loss_probability_note": "工具收敛口径（三情景内在价值按 10%/年增值）；不收敛口径下悲观情景年化 −1.0%",
+  "scenario_values": {"悲观": 4465, "基准": 6633, "乐观": 7976},
+  "bear_method": "sotp_asset_floor（独立方法：悲观毛 NAV 27.61 万亿 − 净债上界 6.7 = 20.91 万亿 ×(1−55%) 折价 ÷ 2,107.667 百万股；method_inputs 已过 S2b 机器重算，偏差 0.007%）",
+  "dispersion_bear_over_base": 0.6728,
+  "key_variables": [
+    {
+      "name": "equity NAV 及构成稳定性",
+      "call": "23.3 万亿日元（毛 NAV 29.49 − 本体净债 6.2）：9434 11.02 + 阿里 12.48 + Sprint 2.38 + 雅日 0.71 + VF 2.40 + 其他 0.5",
+      "proxy": "各持仓市值×官方持股比例、本体净债余额",
+      "falsify": "任一核心持仓（9434/阿里）变现超 30% 或 VF 出资再增 $10bn 以上 → NAV 锚失效预警，降档至排除",
+      "check_by": "2019-09-30",
+      "data_source": "季度决算短信/持仓披露；business_drivers_9984_2019.json sotp"
+    },
+    {
+      "name": "持久折价（治理折价）",
+      "call": "40% 基准（历史区间 30-50% 中枢略保守）；悲观 55%/乐观 30%",
+      "proxy": "市值/equity NAV 比值、回购公告与执行额",
+      "falsify": "折价 <30% 持续两季（收敛兑现，重开评估）或 >60% 持续两季（市场定价新结构性风险，复核 NAV 口径）",
+      "check_by": "2019-12-31",
+      "data_source": "行情数据+公司公告（TSE 巨额回购须即时披露）"
+    },
+    {
+      "name": "Sprint 合并审批",
+      "call": "基准情景内获批（Sprint 按 2.38 万亿计）；失败入悲观（1.2 万亿独立价值）",
+      "proxy": "DOJ/FCC 审批进展",
+      "falsify": "审批被拒或附加条件致协同价值归零 → 悲观概率上修、触发价下修至悲观锚×0.6",
+      "check_by": "2019-12-31",
+      "data_source": "监管公告/公司披露"
+    },
+    {
+      "name": "Vision Fund 组合公允价值",
+      "call": "2.40 万亿（截断日公允价值线性份额口径），悲观 −25%（WeWork 等 LP 估值下调先例已现）",
+      "proxy": "VF 季度估值披露、头部持仓估值事件",
+      "falsify": "头部持仓官方估值下调 >25% 或 VF II 期募资失败 → 触发悲观情景概率上修",
+      "check_by": "2019-12-31",
+      "data_source": "VF 披露/媒体报道（截断日内 LP 下调先例已登记于 manifest）"
+    },
+    {
+      "name": "本体净债与利息负担",
+      "call": "6.2 万亿（官方 NAV 口径：剔除 Sprint/雅日/ARM/VF 自身净债与预付远期 0.73）",
+      "proxy": "季度有息负债与现金、利息支出（FY2018 633,769 百万且逐年上行）",
+      "falsify": "净债 >7.5 万亿或信用利差跳升 → 折价参数上修、equity NAV 下修",
+      "check_by": "2019-12-31",
+      "data_source": "决算短信 BS/CF；financials_9984_2019.json"
+    }
+  ],
+  "falsifiers": [
+    "股价 ≤3,980 且 NAV 构成未发生结构性变化（pre-mortem D 形态约束：价格到了资产变了不触发重开评估）",
+    "折价收敛机制落地：大额持续回购承诺（非一次性市值管理）/分拆计划/继任安排",
+    "NAV 锚证伪：核心持仓大额变现或 VF 再加杠杆式扩张（变量 1/4 证伪线）→ 降档排除",
+    "Sprint 合并失败落地 → 悲观概率上修、触发价下修至约 2,680"
+  ],
+  "prior_expectation": {"verdict_ordinal": 2, "confidence": "medium", "consistent": true, "increment": "管线把先验方向量化为：唯一合法通道（OE 废弃实证）/触发价 3,980/双口径悲观 IRR/折价敏感性三层防御（边际≥40% 需折价≤14% 历史区间外）"},
+  "persona_consensus": "三师全部拒绝现价买入（巴菲特'资产上的期权结构'/段永平'资产好结构差价格半便宜'/李录'折价是市场对结构的诚实定价'），例外条款一致指向 ≤3,980 且须 NAV 构成未变",
+  "red_team_note": "红队五项（折价自由参数三层防御/OE 废弃实证/回购 6,000 亿不构成机制/离散度 0.67 合规/OBS 动机污染五重隔离）全文见 data/phase5_workpaper.json",
+  "replay_note": "复盘触发：2024-06-30 后首次再触达 9984.T 时回填 pre-mortem 四形态兑现情况"
+}
