@@ -10,6 +10,8 @@
   "discount_rate_note": "纪律下限 max(10%, 10Y 国债 3.23%+4pct=7.23%)=10%。猪价上行传导幅度不可知（历史对冲有效但 2019 冲击量级为历史首次——能繁 -23.9% 为监测纪录）支持不降折现率 [E:market_snapshot_000895_2019.json][E:business_drivers_000895.json]",
   "hold_years": 5,
   "dividend_yield": 0.0583,
+  "dividend_yield_basis": "annual_plan",
+  "dividend_yield_alt": 0.0803,
   "dividend_yield_source": "归属口径 1.45 元/股（2018 年度=Q3 特别 0.90+年度末期 0.55）÷24.89=5.83%；支付口径 2.00 元（8.03%）禁用——2018Q3 特别分红是否常态化回放时点不可判定（2019 中报分红方案 2019-08-14 披露 forbidden），保守取年度常规部分。TTM 口径与归属口径恰好重合 [E:dividends_000895_2019.json]",
   "intrinsic_value_growth": 0.02,
   "iv_growth_evidence": "取 2%（低于 fade 终点 2.5%）：①每股口径无稀释——股本 2015 年转增后恒定 32.9956 亿、无 SBC 无期权（与 Zoom 案 iv_growth=0 的 SBC 稀释 2-3% 形成机制对照）；②但分红率 5 年 103% → 留存≈0 → OE 增长无留存资金来源，只能靠收入通胀传导（肉制品提价 2-3%）×利润率维持（健康化侵蚀对冲提价能力）——在 fade 终点 2.5% 上再扣 0.5pct 侵蚀缓冲。无收敛下限=股息率 5.83%+iv_growth 2%=7.83% [E:normalization_000895_2019.json][E:qualitative_000895_2019.json]",

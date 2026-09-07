@@ -66,6 +66,10 @@ S8 价值陷阱闸门：安全边际（vs 基准）> 50% 且（收入或核心�
    收入连续下滑年数可由 `--metrics` 自动读取，核心驱动因子年数手工登记。
 S9 股息率量纲哨兵：`dividend_yield` >20% 判为百分数误填报错、为负报错；
    提供 `--snapshot` 时与 market_snapshot 交叉核对同源同口径（差异 >5% 报错）。
+S9b 股息率口径哨兵（OBS-600660-03 升格，2 案例达门槛）：`dividend_yield` 须携带
+   `dividend_yield_basis`（ttm_paid/annual_plan/sustainable_forward 三选一）；
+   登记可选对照值 `dividend_yield_alt` 时两口径差 >25% 披露（>50% 强制换口径
+   或挂 [E:] 豁免）——特别分红/首次中期分红会把 TTM 口径推高 38-53%（茅台/双汇实证）。
 
 ═══ 输入格式（data/scenarios.json）═══
 {
@@ -719,6 +723,34 @@ def check(path, metrics_path=None, snapshot_path=None):
                       f"错 100× 会让闸门直接自动过闸")
     elif dy < 0:
         errors.append(f"S9 `dividend_yield` = {dy} 为负，非法")
+    # ---- S9b 股息率口径哨兵（OBS-600660-03 升格实施：2 案例达门槛）----
+    # 量纲对≠口径对：TTM 实施派发口径会被特别分红/首次中期分红推高，
+    # 直接作闸门二"不收敛下限"的加数会把「单次成分」当「可持续回报」。
+    # 两例标定：茅台 2018-10 首次中期分红推高 TTM 口径 53%（5.05% vs 可持续 3.3%）；
+    # 双汇 2019-06 特别分红推高支付口径 38%（8.03% vs 归属年度口径 5.83%）。
+    # 25% 线的独立语义：单次成分 ≥1/4 时「TTM≈可持续」假设已实质失效。
+    basis = d.get("dividend_yield_basis")
+    info["dividend_yield_basis"] = basis
+    if dy is not None and basis not in ("ttm_paid", "annual_plan", "sustainable_forward"):
+        warnings.append(
+            "S9 `dividend_yield` 未登记机器可读口径 `dividend_yield_basis`"
+            "（ttm_paid/annual_plan/sustainable_forward 三选一）："
+            "两案实证（茅台 2018-10/双汇 2019-06）未登记口径时无法判定该值"
+            "是否含不可外推的单次分红成分，闸门二②的保底回报语义存疑")
+    alt = d.get("dividend_yield_alt")
+    if dy is not None and isinstance(alt, (int, float)) and min(dy, alt) > 0:
+        gap = abs(dy - alt) / min(dy, alt)
+        info["dividend_yield_basis_gap"] = round(gap, 4)
+        if gap > 0.50:
+            warnings.append(
+                f"S9 两口径股息率分裂 {gap:.0%}（>50%）：主口径 {dy:.2%} vs 对照口径 {alt:.2%}"
+                f"——差异过半来自单次分红成分，主口径不得作为闸门二不收敛下限的加数，"
+                f"须改用 sustainable_forward 口径重登，或登记 [E:] 证据证明单次成分不可外推")
+        elif gap > 0.25:
+            warnings.append(
+                f"S9 两口径股息率分裂 {gap:.0%}（25%-50% 区间）：主口径 {dy:.2%} vs 对照口径 {alt:.2%}"
+                f"——须在报告决策卡披露两口径对照与特别分红/单次分红成分；"
+                f"gate2② 按主口径通过时标注『脆弱通过』并挂接股息可持续性证伪条件")
     if snapshot_path:
         if not os.path.exists(snapshot_path):
             warnings.append(f"S9 快照文件不存在：{snapshot_path}，股息率无法交叉核对")
