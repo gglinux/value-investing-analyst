@@ -1,0 +1,242 @@
+{
+  "company": "中国神华",
+  "ticker": "601088.SH / 1088.HK",
+  "analysis_as_of": "2015-12-31",
+  "case": "B2-07（backtest）",
+  "information_cutoff": {
+    "date": "2015-12-31",
+    "rules": [
+      "仅使用2015-12-31当日或之前公开发布的信息",
+      "最新年度报表=2014年报（2015-03-21披露）；最新季度报表=2015三季报（2015-10-24披露）",
+      "2015年年报（2016-03披露）的2015-12-31数据禁止作为估值输入，仅可在Step 4答案比对时参考",
+      "不使用模型对2015年之后事件（如煤价反转、股价走势）的记忆"
+    ],
+    "forbidden_data_encountered": "抓取新浪利润表时2015-12-31列可见（2015年收入17,706,900万元、归母净利1,614,400万元），未写入任何底稿与分析"
+  },
+  "official_filing_missing": {
+    "years": [
+      2015
+    ],
+    "reason": "回测信息截断纪律：分析基准日2015-12-31，2015年年报于2016年3月下旬才披露，属截断后信息，禁止使用。可用最新信息为2014年报+2015三季报。"
+  },
+  "latest_quarter_checked": {
+    "period": "2015Q3（2015-01-01至2015-09-30累计）",
+    "publish_date": "2015-10-24",
+    "finding": "前三季营收1,314.46亿元、归母净利165.55亿元（同比-44.1%），量价齐跌（2015年1/2月煤炭销量同比-44%/-20%；商品煤售价同比约-10%；4月上网电价下调约2分/千瓦时）；属行业性经营恶化，无一次性损益。已计入估值基期判断。",
+    "checked_on": "2026-09-04"
+  },
+  "adversarial_check": {
+    "checked_on": "2026-09-06",
+    "queries": [
+      "中国神华 601088 监管处罚 违规 做空 财务造假 审计非标 2010-2015",
+      "中国神华 历年分红/年报披露日期核对",
+      "煤炭行业环渤海指数/秦皇岛煤价历史核对"
+    ],
+    "findings": [
+      "未发现针对上市公司的做空报告、财务造假指控或集体诉讼；2005-2014年年报审计意见均为德勤华永标准无保留意见。",
+      "审计署2015-06-28公告（截断前）：神华集团（母公司，非上市主体）2009-2014年28家单位提前确认收入、违规发放补贴等致6年多计利润11.30亿元；48家煤矿超核定产能违规开采4.84亿吨、10家煤矿证照不齐违规开采2.02亿吨。——列入红旗项（治理/合规），不构成一票否决，但提示集团层面合规纪律弱于报表表现。",
+      "财政部2013-12会计信息检查：上市体系子公司国华浙能发电2011年虚列应付滞期费5,848万、多计成本5,518万；神华准格尔未代扣代缴个税。——金额小、已披露整改，列入红旗项。",
+      "环保事件：包头煤化工（2013年12月注入上市公司）2013年污水直排黄河停产整顿；神皖能源安庆电厂二期2013年环评未批先建被叫停。——列入红旗项（煤化工板块经营风险）。"
+    ]
+  },
+  "files": [
+    {
+      "source": "新浪财经历史三表接口（A股CAS）+ 公司年报/业绩快报交叉核对",
+      "grade": "A级",
+      "coverage": "2005-2014年报 + 2015三季报",
+      "verified": "三表勾稽（资产=负债+权益）逐年通过；crosscheck三年度与年报原文/中证网一致",
+      "file": "financials_601088_2015.json"
+    },
+    {
+      "source": "新浪财经利润表（中煤能源）",
+      "grade": "A级",
+      "coverage": "2010-2014",
+      "verified": "is_peer，跳过双源核对",
+      "file": "financials_peer_601898.json"
+    },
+    {
+      "source": "新浪财经利润表（兖州煤业）",
+      "grade": "A级",
+      "coverage": "2010-2014",
+      "verified": "is_peer，跳过双源核对",
+      "file": "financials_peer_600188.json"
+    },
+    {
+      "source": "新浪财经利润表（华能国际）",
+      "grade": "A级",
+      "coverage": "2014",
+      "verified": "is_peer，跳过双源核对",
+      "file": "financials_peer_600011.json"
+    },
+    {
+      "source": "新浪财经利润表（陕西煤业）",
+      "grade": "A级",
+      "coverage": "2014",
+      "verified": "is_peer，跳过双源核对",
+      "file": "financials_peer_601225.json"
+    },
+    {
+      "source": "公司2011/2012/2013/2014年度报告运营数据公告（港交所/上交所）",
+      "grade": "A级",
+      "coverage": "2010-2014销量/售价/售电量/电价 + 2015年经营目标",
+      "verified": "量×价=煤炭分部收入自洽（2014: 451.1×351.4≈158,517）",
+      "file": "business_drivers_601088_2015.json"
+    },
+    {
+      "source": "腾讯行情日线（不复权）+ 中国外汇交易中心中间价 + 中国银行债市参考",
+      "grade": "A级",
+      "coverage": "2015-12-31收盘",
+      "verified": "A股14.97元（与先前验证一致）；H股12.18港元；HKD/CNY中间价0.83778（央行授权公布）；10Y国债2.82%",
+      "file": "market_snapshot_601088_2015.json"
+    },
+    {
+      "source": "公司2014年报披露的2015年经营目标（中证网2015-03-20）",
+      "grade": "A级",
+      "coverage": "公司指引；卖方一致预期不可得（标注）",
+      "verified": "指引为年报原文",
+      "file": "consensus_601088_2015.json"
+    },
+    {
+      "source": "2014年报（分部经营收益占比、煤炭销售结构、单位生产成本、储量）+ 2011年报（分部收入/利润）",
+      "grade": "A级",
+      "coverage": "2010-2014分部",
+      "verified": "与年报原文一致",
+      "file": "segments_601088_2015.json"
+    },
+    {
+      "file": "metrics_601088_2015.json",
+      "source": "compute_metrics.py 输出",
+      "grade": "A级",
+      "coverage": "2005-2014",
+      "verified": "脚本生成"
+    },
+    {
+      "file": "metrics_peer_601898.json",
+      "source": "compute_metrics.py 输出",
+      "grade": "A级",
+      "coverage": "2010-2014",
+      "verified": "脚本生成"
+    },
+    {
+      "file": "metrics_peer_600188.json",
+      "source": "compute_metrics.py 输出",
+      "grade": "A级",
+      "coverage": "2010-2014",
+      "verified": "脚本生成"
+    },
+    {
+      "file": "metrics_peer_600011.json",
+      "source": "compute_metrics.py 输出",
+      "grade": "A级",
+      "coverage": "2012-2014",
+      "verified": "脚本生成"
+    },
+    {
+      "file": "metrics_peer_601225.json",
+      "source": "compute_metrics.py 输出",
+      "grade": "A级",
+      "coverage": "2012-2014",
+      "verified": "脚本生成"
+    },
+    {
+      "file": "parent_metrics_601088_2015.json",
+      "source": "由 financials_601088_2015.json 归母权益列与 market_snapshot 现价计算",
+      "grade": "A级",
+      "coverage": "2005-2014",
+      "verified": "归母ROE/BVPS/PE/PB/触发价"
+    },
+    {
+      "file": "scenarios.json",
+      "source": "Phase 4 三情景底稿（经 check_scenarios.py 门禁）",
+      "grade": "A级",
+      "coverage": "三情景",
+      "verified": "S1-S9 通过，S2b机器重算一致"
+    },
+    {
+      "file": "scenario_audit.json",
+      "source": "check_scenarios.py 审计输出",
+      "grade": "A级",
+      "coverage": "同上",
+      "verified": "脚本生成"
+    },
+    {
+      "file": "expected_return.json",
+      "source": "reverse_dcf.py expected-return 输出",
+      "grade": "A级",
+      "coverage": "期望回报与闸门二",
+      "verified": "脚本生成"
+    },
+    {
+      "file": "fv_base.json",
+      "source": "reverse_dcf.py forward-value（基准情景）",
+      "grade": "A级",
+      "coverage": "基准估值",
+      "verified": "脚本生成"
+    },
+    {
+      "file": "fv_bull.json",
+      "source": "reverse_dcf.py forward-value（乐观情景）",
+      "grade": "A级",
+      "coverage": "乐观估值",
+      "verified": "脚本生成"
+    },
+    {
+      "file": "verification_strength.json",
+      "source": "verification_strength.py 输出",
+      "grade": "A级",
+      "coverage": "核验强度",
+      "verified": "脚本生成"
+    },
+    {
+      "file": "phase5_workpaper.json",
+      "source": "Phase 5 投委会/红队/持有体验底稿",
+      "grade": "A级",
+      "coverage": "Phase 5",
+      "verified": "三师分立推演与红队留痕"
+    },
+    {
+      "file": "workpapers/persona_buffett.md",
+      "source": "巴菲特视角独立评估",
+      "grade": "A级",
+      "coverage": "Phase 5",
+      "verified": "分立生成"
+    },
+    {
+      "file": "workpapers/persona_duan.md",
+      "source": "段永平视角独立评估",
+      "grade": "A级",
+      "coverage": "Phase 5",
+      "verified": "分立生成"
+    },
+    {
+      "file": "workpapers/persona_lilu.md",
+      "source": "李录视角独立评估",
+      "grade": "A级",
+      "coverage": "Phase 5",
+      "verified": "分立生成"
+    },
+    {
+      "file": "manifest.json",
+      "source": "本清单（自登记以支持 [E:manifest.json] 指针）",
+      "grade": "-",
+      "coverage": "-",
+      "verified": "排雷与对立面检索留痕"
+    },
+    {
+      "file": "normalization_601088_2015.json",
+      "source": "Phase 4 基期正常化推导（大宗商品路径+引擎双轨裁决）",
+      "grade": "A级",
+      "coverage": "Phase 3/4",
+      "verified": "早期会话产出，与本报告口径一致"
+    },
+    {
+      "file": "qualitative_601088_2015.json",
+      "source": "Phase 3 五维定性分析底稿+假设一致性对账",
+      "grade": "A级",
+      "coverage": "Phase 3/4",
+      "verified": "早期会话产出，与本报告口径一致"
+    }
+  ],
+  "accounting_note": "统一采用CAS（A股口径）。H股HKFRS归母与CAS存在差异（2014: 39,301 vs 36,807；2013: 45,079 vs 45,678），不影响趋势判断。",
+  "restatement_note": "2011-2013年同一控制下收购致可比数据重述（新浪为最新重述口径）；2010年原披露收入152,063 vs 重述157,662，差异±3%内。"
+}

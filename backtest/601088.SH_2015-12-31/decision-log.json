@@ -1,0 +1,42 @@
+{
+  "case": "B2-07",
+  "company": "中国神华",
+  "ticker": "601088.SH / 1088.HK",
+  "analysis_date": "2015-12-31",
+  "verdict": {"ordinal": 2, "label": "观察等价格"},
+  "gates": {
+    "gate1": {"pass": false, "mos": 0.3773, "requirement": 0.40, "moat": "narrow"},
+    "gate2": {"pass": false, "consistency_irr": [0.1784, 0.2183, false], "no_convergence_floor": [0.0694, 0.06, true], "pessimistic_irr": [0.0233, 0.0, true]}
+  },
+  "phases_completed": {
+    "phase0": "类型=资源/强周期；能力圈在圈内；排雷：一票否决6项全过，红旗4项登记（集团审计认定/子公司虚列费用/包头煤化工环保停产/FCF覆盖偏薄）",
+    "phase1": "十年三表+2015三季报+A/H快照+驱动因子+同业×4，全部落盘 data/",
+    "phase2": "compute_metrics 主+4同业；validate/metrics/drivers/snapshot 四道校验全过",
+    "phase3": "五维分析（商业模式/护城河窄/增长平台期/管理层稳健+治理红旗/财务质量高），证据指针14个",
+    "phase4": "中周期煤价归一化（锚570）→基期OE 37,500→三情景10.43/24.04/30.92→S1-S9通过→期望IRR 17.84%<21.83%",
+    "phase4_5": "关键变量5项+变异认知（市场隐含-4.03%年降 vs 中周期持平）+双重机会成本",
+    "phase5": "三师分立推演（workpapers/persona_*.md）+分歧表+红队3项+持有体验（2015年实际回撤-51.1%）"
+  },
+  "key_judgment_chain": [
+    "弃用margin-avg正常化55,512（超级周期污染+趋势检验rho=-0.92）",
+    "采用中周期煤价锚570元/吨→基期OE 37,500（含2016电价下调3分已落地）",
+    "市场隐含10年OE年增-4.03%＝把周期底当衰亡定价（变异认知核心）",
+    "A股37.7%<40%闸门一不过；期望IRR 17.84%<21.83%闸门二不过；②③过",
+    "H股10.20元MoS 57.6%过双闸——工具选择平行结论"
+  ],
+  "prior_expectation_check": {
+    "verdict_ordinal": {"expected": 2, "actual": 2, "match": true},
+    "gate1": {"expected": false, "actual": false, "match": true},
+    "gate2": {"expected": null, "actual": false, "note": "先验未评级，本次明确判定①未过"}
+  },
+  "red_team_high_severity": "2016年利润若-40%致DPS约0.44元→不收敛下限失守（F2证伪条件已挂跟踪）",
+  "verification": {
+    "validate_data": "pass(0错误/3警告)",
+    "check_scenarios": "pass(0/0)",
+    "check_market_snapshot": "pass(偏差-0.00%)",
+    "check_business_drivers": "pass(5条口径警告已披露)",
+    "verification_strength_grade": "B",
+    "verify_report": "pass(87项, exit 0)"
+  },
+  "next_review": "2016-03下旬年报；触发价14.42元；H股股息率>7.2%"
+}

@@ -1,0 +1,17 @@
+{
+  "company": "兖州煤业",
+  "ticker": "600188.SH",
+  "is_peer": true,
+  "currency": "CNY",
+  "unit": "million",
+  "accounting_standard": "CAS",
+  "fiscal_year_end": "12-31",
+  "data_notes": ["同业对照底稿（跳过双源核对）：新浪财经利润表年度列，单位万元/100。含澳洲资产与公允价值变动，波动大于纯国内动力煤企业。"],
+  "annual": [
+    {"year": 2010, "revenue": 34844, "net_income": 9009, "publish_date": null, "note": "归母净利率25.85%"},
+    {"year": 2011, "revenue": 48768, "net_income": 8623, "publish_date": null, "note": "归母净利率17.68%"},
+    {"year": 2012, "revenue": 59674, "net_income": 5516, "publish_date": null, "note": "归母净利率9.24%"},
+    {"year": 2013, "revenue": 58727, "net_income": 1271, "publish_date": null, "note": "归母净利率2.16%"},
+    {"year": 2014, "revenue": 63923, "net_income": 2284, "publish_date": null, "note": "归母净利率3.57%；2014年少数股东损益-4.26亿、其他综合收益-26.15亿（澳洲汇兑/减值）"}
+  ]
+}

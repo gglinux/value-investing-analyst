@@ -1,0 +1,65 @@
+{
+  "file": "backtest/601088.SH_2015-12-31/data/scenarios.json",
+  "errors": [],
+  "warnings": [],
+  "codes": [],
+  "unmapped_messages": [],
+  "diagnostics": {
+    "scenario_values": {
+      "悲观": 10.43,
+      "基准": 24.04,
+      "乐观": 30.92
+    },
+    "bear_name": "悲观",
+    "base_name": "基准",
+    "margin_of_safety_vs_base": 0.37728785357737105,
+    "bear_method": "worst_year_margin",
+    "bear_recomputed_value": 10.4314,
+    "bear_recompute_deviation": 0.000132,
+    "discount_rate_floor": 0.1,
+    "discount_rate_floor_basis": "硬下限 10%",
+    "worst_year": 2014,
+    "worst_year_actual_margin": 0.1482,
+    "margin_spearman_rho": -0.9151515151515152,
+    "bear_stressed": [
+      "margin",
+      "revenue",
+      "valuation_multiple"
+    ],
+    "bear_base_ratio": 0.4338602329450915,
+    "non_operating_addback_per_share": {
+      "悲观": 0.0,
+      "基准": 0.0,
+      "乐观": 0.0
+    },
+    "bear_vs_price": 0.6967267869071476,
+    "probability_deviations": {},
+    "intrinsic_value_growth": 0.02,
+    "iv_growth_evidence": "基准情景内在价值长期增速2%（名义）：煤炭销量平台期（公司主动限产，2015年目标404百万吨同比-10.4%）+发电/运输占比提升的结构性增长+约2%价格通胀；2005-2014每股收益CAGR为9.6%但含超级周期水分，2009-201",
+    "revenue_decline_streak": 1,
+    "core_driver_decline_years": null,
+    "peak_stagnation": {
+      "peak_year": 2013,
+      "peak_revenue": 283797.0,
+      "latest_revenue": 248360.0,
+      "drawdown_from_peak": 0.1248674228409744,
+      "years_since_peak": 1,
+      "stagnating": false,
+      "thresholds": {
+        "min_drawdown": 0.1,
+        "min_years_since_peak": 3
+      }
+    },
+    "decline_streak_used": 1,
+    "shrinking_reasons": [],
+    "value_trap_triggered": false,
+    "dividend_yield": 0.0494,
+    "snapshot_dividend_yield": {
+      "value": 0.0494,
+      "field": "dividend_yield_ttm_frac",
+      "basis": "键名后缀 _frac",
+      "unit_ambiguous": false
+    }
+  },
+  "passed": true
+}

@@ -1,0 +1,35 @@
+{
+  "company": "华能国际",
+  "ticker": "600011.SH",
+  "is_peer": true,
+  "currency": "CNY",
+  "unit": "million",
+  "accounting_standard": "CAS",
+  "fiscal_year_end": "12-31",
+  "data_notes": [
+    "同业对照底稿（跳过双源核对）：新浪财经利润表年度列。电力分部盈利能力对照锚（煤价下行的受益方）。"
+  ],
+  "annual": [
+    {
+      "year": 2012,
+      "revenue": 133967,
+      "net_income": 5869,
+      "publish_date": null,
+      "note": "归母净利率4.38%"
+    },
+    {
+      "year": 2013,
+      "revenue": 133833,
+      "net_income": 10520,
+      "publish_date": null,
+      "note": "归母净利率7.86%"
+    },
+    {
+      "year": 2014,
+      "revenue": 125407,
+      "net_income": 10546,
+      "publish_date": null,
+      "note": "归母净利率8.41%；煤价大跌下电力盈利改善"
+    }
+  ]
+}

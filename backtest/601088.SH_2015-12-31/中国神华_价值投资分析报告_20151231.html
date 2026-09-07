@@ -1,0 +1,607 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>中国神华 价值投资分析报告（回放 2015-12-31）</title>
+<script src="https://cdn.jsdelivr.net/npm/echarts@5/dist/echarts.min.js"></script>
+<style>
+  :root {
+    --primary: #1a3a5c;
+    --accent: #d97706;
+    --bg: #f7f8fa;
+    --card: #ffffff;
+    --text: #24292f;
+    --muted: #6b7280;
+    --green: #15803d;
+    --red: #b91c1c;
+    --border: #e5e7eb;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif;
+    background: var(--bg); color: var(--text); line-height: 1.75; font-size: 15px;
+  }
+  .container { max-width: 1080px; margin: 0 auto; padding: 24px 20px 80px; }
+  header.report-header {
+    background: var(--primary); color: #fff; border-radius: 12px;
+    padding: 40px 36px; margin-bottom: 28px;
+  }
+  header.report-header h1 { font-size: 26px; font-weight: 700; }
+  header.report-header .meta { margin-top: 8px; opacity: .75; font-size: 13px; }
+  .verdict-banner {
+    display: flex; align-items: center; gap: 24px; margin-top: 24px;
+    background: rgba(255,255,255,.08); border-radius: 10px; padding: 20px 24px;
+  }
+  .verdict-label { font-size: 34px; font-weight: 800; letter-spacing: 2px; }
+  .verdict-buy { color: #4ade80; }
+  .verdict-watch { color: #fbbf24; }
+  .verdict-hard { color: #94a3b8; }
+  .verdict-reject { color: #f87171; }
+  .verdict-score { font-size: 15px; opacity: .9; }
+  .snapshot-grid {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 10px; margin-top: 16px;
+  }
+  .snapshot-item {
+    background: rgba(255,255,255,.08); border-radius: 8px; padding: 10px 14px;
+  }
+  .snapshot-item .k { font-size: 12px; opacity: .65; }
+  .snapshot-item .v { font-size: 17px; font-weight: 700; margin-top: 2px; }
+  .snapshot-time { font-size: 11px; opacity: .55; margin-top: 8px; }
+  section { background: var(--card); border-radius: 12px; padding: 32px 36px; margin-bottom: 24px; border: 1px solid var(--border); }
+  h2 {
+    font-size: 20px; color: var(--primary); padding-bottom: 10px; margin-bottom: 18px;
+    border-bottom: 3px solid var(--accent); display: inline-block;
+  }
+  h3 { font-size: 16px; color: var(--primary); margin: 22px 0 10px; }
+  p { margin-bottom: 12px; }
+  .chart { width: 100%; height: 400px; margin: 12px 0 4px; }
+  .chart-note { font-size: 12px; color: var(--muted); margin-bottom: 16px; }
+  .insight-title { font-size: 15px; font-weight: 700; color: var(--text); margin: 20px 0 4px; }
+  table { width: 100%; border-collapse: collapse; margin: 14px 0; font-size: 14px; }
+  th { background: var(--primary); color: #fff; padding: 10px 12px; text-align: left; font-weight: 600; }
+  td { padding: 9px 12px; border-bottom: 1px solid var(--border); }
+  tr:nth-child(even) td { background: #fafbfc; }
+  .tag { display: inline-block; padding: 2px 10px; border-radius: 20px; font-size: 12px; font-weight: 600; }
+  .tag-green { background: #dcfce7; color: var(--green); }
+  .tag-amber { background: #fef3c7; color: #b45309; }
+  .tag-red { background: #fee2e2; color: var(--red); }
+  .points-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin: 16px 0; }
+  .point-card { border-radius: 10px; padding: 16px 18px; border: 1px solid var(--border); }
+  .point-card.bull { border-left: 4px solid var(--green); }
+  .point-card.bear { border-left: 4px solid var(--red); }
+  .point-card h4 { font-size: 14px; margin-bottom: 8px; }
+  .point-card ul { padding-left: 18px; font-size: 14px; }
+  .point-card li { margin-bottom: 6px; }
+  blockquote.persona {
+    border-left: 4px solid var(--accent); background: #fffbf5;
+    padding: 16px 20px; margin: 14px 0; border-radius: 0 8px 8px 0; font-size: 14px;
+  }
+  blockquote.persona .persona-name { font-weight: 700; color: var(--primary); display: block; margin-bottom: 6px; }
+  .redteam { background: #1f2937; color: #e5e7eb; border-radius: 10px; padding: 24px 28px; margin: 16px 0; }
+  .redteam h3 { color: #fbbf24; margin-top: 0; }
+  .redteam ul, .redteam ol { padding-left: 20px; }
+  .redteam li { margin-bottom: 8px; }
+  .checklist li { margin-bottom: 8px; }
+  footer.disclaimer {
+    font-size: 12px; color: var(--muted); text-align: center; margin-top: 40px;
+    padding-top: 20px; border-top: 1px solid var(--border);
+  }
+  .source-note { font-size: 12px; color: var(--muted); }
+  .verification-strength {
+    font-size: 12px; line-height: 1.7; margin: 12px 0; padding: 10px 14px;
+    border-left: 3px solid var(--border); background: rgba(127,127,127,.06);
+    border-radius: 4px;
+  }
+  .verification-strength[data-grade="A"] { border-left-color: #1D9E75; }
+  .verification-strength[data-grade="B"] { border-left-color: #BA7517; }
+  .verification-strength[data-grade="C"] { border-left-color: #E24B4A; }
+  .verification-strength .vs-meaning { color: var(--muted); }
+  @media print { section { break-inside: avoid; } .chart { height: 360px; } }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <header class="report-header">
+    <h1>中国神华（601088.SH / 1088.HK）价值投资分析报告</h1>
+    <div class="meta">报告日期：2026-09-07（历史回放案件 B2-07，信息截断于 2015-12-31）｜ 数据截止：2015-12-31（最新年报 2014 年报，最新季报 2015 三季报）｜ 现价：A 股 14.97 元 ／ H 股 12.18 港元｜ 市值：2,815.5 亿元</div>
+    <div class="verdict-banner">
+      <div class="verdict-label verdict-watch">观察等价格</div>
+      <div class="verdict-score">
+        <b>闸门一</b>：安全边际 <span class="vnum" data-src="scenario_audit.json" data-path="diagnostics.margin_of_safety_vs_base" data-fmt="pct1">37.7%</span> vs 要求 ≥40%（护城河「窄」）→ <b style="color:#f87171">未达标 ✗</b><br>
+        <b>闸门二（三项全过才算通过）</b>：① 期望 IRR <span class="vnum" data-src="expected_return.json" data-path="expected_annualized_irr" data-fmt="pct1">17.8%</span> vs <span class="vnum" data-src="expected_return.json" data-path="gate2.consistency_expected_irr.hurdle" data-fmt="pct1">21.8%</span>（<i>自洽性校验，与闸门一同源，非独立证据</i>）✗
+        ② 不收敛下限 <span class="vnum" data-src="expected_return.json" data-path="gate2.no_convergence_floor.value" data-fmt="pct1">6.9%</span> vs 6.0%（<i>独立：股息率+内在价值增速，折价永不收敛时的实际回报</i>）✓
+        ③ 悲观情景年化 <span class="vnum" data-src="expected_return.json" data-path="gate2.pessimistic_irr.value" data-fmt="pct1">2.3%</span> vs 0%（<i>独立：悲观值由历史最差年利润率法独立推导</i>）✓ → <b style="color:#f87171">未通过 ✗</b><br>
+        三位大师独立判断：巴菲特【观察等价格】｜ 段永平【观察等价格】｜ 李录【观察等价格（H股可小仓位试探）】<br>
+        内在价值区间：<span class="vnum" data-src="scenarios.json" data-path="scenarios.0.value_per_share" data-fmt="num2">10.43</span> ~ <span class="vnum" data-src="scenarios.json" data-path="scenarios.2.value_per_share" data-fmt="num2">30.92</span> 元（基准 <span class="vnum" data-src="scenarios.json" data-path="scenarios.1.value_per_share" data-fmt="num2">24.04</span> 元）｜ 悲观值为现价的 <span class="vnum" data-src="scenario_audit.json" data-path="diagnostics.bear_vs_price" data-fmt="pct1">69.7%</span>（即较现价低 30.3%）｜ 5 年持有期情景口径亏损概率 <span class="vnum" data-src="expected_return.json" data-path="loss_probability" data-fmt="pct1">0.0%</span>（三情景年化均为正）
+      </div>
+    </div>
+    <div class="verification-strength" data-verification-strength="1"
+     data-grade="B"
+     data-reconciliation-coverage="1.0000"
+     data-crosscheck-level="full"
+     data-window-years="10"
+     data-covers-full-cycle="false">
+  <b>核验强度 B</b>：三表勾稽覆盖率 100%（达标） ｜ 命门科目原文登记 达标（<u>未经原文机器逐字比对</u>） ｜ 数据窗口 10 年，含全球金融危机（部分）<br>
+  <span class="vs-meaning">存在部分核验缺口：结论可用，但相关章节须显式降低置信度</span>
+</div>
+    <div class="snapshot-grid">
+      <div class="snapshot-item"><div class="k">现价（A股）</div><div class="v"><span class="vnum" data-src="market_snapshot_601088_2015.json" data-path="price.value" data-fmt="num2">14.97</span> 元</div></div>
+      <div class="snapshot-item"><div class="k">现价（H股）</div><div class="v"><span class="vnum" data-src="market_snapshot_601088_2015.json" data-path="ah_premium.h_price_cny" data-fmt="num2">10.20</span> 元</div></div>
+      <div class="snapshot-item"><div class="k">总市值</div><div class="v"><span class="vnum" data-src="market_snapshot_601088_2015.json" data-path="market_cap.value" data-fmt="num0">281,550</span> 百万</div></div>
+      <div class="snapshot-item"><div class="k">PE（2014 EPS）</div><div class="v"><span class="vnum" data-src="parent_metrics_601088_2015.json" data-path="pe_a_2014" data-fmt="num2">8.09</span>×</div></div>
+      <div class="snapshot-item"><div class="k">PB（归母）</div><div class="v"><span class="vnum" data-src="parent_metrics_601088_2015.json" data-path="pb_a_2014" data-fmt="num2">1.02</span>×</div></div>
+      <div class="snapshot-item"><div class="k">股息率（A股）</div><div class="v"><span class="vnum" data-src="market_snapshot_601088_2015.json" data-path="dividend_yield_ttm_frac" data-fmt="pct1">4.9%</span></div></div>
+      <div class="snapshot-item"><div class="k">52周区间</div><div class="v"><span class="vnum" data-src="market_snapshot_601088_2015.json" data-path="kline_2015.low_52w" data-fmt="num2">12.96</span>–<span class="vnum" data-src="market_snapshot_601088_2015.json" data-path="kline_2015.high_52w" data-fmt="num2">26.49</span></div></div>
+      <div class="snapshot-item"><div class="k">日均成交(20日)</div><div class="v"><span class="vnum" data-src="market_snapshot_601088_2015.json" data-path="kline_2015.avg_volume_20d_shares_million" data-fmt="num2">18.08</span> 百万股</div></div>
+    </div>
+    <div class="snapshot-time">行情快照时间：2015-12-31 收盘（腾讯行情日线不复权 + 中间价 0.83778，来源等级 A）；抓取核对时间 2026-09-06。</div>
+  </header>
+
+  <section id="summary">
+    <h2>一、投资摘要</h2>
+    <p><b>一句话生意：</b>把全国开采成本最低的煤挖出来，用自己的铁路运到自己的港口卖给发电厂，再把一部分煤在自己的电厂里烧成电——三段利润锁在一家里，是全国煤企中唯一在煤价腰斩周期里仍保持双位数净利率的公司。</p>
+    <div class="points-grid">
+      <div class="point-card bull">
+        <h4>三大投资论点</h4>
+        <ul>
+          <li><b>周期低位而非结构衰退：</b>净利率从 21.5%（2011）降至 <span class="vnum" data-src="metrics_601088_2015.json" data-path="series.9.net_margin" data-fmt="pct1">14.8%</span>，但同期中煤能源跌至 1.1%、兖州煤业 3.6%——利润率下滑几乎 100% 由煤价解释，成本与份额未失守 [E:segments_601088_2015.json] [E:business_drivers_601088_2015.json]。</li>
+          <li><b>成本曲线最左端 + 不可复制的运输网：</b>自产煤单位成本 127.6 元/吨（行业普遍 150–250+），自有铁路港口占全国主要港口内贸发运量 34.7% [E:segments_601088_2015.json]；全周期 ROIC 均值 <span class="vnum" data-src="metrics_601088_2015.json" data-path="summary.roic_avg_5y" data-fmt="pct1">16.0%</span>（5 年口径）[E:metrics_601088_2015.json]。</li>
+          <li><b>现价隐含"永续衰退"：</b>反向 DCF 显示市场定价隐含未来 10 年 Owner Earnings 年降 <span class="vnum" data-src="scenarios.json" data-path="implied_growth_note_value" data-fmt="pct1">-4.0%</span>——把周期底部当成了终局 [E:consensus_601088_2015.json]。</li>
+        </ul>
+      </div>
+      <div class="point-card bear">
+        <h4>三大核心风险</h4>
+        <ul>
+          <li><b>煤价不出清：</b>2015 年末秦港 Q5500 现货 372 元/吨为 2008 年以来最低且仍在探底，产能出清在截断时点尚未启动——若煤价长期不回 500 元上方，正常化基期失效 [E:consensus_601088_2015.json]。</li>
+          <li><b>股息下调：</b>维持 0.74 元/股股息需 2016 年派息率约 72%，盈利塌方下 2016 年度股息大概率下调，不收敛下限将从 6.9% 逼近 6% 警戒线 [E:market_snapshot_601088_2015.json] [E:financials_601088_2015.json]。</li>
+          <li><b>电价与监管：</b>2015 年 4 月上网电价已下调约 2 分/千瓦时、2016 年 1 月 1 日再降 3 分（发改委 2015-12-30 公告，截断前已知），发电分部（利润占比 32%）持续承压 [E:segments_601088_2015.json] [E:consensus_601088_2015.json]。</li>
+        </ul>
+      </div>
+    </div>
+    <p><b>本笔投资取决于：</b>① 秦港 Q5500 能否在 2–3 年内回到 500 元上方（基准锚 570 元/吨）；② 神华成本与下水煤份额（34.7%）是否守住；③ 2016 年度股息政策（DPS ≥0.60 元为观察底线）。</p>
+    <p class="source-note"><b>信息局限声明：</b>① 卖方一致预期在本回测数据源中不可获得，C5 回落信号未执行，估值基期改用公司指引+煤价行业锚定；② 产业链占款能力、前五大客户集中度未逐项取数，下游议价权评级置信度降低；③ 数据窗口 10 年 &lt; 周期敏感类要求的 15 年（核验强度 B 的 V3 partial），正常化均值锚的历史代表性打折；④ 2015 全年归母净利为推算值（三季报年化 + Q4 季节性），非年报数据；⑤ 普通投资者相对机构的信息差主要在煤炭高频价格数据（CCI/环渤海指数周频 vs 机构日频）与电厂库存数据。</p>
+    <div class="insight-title">三位大师独立判断对照（各自独立评估，分歧即信号）</div>
+    <div id="chart-radar-summary" class="chart" style="height:340px"></div>
+    <div class="chart-note">三份评估各自从原始证据独立推导，互不参考（工作纸存档 workpapers/persona_*.md）；分歧点见"投委会评审"章节。评分维度：生意质量/护城河/管理层/价格安全垫/能力圈契合（5 分制）。</div>
+    <div class="insight-title">估值区间 vs 现价：A 股差 3 个百分点过闸，H 股已经全部满足</div>
+    <div id="chart-valuation-band" class="chart" style="height:240px"></div>
+    <div class="chart-note">数据来源：scenarios.json（悲观=历史最差年利润率法独立推导；基准/乐观=Owner Earnings 两阶段 DCF，折现率 10%）。A/H 为同一资产的两种票据：A 股较 H 股溢价 <span class="vnum" data-src="market_snapshot_601088_2015.json" data-path="ah_premium.premium_pct" data-fmt="num1">46.7</span>%。</div>
+  </section>
+
+  <section id="business">
+    <h2>二、公司与生意（商业模式）</h2>
+    <p><b>大白话讲这门生意：</b>神华把"挖煤、运煤、发电"三件事用自有资产串成一条线：地下的煤是全国最好挖的（露天矿+低成本井工矿，自产煤单位成本 127.6 元/吨，2014 年同比仅 +2.5%）[E:business_drivers_601088_2015.json]；挖出来走自己的铁路（朔黄/神朔/包神/大准）到自己的港口（黄骅港等）下水，火车不空跑、港口不闲置；再卖一部分煤给自己的电厂，电厂烧比市场价低 35.4 元/吨的内部煤 [E:segments_601088_2015.json]。钱最终从下游发电集团与工业用户的口袋出来，他们买到的是稳定热值、可靠运力的燃料——不是喜欢，是离不开。</p>
+    <h3>收入公式（量×价必须挂数字）</h3>
+    <p>2014 年：煤炭销量 <span class="vnum" data-src="business_drivers_601088_2015.json" data-path="drivers.4.volume" data-fmt="num1">451.1</span> 百万吨 × 综合售价 <span class="vnum" data-src="business_drivers_601088_2015.json" data-path="drivers.4.price" data-fmt="num1">351.4</span> 元/吨 ≈ 1,585 亿元（占合并收入约 64%，含对内销售）；售电量 <span class="vnum" data-src="business_drivers_601088_2015.json" data-path="drivers.4.power_volume" data-fmt="num2">199.44</span> 十亿千瓦时 × 电价 <span class="vnum" data-src="business_drivers_601088_2015.json" data-path="drivers.4.power_price" data-fmt="num1">355</span> 元/兆瓦时；铁路/港口/航运以净额法列示 [E:business_drivers_601088_2015.json]。增长引擎归因：2005–2014 收入 CAGR <span class="vnum" data-src="metrics_601088_2015.json" data-path="summary.cagr_total.revenue" data-fmt="pct1">18.9%</span> 以量为主（销量 313→451 百万吨、售电量 131.7→199.4 十亿千瓦时、同控收购并表），价在 2011 年见顶后单边下行——未来增速假设必须拆开：量已近顶，价随周期 [E:business_drivers_601088_2015.json] [E:metrics_601088_2015.json]。</p>
+    <div class="insight-title">煤价下行期，发电+运输把利润占比从 47% 抬到 59%：一体化缓震器在工作</div>
+    <div id="chart-segment-mix" class="chart" style="height:320px"></div>
+    <div class="chart-note">数据来源：segments_601088_2015.json（合并抵销前各分部经营收益占比，2014 年报；2013 对照）。这就是 2014 年神华净利率 14.8% 仍是全行业最高（中煤 1.1%、兖煤 3.6%、陕煤 2.3%）的结构原因 [E:segments_601088_2015.json]。</div>
+    <h3>所有者代入拷问</h3>
+    <p><b>① 整体买下愿意吗？</b>按市值 2,815.5 亿买断：当期（2015E 全年归母约 205–225 亿，三季报年化+Q4 季节性推算）所有者收益率约 7.3–8.0%；按中周期正常化归母约 375 亿计约 13.3%；正常化口径约 7.5 年回本。<b>② 第一件想改的事：</b>资本开支纪律——ROIIC（增量资本回报率）2013 年已跌至 5.7%、2014 年 -5.3%，低于资本成本，管理层 2014 年起压缩 capex 的动作方向正确，但派息率仍停在 40% 未上调 [E:metrics_601088_2015.json]。<b>③ 不看财报能理解吗？</b>能：把地下的低成本煤挖出来用自己的路运出去卖掉。<b>④ 最不希望对手做什么？</b>以低于现金成本的价格扩产倾销（正在全行业发生），以及发电集团自建煤炭基地削弱一体化锁定——后者进红队逻辑。</p>
+  </section>
+
+  <section id="quant">
+    <h2>三、定量画像</h2>
+    <div class="insight-title">收入十年翻五倍后于 2013 年见顶，2014 年首次负增长：成长故事结束，现金奶牛故事开始</div>
+    <div id="chart-q1" class="chart"></div>
+    <div class="chart-note">数据来源：metrics_601088_2015.json chart_series（compute_metrics 引擎输出，底稿 10 年 CAS 合并口径，单位百万元）。</div>
+    <p>收入 CAGR <span class="vnum" data-src="metrics_601088_2015.json" data-path="summary.cagr_total.revenue" data-fmt="pct1">18.9%</span>（2005–2014），但 2014 年收入同比 -12.5%、归母净利 <span class="vnum" data-src="financials_601088_2015.json" data-path="annual.9.net_income" data-fmt="num0">36,807</span> 百万元同比 -19.4%；2015 前三季归母仅 <span class="vnum" data-src="financials_601088_2015.json" data-path="interim.net_income" data-fmt="num0">16,555</span> 百万元（同比 -44.1%）——景气仍在探底，2015 全年推算约 205–225 亿（推算方法见估值章节，非年报数据）[E:financials_601088_2015.json]。</p>
+    <div class="insight-title">毛利率从 56% 一路收窄到 34%：外购煤占比提升 + 煤价下行，利润率"形状"单向下行</div>
+    <div id="chart-q2" class="chart"></div>
+    <div class="chart-note">数据来源：metrics_601088_2015.json chart_series（scale=100 小数转百分数）。净利率最新值是全期均值的 <span class="vnum" data-src="metrics_601088_2015.json" data-path="normalization.margin_ratio_latest_vs_avg" data-fmt="pct1">66.3%</span>——水平维度判"周期低位"；但利润率序列秩相关 <span class="vnum" data-src="metrics_601088_2015.json" data-path="normalization.margin_trend.spearman_rho" data-fmt="num2">-0.92</span>、仅穿越均值 1 次、连续 4 年低于均值——形状维度警报"结构性恶化"。两维合读必须给出均值回复证据，见估值章节的裁决 [E:metrics_601088_2015.json]。</p>
+    <div class="insight-title">ROIC 十年全部为正、均值 16%：煤价最差的 2014 年仍有 10.4%——护城河的定量底座</div>
+    <div id="chart-q3" class="chart"></div>
+    <div class="chart-note">数据来源：metrics_601088_2015.json chart_series（scale=100；ROIC 为含少数股东权益口径，偏保守约 2–3pct）。2014 年 ROIC <span class="vnum" data-src="metrics_601088_2015.json" data-path="series.9.roic" data-fmt="pct1">10.4%</span> 仍高于 10% 折现率——行业最差年份资本回报仍未跌破资本成本，这是"窄护城河"评级的定量核心 [E:metrics_601088_2015.json]。</div>
+    <div class="insight-title">同行净利率坍塌 80–90%、神华只收缩 31%：行业性（周期）而非公司性（结构）衰退的关键证据</div>
+    <div id="chart-q4" class="chart"></div>
+    <div class="chart-note">数据来源：parent_metrics_601088_2015.json peer_margin_chart（各公司 metrics 底稿 net_margin 序列 2010–2014 汇编，均为 CAS 合并口径）。华能国际/陕西煤业仅 2012–2014 三年序列未入图（华能 2014 净利率 8.4%、陕煤 2.3%）。</div>
+    <div class="insight-title">自由现金流：扩张高峰期烧钱、收缩期回流——2014 年 FCF 229.7 亿元已覆盖分红 1.56 倍</div>
+    <div id="chart-q5" class="chart"></div>
+    <div class="chart-note">数据来源：metrics_601088_2015.json chart_series（FCF=经营现金流净额−资本开支；fcf_low/fcf_high 为"全部 capex 视同保命钱/维持性 capex"的真实 FCF 区间）。上市以来累计分红 <span class="vnum" data-src="metrics_601088_2015.json" data-path="capital_allocation.cum_dividends" data-fmt="num0">108,003</span> 百万元，全部由累计自由现金流（149,290 百万元）支撑、覆盖 1.38 倍 [E:metrics_601088_2015.json]。</div>
+    <h3>每股口径复核</h3>
+    <p>2005–2014 年股本从 180.9 亿股增至 198.9 亿股（仅 2007 年 A 股 IPO 一次摊薄 +10%，此后十年零增发），每股 EPS CAGR <span class="vnum" data-src="metrics_601088_2015.json" data-path="summary.cagr_per_share.eps" data-fmt="pct1">9.6%</span> 略低于总量 CAGR 10.7%，差异全部来自 IPO 摊薄；每股净资产 CAGR <span class="vnum" data-src="metrics_601088_2015.json" data-path="summary.cagr_per_share.bvps" data-fmt="pct1">18.0%</span>——内生积累真实发生 [E:metrics_601088_2015.json]。归母 ROE 十年均值 <span class="vnum" data-src="parent_metrics_601088_2015.json" data-path="roe_parent_10y_avg" data-fmt="pct1">20.2%</span>、2014 年 <span class="vnum" data-src="parent_metrics_601088_2015.json" data-path="roe_parent_2014" data-fmt="pct1">13.0%</span> [E:parent_metrics_601088_2015.json]。</p>
+  </section>
+
+  <section id="moat">
+    <h2>四、护城河分析</h2>
+    <p><b>评级：<span class="tag tag-amber" data-moat="narrow">窄（narrow）</span>　趋势：稳定偏变窄　一句话依据：成本优势与煤运网络瓶颈真实存在，但产品同质化、售价完全随行就市，利润率无法脱离煤价周期——ROIC 正利差已持续 ≥6 年（不足"宽"要求的 20 年确信）。</b></p>
+    <h3>五源归类</h3>
+    <table>
+      <tr><th>来源</th><th>强度</th><th>证据</th></tr>
+      <tr><td>成本优势</td><td><span class="tag tag-green">强</span></td><td>自产煤单位成本 127.6 元/吨 vs 行业 150–250+；露天+井工组合、亿吨级规模、自有铁路省下第三方运费 [E:segments_601088_2015.json]</td></tr>
+      <tr><td>有效规模</td><td><span class="tag tag-green">强</span></td><td>朔黄—神朔—黄骅港专用煤运网占全国主要港口内贸发运量 34.7%（2013 年 34.0%，微升）；2011 年铁路分部毛利率 48.1%，瓶颈性资产重置成本数千亿 [E:segments_601088_2015.json]</td></tr>
+      <tr><td>无形资产</td><td><span class="tag tag-red">弱</span></td><td>动力煤同质化、无品牌溢价空间，2014 年售价 -10.1% 随行就市 [E:business_drivers_601088_2015.json]</td></tr>
+      <tr><td>转换成本</td><td><span class="tag tag-amber">弱-中</span></td><td>长协客户有粘性但可转换，非制度性锁定（推断，无年报附注定量数据，置信度中）</td></tr>
+      <tr><td>网络效应</td><td><span class="tag tag-red">无</span></td><td>不适用</td></tr>
+    </table>
+    <h3>定量验证</h3>
+    <ul>
+      <li><b>ROIC−资本成本利差：</b>5 年均值 <span class="vnum" data-src="metrics_601088_2015.json" data-path="summary.roic_avg_5y" data-fmt="pct1">16.0%</span>（区间 10.4%–19.5%），对 10% 折现率上限持续正利差约 6pct、已持续 ≥6 年（2006–2014 全程为正）→ 满足"窄"（≥5 年）、不满足"宽"（≥20 年确信，盈利对煤价敏感度过高）[E:metrics_601088_2015.json]。</li>
+      <li><b>定价权三项硬测试：</b>①提价记录=无（售价完全市场化，2014 年 -10.1%、2015 年继续下行）；②销量反应=不适用（无主动提价，反而 2015 年主动限产保价、销量目标 -10.4%）；③成本转嫁=部分——煤价下行 50% 期间净利率仅从 21.5% 降至 14.8%（跌幅 1/3），但对冲来源是"发电+运输内部化"而非对下游提价，性质是缓冲不是定价权 [E:business_drivers_601088_2015.json] [E:segments_601088_2015.json]。结论：无定价权，属"成本优势型"护城河。</li>
+      <li><b>市占率趋势：</b>商品煤产量占全国约 8%，下水煤份额 34.0%→34.7% 稳定微升——下行期份额未流失，护城河非伪命题 [E:segments_601088_2015.json]。</li>
+      <li><b>进攻者尸检：</b>2008–2012 年全行业固定资产投资高潮（数千亿/年资本进攻）→ 结局是 2013–2015 全行业产能过剩、煤价腰斩、纯煤企利润坍缩 80–90%，神华是最后倒下的（2014 年 FCF 仍为正 22,972 百万元）——成本优势型护城河的最强实证 [E:segments_601088_2015.json] [E:metrics_601088_2015.json]。</li>
+    </ul>
+    <h3>产业链议价权（约束估值利润率假设）</h3>
+    <p><b>上游：中-强。</b>资源自给（可采储量 159.79 亿吨中国标准 / JORC 84.2 亿吨，静态可采 &gt;50 年），无供应商议价风险；外部成本冲击主要是资源税从价改革与征地环保成本，2011–2014 自产煤单位成本年均仅 +2~3%，冲击可控 [E:segments_601088_2015.json]。<b>下游：中。</b>五大发电集团集中度高（买方强势），煤电联动使电价下调直接压缩发电分部（2015 年 4 月已下调）；但对煤分部，电厂无处可去——神华煤占港口发运量 1/3。占款能力 10 年趋势未逐项取数（缺失项，下游评级置信度降低）。<b>对估值的约束：</b>无定价权+下游"中" → 基期利润率不得按 2011–2012 高点（19–21%）外推，基准正常化基期按"中周期煤价×正常产量"推导（约 375 亿），显著低于利润率均值口径（555 亿），该约束已进入估值对账 [E:segments_601088_2015.json]。<b>最大侵蚀风险：</b>煤价长期低迷（正在发生）、铁路货运市场化稀释运网溢价、能源结构转型长期压缩煤电需求。</p>
+  </section>
+
+  <section id="growth">
+    <h2>五、增长空间与质量</h2>
+    <p><b>结论先行：这是"现金奶牛"行业，不是成长行业——增长分析的任务是防止为增长付错钱。</b></p>
+    <ul>
+      <li><b>TAM 与 S 曲线：</b>中国煤炭消费约 41 亿吨级（一次能源占比 64–66% 且 2014 年首次回落），煤电装机增速放缓——成熟期/存量博弈特征齐全（价格战、限产、头部集中度被动提升）。行业增长基准假设为 0 至 -2% [E:consensus_601088_2015.json]。</li>
+      <li><b>增长分解（未来 5 年）：</b>行业 0~-2% + 份额 +1~2%（小矿退出+集团资产注入可选）+ 价格周期回复（不可作增长承诺）+ 新业务（煤化工/境外，占比小且高风险——包头煤化工已有环保事故记录）。公司自己给的 2015 年收入目标 2,100 亿 = 同比 <span class="vnum" data-src="consensus_601088_2015.json" data-path="company_guidance_2015.revenue" data-fmt="num0">210,000</span> 百万元（-15.4%）——管理层基线即收缩 [E:business_drivers_601088_2015.json] [E:consensus_601088_2015.json]。</li>
+      <li><b>ROIIC 判读（增长质量）：</b>3 年滚动 ROIIC 2008–2012 年 16–27%（增长创造价值）→ 2013 年 5.7%、2014 年 <span class="vnum" data-src="metrics_601088_2015.json" data-path="series.9.roiic_3y" data-fmt="pct1">-5.3%</span>（增长毁灭价值）。判读：近 3 年的再投资已不增值，正确动作是收缩 capex、提高股东回报——2014 年 capex -13.8% 的行为与之自洽 [E:metrics_601088_2015.json]。</li>
+      <li><b>再投资跑道：</b>短。国内煤电运格局已成型，剩余跑道=集团资产注入+境外项目（风险高）。价值实现主通道是股息与周期回复，不是成长；派息率 40% 有提升空间 [E:segments_601088_2015.json]。</li>
+    </ul>
+  </section>
+
+  <section id="management">
+    <h2>六、管理层与企业文化</h2>
+    <h3>资本配置评分卡（10 年数据，5 分制）</h3>
+    <div class="insight-title">没有增发、没有高位并购、分红全由自由现金流支撑：央企体质下的及格偏上资本配置</div>
+    <div id="chart-mgmt-radar" class="chart" style="height:320px"></div>
+    <div class="chart-note">数据来源：qualitative_601088_2015.json management 节（10 年财务数据逐项评分）；回购维度不适用（上市以来无回购记录）未计入。</div>
+    <table>
+      <tr><th>维度</th><th>评分</th><th>依据</th></tr>
+      <tr><td>再投资纪律</td><td>3/5</td><td>高峰期 ROIIC 尚可（16–27%）但 2013–2014 转负（5.7%/-5.3%）；2014 年起主动收缩 capex -13.8%、2015 目标收入 -15.4%，方向正确；扣分：高峰后半段仍维持 500 亿级开支 [E:metrics_601088_2015.json]</td></tr>
+      <tr><td>并购记录</td><td>3/5</td><td>同控收购按账面价注入、无市场化溢价、协同真实；但注入节奏由集团战略主导，包头煤化工带环保历史问题 [E:manifest.json]</td></tr>
+      <tr><td>增发克制</td><td>4/5</td><td>2007 年 A 股 IPO 后股本十年零变动（198.9 亿股），无增发/可转债 [E:financials_601088_2015.json]</td></tr>
+      <tr><td>分红理性</td><td>4/5</td><td>连续分红（DPS 0.18→0.96→0.74 元），派息率稳定 35–40%，累计分红 108,003 百万元全由 FCF 支撑；扣分：ROIIC 转负后派息率未上调至 50%+ [E:market_snapshot_601088_2015.json] [E:metrics_601088_2015.json]</td></tr>
+    </table>
+    <h3>承诺 vs 兑现（言行一致追踪）</h3>
+    <table>
+      <tr><th>承诺</th><th>兑现</th><th>判定</th></tr>
+      <tr><td>2015 年经营目标：收入 2,100 亿（-15.4%）、销量 404.25 百万吨（-10.4%）、产量 273.6 百万吨（-10.8%）——主动限产保价</td><td>2015 前三季收入 1,314 亿（年化约 1,750 亿，落后于目标节奏）、归母 -44.1%，三季报如实披露无粉饰</td><td>方向一致、完成度落后</td></tr>
+      <tr><td>定期报告披露节奏</td><td>2012/2013/2014 年报分别于 2013-03-23 / 2014-03-29 / 2015-03-21 披露，十年节奏稳定</td><td>兑现</td></tr>
+      <tr><td>派息政策连续性</td><td>2007–2014 连续八年分红，派息率 35–40% 区间稳定</td><td>兑现</td></tr>
+    </table>
+    <p class="source-note">依据：financials_601088_2015.json（publish_date 与 dividends_paid 序列）、consensus_601088_2015.json、market_snapshot_601088_2015.json [E:financials_601088_2015.json] [E:consensus_601088_2015.json] [E:market_snapshot_601088_2015.json]</p>
+    <p><b>诚信结论：可信（上市主体层面）。</b>十年标准无保留审计意见（德勤华永）；反面证据在集团层面：审计署 2015-06-28 公告神华集团 28 家单位 6 年多计利润 11.30 亿元、48 家煤矿超核定产能开采 4.84 亿吨——上市体系未直接涉及，但提示母公司合规文化风险与潜在的注资资产质量问题，作为注资定价风险持续跟踪 [E:manifest.json]。</p>
+  </section>
+
+  <section id="risk">
+    <h2>七、财务质量与风险</h2>
+    <h3>排雷结果（Phase 0 深化）</h3>
+    <p><b>一票否决项：无。</b>未发现做空报告、财务造假指控或集体诉讼；审计意见十年标准无保留。红旗 4 项（均非否决级）：①集团审计署事件（治理）；②环保事故 2 起（包头煤化工污水直排停产、神皖安庆二期未批先建）；③财政部 2013 检查点名的子公司会计问题（金额小已整改）；④2015 年经营恶化（周期性——OCF/净利 1.83 倍的健康含金量排除了造假信号）[E:manifest.json]。</p>
+    <h3>深查发现</h3>
+    <table>
+      <tr><th>维度</th><th>发现</th><th>判定</th></tr>
+      <tr><td>应计质量</td><td>OCF/归母净利十年全部 &gt;1.19、多数 1.5–1.8；2014 年 1.83 倍</td><td><span class="tag tag-green">优秀</span></td></tr>
+      <tr><td>债务结构</td><td>2014 有息负债 81,269 vs 货币资金 43,502 百万元，净债务约 378 亿，净债/权益约 10.6%；利息覆盖约 12 倍；2015Q3 现金回升至 55,223 百万元</td><td><span class="tag tag-green">低杠杆</span></td></tr>
+      <tr><td>表外风险</td><td>集团后续资产注入为大概率但定价与资产质量不可知；担保与或有负债未逐项核验（缺失项）</td><td><span class="tag tag-amber">中</span></td></tr>
+      <tr><td>客户集中度</td><td>下游发电集团集中（前五大客户占比未逐项取数，缺失项）</td><td><span class="tag tag-amber">中</span></td></tr>
+      <tr><td>监管风险</td><td>煤电联动（电价 2015-04 与 2016-01 两连降）、资源税从价改革、环保约束收紧——均为截断前已披露事实</td><td><span class="tag tag-red">实质压力</span></td></tr>
+      <tr><td>股息可持续性</td><td>维持 0.74 元需 2016 年派息率约 72%；中性假设 DPS 下调至 0.45–0.55 元或公司上调派息率（2013 年利润 -4.3% 时 DPS 仅 0.96→0.91 微降的历史倾向）</td><td><span class="tag tag-amber">承压</span></td></tr>
+    </table>
+    <p class="source-note">依据：financials_601088_2015.json、metrics_601088_2015.json、manifest.json adversarial_check [E:financials_601088_2015.json] [E:metrics_601088_2015.json] [E:manifest.json]</p>
+    <h3>A 股防割附加清单</h3>
+    <p>①同控收购定价公允性：历年按账面价注入、无高溢价输送（正面）；②集团资金占用：未发现（十年审计无保留）；③股本运作：十年零增发（正面）；④政策依赖度：电价/煤价双管制传导是核心变量，已进入三情景加压假设。</p>
+    <h3>可及性与摩擦</h3>
+    <p>A 股经境内券商直接交易；H 股（1088.HK）经港股通需缴 20% 股息红利税（H 股名义股息率 7.25%，港股通税后约 5.8%，仍高于 A 股 4.94%）；直接开境外账户持 H 股缴 10% 预提税（约 6.5%）。汇率敞口：港元挂钩美元，人民币兑美元 2015 年波动加大（中间价 6.4936）。A/H 价差 46.7% 本身构成工具选择收益差，但港股通分红税与流动性折价是摩擦成本 [E:market_snapshot_601088_2015.json]。</p>
+  </section>
+
+  <section id="valuation">
+    <h2>八、估值与安全边际</h2>
+    <h3>基期正常化裁决（本案核心测试点：周期低位 vs 结构衰退）</h3>
+    <p>compute_metrics 引擎给出两维信号：<b>水平维度</b>——净利率是全期均值的 <span class="vnum" data-src="metrics_601088_2015.json" data-path="normalization.margin_ratio_latest_vs_avg" data-fmt="pct1">66.3%</span>，判"周期低位"；<b>形状维度</b>——利润率秩相关 <span class="vnum" data-src="metrics_601088_2015.json" data-path="normalization.margin_trend.spearman_rho" data-fmt="num2">-0.92</span>、仅穿越均值 1 次、末端连续 4 年低于均值，引擎警报"结构性恶化"并触发双轨裁决（要求并列两轨+均值回复证据）[E:metrics_601088_2015.json]。</p>
+    <p><b>裁决：判"周期低位"，采用大宗商品路径（中周期煤价×正常产量）向上正常化，但幅度从严。</b>均值回复证据五条：①价格分位——2015 年末秦港 372 元/吨为 2008 年以来最低、低于 8 年均价 40%，逼近全行业现金成本线 [E:consensus_601088_2015.json]；②成本曲线位置——神华自产成本 127.6 元/吨为全国最低之列，全行业亏损时它仍盈利 165.55 亿 [E:segments_601088_2015.json] [E:financials_601088_2015.json]；③份额稳定——销量 451.1 百万吨（-12.4% 系主动限产）、下水份额 34.0%→34.7% 上升，利润率下滑源于价格而非量/份额流失，与"结构性衰退"判别特征相反 [E:segments_601088_2015.json]；④结构对冲——发电+运输利润占比 47%→59%，煤价下跌时一体化分部利润扩张 [E:segments_601088_2015.json]；⑤成本非失控——单位成本年均 +2.5%，利润率单向下行几乎全部由售价贡献。<b>三轨并列：</b>主轨正常化 OE <b>37,500</b> 百万元（中周期锚 570 元/吨×正常产量，推导见下）；保守交叉轨当期 OE 36,807 百万元（2014 实际）；利润率均值口径 55,512 百万元<b>被否决</b>（超级周期利润率污染均值，对资源类公司高估）[E:normalization_601088_2015.json]。</p>
+    <p><b>正常化推导（弹性法，全部用截断前实证数据）：</b>中周期秦港锚 570 元/吨（2008–2015 八年均值 625、2011–2015 五年均值 612、2013–2015 三年均值 510 的保守取值）；实现售价弹性 0.66（2013→2014 年秦港 -10.2%/神华售价 -10.1% 标定）；煤价中枢回归带来煤炭分部税前 +11,300、发电分部燃料成本 -2,028、<b>2016 年 1 月 1 日燃煤上网电价再降 3 分/千瓦时（发改委 2015-12-30 公告，截断前已知）税前 -6,000</b>、成本粘性 -2,000 → 归母 +约 700 → 基期 OE ≈ <b>37,500 百万元</b>（每股 1.885 元）[E:normalization_601088_2015.json] [E:consensus_601088_2015.json]。煤价→归母弹性 225 百万元/(元/吨) 的实证核验：2013→2014 售价 -39.4 元/吨 × 自产 306.7 百万吨 × 75% 税后 ≈ 9,063 ≈ 实际归母降幅 8,871（差额为发电对冲）[E:normalization_601088_2015.json]。</p>
+    <h3>三情景（同一引擎 forward-value，悲观独立方法）</h3>
+    <table>
+      <tr><th>情景</th><th>每股价值</th><th>方法</th><th>关键假设</th><th>概率</th></tr>
+      <tr><td>悲观</td><td><span class="vnum" data-src="scenarios.json" data-path="scenarios.0.value_per_share" data-fmt="num2">10.43</span> 元</td><td>worst_year_margin（独立，全程不走 DCF）</td><td>2014 实证压力年净利率 14.82% × 收入中枢 1,750 亿 × 危机期 PE 8 倍；加压：margin/revenue/valuation_multiple 三项</td><td>25%</td></tr>
+      <tr><td>基准</td><td><span class="vnum" data-src="fv_base.json" data-path="value_per_share" data-fmt="num2">24.04</span> 元</td><td>Owner Earnings 两阶段 DCF</td><td>基期 OE 37,500 百万元、g 2%、r 10%、永续 2%、10 年期；终值占比 <span class="vnum" data-src="fv_base.json" data-path="terminal_diagnostics.terminal_value_ratio" data-fmt="pct1">47.0%</span></td><td>50%</td></tr>
+      <tr><td>乐观</td><td><span class="vnum" data-src="fv_bull.json" data-path="value_per_share" data-fmt="num2">30.92</span> 元</td><td>Owner Earnings 两阶段 DCF</td><td>中周期锚上移至 625 元/吨+煤电联动部分恢复电价，基期 OE 45,000 百万元；终值占比 49.4%</td><td>25%</td></tr>
+    </table>
+    <p class="source-note">悲观情景独立方法核验：脚本按公式重算 0.1482×175,000×8/19,890 = <span class="vnum" data-src="scenario_audit.json" data-path="diagnostics.bear_recomputed_value" data-fmt="num2">10.43</span> 元，与登记值偏差 <span class="vnum" data-src="scenario_audit.json" data-path="diagnostics.bear_recompute_deviation" data-fmt="raw">0.000132</span>，门禁 S1–S9 全过 [E:scenario_audit.json]。最差年选定 2014（净利率 14.82%）而非 2015 推算值 12.6%：2015 为正在发生的压力年，其全年利润为推算而非年报实证，用已审计的 2014 年更硬；交叉验证 pb_trough 法（0.88×14.67=12.9 元）显示 worst_year 口径更保守。</p>
+    <h3>反向 DCF：市场在定价什么？</h3>
+    <p>用市值 <span class="vnum" data-src="market_snapshot_601088_2015.json" data-path="market_cap.value" data-fmt="num0">281,550</span> 百万元、折现率 10%、永续 2% 反解：<b>按正常化基期（37,500）市场隐含未来 10 年 OE 年降 5.59%；按当期基期（36,807）隐含年降 5.31%</b>——市场把周期底部当成了永续衰退轨迹。我们的基准假设是 +2%：<b>分歧即机会，但分歧能否兑现取决于煤价，不取决于口才</b> [E:consensus_601088_2015.json]。</p>
+    <h3>敏感性（永续增速 ±1pct 通常引起价值 ±15–20%，远超安全边际档位分辨率）</h3>
+    <table>
+      <tr><th>假设变动</th><th>基准每股价值</th><th>说明</th></tr>
+      <tr><td>中周期锚 570→456（-20%）</td><td>≈21.5 元</td><td>锚 456 时 OE≈33,600</td></tr>
+      <tr><td>中周期锚 570→684（+20%）</td><td>≈26.6 元</td><td>锚 684 时 OE≈41,500</td></tr>
+      <tr><td>永续增速 2%→1%</td><td>≈22.2 元</td><td>-7.6%</td></tr>
+      <tr><td>永续增速 2%→3%</td><td>≈26.6 元</td><td>+10.6%</td></tr>
+    </table>
+    <p class="source-note">数据来源：scenarios.json sensitivity 节（同一引擎重算）。</p>
+    <h3>安全边际结论（双闸门）</h3>
+    <p><b>闸门一（A 股）：安全边际 37.7% &lt; 40%（"窄"护城河门槛）→ 未达标。</b>清足价 = 基准 24.04 × (1−40%) = <span class="vnum" data-src="parent_metrics_601088_2015.json" data-path="trigger_gate1_price_a" data-fmt="num2">14.42</span> 元。<b>闸门二：</b>①期望 IRR <span class="vnum" data-src="expected_return.json" data-path="expected_annualized_irr" data-fmt="pct1">17.8%</span> &lt; 门槛 <span class="vnum" data-src="expected_return.json" data-path="gate2.consistency_expected_irr.hurdle" data-fmt="pct1">21.8%</span> ✗（自洽性校验：悲观情景 25% 权重以年化 2.3% 拖累加权值；有效门槛对应买入价约 12.70 元）；②不收敛下限 6.9% ≥ 6% ✓（股息 4.9% + 内在价值增速 2%）；③悲观年化 2.3% ≥ 0 ✓。<b>两道闸门均未通过 → 纪律不允许买入档位。</b>[E:expected_return.json] [E:scenario_audit.json]</p>
+    <p><b>H 股同轨对照：</b>同一基准内在价值 24.04 元下，H 股折人民币 10.20 元对应安全边际 57.6%（≥40% ✓）、期望 IRR 约 27%（≥21.8% ✓）、悲观情景年化约 +10%——<b>H 股双闸全过</b>。A/H 价差 46.7% 使工具选择本身构成收益差；但按本案例约束（标的以 A 股 601088.SH 为主口径），结论档位以 A 股为准，H 股事实单列披露 [E:parent_metrics_601088_2015.json] [E:market_snapshot_601088_2015.json]。</p>
+    <h3>假设一致性对账（五维 × 估值）</h3>
+    <table>
+      <tr><th>核对项</th><th>结果</th></tr>
+      <tr><td>① DCF 收入 ≤ TAM×份额上限</td><td>通过——正常化收入中枢 2,100–2,200 亿为现有体量外推，无 TAM 越界</td></tr>
+      <tr><td>② 利润率假设与护城河匹配</td><td>通过——"窄"+无定价权，基期净利率约 21.4%（37,500/175,000）低于 2011–2012 高点，未按高点外推</td></tr>
+      <tr><td>③ 再投资率与 ROIIC 一致</td><td>通过——g=2% 仅靠价与微量增，模型隐含 capex 收缩、分红提升，与 ROIIC 转负事实自洽</td></tr>
+      <tr><td>④ 增速假设通过基率检验</td><td>通过——g=2% 低于近 5 年 EPS 增速 0% 与长期名义 GDP</td></tr>
+      <tr><td>⑤ 利润率符合议价权约束</td><td>通过——下游议价权"中" → 基期取中周期煤价路径而非利润率均值（55,512 被否）</td></tr>
+    </table>
+  </section>
+
+  <section id="key-judgment">
+    <h2>九、关键判断（Phase 4.5）</h2>
+    <h3>关键变量（既重要又可知）</h3>
+    <table>
+      <tr><th>关键变量</th><th>当前判断</th><th>依据</th><th>为什么可知</th></tr>
+      <tr><td>① 煤价均值回复（秦港 Q5500 回到 500 元上方）</td><td>2–3 年内大概率发生（基准情景核心）</td><td>现货 372 元/吨处现金成本 90 分位以下，全行业亏损将强制产能退出；神华限产保价已开始 [E:consensus_601088_2015.json]</td><td>周度跟踪秦港/环渤海指数、全国产能退出与库存数据；价格信号高频可观测</td></tr>
+      <tr><td>② 神华成本与份额稳定性</td><td>守住（成本 +2.5%/年、下水份额 34.7%）</td><td>十年成本曲线未断裂、下行期份额微升 [E:segments_601088_2015.json]</td><td>季度经营公告披露销量/售价/单位成本，公司披露质量高 [E:financials_601088_2015.json]</td></tr>
+      <tr><td>③ 股息政策</td><td>2016 年度 DPS 或降至 0.5–0.6 元，派息率有上调对冲</td><td>2013 年利润下滑时 DPS 微降历史倾向；派息率 40% 有空间 [E:market_snapshot_601088_2015.json]</td><td>年度利润分配公告直接披露，确定性高</td></tr>
+    </table>
+    <h3>变异认知测试</h3>
+    <p><b>市场为什么给现在这个价：</b>2015 年 A 股先泡沫后股灾（6 月 26.49 元→8 月 12.96 元），叠加煤价 372 元/吨仍在创新低、三季报 -44.1%——市场叙事是"煤炭完了"，价格隐含 OE 十年年降 5.6%。<b>我们与市场的分歧：</b>市场把"价格周期"读成"结构死亡"；我们认为成本曲线最左端+份额稳定+一体化对冲的公司不会死于价格潮汐，372 元/吨的煤价本身就在制造供给出清的条件。<b>认知优势来源：</b>不在信息量（煤价高频数据机构更快），而在两点——①用全行业利润率坍缩 80–90% vs 神华 31% 的对照组排除了"结构衰退"误判（多数投资者不看竞对底稿）；②把 2016-01-01 电价下调（截断前已公告）计入基期，多数 quick-look 估值会漏掉这 6 亿税前利润 [E:consensus_601088_2015.json] [E:segments_601088_2015.json]。诚实声明：煤价拐点时点不可知，我们的优势是"位置"不是"时点"。</p>
+    <h3>双重机会成本对照</h3>
+    <table>
+      <tr><th>对照项</th><th>预期年化回报</th><th>本标的预期回报</th><th>结论</th></tr>
+      <tr><td>指数基金（沪深 300，2015 年末股灾后风险溢价抬升期）</td><td>9%（index-hurdle 口径）</td><td rowspan="2">期望 IRR <span class="vnum" data-src="expected_return.json" data-path="expected_annualized_irr" data-fmt="pct1">17.8%</span>（概率加权）</td><td>A 股现价跑赢指数 8.8pct，但低于窄护城河门槛——机会成本可接受、纪律门槛不接受</td></tr>
+      <tr><td>用户最好持仓（未提供，按纪律以指数为默认对照）</td><td>—</td><td>同上</td></tr>
+    </table>
+    <p class="source-note">beats_index=true 仅作机会成本展示，不单独决定档位（与安全边际同源）[E:expected_return.json]。</p>
+  </section>
+
+  <section id="committee">
+    <h2>十、投委会评审（三位大师独立评估 + 红队）</h2>
+    <blockquote class="persona"><span class="persona-name">巴菲特视角（独立评估，全文见 workpapers/persona_buffett.md）</span>"用47%的溢价买世上最好的煤矿生意，不如用折价买它的H股——A股等价格，H股可以认真谈。" 生意本质：把大宗商品生意做出"收费公路"特征，全周期 ROIC 均值 16% 说明成本位置和资产结构是真实的 [E:metrics_601088_2015.json]；护城河判"窄偏宽"——资源决定你在牌桌上，成本与运输才是筹码，但价格接受者保利润率不保价格 [E:business_drivers_601088_2015.json]；管理层扣分项在集团合规文化 [E:manifest.json]；估值上市场把周期底部当永续衰退，A 股差临门一脚、H 股过闸。档位：观察等价格（A 股触发 14.42 元）。</blockquote>
+    <blockquote class="persona"><span class="persona-name">段永平视角（独立评估，全文见 workpapers/persona_duan.md）</span>"生意是真赚钱，但煤价不是它说了算——4.9%股息率买A股不够诱人，等；同样的钱买H股7.25%股息率，才开始有意思。" 能力圈：生意看得懂，但"懂它便宜"和"知道煤价何时反转"是两回事；"生意还在、利润坐电梯"的类型 [E:business_drivers_601088_2015.json]；市值低于归母账面净资产、7.5 倍正常化 PE——价格给了保护但不诱人 [E:parent_metrics_601088_2015.json]；毛病清单：集团审计问题扣小分、煤化工不在能力圈但利润占比仅 2% [E:manifest.json] [E:segments_601088_2015.json]。档位：观察等价格（等价格也等煤价企稳证据）。</blockquote>
+    <blockquote class="persona"><span class="persona-name">李录视角（独立评估，全文见 workpapers/persona_lilu.md）</span>"这是一个'市场按衰亡定价、生意按常态运转'的经典错定价案例——A股差3个百分点的安全边际，H股已经全部满足；耐心是这里唯一的稀缺品。" 核心贡献是两维判读：利润率下滑几乎 100% 由煤价解释（量、成本、价拆解），"这不是诺基亚式的结构性死亡，是商品价格的潮汐" [E:business_drivers_601088_2015.json] [E:metrics_601088_2015.json]；可证伪点明确：若 2016–2017 年煤价不回到 500 元上方，"潮汐论"错误、市场是对的；H 股双闸全过、悲观情景年化仍 +10% [E:parent_metrics_601088_2015.json]。档位：观察等价格（A 股）；H 股可小仓位试探并按季度跟踪。</blockquote>
+    <h3>分歧对照表（核心产出）</h3>
+    <table>
+      <tr><th>问题</th><th>巴菲特</th><th>段永平</th><th>李录</th></tr>
+      <tr><td>护城河算不算"宽"？</td><td>窄偏宽：ROIC 16%+成本最低+运网不可复制</td><td>窄：煤价不由它定，生意再好也受制于人</td><td>窄：周期底部 ROIC 10.4%≈资本成本，宽度未经受足够考验</td></tr>
+      <tr><td>2015 年末是不是"周期底"？</td><td>接近但无出清证据，供给收缩需 2–3 年</td><td>不知道也不猜，用股息率和中周期锚兜底</td><td>产业经济学意义上的底部区，但时间不可知</td></tr>
+      <tr><td>A 股 vs H 股？</td><td>同一资产差 46.7%，当然 H 股</td><td>H 股：同样的公司为什么多付 47%</td><td>H 股过双闸、A 股不过——工具选择本身就是超额收益</td></tr>
+      <tr><td>股息会被砍吗？</td><td>FCF 覆盖 1.38 倍偏薄，下行年有压力</td><td>砍到 0.5 元也还有 3.3%，可接受</td><td>净负债 378 亿+capex 高峰已过，40% 派息可持续性中性</td></tr>
+    </table>
+    <p><b>共识点：</b>①生意质量为煤企最佳、防错能力强；②A 股现价安全边际不足（37.7%&lt;40%）；③观察等待、触发价以下分批。<b>采纳裁决：</b>采纳李录的工具视角与段永平的股息兜底逻辑——A 股档位=观察等价格（触发价 14.42 元），H 股已过双闸的事实单列披露。</p>
+    <div class="redteam">
+      <h3>芒格式红队质询</h3>
+      <p><b>反演——怎样确保这笔投资亏大钱？</b></p>
+      <ol>
+        <li>在煤价 372 元/吨且毫无出清迹象时重仓，赌"这次是底"——若产能出清因地方保护拖延 5 年，基准情景基期 37,500 百万元不成立，内在价值向悲观情景 10.43 元坍缩（较现价 -30%）。</li>
+        <li>忽略电价二连击：2015-04 降 2 分已落地、2016-01-01 再降 3 分已成文——发电分部（利润占比 32%）两年内利润率系统性下移，若煤价不同步回复，一体化缓震器双向缓冲变成双向受损。</li>
+        <li>把 H 股过闸当买入令却忽视摩擦：港股通红利税 20% 吃掉 1.45pct 股息率、流动性折价在退出时反向放大。</li>
+        <li>用"账面 PB 1.02 倍"当安全垫——若煤价长期低迷触发资产减值（煤矿+煤化工），账面净资产本身会缩水，PB 底是软底。</li>
+      </ol>
+      <p><b>心理误判自检：</b>锚定效应（372 元/吨的历史低价锚可能反向锚定我们的"低位"判断——解决：正常化锚用八年均值而非现价）；社会认同（"高股息捡便宜"是 2015 年末的流行叙事，需独立验证股息可持续性——已按悲观情景加压处理）；剥夺超级反应（三季报 -44.1% 的吓人程度可能造成超卖，也可能正确反映趋势——用竞对对照组拆分了量价贡献，避免纯情绪判断）。</p>
+      <p><b>最强空头逻辑：</b>"煤炭需求已见顶（2014 年消费占比首次回落），供给出清受地方财政与就业约束可能拖延数年；神华的运输网溢价将随铁路货运市场化改革稀释；两头上挤（电价降+资源税升）下（成本刚性涨），即使煤价回 500 元，利润率也回不到 2013 年水平——正常化基期 37,500 仍是乐观值。"（回应：该逻辑的极端形态就是悲观情景 10.43 元，它已以 25% 权重计入期望回报；空头无法解释的是份额与成本十年稳定性——若神华真在结构性衰退，竞对坍塌 80–90% 时它不可能只收缩 31% [E:segments_601088_2015.json]。）</p>
+      <p><b>Pre-mortem（假设 5 年后亏 50%）：</b>最可能路径=煤价在 400 元以下徘徊 5 年+2016 年股息下调 40% 市场用脚投票+一笔不理性的集团资产注入摊薄回报。三个坑全部挂上了可观测的前哨指标（见跟踪清单）。</p>
+      <p><b>红队裁定：</b>不降档（维持观察等价格）。理由：档位本身已不含仓位承诺；四条亏钱路径中三条已被情景与加压假设覆盖，第四条（PB 软底）不影响档位判断。但股息下调风险 severity=高，列为第一证伪条件。</p>
+    </div>
+  </section>
+
+  <section id="conclusion">
+    <h2>十一、结论与行动</h2>
+    <p>最终档位：<span class="tag tag-amber" style="font-size:16px">观察等价格（verdict_ordinal = 2）</span>　闸门一 ✗（37.7% &lt; 40%）｜闸门二 ✗（①17.8%&lt;21.8%）——<b>纪律不允许买入档位，但公司质量与价格位置值得持续跟踪。</b></p>
+    <h3>持有体验预演</h3>
+    <p>2015 年内实际发生：6 月 10 日高点 26.49 元→8 月 26 日低点 12.96 元，4 个半月回撤 <span class="vnum" data-src="parent_metrics_601088_2015.json" data-path="max_drawdown_2015" data-fmt="pct1">-51.1%</span>，年末收于 14.97 元仍较高点 -43.5%——而同期基本面恶化幅度（归母 -40% 量级）远小于股价波动：波动主体是市场贝塔（2015 年 A 股泡沫-股灾）而非公司 [E:parent_metrics_601088_2015.json]。<b>灵魂拷问：</b>若买入后下跌 40% 而基本面未变（股息率升至 7%+、净负债可控、份额未失），纪律答案是敢加仓——触发价 14.42 元就是把这个问题的答案价格化。<b>周期股的持有体验本质：</b>买在周期低位的正确姿势是忍受"账面浮亏+漫长等待+市场嘲笑"三件套，回报在出清兑现时一次性到来，前提是你在成本曲线最左端的公司里等。</p>
+    <h3>证伪条件（出现即说明论点错误，逐条对应关键变量）</h3>
+    <ul class="checklist">
+      <li>【煤价均值回复】<b>若 2017-12-31 前秦港 Q5500 未回到 500 元/吨上方</b>→"潮汐论"证伪，正常化基期 37,500 失效，退回当期口径（内在价值降至约 20 元下方、安全边际不足 25%），清仓离场。</li>
+      <li>【股息政策】<b>若 2016 年度 DPS 下调至 0.45 元以下且派息率未同步上调至 50%+</b>→股息支撑逻辑失效，不收敛下限跌破 6% 警戒线，档位降为"拒绝"。</li>
+      <li>【成本与份额】<b>若下水煤份额跌破 30% 或自产煤单位成本年涨幅 &gt;5%</b>→护城河"成本优势+有效规模"双受损，评级降"无"，无论价格多便宜都不给买入结论。</li>
+    </ul>
+    <h3>季度跟踪清单</h3>
+    <table>
+      <tr><th>指标</th><th>当前值（2015-12-31）</th><th>警戒线</th><th>说明</th></tr>
+      <tr><td>秦港 Q5500 平仓价（周）</td><td>372 元/吨</td><td>&lt;350 持续 8 周 / &gt;450 连续 8 周</td><td>跌破 350=出清加速或需求塌方，升破 450=回复启动</td></tr>
+      <tr><td>公司季度商品煤销量同比</td><td>1-2 月 -44%/-20%（限产）</td><td>非限产性下滑 &gt;-10%</td><td>区分主动限产与份额流失</td></tr>
+      <tr><td>自产煤单位生产成本（年报）</td><td>127.6 元/吨（+2.5%）</td><td>年涨幅 &gt;5%</td><td>成本失控即护城河预警</td></tr>
+      <tr><td>下水煤份额</td><td>34.7%</td><td>&lt;30%</td><td>运网地位侵蚀信号</td></tr>
+      <tr><td>上网电价政策</td><td>2016-01-01 起 -3 分/千瓦时</td><td>再降且无煤电联动对冲</td><td>发电分部（利润 32%）利润率下移</td></tr>
+      <tr><td>年度 DPS 与派息率</td><td>0.74 元 / 40%</td><td>DPS &lt;0.45 且派息率 &lt;50%</td><td>证伪条件②</td></tr>
+      <tr><td>集团资产注入公告</td><td>—</td><td>注入价明显高于同业并购倍数</td><td>集团治理风险的具体化</td></tr>
+    </table>
+    <h3>用户初判 vs 本报告结论</h3>
+    <p>本案件为历史回放验证（B2-07），无用户提供初判；meta.json 记录的先验预期为 verdict_ordinal=2「观察等价格」、gate1=false——本报告独立执行结果与先验一致（档位 2、gate1 ✗），gate2 亦未通过（先验中 gate2 未评估）。<b>分歧点：</b>无实质分歧；本报告的增量在于三情景离散度（悲观/基准 = 0.43）与 H 股双闸全过的事实披露。</p>
+    <h3>与上次分析对比</h3>
+    <p>首次分析（无历史 decision-log 记录）。</p>
+  </section>
+
+  <section id="appendix">
+    <h2>附录：数据来源与校验</h2>
+    <h3>数据底稿清单（data/，全部经入口校验）</h3>
+    <table>
+      <tr><th>文件</th><th>来源</th><th>等级</th><th>覆盖</th></tr>
+      <tr><td>financials_601088_2015.json</td><td>新浪财经历史三表（CAS）+ 年报原文/中证网 crosscheck 三年度</td><td>A</td><td>2005–2014 年报 + 2015 三季报</td></tr>
+      <tr><td>metrics_601088_2015.json</td><td>compute_metrics.py 引擎输出（重跑 diff 一致）</td><td>A</td><td>2005–2014 指标序列+正常化诊断</td></tr>
+      <tr><td>financials_peer_*.json ×4（中煤/兖煤/华能/陕煤）</td><td>新浪财经利润表，is_peer 免双源核对（披露项）</td><td>A</td><td>2010–2014（华能/陕煤 2012–2014）</td></tr>
+      <tr><td>business_drivers_601088_2015.json</td><td>公司 2011–2014 年报运营数据公告</td><td>A</td><td>量价电量电价 + 2015 经营目标</td></tr>
+      <tr><td>market_snapshot_601088_2015.json</td><td>腾讯行情日线（不复权）+ 外汇交易中心中间价 + 中债估值</td><td>A</td><td>2015-12-31 收盘</td></tr>
+      <tr><td>consensus_601088_2015.json</td><td>公司 2014 年报经营目标（中证网）+ 环渤海/秦港煤价指数；卖方一致预期不可得（如实标注）</td><td>A/C</td><td>指引+煤价锚</td></tr>
+      <tr><td>segments_601088_2015.json</td><td>2014 年报分部数据 + 2011 年报（HKFRS 口径分部利润）</td><td>A</td><td>2010–2014 分部</td></tr>
+      <tr><td>scenarios.json / scenario_audit.json / expected_return.json / fv_base.json / fv_bull.json</td><td>check_scenarios.py（S1–S9 全过）与 reverse_dcf.py 引擎输出</td><td>A</td><td>三情景/闸门二</td></tr>
+      <tr><td>qualitative_601088_2015.json / phase5_workpaper.json / workpapers/persona_*.md</td><td>Phase 3/5 分析底稿（三师分立生成）</td><td>A</td><td>五维定性+投委会</td></tr>
+    </table>
+    <h3>入口校验与数字校验结果摘要</h3>
+    <p class="source-note">①validate_data.py：通过（0 错误 / 2 警告）——警告一"最新披露距今 4188 天"由 manifest.latest_quarter_checked 应答（2015 三季报已核对，归母 -44.1% 已计入基期）；警告二"2015 年报缺失"由 official_filing_missing 豁免（回测信息截断纪律）。②check_business_drivers.py：通过（0 警告）。③check_market_snapshot.py：通过，2 条 SNAPSHOT_LEGACY_SCHEMA 告警——A/H 分计价快照的固有过渡态（分计价识别依赖顶层 price_a/price_h 字段，迁移规范 schema 会破坏双计价三角校验），三角校验偏差 -0.00%。④verification_strength.py：B 级（V1 勾稽 100% full、V2 原文登记 full、V3 数据窗口 10/15 年 partial——周期敏感类要求 15 年，2005 年上市前数据不可得，相关章节置信度已打折）。⑤竞对底稿 is_peer 跳过双源核对（已披露）。⑥check_scenarios.py：通过（0 警告），S2b 悲观值机器重算偏差 0.0132%。⑦verify_report.py：本报告交付前运行（结果见交付摘要）。</p>
+    <h3>信息局限声明（汇总）</h3>
+    <p class="source-note">卖方一致预期缺失（C5 未执行，估值改用公司指引+行业锚定）；占款能力与前五大客户集中度未逐项取数（下游议价权评级置信度中）；数据窗口 10 年 &lt; 15 年要求（核验强度 B）；2015 全年归母为推算值（三季报年化+Q4 季节性 2012–2014 形态外推）；H 股 HKFRS 与 A 股 CAS 归母存在差异（2014 年 39,301 vs 36,807 百万元），统一采用 CAS 口径；2011–2013 年同控收购致可比数据重述（±3% 内）。</p>
+    <h3>术语速查表</h3>
+    <table>
+      <tr><th>术语</th><th>白话解释</th></tr>
+      <tr><td>ROIC</td><td>投入资本回报率——每 1 元生意里压着的本钱一年赚回几分钱</td></tr>
+      <tr><td>ROIIC</td><td>增量资本回报率——新投下去的 1 元钱一年赚回几分钱，衡量增长是否还划算</td></tr>
+      <tr><td>Owner Earnings（OE）</td><td>所有者盈余——股东真正能从生意里拿走的钱（净利+折旧摊销−维持性资本开支）</td></tr>
+      <tr><td>反向 DCF</td><td>不问"值多少钱"，反问"现在的股价默认了未来赚多少/亏多少"</td></tr>
+      <tr><td>安全边际</td><td>内在价值与买入价的差额缓冲——错估时的保险</td></tr>
+      <tr><td>不收敛下限</td><td>假设股价永远不回到内在价值，股息+内在价值增长本身给你的年回报</td></tr>
+      <tr><td>正常化基期</td><td>把周期高低的利润拉回"中等年景"再估值，防止把顶部当常态或把底部当死亡</td></tr>
+      <tr><td>worst_year_margin</td><td>用历史上真实发生过的最差年利润率推算悲观情景，全程不用 DCF</td></tr>
+    </table>
+  </section>
+
+  <footer class="disclaimer">
+    本报告由分析工具生成，仅供研究参考，不构成任何投资建议。市场有风险，投资需谨慎。
+  </footer>
+</div>
+
+<script>
+// ============ 图表统一配色与初始化 ============
+const COLOR = { primary: '#1a3a5c', accent: '#d97706', grays: ['#9ca3af','#6b7280','#d1d5db','#4b5563'] };
+const charts = [];
+function initChart(id, option) {
+  const el = document.getElementById(id);
+  if (!el || typeof echarts === 'undefined') return;
+  const c = echarts.init(el);
+  c.setOption(Object.assign({
+    textStyle: { fontFamily: '-apple-system, PingFang SC, Microsoft YaHei' },
+    grid: { left: 60, right: 30, top: 50, bottom: 40 },
+    tooltip: { trigger: 'axis' }
+  }, option));
+  charts.push(c);
+}
+window.addEventListener('resize', () => charts.forEach(c => c.resize()));
+if (typeof echarts === 'undefined') {
+  document.querySelectorAll('.chart').forEach(el => {
+    el.innerHTML = '<p style="color:#b91c1c;padding:20px">图表需联网加载 ECharts 后显示</p>';
+  });
+}
+
+// ============ 三人评分雷达（radar 必须用 value 键） ============
+initChart('chart-radar-summary', {
+  tooltip: {},
+  radar: {
+    indicator: [
+      { name: '生意质量', max: 5 }, { name: '护城河', max: 5 }, { name: '管理层', max: 5 },
+      { name: '价格安全垫', max: 5 }, { name: '能力圈契合', max: 5 }
+    ]
+  },
+  series: [{
+    type: 'radar',
+    data: [
+      {/*<!-- vchart src=phase5_workpaper.json path=persona_scores.buffett -->*/ value: [3.5, 3.5, 3.0, 2.5, 5.0], name: '巴菲特', itemStyle: { color: COLOR.primary } },
+      {/*<!-- vchart src=phase5_workpaper.json path=persona_scores.duan -->*/ value: [3.0, 3.0, 3.0, 3.0, 5.0], name: '段永平', itemStyle: { color: COLOR.accent } },
+      {/*<!-- vchart src=phase5_workpaper.json path=persona_scores.lilu -->*/ value: [3.5, 3.5, 3.0, 2.5, 4.5], name: '李录', itemStyle: { color: '#15803d' } }
+    ]
+  }],
+  legend: { bottom: 0 }
+});
+
+// ============ 估值区间：三情景横条 + 现价 markLine ============
+initChart('chart-valuation-band', {
+  grid: { left: 80, right: 60, top: 20, bottom: 30 },
+  xAxis: { type: 'value', name: '每股价值(元)' },
+  yAxis: { type: 'category', data: ['悲观', '基准', '乐观'] },
+  series: [
+    { type: 'bar', barWidth: 36, itemStyle: { color: '#93c5fd' },
+      /*<!-- vchart src=scenarios.json path=chart.values_per_share -->*/
+      data: [10.43, 24.04, 30.92],
+      markLine: { symbol: 'none', data: [
+        { xAxis: 14.97, label: { formatter: 'A股 14.97' }, lineStyle: { color: '#1a3a5c', width: 2 } },
+        { xAxis: 10.204, label: { formatter: 'H股 10.20' }, lineStyle: { color: '#d97706', width: 2, type: 'dashed' } }
+      ] } }
+  ]
+});
+
+// ============ 收入与归母净利（10年） ============
+initChart('chart-q1', {
+  legend: { bottom: 0 },
+  xAxis: { type: 'category', data: [2005,2006,2007,2008,2009,2010,2011,2012,2013,2014] },
+  yAxis: { type: 'value', name: '百万元' },
+  series: [
+    { name: '营业收入', type: 'line', itemStyle: { color: COLOR.primary }, smooth: true,
+      /*<!-- vchart src=metrics_601088_2015.json path=chart_series.revenue -->*/
+      data: [52242,64240,82107,107133,121312,152063,208197,250260,283797,248360] },
+    { name: '归母净利', type: 'line', itemStyle: { color: COLOR.accent }, smooth: true,
+      /*<!-- vchart src=metrics_601088_2015.json path=chart_series.net_income -->*/
+      data: [14700,16436,19766,26588,30276,37187,44822,47661,45678,36807] }
+  ]
+});
+
+// ============ 净利率与毛利率 ============
+initChart('chart-q2', {
+  legend: { bottom: 0 },
+  xAxis: { type: 'category', data: [2005,2006,2007,2008,2009,2010,2011,2012,2013,2014] },
+  yAxis: { type: 'value', name: '%', axisLabel: { formatter: '{value}%' } },
+  series: [
+    { name: '毛利率', type: 'line', itemStyle: { color: COLOR.grays[0] }, smooth: true,
+      /*<!-- vchart src=metrics_601088_2015.json path=chart_series.gross_margin scale=100 -->*/
+      data: [55.7,53.1,50.4,49.5,49.3,46.3,41.1,36.0,33.9,34.3] },
+    { name: '归母净利率', type: 'line', itemStyle: { color: COLOR.primary }, smooth: true,
+      /*<!-- vchart src=metrics_601088_2015.json path=chart_series.net_margin scale=100 -->*/
+      data: [28.1,25.6,24.1,24.8,25.0,24.5,21.5,19.0,16.1,14.8] }
+  ]
+});
+
+// ============ ROIC/ROE ============
+initChart('chart-q3', {
+  legend: { bottom: 0 },
+  xAxis: { type: 'category', data: [2005,2006,2007,2008,2009,2010,2011,2012,2013,2014] },
+  yAxis: { type: 'value', name: '%', axisLabel: { formatter: '{value}%' } },
+  series: [
+    { name: 'ROIC(含少数,偏保守)', type: 'line', itemStyle: { color: COLOR.primary }, smooth: true,
+      data: [null,15.8,15.5,17.1,16.3,18.6,19.5,17.4,14.0,10.4] },
+    { name: 'ROE(含少数)', type: 'line', itemStyle: { color: COLOR.accent }, smooth: true,
+      data: [null,20.9,17.0,16.5,16.3,17.3,17.9,16.8,14.5,10.7] }
+  ]
+});
+
+// ============ 竞对净利率对比 2010-2014 ============
+initChart('chart-q4', {
+  legend: { bottom: 0 },
+  xAxis: { type: 'category', data: [2010,2011,2012,2013,2014] },
+  yAxis: { type: 'value', name: '%', axisLabel: { formatter: '{value}%' } },
+  series: [
+    { name: '中国神华', type: 'line', itemStyle: { color: COLOR.primary }, smooth: true,
+      /*<!-- vchart src=parent_metrics_601088_2015.json path=peer_margin_chart.shenhua scale=100 -->*/
+      data: [24.5,21.5,19.0,16.1,14.8] },
+    { name: '中煤能源', type: 'line', itemStyle: { color: COLOR.grays[0] }, smooth: true,
+      /*<!-- vchart src=parent_metrics_601088_2015.json path=peer_margin_chart.china_coal scale=100 -->*/
+      data: [9.7,10.7,10.6,4.3,1.1] },
+    { name: '兖州煤业', type: 'line', itemStyle: { color: COLOR.grays[1] }, smooth: true,
+      /*<!-- vchart src=parent_metrics_601088_2015.json path=peer_margin_chart.yanzhou scale=100 -->*/
+      data: [25.9,17.7,9.2,2.2,3.6] }
+  ]
+});
+
+// ============ FCF 与真实FCF区间 ============
+initChart('chart-q5', {
+  legend: { bottom: 0 },
+  xAxis: { type: 'category', data: [2005,2006,2007,2008,2009,2010,2011,2012,2013,2014] },
+  yAxis: { type: 'value', name: '百万元' },
+  series: [
+    { name: 'FCF(OCF-全部capex)', type: 'bar', itemStyle: { color: COLOR.primary },
+      /*<!-- vchart src=metrics_601088_2015.json path=chart_series.fcf -->*/
+      data: [9799,1751,1862,7680,24390,31843,27892,18478,2623,22972] },
+    { name: '真实FCF上限(仅维持性capex)', type: 'line', itemStyle: { color: COLOR.accent }, smooth: true,
+      /*<!-- vchart src=metrics_601088_2015.json path=chart_series.fcf_high -->*/
+      data: [20592,18021,20900,34051,43496,45239,56775,52576,34107,46194] }
+  ]
+});
+
+// ============ 分部经营收益占比（合并抵销前） ============
+initChart('chart-segment-mix', {
+  legend: { bottom: 0 },
+  xAxis: { type: 'category', data: ['2013', '2014'] },
+  yAxis: { type: 'value', name: '%', max: 100, axisLabel: { formatter: '{value}%' } },
+  series: [
+    { name: '煤炭', type: 'bar', stack: 's', itemStyle: { color: COLOR.primary }, data: [51, 39] },
+    { name: '发电', type: 'bar', stack: 's', itemStyle: { color: COLOR.accent }, data: [26, 32] },
+    { name: '运输', type: 'bar', stack: 's', itemStyle: { color: '#4b5563' }, data: [21, 27] },
+    { name: '煤化工', type: 'bar', stack: 's', itemStyle: { color: '#d1d5db' }, data: [2, 2] }
+  ]
+});
+
+// ============ 资本配置评分雷达（radar 用 value） ============
+initChart('chart-mgmt-radar', {
+  tooltip: {},
+  radar: {
+    indicator: [
+      { name: '再投资纪律', max: 5 }, { name: '并购记录', max: 5 }, { name: '增发克制', max: 5 },
+      { name: '分红理性', max: 5 }, { name: '回购时机(N/A)', max: 5 }
+    ]
+  },
+  series: [{
+    type: 'radar',
+    data: [
+      { value: [3, 3, 4, 4, 0], name: '资本配置评分', itemStyle: { color: COLOR.primary }, areaStyle: { opacity: 0.15 } }
+    ]
+  }]
+});
+</script>
+</body>
+</html>

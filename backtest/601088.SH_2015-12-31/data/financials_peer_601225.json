@@ -1,0 +1,36 @@
+{
+  "company": "陕西煤业",
+  "ticker": "601225.SH",
+  "is_peer": true,
+  "currency": "CNY",
+  "unit": "million",
+  "accounting_standard": "CAS",
+  "fiscal_year_end": "12-31",
+  "data_notes": [
+    "同业对照底稿（跳过双源核对）：新浪财经利润表年度列。2014-01-05上市，仅2014年上市后完整年度数据。",
+    "2012-2013为IPO前追溯申报数据（新浪财经保留），仅作趋势参照。"
+  ],
+  "annual": [
+    {
+      "year": 2012,
+      "revenue": 44260,
+      "net_income": 6417,
+      "publish_date": null,
+      "note": "归母净利率14.50%（IPO前口径，新浪保留数）"
+    },
+    {
+      "year": 2013,
+      "revenue": 43219,
+      "net_income": 3486,
+      "publish_date": null,
+      "note": "归母净利率8.07%"
+    },
+    {
+      "year": 2014,
+      "revenue": 41150,
+      "net_income": 9515,
+      "publish_date": null,
+      "note": "归母净利率2.31%（少数股东损益18.61亿占比大）"
+    }
+  ]
+}
