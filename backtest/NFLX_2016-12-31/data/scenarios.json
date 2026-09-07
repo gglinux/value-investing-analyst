@@ -1,0 +1,125 @@
+{
+  "company": "Netflix",
+  "ticker": "NFLX",
+  "currency": "USD",
+  "price": 123.8,
+  "price_source": "2016-12-30 收盘价（12-31 为周六休市，回放时点取最后交易日）[E:market_snapshot_NFLX_2016.json]",
+  "moat": "narrow",
+  "moat_note": "护城河评级'窄'（trend 改善）：五源检验——无形资产中（品牌+推荐技术+自制内容，但授权内容可竞价夺走）/转换成本弱（月付无合约）/网络效应弱-中（数据网络效应）/成本优势中（规模经济 US 已兑现：贡献利润率 44%，Intl −5.9% 未证）/有效规模中（86.7M 会员先发+190 国生态）。定价权有实证（2014 与 2016 两轮 US 提价无成体系流失恶化）但频度幅度不足以证明'宽'。评级严格从 Netflix 自身证据独立推导 [E:qualitative_NFLX_2016.json]。闸门一安全边际要求≥40%、闸门二期望 IRR 门槛 21.8%（窄护城河档）",
+  "discount_rate": 0.1,
+  "discount_rate_note": "纪律下限 max(10%, 10Y UST 2.45%+4pct=6.45%)=10%。Netflix 波动率与业务风险支持更高折现率（内容投入不确定性+竞争格局未定），取 10% 下限已属对成长股宽容 [E:market_snapshot_NFLX_2016.json]",
+  "hold_years": 5,
+  "dividend_yield": 0.0,
+  "dividend_yield_source": "零分红（2012 年后从未分红；FCF 持续为负期不分红是正确纪律，见 capital_allocation 评分）[E:metrics_NFLX_2016.json][E:qualitative_NFLX_2016.json]",
+  "intrinsic_value_growth": 0.0,
+  "iv_growth_evidence": "取 0：基准情景 fade 10 年后永续增速=0（与 fv_base 假设一致）。对高成长公司这是刻意的纪律选择——内在价值增速锚定'可验证的稳态'而非'愿景'；乐观情景的成长期权在乐观情景价值中体现，不进入'价值不收敛下限'。注意：iv_growth=0 + 股息率 0 → 不收敛下限 0%，远低于 floor hurdle 5%，闸门二该子项直接不过 [E:normalization_NFLX_2016.json]",
+  "default_probabilities": {
+    "悲观": 0.3,
+    "基准": 0.5,
+    "乐观": 0.2
+  },
+  "scenarios": [
+    {
+      "name": "悲观",
+      "value_per_share": 1.48,
+      "probability": 0.3,
+      "method": "worst_year_margin",
+      "method_note": "独立路径（全程不走DCF）：历史最差年净利率×当期收入×危机期盈利倍数。最差年=2012（净利率 0.4752%=NI 17.152/收入 3,609.282，真实压力年：Qwikster 品牌事故+streaming 转型内容采购前置+国际扩张启动三重叠加，为九年最低且塌陷持续两年 2012-2013）；当期收入取 2015 实际 6,779.5（不用 2016E 指引锚，悲观情景不给指引信用）；危机期倍数 20x（成熟媒体/内容公司 PE 15-20x 上界——悲观内核是'增长信任破灭后按成熟内容资产定价'；上界而非中值，因悲观情景下公司仍是全球唯一规模 SVOD 且订阅粘性下收入大概率继续增长）。S2b机器重算=0.004752×6,779.511×20/436.456=1.48 美元。口径警示：PE 对低利润基数公司天然失真（2012 真实恐慌底市值 ~3.1B 对当年 NI 17.2 隐含 PE 180x，市场当时实际按 P/S 0.86 定价 NFLX）——20x 的含义是'假设塌陷后的利润基数已稳定'，与 2012 年'利润正在塌陷中'不可比；敏感度 15x→1.11、25x→1.85。与基准的关系：基准 13.71 是'利润率均值化+增长 10% fade'；悲观 1.48 是'历史最差净利率重现常态化+成熟倍数化'——约为基准的 1/9，成长股塌陷的杀伤结构不同于周期股 [E:metrics_NFLX_2016.json][E:financials_NFLX_2016.json][E:normalization_NFLX_2016.json]",
+      "method_inputs": {
+        "worst_year": 2012,
+        "worst_margin": 0.004752,
+        "revenue_m": 6779.511,
+        "crisis_multiple": 20,
+        "shares_m": 436.456,
+        "worst_year_stress_evidence": "2012 实证压力年三重叠加：①Qwikster 品牌事故（拆分 DVD/流媒体被用户用脚投票，当年撤回）；②内容采购前置——2011 capex/收入 77%（2,456/3,205，同比 +335%）摊销压力 2012 集中释放；③国际扩张启动（2010-09 加拿大→2012 拉美/欧洲）亏损前置。净利率 0.4752%、OE 利润率 1.20% 均为九年最低，且是唯一'营收增长 20.9% 但利润塌陷 92%'的年份 [E:metrics_NFLX_2016.json][E:business_drivers_NFLX_2016.json]",
+        "crisis_multiple_evidence": "20x 取成熟媒体/内容公司 PE 15-20x 上界：悲观内核=竞赛失控+国际单元经济证伪后，市场按'无增长但订阅粘性的内容资产'定价，仍给予存量业务质量溢价。警示：PE 对本案低基数失真（2012 恐慌底隐含 PE 180x、市场实际按 P/S 0.86 定价），20x 建立在'塌陷后利润稳定'假设上；若利润继续恶化，此锚仍属乐观——敏感度 15x→1.11、25x→1.85 [E:metrics_NFLX_2016.json]"
+      },
+      "stressed_assumptions": [
+        "margin",
+        "competition",
+        "financing_rollover"
+      ],
+      "probability_evidence": "[E:manifest.json][E:workpapers/phase0_forensic_20260907.json][E:metrics_NFLX_2016.json] 悲观证据链：①内容军备竞赛量化敞口——内容支出/收入 2011 77%→2015 88%→2016E 93%，内容义务 10.4→14.4B（+38%/年）；②竞争升级时点内信号——Amazon Prime Video 全球化加码、Disney 2016-08 收购 BAMTech（收回授权自建平台的前置布局，正是上游脆弱点的验证）；③国际单元经济未证——Intl 贡献利润率 2015 −5.9%，2016-01 全球上线 130 国意味着整合成本前置；④融资依赖——FCF 连续 6 年为负（2011-2016E 累计约 −5.5B）、2011-2016 累计发债 ~5.5B、2016-10 再发 1B，滚动发行依赖资本市场窗口；⑤实证压力年锚——2012 式'事故年利润率塌陷'在该公司真实发生过且塌陷持续两年（2012-2013）。综合：竞赛失控/单元经济证伪/融资收紧三风险任何一个兑现即滑向本情景，30% 概率与其证据强度相称",
+      "non_operating_addback_per_share": 0.0
+    },
+    {
+      "name": "基准",
+      "value_per_share": 13.71,
+      "probability": 0.5,
+      "method": "dcf_owner_earnings",
+      "method_note": "fade 动态口径：base_oe=404.86（正常化裁决主锚：历史 OE 利润率均值 5.97%×6,779.5，normalization ADJ3；hybrid 775.8 因 conv 2.41 不可持续被拒绝采纳为基准），growth 10%/年线性 fade 10 年至 0，r=10%，tg=0。404.86 十年复合 10%→衰减→静态化的现值合计 5,983 百万 ÷436.456M 股=13.71 美元。基准内核：收入驱动逻辑成立（国际渗透+提价+自制留存），投入节奏均值回复（内容支出/收入比从 88-93% 向稳态回落），US 稳态形态（44% 贡献利润率）逐步外溢到国际——但 OE 十年 10% 复合已是从历史 17.4% 打折的保守路径。终值占比 42.3%，估值主体由可见预测期支撑 [E:fv_base.json][E:normalization_NFLX_2016.json]",
+      "method_inputs": {
+        "shares_m": 436.456,
+        "base_oe": 404.86,
+        "growth": 0.1,
+        "discount_rate": 0.1,
+        "terminal_growth": 0.0,
+        "years": 10,
+        "fade": true
+      },
+      "stressed_assumptions": [
+        "base_oe_anchor",
+        "fade_path"
+      ],
+      "probability_evidence": "[E:business_drivers_NFLX_2016.json][E:financials_NFLX_2016.json] 基准证据：①收入可见性高——2016E 8,832（+30.3%）为时点内公司指引锚，会员 86.7M 且 2016-01 全球上线打开 TAM；②US 单元经济已证（贡献利润率 44%）为国际提供稳态模板；③投入节奏历史上确实均值回复过——2012 内容采购高峰后 2013-2014 利润率修复（0.48%→4.85%）；④增长 96% 靠会员量、ARPU 年仅 +0.7%——量的可持续性远强于价的赌注。50% 概率：基准情景是'管理层叙述与已证事实的最小外推'",
+      "non_operating_addback_per_share": 0.0
+    },
+    {
+      "name": "乐观",
+      "value_per_share": 38.36,
+      "probability": 0.2,
+      "method": "dcf_owner_earnings",
+      "method_note": "fade 动态口径：base_oe=775.83（hybrid 交叉锚——正常化净利 321.96×当期 conv 2.41，仅作乐观端上限展示，normalization ADJ2 已论证其折价理由），growth 20%/年线性 fade 10 年至 0，r=10%，tg=0。775.83 十年复合 20%→衰减→静态化现值 16,742 百万 ÷436.456M 股=38.36 美元。乐观内核：hybrid 锚兑现（预付沉淀持续）+国际爬坡至 US 级利润率+自制内容护城河变宽+提价权兑现。终值占比 45.6%。关键：即使乐观情景，38.36 仍比市价 123.80 低 69%——乐观情景自身不过闸门一 [E:normalization_NFLX_2016.json]",
+      "method_inputs": {
+        "shares_m": 436.456,
+        "base_oe": 775.83,
+        "growth": 0.2,
+        "discount_rate": 0.1,
+        "terminal_growth": 0.0,
+        "years": 10,
+        "fade": true
+      },
+      "stressed_assumptions": [
+        "base_oe_anchor_hybrid",
+        "international_unit_economics",
+        "pricing_power"
+      ],
+      "probability_evidence": "[E:qualitative_NFLX_2016.json][E:business_drivers_NFLX_2016.json] 乐观证据：①国际渗透陡升段（2016 Intl 会员 +50%+）+190 国 TAM 万亿美元级；②两轮提价实证+推荐数据网络效应，护城河 trend 改善；③自制内容从'对冲上游'升级为'独特资产'（2016 原创目录扩大）；④2016E 收入 +30.3% 超十年 CAGR。仅 20% 概率：乐观需要同时兑现'conv 2.41 可持续+国际利润率爬坡+军备竞赛不失控'三个条件，且 38.36 与市价的 69% 缺口说明即使全兑现，现价也已透支——这是本案最核心的估值发现，不是乐观概率低，而是现价高于乐观价值",
+      "non_operating_addback_per_share": 0.0
+    }
+  ],
+  "sensitivity": {
+    "note": "估值最敏感两假设：①base_oe 锚（本案最大争议点，三锚裁决见 normalization ADJ1-ADJ3）②预测期增速。r 的 ±1pct 影响相对次要（缺口太大）",
+    "base_oe_anchor": "EPV 静态口径（g=0）：321.96（NI 口径保守极限锚）→7.38；404.86（主锚）→9.28；775.83（hybrid 交叉锚）→17.78。fade 动态口径（g=10% fade）：404.86→13.71。三锚全区间 7.38-17.78，与市价 123.80 的缺口 −86%~-94%；悲观情景另用独立方法 worst_year_margin（2012 最差净利率 0.4752% 重现+20x 成熟倍数）→1.48，为全锚最深处——锚位争议不改变结论方向",
+    "growth_fade": "基准锚 404.86 下：g=8%→12.69；10%→13.71；12%→14.80；15%→16.59。growth 15%（接近历史 OE CAGR 17.4%）也只有 16.59，为市价的 13.4%",
+    "discount_rate_pm1": "基准锚+g 10% fade 下：r=9%→15.35；r=11%→12.37（±1pct 约 ±12%）",
+    "implied_growth_solving": "现价隐含增速反解（EV 口径 55,028=市值 53,128+净债 1,900）：无解——在 -50%~+60% 增速搜索区间内现价无法被解释，市场定价隐含 OE 框架之外假设（利润率跃迁+永续高增长+或情绪定价）。131x OE（53,128/404.86）的静态倍数本身即是结论：即使 OE 十年 25% 复合增长（至 ~3,770），按 10% 折现的静态合理市值 ~37,700 仍低于当前市值 28% [E:workpapers][E:metrics_NFLX_2016.json]"
+  },
+  "epv_nav_tear": {
+    "finding": "EPV/账面撕裂方向与重资产周期股相反：EPV（主锚 4,049 百万）为账面归母权益（2,223 百万）的 1.8 倍——盈利能力口径显示的账面价值是被低估的（内容资产摊销入账），而市价 53,128 又是 EPV 的 13.1 倍、账面 BV 的 23.9 倍",
+    "implication": "①PB 21x 与 PE 326x 均无锚定意义：账面净资产被内容摊销系统性低估（真实内容经济价值≈历史现金投入 19.3B 累计），真实 PB 更接近 2.8x 但仍远高于其盈利能力支撑水平；②本案定价唯一可行框架是 OE/收入驱动+反向 DCF，常规倍数全部失效；③EPV>账面本身说明'无形盈利能力'真实存在（US 分部已证），问题不在'公司没有盈利能力'而在'市价为 13 倍于可验证盈利能力的未来预付款'"
+  },
+  "non_operating_note": "OE 口径为净利+折旧摊销−维持性 capex（引擎 mc=D&A 封顶），净利已扣利息费用（2015 利息 132.7 百万），OE 为权益口径现金流，与市值同口径——不再另扣净债（净债≈总债 2,900−现金 969≈1,900 百万，2016Q3）。债务本金到期偿还的尾部风险在悲观情景（融资滚动）与 red_flags 中体现。无非经营资产加回项 [E:financials_NFLX_2016.json][E:metrics_NFLX_2016.json]",
+  "value_trap_note": "S8 价值陷阱闸门未触发（安全边际 −89%，远低于 50% 触发线）——本案不存在'便宜的价值陷阱'问题，问题是'根本不便宜'：市价为基准内在价值的 9.0 倍、乐观情景的 3.2 倍、悲观情景的 84 倍。反向：本案是'贵的成长陷阱'风险——若增长兑现不及市场隐含假设，131x OE 的起点意味着多年增长也无法修复估值缺口（增长消化估值需要 OE 以隐含增速增长且市价不涨）",
+  "chart": {
+    "names": [
+      "悲观",
+      "基准",
+      "乐观"
+    ],
+    "values_per_share": [
+      1.48,
+      13.71,
+      38.36
+    ],
+    "price": [
+      123.8
+    ],
+    "values_per_share_price": [
+      1.48,
+      13.71,
+      38.36,
+      123.8
+    ]
+  }
+}

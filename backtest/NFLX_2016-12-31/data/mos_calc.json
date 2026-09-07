@@ -1,0 +1,11 @@
+{
+ "mos": -0.8893,
+ "premium": 8.03,
+ "epv_main": 9.28,
+ "epv_cross": 17.78,
+ "epv_pessimistic_ni_anchor": 7.38,
+ "buy_ceiling_epv": 5.57,
+ "excess_vs_index_pct": -42.56,
+ "avg_loss_pct": -80.5,
+ "note": "派生值：mos=(V0-P)/P；premium=(P-V0)/V0；EPV=base_oe/0.10/shares；其余为报告叙述辅助值"
+}

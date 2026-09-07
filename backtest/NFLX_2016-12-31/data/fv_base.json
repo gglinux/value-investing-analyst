@@ -1,0 +1,28 @@
+{
+  "operating_value": 5982.487327166027,
+  "add_back": 0.0,
+  "equity_value": 5982.487327166027,
+  "shares": 436.456,
+  "value_per_share": 13.706965483728089,
+  "fx": 1.0,
+  "value_per_share_quote_ccy": 13.706965483728089,
+  "assumptions": {
+    "base_oe": 404.86,
+    "growth": 0.1,
+    "discount_rate": 0.1,
+    "terminal_growth": 0.0,
+    "years": 10,
+    "fade": true
+  },
+  "terminal_diagnostics": {
+    "terminal_value_ratio": 0.423040076136174,
+    "forecast_pv": 3451.6554327980143,
+    "terminal_pv": 2530.8318943680124,
+    "level": "ok",
+    "action_required": "估值主体由可见的预测期现金流支撑",
+    "blocks_margin_of_safety_only_buy": false,
+    "terminal_growth": 0.0,
+    "discount_rate": 0.1,
+    "spread": 0.1
+  }
+}

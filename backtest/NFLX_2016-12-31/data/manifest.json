@@ -75,90 +75,199 @@
     "Phase 4 估值双闸门 + scenarios + 三师红队",
     "Phase 5 HTML 报告 + verify_report 119 项"
   ],
-  "files": {
-    "data/financials_NFLX_2016.json": {
+  "files": [
+    {
       "source": "EDGAR companyfacts + 4份10-K R文件 + Q3'16股东信",
       "level": "A",
       "fetched": "2026-09-07",
       "coverage": "2007-2015 年度 + 2016 9M/指引",
-      "validated": "validate_data 通过（0错/5警）+ crosscheck_official 通过（0错/5警，豁免2科目已登记）+ check_transcription 通过（口径豁免26项）"
+      "validated": "validate_data 通过（0错/5警）+ crosscheck_official 通过（0错/5警，豁免2科目已登记）+ check_transcription 通过（口径豁免26项）",
+      "file": "financials_NFLX_2016.json"
     },
-    "data/market_snapshot_NFLX_2016.json": {
+    {
       "source": "东方财富 push2his 美股日K（secid=105.NFLX）+ UST 10Y",
       "level": "A",
       "fetched": "2026-09-07",
       "coverage": "2016-12-30 收盘 + 52周区间",
-      "validated": "check_market_snapshot 三角校验通过（偏差0.00%）"
+      "validated": "check_market_snapshot 三角校验通过（偏差0.00%）",
+      "file": "market_snapshot_NFLX_2016.json"
     },
-    "data/business_drivers_NFLX_2016.json": {
+    {
       "source": "FY2012/FY2014/FY2015 10-K MD&A 分部会员表 + Q3'16股东信",
       "level": "A",
       "fetched": "2026-09-07",
       "coverage": "2012-2016 量价分解 + 单位经济",
-      "validated": "分部收入勾稽恒等 + 会员数与股东信互证（70.84M≡70.84M）"
+      "validated": "分部收入勾稽恒等 + 会员数与股东信互证（70.84M≡70.84M）",
+      "file": "business_drivers_NFLX_2016.json"
     },
-    "data/financials_peer_NFLX_2016.json": {
+    {
       "source": "SEC companyfacts（DIS/CMCSA/FOX）+ Disney 官方财报",
       "level": "A/B",
       "fetched": "2026-09-07",
       "coverage": "FY2012-FY2016",
-      "validated": "竞对跳过双源核对（is_peer）"
+      "validated": "竞对跳过双源核对（is_peer）",
+      "file": "financials_peer_NFLX_2016.json"
     },
-    "data/raw/companyfacts.json": {
+    {
       "source": "EDGAR companyfacts API CIK0001065280",
       "level": "A",
       "fetched": "2026-09-07",
       "coverage": "全历史（end<=2015-12-31 截断使用）",
-      "validated": "crosscheck_official 比对源"
+      "validated": "crosscheck_official 比对源",
+      "file": "raw/companyfacts.json"
     },
-    "data/raw/companyfacts_dis.json / _cmcsa.json / _fox.json": {
+    {
       "source": "EDGAR companyfacts API",
       "level": "A",
       "fetched": "2026-09-07",
       "coverage": "竞对 FY2012-2016",
-      "validated": "竞对用途"
+      "validated": "竞对用途",
+      "file": "raw/companyfacts_dis.json / _cmcsa.json / _fox.json"
     },
-    "data/raw_edgar_annual.json": {
+    {
       "source": "extract_edgar_annual.py 抽取产物",
       "level": "A",
       "fetched": "2026-09-07",
       "coverage": "2007-2015",
-      "validated": "check_transcription 比对源"
+      "validated": "check_transcription 比对源",
+      "file": "raw_edgar_annual.json"
     },
-    "data/filings/tenk_2015_R2/R5/R6/R39.htm + tenk_2015_main.htm": {
+    {
       "source": "FY2015 10-K accession 0001065280-16-000047",
       "level": "A",
       "fetched": "2026-09-07",
       "coverage": "2013-2015 三表+内容明细+MD&A",
-      "validated": "与 companyfacts 交叉一致"
+      "validated": "与 companyfacts 交叉一致",
+      "file": "filings/tenk_2015_R2/R5/R6/R39.htm + tenk_2015_main.htm"
     },
-    "data/filings/tenk_2012_R3/R4/R5.htm + tenk_2012_main.htm + tenk_2012_R2.htm": {
+    {
       "source": "FY2012 10-K accession 0001065280-13-000008",
       "level": "A",
       "fetched": "2026-09-07",
       "coverage": "2010-2012",
-      "validated": "OCF 2011/2010 与 companyfacts 一致"
+      "validated": "OCF 2011/2010 与 companyfacts 一致",
+      "file": "filings/tenk_2012_R3/R4/R5.htm + tenk_2012_main.htm + tenk_2012_R2.htm"
     },
-    "data/filings/tenk_2010_R2.xml + tenk_2009_R6.xml": {
+    {
       "source": "FY2010 10-K 0001193125-11-040217 / FY2009 10-K 0001193125-10-036181",
       "level": "A",
       "fetched": "2026-09-07",
       "coverage": "2007-2010",
-      "validated": "OCF/NI/回购三列与 companyfacts 一致"
+      "validated": "OCF/NI/回购三列与 companyfacts 一致",
+      "file": "filings/tenk_2010_R2.xml + tenk_2009_R6.xml"
     },
-    "data/filings/tenk_2014_main.htm": {
+    {
       "source": "FY2014 10-K accession 0001065280-15-000006",
       "level": "A",
       "fetched": "2026-09-07",
       "coverage": "2013/2014 分部会员表",
-      "validated": "与 FY2015 10-K 对照列一致"
+      "validated": "与 FY2015 10-K 对照列一致",
+      "file": "filings/tenk_2014_main.htm"
     },
-    "data/filings/q3_2016_shareholder_letter.htm": {
+    {
       "source": "Q3'16 8-K EX-99.1（filed 2016-10-17）",
       "level": "A",
       "fetched": "2026-09-07",
       "coverage": "Q4'16F 指引 + 季度 OCF/FCF/内容义务 + 9M 现金流量表",
-      "validated": "9M OCF 与 10-Q XBRL 一致（−916.8）"
+      "validated": "9M OCF 与 10-Q XBRL 一致（−916.8）",
+      "file": "filings/q3_2016_shareholder_letter.htm"
+    },
+    {
+      "source": "compute_metrics.py（market_cap 53,128 注入）",
+      "level": "机器生成",
+      "fetched": "2026-09-07",
+      "coverage": "2007-2015 年度指标+正常化+资本配置+警报",
+      "validated": "引擎输出，6 警报 9 警告已在报告/裁决应答",
+      "file": "metrics_NFLX_2016.json"
+    },
+    {
+      "source": "正常化裁决（ADJ1-ADJ5）",
+      "level": "分析师裁决底稿",
+      "fetched": "2026-09-07",
+      "coverage": "周期低位误判证据+hybrid 拒绝+主锚降档",
+      "validated": "与 metrics 引擎输出全部对账",
+      "file": "normalization_NFLX_2016.json"
+    },
+    {
+      "source": "五维定性（护城河=窄）",
+      "level": "分析师底稿",
+      "fetched": "2026-09-07",
+      "coverage": "五维+假设一致性 ledger 5 项",
+      "validated": "ledger 与 normalization/scenarios 对账",
+      "file": "qualitative_NFLX_2016.json"
+    },
+    {
+      "source": "三情景（worst_year_margin/fade DCF×2）",
+      "level": "分析师底稿+引擎重算",
+      "fetched": "2026-09-07",
+      "coverage": "悲观 1.48/基准 13.71/乐观 38.36+敏感性",
+      "validated": "check_scenarios 通过 0 警告",
+      "file": "scenarios.json"
+    },
+    {
+      "source": "reverse_dcf.py expected-return",
+      "level": "机器生成",
+      "fetched": "2026-09-07",
+      "coverage": "三情景 IRR+闸门二三项",
+      "validated": "与 scenarios.json 单一事实源",
+      "file": "expected_return.json"
+    },
+    {
+      "source": "reverse_dcf.py forward-value（主锚 404.86+g10% fade）",
+      "level": "机器生成",
+      "fetched": "2026-09-07",
+      "coverage": "基准情景 13.71",
+      "validated": "终值占比 42.3% ok",
+      "file": "fv_base.json"
+    },
+    {
+      "source": "reverse_dcf.py forward-value（hybrid 锚 775.83+g20% fade）",
+      "level": "机器生成",
+      "fetched": "2026-09-07",
+      "coverage": "乐观情景 38.36",
+      "validated": "终值占比 45.6% ok",
+      "file": "fv_bull.json"
+    },
+    {
+      "source": "build_report.py 派生计算",
+      "level": "机器生成",
+      "fetched": "2026-09-07",
+      "coverage": "MoS/溢价/EPV 锚位/买入上限",
+      "validated": "由 scenarios+market_snapshot 派生",
+      "file": "mos_calc.json"
+    },
+    {
+      "source": "verification_strength.py",
+      "level": "机器生成",
+      "fetched": "2026-09-07",
+      "coverage": "V1-V3 核验强度",
+      "validated": "grade B（勾稽 8/9+窗口 9 年）",
+      "file": "verification_strength.json"
+    },
+    {
+      "source": "三师收敛+红队五项+pre-mortem",
+      "level": "分析师底稿",
+      "fetched": "2026-09-07",
+      "coverage": "persona_scores/divergence/red_team/falsifiers",
+      "validated": "与三份 persona md 一致",
+      "file": "phase5_workpaper.json"
+    },
+    {
+      "source": "自引用登记",
+      "level": "-",
+      "fetched": "2026-09-07",
+      "coverage": "Phase 0 排雷+files 清单",
+      "validated": "-",
+      "file": "manifest.json"
+    },
+    {
+      "source": "Phase 0 排雷详录（对立检索+监管审计+背离定性）",
+      "level": "分析师底稿",
+      "fetched": "2026-09-07",
+      "coverage": "forensic checklist+空头论据应答+FY2015 外获交叉验证",
+      "validated": "manifest.adversarial_check 摘要一致",
+      "file": "workpapers/phase0_forensic_20260907.json"
     }
-  }
+  ],
+  "files_paths_note": "file 字段相对 data/ 目录；完整路径映射见 git 历史 files 区块（2026-09-07 由 dict 格式转换为 list 格式以对齐 verify_report 校验器）"
 }
