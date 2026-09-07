@@ -122,6 +122,28 @@ def rerun_engine(case):
     return sorted(set(codes)), notes
 
 
+def _classify_failures(res, answer):
+    """已知失败 vs 新增回归 归桶。
+
+    提前 return 的路径（如 answer 含未注册断言）也必须走这步——否则失败
+    既不算回归也不算已知，结果列显示「通过」、退出码 0，门禁被静默绕过
+    （Netflix 案 B2-09 实证：该缺陷让两处未注册问题全部漏报）。
+    """
+    known_kinds = set(answer.get("known_failures") or [])
+
+    def _kind(f):
+        return ("verdict_track" if "档位轨" in f or "verdict_ordinal" in f else
+                "must_trigger" if "must_trigger 未命中" in f else
+                "must_not_trigger" if "误触发" in f else
+                "engine_drift" if "漂移" in f else "other")
+
+    for f in res["failures"]:
+        (res["known"] if _kind(f) in known_kinds else res["regressions"]).append(f)
+    res["stale_known"] = sorted(
+        k for k in known_kinds
+        if not any(k == _kind(f) for f in res["failures"]))
+
+
 def check_case(case, do_rerun=False):
     v, a = case["verdict"], case["answer"]
     fired = set(v.get("codes") or [])
@@ -136,6 +158,8 @@ def check_case(case, do_rerun=False):
     bad = unknown_assertions(names)
     if bad:
         res["failures"].append(f"answer 含未注册断言 {bad}")
+        res["verdict_track"] = "未执行（answer 含未注册断言）"
+        _classify_failures(res, a)
         return res
 
     # ---- 排雷/告警轨 ----
@@ -206,22 +230,10 @@ def check_case(case, do_rerun=False):
     # ---- 已知失败 vs 新增回归 ----
     # 茅台档位轨未命中是第一批**记录在案**的真实假阴性（`backtest/REPORT.md` 元问题 3）。
     # 若把它一并算作红灯，本脚本就永远是红的、无法当回归门禁用。故 answer.json 可登记
-    # `known_failures`，只有**未登记**的失败才算回归。这不是掩盖问题——已知失败在输出中
-    # 单独列示，且一旦被修好（失败消失）会提示更新登记。
-    known_kinds = set(a.get("known_failures") or [])
-    for f in res["failures"]:
-        kind = ("verdict_track" if "档位轨" in f or "verdict_ordinal" in f else
-                "must_trigger" if "must_trigger 未命中" in f else
-                "must_not_trigger" if "误触发" in f else
-                "engine_drift" if "漂移" in f else "other")
-        (res["known"] if kind in known_kinds else res["regressions"]).append(f)
-    res["stale_known"] = sorted(
-        k for k in known_kinds
-        if not any(k == ("verdict_track" if "档位轨" in f or "verdict_ordinal" in f else
-                         "must_trigger" if "must_trigger 未命中" in f else
-                         "must_not_trigger" if "误触发" in f else
-                         "engine_drift" if "漂移" in f else "other")
-                   for f in res["failures"]))
+    # `known_failures`（kind 短名：verdict_track / must_trigger / must_not_trigger /
+    # engine_drift / other），只有**未登记**的失败才算回归。这不是掩盖问题——已知失败在
+    # 输出中单独列示，且一旦被修好（失败消失）会提示更新登记。
+    _classify_failures(res, a)
 
     # 假阳性绕过 known_failures 豁免：无论是否登记，一律计入 regressions（红灯）。
     # 这是刻意的不对称——错买不可逆，不允许用"已知"把它变成不阻塞。

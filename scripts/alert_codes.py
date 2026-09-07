@@ -39,6 +39,15 @@
 `NORM_BASE_UNUSABLE`（全期平均亏损 → 均值路径数学失效，拒绝给标签）而非
 `NORM_CYCLE_PEAK`。第一批靠人工「两层合读」裁定命中，本表把这个等价关系
 显式化，使其可机器判定且可被审查。
+
+## 直引代号（Netflix 案 B2-09 新增）
+
+官方答案有时**直接点名某条告警**而非某个抽象断言——Netflix 案的
+`must_not_trigger` 写的就是烧钱告警族三个代号（`M_DIVIDEND_ILLUSION` /
+`M_FCF_QUALITY` / `M_OWNER_YIELD_NOT_CASH_BACKED`）。为此断言机制支持
+**直引注册代号**：`ALERTS` 表中已有的代号可不经 `ASSERTIONS` 组映射直接用作
+断言名，按自映射单元素组处理。写错的代号依然会被门禁逮住（不在两张表的
+名字仍判未注册），故不牺牲「写错必须被逮住」的初衷。
 """
 
 # ═══════════════════════════════════════════════════════════════════
@@ -124,6 +133,11 @@ ALERTS = {
     "NORM_DUAL_TRACK": ("normalization", "双轨基期：'周期高位'可能是结构性变化的误报，须并列两轨"),
     "NORM_STRUCTURAL_DECLINE": ("normalization", "结构性衰退：利润率单向下行未回归均值，'周期低位'可能是衰退"),
     "NORM_MARGIN_SHAPE": ("normalization", "利润率形状检验结果（改善/恶化/波动）"),
+    # Netflix 案（B2-09）新设：engine 的 hybrid 向上正常化推荐（NI×conv）被人工裁决拒绝，
+    # 属「引擎对高成长公司适配问题」的可判定实证。conv 由营运资本释放驱动（预收沉淀是
+    # 会员增速的函数而非利润率函数），永久化即高估——同型证据与茅台 OBS-STAGE4-03
+    # 合计 2 例，达改码门槛候选。manually_recorded，须在 normalization 底稿留痕。
+    "NORM_ADJ_HYBRID_REJECTED": ("normalization", "正常化裁决人工覆盖：hybrid 向上正常化推荐被裁决拒绝（转换系数不可持续），基期锚改用引擎区间下界或更低"),
 
     # ---- 三情景门禁（check_scenarios.py 自动）----
     "S1_SCHEMA": ("scenarios", "schema：必填字段/概率和/现价/护城河档位"),
@@ -236,6 +250,17 @@ ASSERTIONS = {
 # 四、工具函数
 # ═══════════════════════════════════════════════════════════════════
 
+def _assertion_codes(assertion_id):
+    """断言对应的代号集合：注册断言组取组内代号；直引注册代号按自映射单元素组处理。
+
+    返回 None 表示该名字既非注册断言也非注册代号（写错必须被逮住）。
+    """
+    wanted = ASSERTIONS.get(assertion_id)
+    if wanted is None and assertion_id in ALERTS:
+        wanted = {assertion_id}
+    return wanted
+
+
 def is_known_code(code):
     """代号是否已注册。"""
     return code in ALERTS
@@ -247,21 +272,22 @@ def unknown_codes(codes):
 
 
 def unknown_assertions(names):
-    """返回未注册的断言名列表。"""
-    return [n for n in names if n not in ASSERTIONS]
+    """返回未注册的断言名列表（直引注册代号视为已注册）。"""
+    return [n for n in names if _assertion_codes(n) is None]
 
 
 def assertion_satisfied(assertion_id, fired_codes):
     """断言是否被满足：其代号集合与已触发代号有交集即满足。"""
-    wanted = ASSERTIONS.get(assertion_id)
+    wanted = _assertion_codes(assertion_id)
     if wanted is None:
-        raise KeyError(f"未注册的断言 `{assertion_id}`，请先在 alert_codes.ASSERTIONS 登记")
+        raise KeyError(f"未注册的断言 `{assertion_id}`，请先在 alert_codes.ASSERTIONS 登记"
+                       f"（或直接引用 ALERTS 已注册代号）")
     return bool(wanted & set(fired_codes))
 
 
 def matched_codes(assertion_id, fired_codes):
     """返回使断言成立的具体代号（便于报告里写清「靠哪一条满足的」）。"""
-    wanted = ASSERTIONS.get(assertion_id, set())
+    wanted = _assertion_codes(assertion_id) or set()
     return sorted(wanted & set(fired_codes))
 
 
