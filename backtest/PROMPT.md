@@ -217,7 +217,11 @@ REPORT.md 作为战绩依据。**
 
 ## 八、必须回答的四个元问题
 
-每批跑完后在 `backtest/REPORT.md` 中回答。**统计口径必须与第九节的三条计分轨一致，同一案例不得同时计入互斥的两个桶。**
+每批跑完后在 `backtest/BATCH<N>_FINDINGS.md` 中回答（第一批为 `BATCH1_FINDINGS.md`）。**统计口径必须与第九节的三条计分轨一致，同一案例不得同时计入互斥的两个桶。**
+
+**文档纪律**：该文件**只记结论**——战绩表、关键发现、已被推翻的结论清单、仍未解决项。
+推导过程、逐条复算、审查往返一律移入 `backtest/archive/`。若某条结论事后被推翻，
+必须在结论文件的「已被推翻」表中登记，并在归档件顶部加失效标记——被推翻的结论不得无标记示人。
 
 1. **假阴性成本**：统计正向案例中被判「观察等价格」或更低而错过的比例。**假阴性率 ≥1/3 即视为保守度超标**（不再要求「全部错过」才触发——第一批正向案例只有 2 个，原判据要 2/2 全错才成立，几乎不可能触发），须给出具体到字段与阈值的放松方案。每批须保证 **≥3 个正向案例**，否则本项统计不具判别意义。
    错过成本按 `earnings_driven_return` 与 `multiple_driven_return` 拆分陈述，**只有盈利驱动部分计入系统错误**，倍数扩张部分单列为「未捕获的情绪溢价」。第一批实证：福耀错过的 +185.6% 主体是 PE 13.3→52 的倍数扩张，而 2019 年归母实际 −29.7%——事前算术是对的。
@@ -361,7 +365,7 @@ python3 scripts/run_backtest_assertions.py --rerun --baseline backtest/assertion
 - `backtest/<ticker>_<date>/verdict.json`（Step 3 结论落盘，含 `codes` / `verdict_ordinal` / `frozen_before_diff`，**单独 commit**）
 - `backtest/<ticker>_<date>/answer.json`（Step 4 才创建，答案与断言）
 - `backtest/<ticker>_<date>/diff.md`（逐项比对与根因定位，落到稳定条款号）
-- `backtest/REPORT.md`（批次汇总 + **四个**元问题，统计口径按两条计分轨）
+- `backtest/BATCH<N>_FINDINGS.md`（批次结论：战绩 + **四个**元问题 + 已被推翻的结论清单，统计口径按三条计分轨。**只记结论，推导过程移入 `archive/`**——第一批的教训：自我裁决、事实核对、独立复核三份嵌套审查同一件事，941 行中大量是「我认为 A、他认为 B、复算后是 C」的推导，读者无法一眼看出哪个数字是最终有效的）
 - `backtest/observations.md`（观察记录，含未达改码门槛的裁决理由）
 - 断言 runner 的运行输出（`--rerun --baseline` 全绿或仅已知失败）
 - 若改引擎：改动说明 + **断言基线对比**（改动前后逐案例代号变化）+ `cases/` 全量回归结果

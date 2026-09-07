@@ -1,5 +1,16 @@
 # 第一批回放报告（REPORT.md）— 六案例收官
 
+> ## ⛔ 已归档：本文件多处结论已被推翻，**不得直接引用**
+>
+> 结论口径以 [`../BATCH1_FINDINGS.md`](../BATCH1_FINDINGS.md) 为准。本文件保留仅为追溯推导过程。
+>
+> 已失效的具体结论（推翻依据见 [`REPORT_FACTCHECK_AND_ACTIONS.md`](REPORT_FACTCHECK_AND_ACTIONS.md)）：
+> - **R1 作为「假阴性主修法」的定位已撤销**——经复算，它在数学上无法翻案任何错过案例
+> - **错误拒绝 2 例 / 比率 0.67 已修正为 1 例 / 0.25**——福耀属「判断正确 + 触发器有效」，应计正确拒绝
+> - **文中「observations.md 14 条」应为 17 条**
+> - **「0 反向错误」应表述为「本批未设置能暴露假阳性的样本」**
+> - **「元问题 1 已回答」应标记为未回答**
+
 > 依 `backtest/PROMPT.md` 第八节：每批跑完后回答三个元问题。
 > 本批 6 案例全部落盘（meta.json 冻结 / report.html 过 verify_report / verdict.json / diff.md），引擎代码 **0 改动**——全部观察登记于 `observations.md`（14 条），本文件为统一裁决现场。
 

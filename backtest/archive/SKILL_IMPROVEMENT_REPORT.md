@@ -1,5 +1,8 @@
 # Skill 完善报告 — 基于第一批 6 案例回放的独立审查
 
+> **已归档**：本文件提出的 P0 基础设施（告警码注册表、断言 runner、schema 分离）**均已落地**，
+> 结论已提炼进 [`../BATCH1_FINDINGS.md`](../BATCH1_FINDINGS.md)。保留此处仅为追溯审查过程。
+
 > 审查人：独立审查上下文（未参与第一批执行）
 > 审查日期：2026-09-05
 > 审查对象：`backtest/` 第一批 6 案例 + `backtest/REPORT.md` + `backtest/observations.md`（**17 条**，REPORT.md 误记为 14 条）
