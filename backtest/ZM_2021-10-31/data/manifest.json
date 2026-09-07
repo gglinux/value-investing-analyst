@@ -1,0 +1,175 @@
+{
+  "company": "Zoom Video Communications, Inc.",
+  "ticker": "ZM",
+  "analysis_as_of": "2021-10-31",
+  "case": "B2-11（backtest，第二批案例11）",
+  "information_cutoff": {
+    "date": "2021-10-31",
+    "rules": "仅采用发布/申报日 ≤ 2021-10-31 的信息；SEC companyfacts 中 filed 2021-11-23（Q3'22 10-Q）与 2022-03-07（FY2022 10-K）等帧一律禁用；行情窗口止 2021-10-29（最后交易日）",
+    "forbidden_data_encountered": [
+      "Q3 FY2022 10-Q 与财报信（2021-11-22/23，含 2021-10-31 期末实际数——恰在截断日后三周，禁用）",
+      "FY2022 10-K（filed 2022-03-07，禁用；其 XBRL 帧 SBC 477.287 等一律不引用）",
+      "2021-11 之后股价与事件（含 2021-11 月股价反弹）"
+    ]
+  },
+  "official_filing_missing": {
+    "years": [
+      2017,
+      2018,
+      2019,
+      2022,
+      2023,
+      2024,
+      2025
+    ],
+    "reason": "（a）FY2017-FY2019 为上市前私有年度（IPO 2020-04），无 10-K/10-Q 载体；S-1 招股书（filed 2019-03-22）为唯一 SEC 合规载体且经审计，FY2018/2019 已与 10-K 比较期双向核对一致。（b）FY2022-FY2025 年报均发布于回放时点 2021-10-31 之后（FY2022 10-K 最早 filed 2022-03-07 > 截断日），属回放固有缺口非数据缺失——年度覆盖哨兵按真实系统时间评估时以此豁免。回放时点视角下最新年报 FY2021 10-K（2021-03-18）已合规覆盖。"
+  },
+  "data_availability_notes": "数据窗口 FY2017-FY2021 共 5 个完整年度 + H1 FY2022 半年——显著短于引擎默认 10 年，核验强度按 partial 评级（manifest verification_strength 预告 grade C 边缘）；IPO 前年度（FY2017-2019）无独立年报，S-1 审计数据与 10-K 比较期双向核对构成替代勾稽链。",
+  "latest_quarter_checked": {
+    "period": "Q2 FY2022（止 2021-07-31）",
+    "publish_date": "2021-08-30（财报信）/ 2021-08-31（10-Q）",
+    "finding": "收入 1,021.5M（+54% YoY）但 Q3 指引中值 1,017.5M 环比 −0.4%；YoY 轨迹 +191.4%→+53.9%→+30.9%F→+15.0%F 断崖降档；TTM NRR>130% 与 $100k+ 客户 +131% 为对侧证据",
+    "checked_on": "2026-09-07"
+  },
+  "adversarial_check": {
+    "checked_on": "2026-09-07",
+    "queries": "Zoom Q2 FY2022 财报信（EDGAR EX-99.1 原文）+ Q2 10-Q XBRL + S-1 原文回取 + 东方财富日K 294 根",
+    "findings": "负面证据链已入底稿：①指引环比零增长（Q2 1,021.5 → Q3F 1,017.5）；②隐含 Q4 YoY 仅 +15.0%；③毛利率 FY2021 下滑 12.5pct 后仅部分修复；④SBC 占 TTM FCF 23.4% 为 FCF 质量扣减；⑤>10 员工客户数增速回落至 +36% 与在线业务收缩互证。正面证据链（NRR>130%、$100k+ +131%、FCF 利润率 46%）同样入底稿——两侧对齐，无单边叙事。",
+    "workpaper": "data/filings/q2_ex991.txt + data/filings/s1_2019.txt + data/raw/extracted_concepts.json",
+    "status": "完成（Step 2 采集阶段；Phase 4 三师红队再检）"
+  },
+  "data_sources": {
+    "financials": "SEC EDGAR companyfacts API（CIK 0001585521，filed≤2021-10-31 帧过滤）+ Q2 FY2022 10-Q + FY2021/FY2020 10-K + S-1（filed 2019-03-22）原文回取 FY2017",
+    "market": "东方财富 push2his 美股日K（secid=105.ZM，fqt=0，294 根 2020-09-01~2021-10-29）",
+    "peers": "未引入同业对标（Phase 4 视需要补充 SaaS 可比口径——登记为待办而非缺口：本案估值锚为反向 DCF 收入驱动，同业倍数仅作佐证）"
+  },
+  "accounting_policies_reviewed": [
+    "财年止 1-31（FY 标签 = 止日年份，与自然年错位一年——底稿 annual.year 用 FY 习惯口径如 FY2021 = 2020-02~2021-01）",
+    "递延收入：ContractWithCustomerLiability（ASC 606），沉淀方向与 Netflix 相反",
+    "SBC：ShareBasedCompensation 现金流量表口径 FY2021 275.8 / H1 FY2022 201.1——OE normalization 的强制调整项",
+    "无债务：companyfacts 无 LongTermDebt/ShortTermBorrowings 帧，负债全部经营性（递延收入+递延合同成本+经营租赁）",
+    "参与证券：FY2017-2019 NetIncomeLoss 与归属普通股股东净利有差异（优先股股息），底稿用 NetIncomeLoss 口径"
+  ],
+  "workpapers": "data/filings/（Q2 财报信 EX-99.1+S-1+FY2020/FY2021 10-K 原文及纯文本版）、data/raw/（companyfacts 1.68MB + extracted_concepts + raw_edgar_annual_ZM_2021）；行情原始返回 294 根日K已在 market_snapshot source_prices 登记（WebFetch 返回全文，2026-09-07）",
+  "next_steps": [
+    "Step 2 收尾：validate_data 门禁清零 + 底稿四件套 commit（本 commit）",
+    "Phase 2：compute_metrics（market_cap 83,948 注入）+ normalization（SBC 调整 + 递延增量正常化——FCF 46.1% 利润率向净利率收敛的口径裁决）",
+    "Phase 3：qualitative 五维 + 增速基期裁决（疫情扭曲期的外推纪律）",
+    "Phase 4：三情景（OBS-2016-12-01 预登记复检场：PE 84x/PS 23x 下 OE 是否重现『参数不可达型』）+ check_scenarios 门禁 + expected-return 双闸门 + mos_calc + 三师红队（含『OBS 预锚定/改码激励』动机污染专条）",
+    "Phase 5：HTML 报告 + verify_report + verdict.json（单独 commit）+ Step 4 官方答案 + Step 5 OBS-2016-12-01 改码门槛裁决（若达严格门槛则按候选方案实施成长股通道，防 R1 单案例不改码铁律另议）"
+  ],
+  "files": [
+    {
+      "source": "SEC EDGAR companyfacts API（CIK 0001585521，filed≤2021-10-31 帧过滤）+ FY2020/FY2021 10-K + Q1/Q2 FY2022 10-Q",
+      "level": "A",
+      "fetched": "2026-09-07",
+      "coverage": "FY2018-FY2021 年度 + H1 FY2022 + BS 三期 + 递延收入/SBC 序列",
+      "validated": "validate_data 通过（0错/4警：A1 年度哨兵豁免已登记/FY2017 BS 缺载体豁免/勾稽覆盖 4/5=80% 达标）+ crosscheck_official --audit 通过（0错/0警）+ check_transcription 通过（0错/2警口径豁免，5年13字段搬运完整）",
+      "file": "financials_ZM_2021.json"
+    },
+    {
+      "source": "东方财富 push2his 美股日K（secid=105.ZM，fqt=0）",
+      "level": "A",
+      "fetched": "2026-09-07",
+      "coverage": "2021-10-29 收盘 274.65 + 52 周区间 250.11-505.88 + 峰值 588.84（2020-10-19）",
+      "validated": "check_market_snapshot 三角校验通过（price×shares=market_cap 偏差 0.00%）",
+      "file": "market_snapshot_ZM_2021.json"
+    },
+    {
+      "source": "Q2 FY2022 财报信（EDGAR EX-99.1，2021-08-30）Customer Metrics/Financial Outlook 正文",
+      "level": "A",
+      "fetched": "2026-09-07",
+      "coverage": "NRR>130%（13 季）、$100k+ 客户 2,278（+131%）、>10 员工客户 504,900（+36%）、Q3F/FY2022F 双指引",
+      "validated": "check_business_drivers 通过（0警告）：客户数五点序列双源一致（S-1≡10-K），量×价为同源推导恒等（price_label 标注）",
+      "file": "business_drivers_ZM_2021.json"
+    },
+    {
+      "source": "SEC EDGAR companyfacts API 原始返回",
+      "level": "A",
+      "fetched": "2026-09-07",
+      "coverage": "346 个 us-gaap 概念全量（1.68MB）",
+      "validated": "原始证据留存；filed>2021-10-31 帧禁用规则已声明",
+      "file": "raw/companyfacts.json"
+    },
+    {
+      "source": "companyfacts 过滤提取（20 组概念，filed≤2021-10-31）",
+      "level": "A",
+      "fetched": "2026-09-07",
+      "coverage": "年度/季度/BS/现金流全部账目帧",
+      "validated": "提取脚本按 (start,end,最新filed≤cutoff) 聚合；FY2021 各季分季值合计与全年勾稽（328.167+663.520+777.196+882.485=2,651.368 ✓）",
+      "file": "raw/extracted_concepts.json"
+    },
+    {
+      "source": "SEC EDGAR EX-99.1 原文（accession 0001585521-21-000230）",
+      "level": "A",
+      "fetched": "2026-09-07",
+      "coverage": "Q2 FY2022 财报信全文（279KB）",
+      "validated": "curl 下载（UA 头），字节量与 EDGAR index 登记一致",
+      "file": "filings/q2_fy2022_ex991.htm"
+    },
+    {
+      "source": "q2_fy2022_ex991.htm 纯文本化（表格保留分隔）",
+      "level": "B",
+      "fetched": "2026-09-07",
+      "coverage": "全文 27.8K 字符",
+      "validated": "关键段落（Outlook/Customer Metrics/现金流）人工摘录至 business_drivers 与 financials interim",
+      "file": "filings/q2_ex991.txt"
+    },
+    {
+      "source": "SEC EDGAR S-1 主文档（accession 0001193125-19-083351，filed 2019-03-22）",
+      "level": "A",
+      "fetched": "2026-09-07",
+      "coverage": "S-1 招股书全文（2.0MB）——FY2017 年度数据唯一载体",
+      "validated": "curl 下载（UA 头），字节量 2,021,373 与 EDGAR index 登记一致",
+      "file": "filings/s1_2019-03-22.htm"
+    },
+    {
+      "source": "s1_2019-03-22.htm 纯文本化",
+      "level": "B",
+      "fetched": "2026-09-07",
+      "coverage": "全文 670.8K 字符；Selected Financial Data（L1939）与 MD&A 现金流摘要（L3125）已摘录",
+      "validated": "FY2017 rev 60.817/gp 48.345/ni −0.014/ocf 9.361/capex 4.8 逐项摘录；FY2018/2019 与 10-K 比较期一致",
+      "file": "filings/s1_2019.txt"
+    },
+    {
+      "source": "companyfacts 按 FY 窗口提取（带 __concept/__filed 帧级元数据，filed≤2021-10-31）",
+      "level": "A",
+      "fetched": "2026-09-07",
+      "coverage": "2017-2021 五年 × 13 字段（FY2017 为 S-1 审计摘录，标记 S-1 来源）",
+      "validated": "check_transcription 通过：5 年 13 字段全部搬运一致（0错/2警口径豁免）",
+      "file": "raw/raw_edgar_annual_ZM_2021.json"
+    },
+    {
+      "source": "SEC EDGAR 10-K 主文档（accession 0001585521-21-000048，filed 2021-03-18）",
+      "level": "A",
+      "fetched": "2026-09-07",
+      "coverage": "FY2021 10-K 全文（2.7MB）——客户数 467,100/NRR>130%/小客户占比 36% 载体",
+      "validated": "curl 下载 UA 头；客户数与 FY2020 10-K 比较、S-1 历史序列互证",
+      "file": "filings/fy2021_10k.htm"
+    },
+    {
+      "source": "fy2021_10k.htm 纯文本化",
+      "level": "B",
+      "fetched": "2026-09-07",
+      "coverage": "453K 字符",
+      "validated": "客户数/NRR/占比段落正则提取至 business_drivers",
+      "file": "filings/fy2021_10k.txt"
+    },
+    {
+      "source": "SEC EDGAR 10-K 主文档（accession 0001585521-20-000095，filed 2020-03-20）",
+      "level": "A",
+      "fetched": "2026-09-07",
+      "coverage": "FY2020 10-K 全文（3.5MB）——客户数 81,900/50,800/25,800 序列载体",
+      "validated": "客户数与 S-1 逐点一致",
+      "file": "filings/fy2020_10k.htm"
+    },
+    {
+      "source": "fy2020_10k.htm 纯文本化",
+      "level": "B",
+      "fetched": "2026-09-07",
+      "coverage": "390K 字符",
+      "validated": "同上",
+      "file": "filings/fy2020_10k.txt"
+    }
+  ]
+}
