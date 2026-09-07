@@ -1,0 +1,52 @@
+{
+  "case": "NFLX_2016-12-31",
+  "expected_verdict_set": [3, 4],
+  "expected_verdict_set_note": "官方答案（ANSWERS.md 第二批第 30 行，仅一行定性）：『Netflix 2016-12：小仓位试探 或以上；must_not_trigger = 烧钱型现金流告警的误触发。事后 5 年约 3 倍。』——『或以上』映射档位 {3, 4}（小仓位试探/核心买入）；官方同时设定了 must_not_trigger 约束（本案是第二批唯一带 must_not_trigger 的案例）",
+  "expected_gate1": null,
+  "expected_gate2": null,
+  "expected_gate_note": "答案行未设定量闸门字段。档位 3（小仓位试探）隐含的框架语义：不是『便宜到双闸通过』，而是『高成长再投入型按纯 OE 框架必然显得贵，需为成长股设独立估值通道』——官方期望框架在此类公司上给出试探性而非拒绝性结论",
+  "must_trigger": [],
+  "must_trigger_any": [],
+  "must_not_trigger": ["M_DIVIDEND_ILLUSION", "M_FCF_QUALITY", "M_OWNER_YIELD_NOT_CASH_BACKED"],
+  "must_not_trigger_note": "『烧钱型现金流告警』映射为引擎告警族三项：M_DIVIDEND_ILLUSION（股东回报未被累计 FCF 覆盖）、M_FCF_QUALITY（近 5 年 ≥3 年 FCF/净利<0.6）、M_OWNER_YIELD_NOT_CASH_BACKED（OE 收益率不可落袋）。官方语义：订阅预收现+主动内容再投入的公司，OCF/FCF 为负是商业模式特征而非烧钱恶化信号，这三类告警在此类公司上属误触发。实际结果：三项全部触发（引擎输出 alert_codes 含全部三项）——must_not_trigger 约束被违反",
+  "known_failures": [
+    "verdict_track",
+    "must_not_trigger"
+  ],
+  "known_failures_note": "双轨皆未命中。档位轨缺口 2 档：管线纯 OE 框架下 131x OE 的静态倍数不可能通过任何买入档位；官方期望的『小仓位试探或以上』需要框架具备『远期规模化 OE/收入驱动/单元经济外推』的成长股通道——管线缺此通道。告警轨：官方明确要求烧钱告警在此类公司上不触发，引擎却在零分红公司上触发了分红幻觉（M_DIVIDEND_ILLUSION 的语义是『高股息不可持续』，对股息率 0% 的公司触发即语义误用）——告警的公司类型门控缺失",
+  "actual_3y_total_return": 1.6134,
+  "actual_5y_total_return": 3.8664,
+  "actual_3y_annualized": 0.3775,
+  "actual_5y_annualized": 0.3722,
+  "earnings_driven_return": null,
+  "multiple_driven_return": null,
+  "return_decomposition_note": "PE 三因子拆解在本案可算但意义有限：回放日 PE TTM 325.9x（净利基数 162.9M），2021-12-31 PE TTM 约 48x（净利 ~5.1B/市值 ~289B 摊薄口径粗略）——5 年回报 4.87x 的构成大致为盈利增长 ~31x（TTM 净利 162.9M→约 5.1B）× 倍数压缩 ~0.148x（325.9→~48）——即回报全部由盈利规模化驱动、倍数深度压缩，恰好是『为质量付高价后靠增长消化估值』的教科书路径。精确拆解留待复盘（2021 年报 TTM 净利与市值快照待复盘时回填），此处为方向性估计",
+  "actual_max_drawdown": -0.3161,
+  "actual_max_drawdown_detail": "月收盘不复权口径：2018-06-29 峰值 391.43 → 2018-12-31 低谷 267.66，回撤 −31.6%（2018 年加息+增长恐慌）；期间最大浮亏（从回放日 123.80 起）：5 年内任一月收盘均未低于 123.80（最低月收盘为 2017-01-31 的 140.71，+13.6%）——拒绝结论在价格维度上『买入即最低点』形态成立",
+  "dividend_contribution": 0.0,
+  "dividend_contribution_basis": "Netflix 2016-2021 零分红——总回报=纯价格回报（4.87x），与回放日闸门二②不收敛下限 0% 的输入一致：市场重估完全兑现时的回报全部来自倍数与盈利，无现金流缓冲",
+  "price_basis": {
+    "replay_close": 123.80,
+    "close_2017_12_29": 191.96,
+    "close_2018_12_31": 267.66,
+    "close_2019_12_31": 323.57,
+    "close_2020_12_31": 540.73,
+    "close_2021_12_31": 602.44,
+    "high_close_5y": 690.31,
+    "high_close_5y_date": "2021-10-29",
+    "low_close_5y_after_replay": 140.71,
+    "low_close_5y_after_replay_date": "2017-01-31",
+    "multiple_5y": 4.866,
+    "official_answer_said": "事后 5 年约 3 倍",
+    "official_vs_actual_note": "官方答案『约 3 倍』为保守/撰写时点口径表述；按 2016-12-30 收盘 123.80 → 2021-12-31 收盘 602.44 实测为 4.87 倍——官方口径与实测方向一致（大幅正回报），幅度保守不影响断言判定",
+    "source": "东方财富 push2his 美股月K（secid=105.NFLX，klt=103，fqt=0 不复权；2015-07 拆股后无再拆股、零分红，不复权即可比），2026-09-07 抓取 61 根月K；回放日收盘 123.80 与 market_snapshot 三角校验一致"
+  },
+  "trigger_price_outcome": {
+    "gate1_trigger_price": 5.57,
+    "optimistic_scenario_price": 38.36,
+    "touched": false,
+    "note": "闸门一数学达标价 5.57 与乐观情景 38.36 在 5 年内均未接近（5 年最低月收盘 140.71 为回放日的 +13.6%）——『观察等价格』在本案是茅台型『永不触发的观察』：等的价格从未出现，机会成本 5 年 +386.6%。与鞍钢对照：鞍钢的等待事后正确（5 年含息 −5.3%），Netflix 的等待事后昂贵（+386.6% vs 指数门槛 9%/年≈+54%）——同为『观察等价格』执行，结局由标的质量决定，这正是官方答案在档位上区分两者的意义"
+  },
+  "outcome_note": "拒绝档位的事后验证失败：买入持有 5 年 +386.6%（年化 +37.2%），为指数门槛（9%/年）的 4 倍——官方『小仓位试探或以上』事后正确且幅度巨大。但需精确拆解错误性质：①管线的定量事实全部成立（131x OE、implied-growth 无解、FCF 连续为负、conv 不可持续）——错的是框架通道而非数字；②三师定性判断全部正确（管理层 4.0、护城河窄且改善、趋势判断对、pre-mortem 预言的正是『动量错过』形态）；③错误根因是框架缺『成长股估值通道』：纯 OE 框架对『当期 OE 极小但单元经济已证、TAM 早期』的公司只能输出拒绝，无法表达『小仓位试探』——这正是官方答案与 OBS-STAGE4-03 指向的引擎改进方向。闸门二②不收敛下限 0% 的『成长陷阱』警告事后被证伪为过度保守（市场重估完全兑现），但其逻辑在 2018 年（−31.6% 回撤、市场一度质疑 FCF 烧钱）曾有局部兑现窗口",
+  "answer_source": "ANSWERS.md 第二批第 30 行（Netflix 2016-12 段，一行定性+must_not_trigger 约束+事后 5 年约 3 倍）+ 东方财富 push2his 月K行情复核 2026-09-07"
+}
