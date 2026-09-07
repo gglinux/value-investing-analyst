@@ -1,0 +1,114 @@
+{
+  "case": "B2-07",
+  "company": "中国神华",
+  "ticker": "601088.SH / 1088.HK",
+  "as_of": "2015-12-31",
+  "analysis_generated": "2026-09-07",
+  "information_cutoff_discipline": {
+    "latest_annual": "2014年报（2015-03-21披露）",
+    "latest_interim": "2015三季报（2015-10-24披露）",
+    "forbidden_used": false,
+    "forbidden_data_encountered_and_registered": true
+  },
+  "final_verdict": "观察等价格",
+  "verdict_ordinal": 2,
+  "verdict_ordinal_scale": {"0": "排除", "1": "拒绝", "2": "观察等价格", "3": "小仓位试探", "4": "核心买入"},
+  "gate1": {
+    "pass": false,
+    "margin_of_safety": 0.377,
+    "moat_rating": "窄",
+    "required_margin_of_safety": 0.40,
+    "trigger_price_a": 14.42,
+    "note": "安全边际按基准情景 24.04 元对 A 股现价 14.97 元计；H 股同基准安全边际 57.6%（过闸），按案例约束以 A 股为主口径，H 股事实单列披露"
+  },
+  "gate2": {
+    "pass": false,
+    "expected_irr": 0.1784,
+    "consistency_hurdle": 0.2183,
+    "item1_consistency_irr": {"value": 0.1784, "hurdle": 0.2183, "pass": false, "note": "自洽性校验，与闸门一同源，非独立证据"},
+    "item2_no_convergence_floor": {"value": 0.0694, "hurdle": 0.06, "pass": true},
+    "item3_pessimistic_irr": {"value": 0.0233, "hurdle": 0.0, "pass": true},
+    "effective_hurdle_gap": "GATE_EFFECTIVE_HURDLE_GAP——悲观情景 25% 权重拖累期望 IRR；闸门二①达线所需价格约 12.70 元"
+  },
+  "scenarios_value_per_share": {
+    "pessimistic": 10.43,
+    "base": 24.04,
+    "optimistic": 30.92,
+    "probabilities": {"悲观": 0.25, "基准": 0.5, "乐观": 0.25},
+    "bear_method": "worst_year_margin（独立方法：2014 实证压力年净利率 14.82% × 收入中枢 1,750 亿 × 危机期 PE 8 倍）",
+    "dispersion_bear_over_base": 0.43
+  },
+  "expected_irr": 0.1784,
+  "normalized_base_oe": {
+    "judgment": "周期低位（大宗商品路径：中周期煤价×正常产量），非结构衰退；正常化有据但幅度从严",
+    "main_track_normalized_oe_million": 37500,
+    "main_track_derivation": "中周期秦港锚 570 元/吨（八年均值 625/五年 612/三年 510 的保守取值）× 实现售价弹性 0.66 × 自产量，计入 2016-01-01 上网电价下调 3 分/千瓦时（发改委 2015-12-30 公告，截断前已知）-6,000 税前、发电燃料对冲、成本粘性",
+    "cross_track_current_oe_million": 36807,
+    "rejected_margin_mean_oe_million": 55512,
+    "rejection_reason": "利润率均值口径被超级周期污染，对资源类公司高估；compute_metrics 的 margin_trend 结构性恶化警报经大宗商品路径五条均值回复证据裁决后不成立（竞对坍缩 80-90% vs 神华 31%、份额上升、成本+2.5%/年、一体化对冲）",
+    "engine_dual_track_disclosed": true
+  },
+  "moat_rating": "窄",
+  "moat_trend": "稳定偏变窄",
+  "company_type": "资源（大宗商品）",
+  "discount_rate": 0.10,
+  "discount_rate_basis": "max(10%, 10Y国债 2.82% + 4pct) = 10%",
+  "codes": [
+    "NORM_CYCLE_TROUGH",
+    "NORM_DUAL_TRACK",
+    "NORM_MARGIN_SHAPE",
+    "GATE1_FAIL",
+    "GATE2_FAIL",
+    "GATE2_1_IRR_FAIL",
+    "GATE_EFFECTIVE_HURDLE_GAP",
+    "M_ROIIC_LOW",
+    "M_SHAREHOLDER_RETURN_THIN_COVER",
+    "M_PEAK_DRAWDOWN_STAGNANT",
+    "SNAPSHOT_LEGACY_SCHEMA",
+    "TRIGGER_REACHABLE"
+  ],
+  "codes_note": "全部取自 scripts/alert_codes.py 注册表；NORM_MARGIN_SHAPE 为引擎形状维度警报（本案经大宗商品路径裁决后不改变周期低位判定，但保留留痕）；M_PEAK_DRAWDOWN_STAGNANT 为人工登记（归母净利自 2012 峰值回撤 22.8% 且 3 年未收复）；TRIGGER_REACHABLE=触发价 14.42 元在 52 周区间内（低点 12.96）；SNAPSHOT_LEGACY_SCHEMA 为 A/H 分计价快照固有过渡态告警（已披露）",
+  "falsification_conditions": [
+    "煤价：2017-12-31 前秦港 Q5500 未回到 500 元/吨上方 → 正常化基期失效",
+    "股息：2016 年度 DPS < 0.45 元且派息率未上调至 50%+ → 档位降为拒绝",
+    "护城河：下水份额 < 30% 或自产煤成本年涨幅 > 5% → 评级降『无』，不给买入结论"
+  ],
+  "review_checkpoints": {
+    "next_review": "2016-03 下旬（2015 年报披露，回放外事件，仅用于答案比对）",
+    "tracking": "秦港 Q5500 周价、季度销量同比、自产煤单位成本、下水份额、电价政策、DPS 公告、集团资产注入定价"
+  },
+  "persona_verdicts": {"buffett": "观察等价格", "duan": "观察等价格", "lilu": "观察等价格（H股可小仓位试探）"},
+  "verification": {
+    "validate_data": "通过（0 错误 / 2 警告均已应答）",
+    "check_scenarios": "通过（S1-S9，0 警告）",
+    "verification_strength_grade": "B",
+    "verify_report_exit_code": 0,
+    "verify_report_summary": "80/80 通过（正文数字 56 + 图表数组 13 + 证据指针 11）"
+  },
+  "data_availability_notes": [
+    "卖方一致预期不可得（C5 未执行，估值基期改用公司指引+煤价行业锚定，manifest 已登记）",
+    "占款能力与前五大客户集中度未逐项取数（下游议价权评级置信度中）",
+    "数据窗口 10 年 < 周期敏感类要求 15 年（核验强度 B 的 V3 partial；2005 年上市前数据不可得）",
+    "2015 全年归母为推算值（三季报年化 + Q4 季节性 2012-2014 形态外推，约 205-225 亿），非年报数据",
+    "竞对华能/陕煤仅 3 年序列（降级披露）；煤价指数为复盘报告引述（C 级旁证，仅用于锚位参考）",
+    "抓取时 2015-12-31 年报列可见（收入 1,770.69 亿/归母 161.44 亿），未写入任何底稿与分析（manifest 登记）"
+  ],
+  "prior_expectation_comparison": {
+    "prior_verdict_ordinal": 2,
+    "prior_gate1": false,
+    "prior_gate2": null,
+    "actual_verdict_ordinal": 2,
+    "actual_gate1": false,
+    "actual_gate2": false,
+    "consistent_with_prior": true,
+    "increment": "gate2 三项中②③通过、仅①（与闸门一同源）未过；H 股双闸全过的事实披露；悲观/基准离散度 0.43"
+  },
+  "frozen_before_diff": true,
+  "frozen_at": "2026-09-06",
+  "key_artifacts": {
+    "report": "中国神华_价值投资分析报告_20151231.html",
+    "decision_log": "decision-log.md",
+    "data_dir": "data/",
+    "persona_workpapers": "workpapers/persona_{buffett,duan,lilu}.md"
+  }
+}
