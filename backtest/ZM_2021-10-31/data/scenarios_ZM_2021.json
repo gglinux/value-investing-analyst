@@ -1,0 +1,123 @@
+{
+  "company": "Zoom Video Communications",
+  "ticker": "ZM",
+  "currency": "USD",
+  "price": 274.65,
+  "price_source": "2021-10-31 为周日休市，取最后交易日 2021-10-29 收盘价 274.65（东方财富 push2his 美股日K secid=105.ZM，fqt=0 不复权——Zoom 无拆股无分红不复权即可比）[E:market_snapshot_ZM_2021.json]",
+  "moat": "narrow",
+  "moat_note": "护城河评级'窄'且 trend 为'受侵蚀压力'：五源检验——无形资产中（品牌动词化'开个 Zoom'+NPS>70，但核心功能无专利壁垒）/转换成本弱-中（企业侧有部署集成与硬件生态，个人与 SMB 近乎零——而 FY2021 收入结构恰向长尾倾斜至 36%）/网络效应弱-中（双边通讯网络存在但会议场景天然要求跨平台互通，削弱排他锁定）/成本优势中（13 个自有数据中心+带宽批量采购，毛利率 73.4-81.5% 软件级；但对自建骨干网的 Microsoft/Google 无优势）/有效规模中（504,900 企业客户先发规模，但 Teams 以 Office 3 亿+ 座位捆绑免费供给，'有效规模'对捆绑打法效力有限）。最硬的量化证据 NRR>130% TTM 连续 13 季，但对增速突变滞后（TTM 平滑）。侵蚀压力四项：Teams 捆绑/疫情需求回吐（客户数增速 +470%→+36% 悬崖即证据）/隐私安全尾部风险/OS 级免费方案截流 [E:qualitative_ZM_2021.json]。闸门一安全边际要求≥40%、闸门二期望 IRR 门槛 21.8%（窄护城河档，r=10%/H=5）",
+  "discount_rate": 0.1,
+  "discount_rate_note": "纪律下限 max(10%, 10Y UST 1.56%+4pct=5.56%)=10%。增长不确定性与侵蚀压力支持更高折现率，取 10% 下限已属对成长股宽容 [E:market_snapshot_ZM_2021.json]",
+  "hold_years": 5,
+  "dividend_yield": 0.0,
+  "dividend_yield_source": "零分红（2021 年 4 月董事会授权 10 亿美元回购计划但从未执行且从未分红；高增长期不分红是正确纪律）[E:financials_ZM_2021.json]",
+  "intrinsic_value_growth": 0.0,
+  "iv_growth_evidence": "取 0：基准 DCF 永续段 OE 增速 2.5%（fade 终点），但每股口径须再扣 SBC 稀释——FY2021 SBC 275.8M 占收入 10.4%、稀释股本半年 +2.5%（298.1→305.7M），稳态下 SBC 激励结构不会消失，年化稀释 ~2-3% 恰好吃掉 2.5% 的永续 OE 增速。每股内在价值长期增速 ≈ 0，与 normalization ADJ2'SBC 是真实成本'的主锚裁决一致。注意：iv_growth=0 + 股息率 0 → 不收敛下限 0%，远低于 floor hurdle 5%，闸门二该子项直接不过 [E:normalization_ZM_2021.json][E:financials_ZM_2021.json]",
+  "default_probabilities": {
+    "悲观": 0.3,
+    "基准": 0.5,
+    "乐观": 0.2
+  },
+  "scenarios": [
+    {
+      "name": "悲观",
+      "value_per_share": 30.06,
+      "probability": 0.3,
+      "method": "pe_trough_multiple",
+      "method_note": "独立路径（全程不走DCF）：危机期成熟倍数 × 当期 SBC 后 OE。earnings 取主锚 OE_SBC_adj（TTM）612.58（净利 1,003.9 − SBC 391.3，normalization ADJ2 核心裁决：SBC 是真实成本，悲观情景不给 COVID 峰值净利率 27.6% 信用）；倍数 15x 取'无增长但高盈利质量'软件资产的成熟 PE 下界（悲观内核=增长信任破灭后按稳态软件资产定价，Adobe/Intuit 类 15-20x 区间的下界）。S2b 机器重算 = 15×(612.58/305.653) = 30.06 美元。口径警示：612.58 的 TTM 含 COVID 峰值半年（H1 FY2022 净利 544.6），若下半年峰值回吐则盈利基数本身高估——15x 建立在'利润基数已稳'假设上；敏感度 10x→20.04、20x→40.08。与基准的关系：基准 63.97 是'FY2022F 利润率 18%+12% fade 十年'；悲观 30.06 是'SBC 后真实盈利 612.6 直接倍数化、零增长'——约为基准的 47%。净现金加回口径：V0 登记 30.06 不含加回（expected-return 按 0% 加回计=最保守）；可辩护中间口径 10.01/股（60% 折价，见 non_operating_addback_per_share 与 non_operating_note 分层设计），若含加回悲观总价值 40.07 仍比现价低 85.4%——口径选择不改变结论方向 [E:normalization_ZM_2021.json][E:metrics_ZM_2021.json][E:financials_ZM_2021.json]",
+      "method_inputs": {
+        "trough_multiple": 15,
+        "earnings_m": 612.58,
+        "shares_m": 305.653,
+        "trough_multiple_evidence": "15x='无增长高盈利质量'软件资产的危机期 PE 下界：悲观情景下 Zoom 的终局形态是'NRR 回落至 ~100%、增长归零、但毛利率 73%+ 与正 FCF 仍在'的稳态软件资产——市场对此类资产（Adobe/Intuit/微软 2010s 无增长段）常态定价 15-20x，悲观取下界。警示：TTM 盈利 612.58 含 COVID 峰值半年，若回吐则 15x 仍属乐观——敏感度 10x→20.04、20x→40.08 [E:normalization_ZM_2021.json][E:financials_ZM_2021.json]"
+      },
+      "stressed_assumptions": [
+        "margin",
+        "competition",
+        "multiple_compression"
+      ],
+      "probability_evidence": "[E:manifest.json][E:business_drivers_ZM_2021.json][E:financials_ZM_2021.json] 悲观证据链：①增速断崖已发生而非假设——YoY 轨迹 Q1'22 +191.4%→Q2'22 +53.9%→Q3'22F +30.9%（指引中值）→隐含 Q4'22F +15.0%，环比 Q3F −0.4%（零增长），指引发布次日 2021-08-31 股价 −16.7% 放量确认市场已开始定价；②侵蚀压力具体化——Teams 以 Office 3 亿+ 座位免费捆绑、客户数增速 +470%→+36% 悬崖、长尾（≤10 员工）收入占比 36% 留存天然弱；③利润率峰值不可持续——净利率 25.4%（FY2021）处软件业顶部，毛利率 81.5%→69.0%→73.4% 的疫情扰动已示范均值回归路径；④SBC 摊薄持续（半年 +2.5%）。综合：'增长陷阱'路径（增长归零+利润率均值回归+SBC 摊薄三重兑现）有充分时点内证据，30% 概率与其证据强度相称",
+      "non_operating_addback_per_share": 10.01
+    },
+    {
+      "name": "基准",
+      "value_per_share": 63.97,
+      "probability": 0.5,
+      "method": "dcf_owner_earnings",
+      "method_note": "fade 动态口径：base_oe=721.8（FY2022F 收入 4,010×18% 净利率——18% 取'峰值 25.4% 均值回归但明显高于疫情前 9.5%/4.0%'的中间路径，normalization ADJ5 情景输入），growth 12%/年线性 fade 10 年至永续 2.5%，r=10%，tg=2.5%。经营业务现值 14,453 + 净现金加回 5,100 = 股权 19,553 百万 ÷305.653M 股 = 63.97 美元。基准内核：企业客户直销引擎仍在（$100k+ 客户 2,278 家 +131% YoY）、NRR>130% 存量扩张引力未失、18% 净利率对 SBC 后口径可辩护（H1 FY2022 SBC 后净利率 21.4%）；但 12% 增速已是从'疫情 +191%→指引 +31%'断崖后的重减速路径——基准本身就是把'增长归零'当中心预期的一半。终值占比 53%，估值主体由可见预测期支撑 [E:fv_base.json][E:normalization_ZM_2021.json][E:business_drivers_ZM_2021.json]",
+      "method_inputs": {
+        "shares_m": 305.653,
+        "base_oe": 721.8,
+        "growth": 0.12,
+        "discount_rate": 0.1,
+        "terminal_growth": 0.025,
+        "years": 10,
+        "fade": true
+      },
+      "stressed_assumptions": [
+        "base_oe_anchor",
+        "fade_path",
+        "margin_mean_reversion"
+      ],
+      "probability_evidence": "[E:business_drivers_ZM_2021.json][E:financials_ZM_2021.json] 基准证据：①FY2022F 收入 4,010（+51.3%）为公司自己的指引锚（Q3 指引中值上修后的全年中值），年内已兑现 49.3%（H1 1,977.7）；②18% 净利率介于疫情前 4.0-9.5% 与峰值 25.4% 之间，H1 FY2022 实际 27.5% 给出上侧余量；③NRR>130% TTM 连续 13 季+企业客户数 +57%（81,900→504,900 口径内），存量扩张引擎真实存在；④增长 12% fade 十年已内含'疫情回吐后增长中枢下移'的主流预期（指引环比已零增长）。50% 概率：基准是'管理层指引+已证单元经济的最小外推'",
+      "non_operating_addback_per_share": 16.68
+    },
+    {
+      "name": "乐观",
+      "value_per_share": 220.91,
+      "probability": 0.2,
+      "method": "dcf_owner_earnings",
+      "method_note": "极限测试口径（可辩护假设空间的上界，非舒适乐观）：base_oe=1,002.5（FY2022F 收入 4,010×25%——峰值净利率 25.4% 十年维持不回落），growth 30%/年线性 fade 15 年至永续 2.5%，r=10%，tg=2.5%。经营业务现值 62,422 + 净现金 5,100 = 67,522 百万 ÷305.653M 股 = 220.91 美元。乐观内核：利润率峰值永续维持（SBC 后口径仍要 SBC 前净利更高——已是最激进的可辩护利润率）+增速在指引 +15% 的背景下重新加速到 30% 并维持 15 年+Zoon 一类的第二曲线不必要（单产品兑现全部）。终值占比 48%。核心结论：即使三重激进假设全部成立，220.91 仍比现价 274.65 低 19.6%——'参数不可达'的量化主体：现价隐含的未来 10 年 OE 增速 33.5%/年（EV 口径）本身就是本情景外增速 [E:fv_bull.json][E:market_snapshot_ZM_2021.json]",
+      "method_inputs": {
+        "shares_m": 305.653,
+        "base_oe": 1002.5,
+        "growth": 0.3,
+        "discount_rate": 0.1,
+        "terminal_growth": 0.025,
+        "years": 15,
+        "fade": true
+      },
+      "stressed_assumptions": [
+        "margin_peak_persistence",
+        "growth_reacceleration",
+        "competition_stall"
+      ],
+      "probability_evidence": "[E:qualitative_ZM_2021.json][E:business_drivers_ZM_2021.json] 乐观证据：①企业渗透仍早（$100k+ 客户 2,278 家仅占 504,900 企业客户的 0.45%，企业收入占比 64% 继续提升空间）；②Zoom Phone/Rooms 等扩展产品线交叉销售（NRR>130% 的载体）；③净现金 5.1bn 无债务提供全强度投入能力。仅 20% 概率的理由：乐观需要同时兑现'25.4% 峰值净利率在 Teams 捆绑竞争下不回落+增速从指引 +15% 重新加速到 30% 持续 15 年'——后者与已发布的 Q4'22F 隐含 +15.0% 指引方向直接矛盾，且侵蚀压力四项（Teams/回吐/隐私/OS 截流）无一缓解。注意 220.91<274.65：乐观情景自身不过闸门一，本案的核心发现不是乐观概率低，而是现价高于乐观价值",
+      "non_operating_addback_per_share": 16.68
+    }
+  ],
+  "sensitivity": {
+    "note": "估值最敏感两假设：①基期 OE 锚（本案五锚裁决见 normalization ADJ1-ADJ5，SBC 口径为最大分歧点）②预测期增速与利润率维持假设。r 的 ±1pct 影响相对次要（缺口太大）",
+    "base_oe_anchor": "EPV 静态口径（OE/r）：154.68（引擎均值锚，过苛参照）→5.06；612.58（SBC 后主锚）→20.04；672.32（GAAP 净利）→22.00；721.8（FY2022F×18% 基准）→23.61；1,002.5（FY2022F×25% 峰值）→32.80。五锚全区间 5.06-32.80，与市价 274.65 的缺口 −88%~-98%；fade 动态口径（基准 721.8，g=12% fade 10y，含加回）→63.97、极限（1,002.5，g=30% fade 15y）→220.91。悲观另用独立方法 pe_trough_multiple（15×612.58）→30.06。锚位争议不改变结论方向 [E:normalization_ZM_2021.json][E:metrics_ZM_2021.json]",
+    "growth_fade": "基准锚 721.8 下（含加回）：g=8%→57.01；10%→60.37；12%→63.97；15%→69.89。growth 从 8% 到 15% 的整个区间（58-70）均不足现价的 26%——增速假设在合理区间内对结论无翻转力",
+    "discount_rate_pm1": "基准锚+g 12% fade 下：r=9%→71.67；r=11%→58.10（±1pct 约 ±11%）",
+    "implied_growth_solving": "现价隐含增速反解（EV 口径：市值 83,948−净现金 5,100=78,848）：未来 10 年 OE 增速 33.53%/年（全市值口径 34.44%）——而收入 YoY 已断崖至 +31%F（Q3 指引）→+15%F（隐含 Q4）、利润率峰值 25.4% 处软件业顶部、极限测试组合（25% 利率率维持+30% 增速 fade 15y）仍只值 220.91（<现价 19.6%）。'参数不可达'成立：现价需要的不是更乐观的单一参数，而是本框架之外的未来（利润率跃迁超峰值/第二增长曲线/纯情绪定价）[E:metrics_ZM_2021.json][E:fv_bull.json]"
+  },
+  "epv_nav_tear": {
+    "finding": "EPV/账面方向与重资产周期股相反：EPV（主锚 612.58/r=10% = 6,126 百万）为账面总权益 4,657.7 百万的 1.3 倍——盈利能力口径显示的账面价值被低估（轻资产+递延收入池 1,178M 预收沉淀+品牌），而市价 83,948 又是 EPV 的 13.7 倍",
+    "implication": "①PE_TTM 83.6x/PS_TTM 23.1x/EV/S 21.7x 均在为'增长'而非'存量盈利能力'付费：净现金 5.1bn 只解释市值的 6.1%，其余 93.9% 全是未来增长预付款；②本案定价唯一可行框架是 OE/反向 DCF，且市价隐含增速 33.5% 已超出利润率物理上限可支撑的区间；③EPV>账面本身说明单元经济真实（NRR>130%+73% 毛利率），问题不在'公司不好'而在'市价为 13.7 倍于可验证盈利能力的未来预付款'——与 Netflix 案'13.1 倍 EPV'同构 [E:market_snapshot_ZM_2021.json][E:financials_ZM_2021.json]"
+  },
+  "non_operating_note": "Zoom 无任何金融债务（FY2021 10-K BS 无 short/long-term debt），净现金 = 现金 1,931.4 + 短期投资 ~3,168.6 ≈ 5,100M（2021-07-31，财报信 $5.1bn 口径）[E:financials_ZM_2021.json]。加回分层设计（对应 S5 立法本意'悲观必须施加更狠折价'）：基准/乐观按全额 5,100（16.68/股）——全部为现金+国债/定期存款类上市证券，流动性极高无折价必要；悲观可辩护中间口径 10.01/股（60% 折价）——悲观内核是'增长破灭后公司为重振增长大量烧钱'（销售激励/降价/研发追新/潜在 M&A，参照疫情期 capex+数据中心扩张先例），5 年持有期内净现金预计消耗显著；expected-return 引擎按悲观 V0=30.06 计（加回 0%=最保守口径）。三档折价 0%/60%/100% 与三情景压力强度单调对应。悲观 V0（30.06）为纯 pe_trough 经营值不含加回（S2b 算术约束），基准/乐观 V0 为含加回值——口径差异已在各 method_note 显式披露",
+  "value_trap_note": "S8 价值陷阱闸门未触发（安全边际 −329%，远低于 50% 触发线）——本案不存在'便宜的价值陷阱'问题，问题是'根本不便宜'：市价为基准内在价值的 4.3 倍、乐观极限情景的 1.24 倍、悲观情景的 9.1 倍。反向：本案是'贵的成长陷阱'风险的标准形态——增速断崖（+191%→+53.9%→指引 +31%→隐含 +15%）与估值透支（PE_TTM 83.6x）叠加，市场定价已从'增长股'切换半步到'利润率均值回归股'，若 Q4 FY2022 实际增速落在隐含 +15% 之下，83.6x 的起点意味着多年增长也无法修复估值缺口（2021-08-31 指引次日 −16.7% 已演示该机制的灵敏度）[E:market_snapshot_ZM_2021.json]",
+  "chart": {
+    "names": [
+      "悲观",
+      "基准",
+      "乐观"
+    ],
+    "values_per_share": [
+      30.06,
+      63.97,
+      220.91
+    ],
+    "price": [
+      274.65
+    ],
+    "values_per_share_price": [
+      30.06,
+      63.97,
+      220.91,
+      274.65
+    ]
+  }
+}

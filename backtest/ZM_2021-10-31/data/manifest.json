@@ -170,6 +170,94 @@
       "coverage": "390K 字符",
       "validated": "同上",
       "file": "filings/fy2020_10k.txt"
+    },
+    {
+      "source": "compute_metrics 引擎输出（输入：financials_ZM_2021.json + market_snapshot --market-cap 83948）",
+      "level": "A",
+      "fetched": "2026-09-07",
+      "coverage": "FY2017-2021 series/summary/normalization/capital_allocation/owner_yield/alerts 7 条",
+      "validated": "量纲哨兵触发后人工核对 market_cap=274.65×305.653 自洽（0.80% 为真实量纲）；ROIIC 警报经 ADJ4 裁决失真（负权益/轻资产 IC 分母）",
+      "file": "metrics_ZM_2021.json"
+    },
+    {
+      "source": "Phase 2 正常化裁决工作纸（输入：metrics alerts + ADJ1-ADJ5 五裁决）",
+      "level": "A",
+      "fetched": "2026-09-07",
+      "coverage": "engine_output 7 项/adjudications 5 条/base_oe_range_final 五锚（154.68/612.58/672.32/721.8/1002.5）/conclusion_for_valuation/cross_reference 三先例镜像",
+      "validated": "五裁决链与 normalization 工作纸互证；主锚 612.58=SBC 核心裁决（ADJ2），量纲与口径链条经红队第 4 项交叉验证（差 <0.2%）",
+      "file": "normalization_ZM_2021.json"
+    },
+    {
+      "source": "Phase 3 五维定性底稿（morningstar 五源+quant_tests+OBS 三条件盘点）",
+      "level": "A",
+      "fetched": "2026-09-07",
+      "coverage": "business_model/moat（窄·侵蚀压力，五源+erosion 四项）/growth/management/financial_quality/assumption_consistency_ledger 5 条",
+      "validated": "护城河评级从 Zoom 自身披露独立推导（purpose 载明不参照其他案例结论）；改码激励隔离声明登记",
+      "file": "qualitative_ZM_2021.json"
+    },
+    {
+      "source": "Phase 4 三情景估值（悲观=pe_trough_multiple 手工构建；基准/乐观=forward-value 引擎输出）",
+      "level": "A",
+      "fetched": "2026-09-07",
+      "coverage": "三情景 30.06/63.97/220.91+概率 0.3/0.5/0.2+sensitivity 四轴+epv_nav_tear+非经营加回分层+value_trap_note+chart",
+      "validated": "check_scenarios 通过（0 错 0 警）：S2b 机器重算偏差 0.008%/S2c worst_year_margin 预防性排除/S4 离散度 0.47/S5 分层折价合规/S7b iv_growth=0 带 [E:] 证据",
+      "file": "scenarios_ZM_2021.json"
+    },
+    {
+      "source": "reverse_dcf forward-value（基准：base_oe 721.8/g0.12 fade 10y/r0.10/tg0.025/add-back 5100）",
+      "level": "A",
+      "fetched": "2026-09-07",
+      "coverage": "经营 14,453+加回 5,100=19,553 → 63.97/股；终值占比 53%（<60% 达标）",
+      "validated": "terminal_diagnostics level=ok；假设间距 r−tg=7.5% 合规",
+      "file": "fv_base.json"
+    },
+    {
+      "source": "reverse_dcf forward-value（乐观极限：base_oe 1002.5/g0.30 fade 15y/同参数）",
+      "level": "A",
+      "fetched": "2026-09-07",
+      "coverage": "经营 62,422+加回 5,100=67,522 → 220.91/股；终值占比 48%（达标）；仍低于现价 19.6%=参数不可达量化主体",
+      "validated": "terminal_diagnostics level=ok；参数方向经红队第 3 项双向质询",
+      "file": "fv_bull.json"
+    },
+    {
+      "source": "reverse_dcf expected-return --scenarios-file（自动读取 scenarios 全口径）",
+      "level": "A",
+      "fetched": "2026-09-07",
+      "coverage": "三情景 IRR/期望 IRR −16.64%/loss_prob 80%/gate2 三项（−16.64% vs 21.8%；0% vs 6%；−29.33% vs 0%）",
+      "validated": "折现率与 forward-value 同源（0.10）；IRR 修正式（v2.9）口径，股息不叠加",
+      "file": "expected_return_ZM_2021.json"
+    },
+    {
+      "source": "Phase 4.5 安全边际派生值（输入：scenarios+market_snapshot）",
+      "level": "A",
+      "fetched": "2026-09-07",
+      "coverage": "mos_vs_base −329.3%/mos_vs_bull −24.3%/触发价 38.38（含 52 周可及性核验）/烟蒂检验/EPV 三锚",
+      "validated": "三口径全查；触发价历史可及性核查（低于上市以来全部成交区间）如实披露",
+      "file": "mos_calc_ZM_2021.json"
+    },
+    {
+      "source": "Phase 5 三师分立+红队工作纸（persona 三稿分离，仅共享管线输出）",
+      "level": "A",
+      "fetched": "2026-09-07",
+      "coverage": "persona_scores/divergence 四轴/consensus 5 条/adopted_ruling/red_team_checks 5 项（含 OBS-2016-12-01 预锚定专条六重隔离）/pre_mortem 四形态",
+      "validated": "separation_protocol_note 登记三师不接触答案与 OBS 全文；动机污染披露沿用 meta.json 四层",
+      "file": "phase5_workpaper.json"
+    },
+    {
+      "source": "核验强度评估（validate_data/crosscheck/数据窗口三要素）",
+      "level": "A",
+      "fetched": "2026-09-07",
+      "coverage": "勾稽 4/5=80% partial/crosscheck 3 年 full/窗口 5 年 weak（COVID 扭曲+无压力年）/grade C",
+      "validated": "grade C 与首屏徽章一致（data-verification-strength=1）",
+      "file": "verification_strength.json"
+    },
+    {
+      "source": "自引用登记",
+      "level": "-",
+      "fetched": "2026-09-07",
+      "coverage": "信息截断纪律+forbidden 清单+official_filing_missing+files 24 项",
+      "validated": "-",
+      "file": "manifest.json"
     }
   ]
 }

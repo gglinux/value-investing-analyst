@@ -1,0 +1,49 @@
+{
+  "company": "Zoom Video Communications, Inc.",
+  "ticker": "ZM",
+  "annual_rows": 5,
+  "year_min": 2017,
+  "year_max": 2021,
+  "reconciliation": {
+    "schema": "general（三表勾稽）",
+    "keys_required": [
+      "total_assets",
+      "total_liabilities",
+      "total_equity"
+    ],
+    "covered_years": 4,
+    "total_years": 5,
+    "coverage": 0.8,
+    "level": "partial",
+    "note": "FY2017 资产负债表无载体（S-1 Selected Financial Data 不含 BS 明细）登记 crosscheck_exempt；FY2018/2019 末 mezzanine 优先股 159.552M 临时权益以总权益口径（=assets−liabilities）勾稽通过，equity_official_gaap 留存披露。取证检查只在科目齐备的年份执行。"
+  },
+  "crosscheck": {
+    "years_registered": [
+      2019,
+      2020,
+      2021
+    ],
+    "years_official_source": [
+      2019,
+      2020,
+      2021
+    ],
+    "level": "full",
+    "machine_verified_against_source_text": false,
+    "note": "三年度命门科目与 10-K 官方值核对（--audit 模式 0 错 0 警）。结构性说明：引擎归年口径与 Zoom 财年标签错位一年（财年末 1-31 归前一年），已登记 crosscheck_exempt.fy_label_mismatch，不改码、以 --audit 模式验证转录一致性。FY2017 数字源自 S-1 Selected Financial Data（唯一载体，手工摘录），仅经 check_transcription 搬运校验，未经官方 BS 勾稽。脚本只能核验 source 字符串指向官方原文的**形态**——本项无论哪一级，首屏都必须写明「未经原文机器逐字比对」"
+  },
+  "data_window": {
+    "span_years": 5,
+    "required_years": 10,
+    "cycle_sensitive": false,
+    "stress_years_covered": {
+      "2020": "COVID-19 全球疫情（对 Zoom 为受益扭曲年而非压力年）"
+    },
+    "covers_full_cycle": false,
+    "level": "weak",
+    "note": "三重缺口：①窗口 5/10 年不足（公司 2011 年成立、2019 年上市，S-1 覆盖 FY2017 起为可得全部）；②窗口后半段（FY2020-2021）被疫情需求脉冲严重扭曲——'历史常态'在窗口内不存在，FY2020 前的老常态与 FY2021 的新常态之间的过渡形态未被观测；③窗口不含任何系统性压力年（Zoom 未经历危机、未经历上市后熊市）——序列最差年 2017 是公司幼年期而非危机年，'历史最差'口径整体不成立（这正是 S2c 拒绝 worst_year_margin 悲观方法、改用 pe_trough_multiple 的数据层原因）。悲观情景因此改用行业成熟倍数锚，正常化基期改用情景输入区间（ADJ5）"
+  },
+  "grade": "C",
+  "grade_meaning": "存在明显核验缺口：结论方向可用（缺口幅度 −329.3% 远超任何缺口可解释范围），但档位判定从严（narrow 档 40% + gate2 全三项），且'参数不可达'表述限于'本框架可辩护参数空间'内",
+  "generated_at": "2026-09-07"
+}
