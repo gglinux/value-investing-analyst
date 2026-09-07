@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>鞍钢股份 价值投资分析报告（回放 2015-12-31）</title>
+<script src="https://cdn.jsdelivr.net/npm/echarts@5/dist/echarts.min.js"></script>
+<style>
+  :root {
+    --primary: #1a3a5c;
+    --accent: #d97706;
+    --bg: #f7f8fa;
+    --card: #ffffff;
+    --text: #24292f;
+    --muted: #6b7280;
+    --green: #15803d;
+    --red: #b91c1c;
+    --border: #e5e7eb;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif; background: var(--bg); color: var(--text); line-height: 1.75; font-size: 15px; }
+  .container { max-width: 1080px; margin: 0 auto; padding: 24px 20px 80px; }
+  header.report-header { background: var(--primary); color: #fff; border-radius: 12px; padding: 40px 36px; margin-bottom: 28px; }
+  header.report-header h1 { font-size: 26px; font-weight: 700; }
+  header.report-header .meta { margin-top: 8px; opacity: .75; font-size: 13px; }
+  .verdict-banner { display: flex; align-items: center; gap: 24px; margin-top: 24px; background: rgba(255,255,255,.08); border-radius: 10px; padding: 20px 24px; }
+  .verdict-label { font-size: 34px; font-weight: 800; letter-spacing: 2px; }
+  .verdict-reject { color: #f87171; }
+  .verdict-score { font-size: 15px; opacity: .9; }
+  .snapshot-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 10px; margin-top: 16px; }
+  .snapshot-item { background: rgba(255,255,255,.08); border-radius: 8px; padding: 10px 14px; }
+  .snapshot-item .k { font-size: 12px; opacity: .65; }
+  .snapshot-item .v { font-size: 17px; font-weight: 700; margin-top: 2px; }
+  .snapshot-time { font-size: 11px; opacity: .55; margin-top: 8px; }
+  section { background: var(--card); border-radius: 12px; padding: 32px 36px; margin-bottom: 24px; border: 1px solid var(--border); }
+  h2 { font-size: 20px; color: var(--primary); padding-bottom: 10px; margin-bottom: 18px; border-bottom: 3px solid var(--accent); display: inline-block; }
+  h3 { font-size: 16px; color: var(--primary); margin: 22px 0 10px; }
+  p { margin-bottom: 12px; }
+  .chart { width: 100%; height: 400px; margin: 12px 0 4px; }
+  .chart-note { font-size: 12px; color: var(--muted); margin-bottom: 10px; }
+  table { width: 100%; border-collapse: collapse; margin: 12px 0 18px; font-size: 14px; }
+  th, td { border: 1px solid var(--border); padding: 8px 12px; text-align: left; }
+  th { background: #f1f5f9; color: var(--primary); font-weight: 600; }
+  td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
+  .tag { display: inline-block; padding: 2px 10px; border-radius: 999px; font-size: 12px; font-weight: 600; margin-right: 6px; }
+  .tag-red { background: #fee2e2; color: var(--red); }
+  .tag-green { background: #dcfce7; color: var(--green); }
+  .tag-gray { background: #e5e7eb; color: #374151; }
+  .tag-amber { background: #fef3c7; color: #92400e; }
+  .callout { border-left: 4px solid var(--accent); background: #fffbeb; padding: 14px 18px; border-radius: 0 8px 8px 0; margin: 14px 0; }
+  .callout-red { border-left-color: var(--red); background: #fef2f2; }
+  .callout-blue { border-left-color: #2563eb; background: #eff6ff; }
+  .verification-strength { background: rgba(255,255,255,.10); border: 1px dashed rgba(255,255,255,.45); border-radius: 10px; padding: 12px 16px; margin-top: 18px; font-size: 13px; }
+  .verification-strength .vs-meaning { opacity: .8; font-size: 12px; }
+  .eptr { color: #2563eb; font-size: 12px; }
+  .muted { color: var(--muted); font-size: 13px; }
+  .kpi { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin: 14px 0; }
+  .kpi .item { background: #f8fafc; border: 1px solid var(--border); border-radius: 8px; padding: 12px 14px; }
+  .kpi .item .k { font-size: 12px; color: var(--muted); }
+  .kpi .item .v { font-size: 19px; font-weight: 700; color: var(--primary); margin-top: 4px; }
+  ul.tight li { margin-bottom: 6px; }
+  footer { text-align: center; color: var(--muted); font-size: 12px; margin-top: 30px; }
+</style>
+</head>
+<body>
+<div class="container">
+
+<header class="report-header">
+  <h1>鞍钢股份（000898.SZ / 00347.HK）价值投资分析报告</h1>
+  <div class="meta">回放时点 2015-12-31 ｜ 信息截断 2015-12-31 ｜ 第二批案例 B2-08 ｜ 本报告仅使用 2015-12-31 及之前的公开信息</div>
+  <div class="verdict-banner">
+    <div class="verdict-label verdict-reject">拒绝</div>
+    <div class="verdict-score">
+      档位序数 <b>1</b>（排除=0/拒绝=1/观察=2/小仓位=3/核心买入=4）<br>
+      闸门一（安全边际 ≥40%，无护城河）：<b style="color:#f87171">未通过</b>（<span class="vnum" data-src="scenario_audit.json" data-path="diagnostics.margin_of_safety_vs_base" data-fmt="pct1">-264.1%</span>）<br>
+      闸门二（期望IRR / 不收敛下限 / 悲观年化）：<b style="color:#f87171">未通过</b>（<span class="vnum" data-src="expected_return.json" data-path="expected_annualized_irr" data-fmt="pct1">-16.2%</span> / <span class="vnum" data-src="expected_return.json" data-path="gate2.no_convergence_floor.value" data-fmt="pct2">0.94%</span>&lt;6% / <span class="vnum" data-src="expected_return.json" data-path="gate2.pessimistic_irr.value" data-fmt="pct1">-30.8%</span>&lt;0%）
+    </div>
+  </div>
+  <div class="snapshot-grid">
+    <div class="snapshot-item"><div class="k">A股现价</div><div class="v"><span class="vnum" data-src="market_snapshot_000898_2015.json" data-path="price_a" data-fmt="num2">4.77</span> 元</div></div>
+    <div class="snapshot-item"><div class="k">52周高（2015-06-15）</div><div class="v"><span class="vnum" data-src="market_snapshot_000898_2015.json" data-path="kline_2015.high_52w" data-fmt="num2">8.51</span> 元</div></div>
+    <div class="snapshot-item"><div class="k">52周低（2015-08-26）</div><div class="v"><span class="vnum" data-src="market_snapshot_000898_2015.json" data-path="kline_2015.low_52w" data-fmt="num2">4.58</span> 元</div></div>
+    <div class="snapshot-item"><div class="k">PB（2015Q3 BPS 6.49）</div><div class="v"><span class="vnum" data-src="market_snapshot_000898_2015.json" data-path="valuation_snapshot.pb_mrq" data-fmt="num3">0.735</span></div></div>
+    <div class="snapshot-item"><div class="k">A股/H股溢价</div><div class="v"><span class="vnum" data-src="market_snapshot_000898_2015.json" data-path="ah_premium.premium_pct" data-fmt="num1">81.3</span>%</div></div>
+    <div class="snapshot-item"><div class="k">股息率（A股TTM）</div><div class="v"><span class="vnum" data-src="market_snapshot_000898_2015.json" data-path="dividend_yield_ttm" data-fmt="pct2">0.94%</span></div></div>
+  </div>
+  <div class="snapshot-time">行情快照：2015-12-31收盘（东方财富日线不复权 secid=0.000898/116.00347；10Y国债 <span class="vnum" data-src="market_snapshot_000898_2015.json" data-path="risk_free.cn_10y_treasury_yield_pct" data-fmt="num2">2.82</span>%）</div>
+  <div class="verification-strength" data-verification-strength="1"
+     data-grade="B"
+     data-reconciliation-coverage="1.0000"
+     data-crosscheck-level="full"
+     data-window-years="10"
+     data-covers-full-cycle="false">
+  <b>核验强度 B</b>：三表勾稽覆盖率 100%（达标） ｜ 命门科目原文登记 达标（<u>未经原文机器逐字比对</u>） ｜ 数据窗口 10 年，含全球金融危机（部分）<br>
+  <span class="vs-meaning">存在部分核验缺口：结论可用，但相关章节须显式降低置信度</span>
+</div>
+</header>
+
+<!-- ═══════════ 一、投资摘要 ═══════════ -->
+<section>
+<h2>一、投资摘要</h2>
+<p><b>结论：拒绝（档位1）。</b>鞍钢股份是无护城河、长期资本回报低于资本成本的重资产周期股，2015年末站在结构性衰退与周期底部的叠加点上。现价4.77元对基准内在价值<span class="vnum" data-src="fv_base.json" data-path="value_per_share" data-fmt="num2">1.31</span>元溢价约 <span class="vnum" data-src="scenario_audit.json" data-path="diagnostics.margin_of_safety_vs_base" data-fmt="pct1">-264.1%</span>（安全边际为负），即使按乐观情景（向上正常化兑现，<span class="vnum" data-src="fv_bull.json" data-path="value_per_share" data-fmt="num2">3.42</span>元）衡量仍溢价约39%。双闸门在A股与H股两个市场均深度不过。</p>
+<p><b>本案的核心发现是「EPV/资产价值撕裂」</b>：盈利能力资本化价值（9,500百万元）仅为账面归母权益（<span class="vnum" data-src="financials_000898_2015.json" data-path="interim.equity_parent" data-fmt="num0">46,977</span>百万元）的0.20倍——ROE <span class="vnum" data-src="metrics_000898_2015.json" data-path="series.9.roe" data-fmt="pct1">2.0%</span>的权益在r=10%下公允PB≈0.2；而A股PB <span class="vnum" data-src="market_snapshot_000898_2015.json" data-path="valuation_snapshot.pb_mrq" data-fmt="num3">0.735</span>、H股PB 0.405、2013年危机底PB 0.385，三个市场的定价全部远高于公允水平。市场持续为壳资源、资产期权与保壳预期付费，而非为盈利能力付费。<b>「破净」在本案不是低估的证据，而是定价锚错位的表象。</b></p>
+<p><b>三情景</b>：悲观（独立清算路径）<span class="vnum" data-src="scenarios.json" data-path="scenarios.0.value_per_share" data-fmt="num2">0.47</span>元（概率<span class="vnum" data-src="scenarios.json" data-path="scenarios.0.probability" data-fmt="pct0">30%</span>）、基准（正常化裁决锚）<span class="vnum" data-src="scenarios.json" data-path="scenarios.1.value_per_share" data-fmt="num2">1.31</span>元（<span class="vnum" data-src="scenarios.json" data-path="scenarios.1.probability" data-fmt="pct0">50%</span>）、乐观（主轨兑现）<span class="vnum" data-src="scenarios.json" data-path="scenarios.2.value_per_share" data-fmt="num2">3.42</span>元（<span class="vnum" data-src="scenarios.json" data-path="scenarios.2.probability" data-fmt="pct0">20%</span>）。三情景期望每股价值<span class="vnum" data-src="expected_return.json" data-path="expected_value_per_share" data-fmt="num2">1.48</span>元，期望年化IRR <span class="vnum" data-src="expected_return.json" data-path="expected_annualized_irr" data-fmt="pct1">-16.2%</span>，亏损概率<span class="vnum" data-src="expected_return.json" data-path="loss_probability" data-fmt="pct0">80%</span>。</p>
+<div class="callout callout-red"><b>一句话拒因</b>：这不是「便宜的好生意等催化」，也不是「便宜的烂生意防价值陷阱」——现价连乐观情景的内在价值都买不到，问题不是「何时修复」而是「根本没有低估」。</div>
+</section>
+
+<!-- ═══════════ 二、公司与生意（商业模式） ═══════════ -->
+<section>
+<h2>二、公司与生意（商业模式）</h2>
+<p>鞍钢股份是鞍钢集团旗下核心钢铁上市平台（央企控股+A+H两地上市），主营热轧板、冷轧板等板材产品，兼营型材与线材。2014年生产铁2,178万吨/钢2,145万吨/钢材2,005万吨（2014年报运营数据，A股披露2015-03-31）<span class="eptr">[E:financials_000898_2015.json]</span>。</p>
+<p>商业模式的本质：<b>同质化大宗商品制造</b>——上游锁定铁矿石与焦煤两个市场价格，下游接受钢价随行就市，公司既不拥有成本曲线优势，也不拥有产品定价权。销售钢材量在2010-2014年维持在<span class="vnum" data-src="business_drivers_000898_2015.json" data-path="drivers.4.volume" data-fmt="num0">1,999</span>万吨平台（2010年<span class="vnum" data-src="business_drivers_000898_2015.json" data-path="drivers.0.volume" data-fmt="num0">2,069</span>万吨），而吨钢收入从<span class="vnum" data-src="business_drivers_000898_2015.json" data-path="drivers.0.price" data-fmt="num0">4,468</span>元降至<span class="vnum" data-src="business_drivers_000898_2015.json" data-path="drivers.4.price" data-fmt="num0">3,704</span>元——<b>量稳价跌</b>是价格接受者在行业过剩期的标准形态 <span class="eptr">[E:business_drivers_000898_2015.json]</span>。</p>
+<p>公司史有两次关键事件塑造了今天的资产负债表：①2006年2月向母公司定向增发约29.7亿股收购鞍钢新钢铁，主业整体上市，收入规模跳升106%；②2007年A+H配股后总股本7,234,807,847股定型（A股6,149.01百万股+H股1,085.80百万股）<span class="eptr">[E:financials_000898_2015.json]</span>。这意味着今天的股东结构里嵌着两轮面向母公司的股权融资，而2007年配股之后公司再未给股东创造过超过资本成本的回报 <span class="eptr">[E:metrics_000898_2015.json]</span>。</p>
+<p>收入结构无产品护城河可言：板材占比高但与宝钢、武钢、首钢等同业高度重叠，2015年行业亏损面47.5%的环境下，产品差异不足以支撑溢价 <span class="eptr">[E:workpapers/aux_evidence_20260907.json]</span>。商业模式定性：<b>资本密集、商品价格接受、无转换成本、无品牌溢价</b>。</p>
+</section>
+
+<!-- ═══════════ 三、定量画像 ═══════════ -->
+<section>
+<h2>三、定量画像</h2>
+<h3>3.1 收入与盈利：十年下坡路</h3>
+<div class="chart" id="chart_rev_ni"></div>
+<div class="chart-note">2005-2014营业收入（柱，百万元）与归母净利（线，百万元）。2006/2007年为并表与景气峰值；2011/2012连亏；2013年微利含折旧变更约9亿贡献；2014年归母<span class="vnum" data-src="financials_000898_2015.json" data-path="annual.9.net_income" data-fmt="num0">928</span>百万元、扣非917百万元（非经常性损益仅11百万）。数据源 [E:metrics_000898_2015.json]</div>
+<h3>3.2 盈利能力：结构性恶化，不是周期波动</h3>
+<div class="chart" id="chart_margin"></div>
+<div class="chart-note">净利率与ROE（%）。2005年ROE无期初基数不适用（作0绘制）。利润率形状检验：秩相关<span class="vnum" data-src="metrics_000898_2015.json" data-path="normalization.margin_trend.spearman_rho" data-fmt="raw">-0.78</span>、穿越均值<span class="vnum" data-src="metrics_000898_2015.json" data-path="normalization.margin_trend.mean_crossings" data-fmt="num0">1</span>次、末端连续<span class="vnum" data-src="metrics_000898_2015.json" data-path="normalization.margin_trend.trailing_same_side_years" data-fmt="num0">6</span>年低于均值——判为<b>结构性恶化</b>（置信度高）</div>
+<table>
+<tr><th>指标</th><th class="num">2011</th><th class="num">2012</th><th class="num">2013</th><th class="num">2014</th></tr>
+<tr><td>归母净利（百万元）</td><td class="num"><span class="vnum" data-src="metrics_000898_2015.json" data-path="chart_series.net_income.6" data-fmt="num0">-2,146</span></td><td class="num"><span class="vnum" data-src="metrics_000898_2015.json" data-path="chart_series.net_income.7" data-fmt="num0">-4,157</span></td><td class="num"><span class="vnum" data-src="metrics_000898_2015.json" data-path="chart_series.net_income.8" data-fmt="num0">770</span></td><td class="num"><span class="vnum" data-src="metrics_000898_2015.json" data-path="chart_series.net_income.9" data-fmt="num0">928</span></td></tr>
+<tr><td>ROE（平均口径）</td><td class="num"><span class="vnum" data-src="metrics_000898_2015.json" data-path="chart_series.roe.6" data-fmt="pct1">-4.0%</span></td><td class="num"><span class="vnum" data-src="metrics_000898_2015.json" data-path="chart_series.roe.7" data-fmt="pct1">-8.3%</span></td><td class="num"><span class="vnum" data-src="metrics_000898_2015.json" data-path="chart_series.roe.8" data-fmt="pct1">1.6%</span></td><td class="num"><span class="vnum" data-src="metrics_000898_2015.json" data-path="chart_series.roe.9" data-fmt="pct1">2.0%</span></td></tr>
+<tr><td>毛利率</td><td class="num"><span class="vnum" data-src="metrics_000898_2015.json" data-path="chart_series.gross_margin.6" data-fmt="pct1">4.4%</span></td><td class="num"><span class="vnum" data-src="metrics_000898_2015.json" data-path="chart_series.gross_margin.7" data-fmt="pct1">2.7%</span></td><td class="num"><span class="vnum" data-src="metrics_000898_2015.json" data-path="chart_series.gross_margin.8" data-fmt="pct1">11.2%</span></td><td class="num"><span class="vnum" data-src="metrics_000898_2015.json" data-path="chart_series.gross_margin.9" data-fmt="pct1">11.6%</span></td></tr>
+<tr><td>每股净资产（元）</td><td class="num"><span class="vnum" data-src="metrics_000898_2015.json" data-path="chart_series.bvps.6" data-fmt="num2">7.23</span></td><td class="num"><span class="vnum" data-src="metrics_000898_2015.json" data-path="chart_series.bvps.7" data-fmt="num2">6.67</span></td><td class="num"><span class="vnum" data-src="metrics_000898_2015.json" data-path="chart_series.bvps.8" data-fmt="num2">6.51</span></td><td class="num"><span class="vnum" data-src="metrics_000898_2015.json" data-path="chart_series.bvps.9" data-fmt="num2">6.66</span></td></tr>
+</table>
+<h3>3.3 引擎告警（compute_metrics 输出，6条ALERT）</h3>
+<ul class="tight">
+<li><b>分红幻觉</b>：累计股东回报<span class="vnum" data-src="metrics_000898_2015.json" data-path="capital_allocation.cum_dividends" data-fmt="num0">18,621</span>百万元 vs 累计自由现金流<span class="vnum" data-src="metrics_000898_2015.json" data-path="capital_allocation.cum_fcf" data-fmt="num0">3,193</span>百万元，覆盖<span class="vnum" data-src="metrics_000898_2015.json" data-path="capital_allocation.fcf_cover_shareholder_return" data-fmt="num2">0.17</span>x——分红靠融资/举债维持 <span class="eptr">[E:metrics_000898_2015.json]</span></li>
+<li><b>利润含金量</b>：近5年中2011/2012/2014三年FCF/净利润&lt;0.6</li>
+<li><b>周期低位+结构性衰退双警报</b>：最新净利率仅为全期均值0.37倍，但利润率单向下行未回归均值——向上正常化是价值陷阱的典型入口</li>
+<li><b>所有者收益率不可落袋</b>：OE收益率7.7%看似可观，但cash_backed=false，禁止据此判断低估</li>
+</ul>
+<p><b>2015年最新证据</b>（截断日已披露）：三季报归母<span class="vnum" data-src="financials_000898_2015.json" data-path="interim.net_income" data-fmt="num0">-888</span>百万元（上年同期+923），Q3单季-1,043百万元逐季扩大，主因钢价跌幅远超原料成本跌幅 <span class="eptr">[E:financials_000898_2015.json][E:workpapers/aux_evidence_20260907.json]</span>。</p>
+</section>
+
+<!-- ═══════════ 四、护城河分析 ═══════════ -->
+<section>
+<h2 data-moat="none">四、护城河分析</h2>
+<p><b>评级：无</b>（wide/narrow/none三档中取none，机器标记 data-moat="none"）。闸门一安全边际要求≥40%、闸门二期望IRR门槛21.8% <span class="eptr">[E:qualitative_000898_2015.json]</span>。</p>
+<h3>4.1 五源检验</h3>
+<table>
+<tr><th>来源</th><th>结论</th><th>依据</th></tr>
+<tr><td>无形资产</td><td>无</td><td>「鞍钢」品牌无产品溢价能力，板材同质化；专利/工艺不构成排他</td></tr>
+<tr><td>转换成本</td><td>无</td><td>钢厂切换供应商仅涉及认证周期（3-6个月），无生态锁定</td></tr>
+<tr><td>网络效应</td><td>无</td><td>制造业无网络结构</td></tr>
+<tr><td>成本优势</td><td>无</td><td>无自有矿山成本红利（对比：本钢/首钢部分自给）；鲅鱼圈新基地折旧负担重；与宝钢对照的高端板材成本地位不占优 <span class="eptr">[E:metrics_peer_600019.json]</span></td></tr>
+<tr><td>有效规模</td><td>无</td><td>全国粗钢产能严重过剩，规模反成退出障碍</td></tr>
+</table>
+<h3>4.2 定量检验</h3>
+<ul class="tight">
+<li>ROE八年（2007-2014）均值约-0.9%，五年ROIC均值<span class="vnum" data-src="metrics_000898_2015.json" data-path="summary.roic_avg_5y" data-fmt="pct1">0.8%</span>，显著低于10%折现率 <span class="eptr">[E:metrics_000898_2015.json]</span></li>
+<li>同业对照：宝钢2014年净利率<span class="vnum" data-src="metrics_peer_600019.json" data-path="series.2.net_margin" data-fmt="pct1">3.1%</span>（归母<span class="vnum" data-src="metrics_peer_600019.json" data-path="series.2.net_income" data-fmt="num0">5,792</span>百万元）vs 鞍钢<span class="vnum" data-src="metrics_000898_2015.json" data-path="series.9.net_margin" data-fmt="pct1">1.3%</span>（<span class="vnum" data-src="metrics_000898_2015.json" data-path="series.9.net_income" data-fmt="num0">928</span>百万元）；宝钢2014年期末ROE约5.07% vs 鞍钢1.94%（按期末归母权益手工推算）<span class="eptr">[E:financials_peer_600019.json][E:metrics_peer_600019.json]</span></li>
+<li>吨钢收入连续4年下滑累计-23%（4,468→3,704元/吨）——价格接受者的直接证据 <span class="eptr">[E:business_drivers_000898_2015.json]</span></li>
+</ul>
+<p>结论：<b>护城河评级「无」不是「弱」，是五个来源全部不存在</b>。这意味着其盈利能力没有结构性保护，EPV应按「竞争均衡下利润率向行业均值回归」处理，而行业均值本身在恶化。</p>
+</section>
+
+<!-- ═══════════ 五、增长空间与质量 ═══════════ -->
+<section>
+<h2>五、增长空间与质量</h2>
+<p><b>TAM见顶</b>：中国粗钢需求在2014年前后进入平台期，行业逻辑从「增量扩表」切换到「存量博弈」。公司销量从2010年<span class="vnum" data-src="business_drivers_000898_2015.json" data-path="drivers.0.volume" data-fmt="num0">2,069</span>万吨回落至2014年<span class="vnum" data-src="business_drivers_000898_2015.json" data-path="drivers.4.volume" data-fmt="num0">1,999</span>万吨——在价格持续下跌的市场里，量的维持以牺牲售价为代价 <span class="eptr">[E:business_drivers_000898_2015.json]</span>。</p>
+<p><b>增长质量：ROIIC低于资本成本，增长毁灭价值</b>。2005-2014累计经营现金流<span class="vnum" data-src="metrics_000898_2015.json" data-path="capital_allocation.cum_ocf" data-fmt="num0">45,445</span>百万元、累计资本开支<span class="vnum" data-src="metrics_000898_2015.json" data-path="capital_allocation.cum_capex" data-fmt="num0">42,252</span>百万元——十年间94%的经营现金再投入产能，换来的是累计自由现金流仅<span class="vnum" data-src="metrics_000898_2015.json" data-path="capital_allocation.cum_fcf" data-fmt="num0">3,193</span>百万元 <span class="eptr">[E:metrics_000898_2015.json]</span>。滚动3年ROIIC在2011-2012年为-33%~-60%，2014年无正值记录。对这类生意，<b>最优再投资率是0</b>：任何「增长战略」都在把股东的钱搬进低回报资产。</p>
+<p><b>矿价红利的边界</b>：2015年铁矿石价格下行约40.9%，理论上改善成本端，但三季报证明钢价跌幅（CSPI前三季度同比约-24%）吞噬了全部红利并导致转亏 <span class="eptr">[E:workpapers/aux_evidence_20260907.json][E:financials_000898_2015.json]</span>。原料跌价对价格接受者不是利润来源——售价锚定市场而非成本加成。</p>
+<p>增长结论：无真实增长空间；「每股内在价值增速」取0 <span class="eptr">[E:metrics_000898_2015.json][E:business_drivers_000898_2015.json]</span>。</p>
+</section>
+
+<!-- ═══════════ 六、管理层与企业文化 ═══════════ -->
+<section>
+<h2>六、管理层与企业文化</h2>
+<p><b>资本配置评级：C-</b>。三项记录：<br>
+①2007年A+H配股融资后，公司承诺的产能扩张与回报未兑现为股东价值——配股价对应的权益在2011-2012年亏蚀近半；<br>
+②2005-2014年累计资本开支42,252百万元（含2008年鲅鱼圈基地建设高峰14,684百万元）几乎全部再投入低回报产能，无一次有意义的回购或收缩 <span class="eptr">[E:financials_000898_2015.json][E:metrics_000898_2015.json]</span>；<br>
+③分红政策顺周期且不可持续：2011/2012年度零分红，2013/2014年度恢复（0.027/0.045元），而覆盖自由现金流的比例仅0.17x——分红的资金来源是债务与股权融资 <span class="eptr">[E:market_snapshot_000898_2015.json]</span>。</p>
+<p><b>诚信记录：可信度打折</b>。2012年辽宁证监局曾责令公司就相关事项作出说明；2013年通过变更固定资产折旧年限（30→40年等，媒体测算贡献约9亿元）叠加资产置换实现「扭亏」770百万元、摘除*ST——会计手段服务于上市地位 <span class="eptr">[E:workpapers/aux_evidence_20260907.json][E:financials_000898_2015.json]</span>。2015年Q3再陷亏损，若全年亏损将再度面临退市风险警示（公司2011/2012连亏被*ST有先例）<span class="eptr">[E:financials_000898_2015.json]</span>。</p>
+<p>母公司依赖：原料采购与销售部分依赖鞍钢集团体系，资产置换与托管安排频密（2013年处置含少数股东子公司）——关联交易是治理的长期折价项 <span class="eptr">[E:financials_000898_2015.json][E:qualitative_000898_2015.json]</span>。</p>
+</section>
+
+<!-- ═══════════ 七、财务质量与风险 ═══════════ -->
+<section>
+<h2>七、财务质量与风险</h2>
+<h3>7.1 利润含金量</h3>
+<p>OCF的质量缺陷：高OCF年份靠应付款占款（2013年OCF <span class="vnum" data-src="financials_000898_2015.json" data-path="annual.8.ocf" data-fmt="num0">10,563</span>百万元中应付项目+879，2014年立即回吐至<span class="vnum" data-src="financials_000898_2015.json" data-path="annual.9.ocf" data-fmt="num0">2,137</span>百万元）；2015Q3单季亏损中含汇兑损失98百万元（三季报原文归因）<span class="eptr">[E:financials_000898_2015.json]</span>。维持性资本开支（2014年约3,829百万元）与D&A相当，折旧现金流基本被置换性开支吃掉，真实可分配现金接近于零 <span class="eptr">[E:metrics_000898_2015.json]</span>。</p>
+<h3>7.2 债务与流动性：本案最大的尾部风险</h3>
+<ul class="tight">
+<li>2015Q3有息负债<span class="vnum" data-src="financials_000898_2015.json" data-path="interim.total_debt" data-fmt="num0">33,834</span>百万元−货币资金<span class="vnum" data-src="financials_000898_2015.json" data-path="interim.cash" data-fmt="num0">9,603</span>百万元=净负债24,231百万元，净负债/归母权益51.6% <span class="eptr">[E:market_snapshot_000898_2015.json]</span></li>
+<li>短融12,000百万元全部一年内到期，依赖滚动发行；2015Q3现金较2014年末（<span class="vnum" data-src="financials_000898_2015.json" data-path="annual.9.cash" data-fmt="num0">1,712</span>百万元）激增主因举债而非经营 <span class="eptr">[E:financials_000898_2015.json]</span></li>
+<li>在钢价L型的基准世界里，利息保障对微利/微亏的利润表极度敏感——债务是把「平庸」放大为「危机」的杠杆</li>
+</ul>
+<h3>7.3 排雷与对立检索结论（Phase 0）</h3>
+<p>对立检索三组查询结论：<b>无财务造假形态证据</b>（勾稽10/10年通过、2012-2014三年与官方原文交叉核对一致）；但有「保壳痕迹」与2012年监管措施记录，属常规商事与监管范畴 <span class="eptr">[E:manifest.json]</span>。数据时效：自截断日起算信息时效4,178天（回测工程属性），全部底稿以publish_date登记。</p>
+<div class="callout"><b>核验强度B级披露</b>：数据窗口10年（强周期标的要求15年），未覆盖完整周期——本报告的「历史最差」观测可能不是真实极值，正常化与悲观情景的置信度相应下调。另：命门科目原文登记为「未经原文机器逐字比对」状态。</div>
+</section>
+
+<!-- ═══════════ 八、估值与安全边际 ═══════════ -->
+<section>
+<h2>八、估值与安全边际</h2>
+<h3>8.1 基期论证（Phase 2 裁决）</h3>
+<p>引擎双轨并列：主轨（向上正常化）<span class="vnum" data-src="metrics_000898_2015.json" data-path="normalization.net_income_normalized" data-fmt="num0">2,477</span>百万元 vs 交叉轨（当期）<span class="vnum" data-src="metrics_000898_2015.json" data-path="normalization.net_income_current" data-fmt="num0">928</span>百万元；中周期口径<span class="vnum" data-src="metrics_000898_2015.json" data-path="normalization.net_income_mid_cycle" data-fmt="num0">1,281</span>百万元、OE利润率均值轨<span class="vnum" data-src="metrics_000898_2015.json" data-path="normalization.oe_normalized" data-fmt="num0">957</span>百万元。人工裁决：<b>结构性盈利能力缺失+周期底部——六项均值回复检验全败（成本曲线位置✗/份额中性偏负/企稳微弱且被2015Q3证伪/结构对冲不满足/长期资本回报价值毁灭/行业出清不满足），禁用主轨</b>；base_oe=<b>950</b>百万元（2013-14扣非695/917均值806基础上的上限，range 700-950）<span class="eptr">[E:normalization_000898_2015.json][E:metrics_000898_2015.json]</span>。</p>
+<h3>8.2 三情景（悲观为独立方法，S2b机器重算可验）</h3>
+<table>
+<tr><th>情景</th><th>方法</th><th class="num">每股价值</th><th class="num">概率</th><th>核心逻辑</th></tr>
+<tr><td>悲观</td><td>清算/困境变现（独立路径）</td><td class="num"><span class="vnum" data-src="scenarios.json" data-path="scenarios.0.value_per_share" data-fmt="num2">0.47</span></td><td class="num"><span class="vnum" data-src="scenarios.json" data-path="scenarios.0.probability" data-fmt="pct0">30%</span></td><td>2015Q3资产负债表整体变现：现金9,603×1.0 + 非现金资产87,103×0.50 − 负债49,322 − 少数股东407，机器重算0.4735元/股（偏差0.74%）；敏感度：变现率0.45→约0元，0.55→1.08元</td></tr>
+<tr><td>基准</td><td>Owner Earnings DCF</td><td class="num"><span class="vnum" data-src="scenarios.json" data-path="scenarios.1.value_per_share" data-fmt="num2">1.31</span></td><td class="num"><span class="vnum" data-src="scenarios.json" data-path="scenarios.1.probability" data-fmt="pct0">50%</span></td><td>base_oe=950、r=10%、g=0、10年 → <span class="vnum" data-src="fv_base.json" data-path="operating_value" data-fmt="num0">9,500</span>百万元（终值占比<span class="vnum" data-src="fv_base.json" data-path="terminal_diagnostics.terminal_value_ratio" data-fmt="pct0">39%</span>）</td></tr>
+<tr><td>乐观</td><td>Owner Earnings DCF</td><td class="num"><span class="vnum" data-src="scenarios.json" data-path="scenarios.2.value_per_share" data-fmt="num2">3.42</span></td><td class="num"><span class="vnum" data-src="scenarios.json" data-path="scenarios.2.probability" data-fmt="pct0">20%</span></td><td>向上正常化世界兑现主轨2,477、g=0 → <span class="vnum" data-src="fv_bull.json" data-path="operating_value" data-fmt="num0">24,774</span>百万元——仍低于现价约28%</td></tr>
+</table>
+<p class="muted">离散度哨兵：悲观/基准 = <span class="vnum" data-src="scenario_audit.json" data-path="diagnostics.bear_base_ratio" data-fmt="num2">0.36</span>（≤0.85达标）；折现率10% ≥ 纪律下限max(10%, 10Y+4pct=6.82%)；三情景门禁（S1-S9十二项）0错误0警告通过。压力项：asset_recovery_rates/solvency/margin（≥2且非纯增速）。</p>
+<div class="chart" id="chart_scenario"></div>
+<div class="chart-note">三情景每股价值与两市场价格（红线=A股4.77，蓝线=H股折人民币2.6306）：两个市场的价格都高于全部三个情景值</div>
+<h3>8.3 EPV/资产价值撕裂（本案核心发现）</h3>
+<div class="callout callout-blue">
+<b>撕裂的三组数字</b>：①盈利能力资本化9,500百万元 = 账面归母46,977百万元的0.20倍（ROE 2%在r=10%下公允PB≈0.2，Gordon稳定式）；②市场定价：A股PB <span class="vnum" data-src="market_snapshot_000898_2015.json" data-path="valuation_snapshot.pb_mrq" data-fmt="num3">0.735</span> / H股PB 0.405（3.140港元×<span class="vnum" data-src="market_snapshot_000898_2015.json" data-path="fx.cny_per_hkd" data-fmt="raw">0.83778</span>）/ 2013年危机底不复权收盘2.52元对当时BPS 0.385倍；③清算残值0.47元 vs 账面BPS 6.49元——账面净资产几乎全部是持续经营假设的产物。<br><br>
+<b>含义</b>：对无护城河重资产亏损周期股，<b>PB&lt;1绝不是低估的充分条件</b>；市场的「底」由壳价值+资产期权+保壳预期托住，而非盈利能力。反向DCF：现价市值32,187百万元对当期OE 928百万元隐含10年增速<b>+17.79%</b>——与过去六年实际复合-17.5%（2008年3,052→2014年928）方向完全相反 <span class="eptr">[E:scenarios.json][E:fv_base.json][E:market_snapshot_000898_2015.json][E:metrics_000898_2015.json]</span>。
+</div>
+<h3>8.4 双闸门判定</h3>
+<table>
+<tr><th>闸门</th><th>项目</th><th class="num">实际</th><th class="num">门槛</th><th>判定</th></tr>
+<tr><td rowspan="1">闸门一</td><td>安全边际（vs 基准1.31元，无护城河要求≥40%）</td><td class="num"><span class="vnum" data-src="scenario_audit.json" data-path="diagnostics.margin_of_safety_vs_base" data-fmt="pct1">-264.1%</span></td><td class="num">≥40%</td><td><span class="tag tag-red">未通过</span></td></tr>
+<tr><td rowspan="3">闸门二</td><td>①期望年化IRR（自洽校验）</td><td class="num"><span class="vnum" data-src="expected_return.json" data-path="expected_annualized_irr" data-fmt="pct1">-16.2%</span></td><td class="num">21.8%（none/narrow）</td><td><span class="tag tag-red">未通过</span></td></tr>
+<tr><td>②不收敛下限=股息率+内在价值增速（独立）</td><td class="num"><span class="vnum" data-src="expected_return.json" data-path="gate2.no_convergence_floor.value" data-fmt="pct2">0.94%</span></td><td class="num">≥<span class="vnum" data-src="expected_return.json" data-path="gate2.no_convergence_floor.hurdle" data-fmt="pct0">6%</span></td><td><span class="tag tag-red">未通过</span></td></tr>
+<tr><td>③悲观情景年化（独立）</td><td class="num"><span class="vnum" data-src="expected_return.json" data-path="gate2.pessimistic_irr.value" data-fmt="pct1">-30.8%</span></td><td class="num">≥<span class="vnum" data-src="expected_return.json" data-path="gate2.pessimistic_irr.hurdle" data-fmt="pct0">0%</span></td><td><span class="tag tag-red">未通过</span></td></tr>
+</table>
+<p><b>H股交叉校验</b>：H股3.140港元=2.6306元人民币，对基准1.31元安全边际<span class="vnum" data-src="scenarios.json" data-path="h_share_crosscheck.mos_h" data-fmt="pct1">-100.8%</span>——双闸同样不过。A/H溢价<span class="vnum" data-src="market_snapshot_000898_2015.json" data-path="ah_premium.premium_pct" data-fmt="num1">81.3</span>%说明港股定价更狠，但0.405 PB对公允PB≈0.2仍近翻倍溢价——<b>工具选择救不了标的质量</b> <span class="eptr">[E:market_snapshot_000898_2015.json][E:scenarios.json]</span>。</p>
+<h3>8.5 敏感度</h3>
+<ul class="tight">
+<li>base_oe锚：700→0.97元；950（裁决锚）→1.31元；1,281（中周期轨）→1.77元；2,477（主轨）→3.42元——<b>即使用最激进锚，内在价值仍比现价低28%</b> <span class="eptr">[E:scenarios.json]</span></li>
+<li>折现率±1pct：r=9%→1.46元；r=11%→1.19元（永续近似）</li>
+<li>清算变现率±5pct：0.45→约0元；0.55→1.08元——悲观值对变现率敏感，但任何取值都远低于账面BPS</li>
+</ul>
+<p><b>价值陷阱闸门（S8）</b>：未触发——安全边际为负远低于50%触发线。收入连续<span class="vnum" data-src="scenario_audit.json" data-path="diagnostics.revenue_decline_streak" data-fmt="num0">4</span>年负增长、自2010年峰值回撤<span class="vnum" data-src="scenario_audit.json" data-path="diagnostics.peak_stagnation.drawdown_from_peak" data-fmt="pct0">20%</span>且<span class="vnum" data-src="scenario_audit.json" data-path="diagnostics.peak_stagnation.years_since_peak" data-fmt="num0">4</span>年未收复（峰值回撤停滞口径成立）——本案不存在「便宜的价值陷阱」问题，问题是「根本不便宜」<span class="eptr">[E:scenario_audit.json]</span>。</p>
+</section>
+
+<!-- ═══════════ 九、关键判断（Phase 4.5） ═══════════ -->
+<section>
+<h2>九、关键判断（Phase 4.5）</h2>
+<h3>9.1 关键变量识别（李录方法：既重要又可知）</h3>
+<table>
+<tr><th>变量</th><th>当前判断</th><th>支撑证据</th><th>可知性</th></tr>
+<tr><td>①中周期盈利能力（base_oe 700/950/1,281）</td><td>950百万元（禁用主轨2,477）</td><td>2013-14扣非695/917；六项均值回复检验全败；2015Q3单季-1,043方向佐证</td><td><b>高</b>——季度扣非归母直接可观测，错了对了每个季度都能验证</td></tr>
+<tr><td>②债务滚动与再融资</td><td>可续但脆弱（短融12,000全滚动）</td><td>净债/归母51.6%；2015Q3现金激增靠举债</td><td><b>高</b>——短融发行利率与余额月度公开</td></tr>
+<tr><td>③行业出清时点</td><td>终会来但时点不可知</td><td>行业亏损面47.5%而产量创新高；无政策强退出信号</td><td><b>低</b>——重要但不可知，<b>不给估值权重</b>，降级为跟踪变量</td></tr>
+</table>
+<p>收敛结果：真正「既重要又可知」的是①②，两者都指向「盈利能力低+尾部风险高」。变量③虽重要但不可知——按纪律不得作为买入依据（「等出清」没有时间表）。</p>
+<h3>9.2 变异认知测试（主锚=价格）</h3>
+<p><b>市场为什么给4.77元？</b>主锚（反向DCF，A级）：现价隐含10年OE年增速<b>+17.79%</b>——市场定价的不是当期盈利能力，而是「周期必然修复+国企不倒+壳价值」的复合叙事。我方基准：g=0%（结构性衰退裁决），分歧是「+17.79% vs 0%」的全部。逐参数对照：市场隐含假设=钢价均值回复至2011年前水平且公司份额稳定；我方证据=吨钢收入连降4年、行业亏损面近半而产量未降、成本曲线位置不占优。<b>认知优势来源</b>：更严格的盈利能力资本化纪律（市场用净资产锚、我方用盈利能力锚）+对「周期低位≠均值回复」的形状检验。一致预期旁证：本轮未采集机构级consensus数据，变异认知判定的置信度相应降档（主锚为价格本身，A级，不受影响）。</p>
+<h3>9.3 双重机会成本对照（直接引用 expected_return.json，禁止另估）</h3>
+<ul class="tight">
+<li>对照①指数基金（门槛9%）：期望年化IRR <span class="vnum" data-src="expected_return.json" data-path="expected_annualized_irr" data-fmt="pct1">-16.2%</span>，跑输<span class="vnum" data-src="expected_return.json" data-path="excess_vs_index" data-fmt="pct1">-25.2%</span>pct → <b>机会成本不划算</b></li>
+<li>对照②用户现有持仓：Phase 0未提供持仓信息，无法对照（如实登记）</li>
+<li>风险剖面：亏损概率<span class="vnum" data-src="expected_return.json" data-path="loss_probability" data-fmt="pct0">80%</span>、亏损情景平均跌幅<span class="vnum" data-src="expected_return.json" data-path="expected_downside_given_loss" data-fmt="pct1">-66.4%</span>、悲观情景年化<span class="vnum" data-src="expected_return.json" data-path="pessimistic_irr" data-fmt="pct1">-30.8%</span>——这不是投资，是负期望赌注</li>
+</ul>
+</section>
+
+<!-- ═══════════ 十、投委会评审 ═══════════ -->
+<section>
+<h2>十、投委会评审（三位大师独立评估 + 红队）</h2>
+<p class="muted">三份评估按分离生成协议独立落盘（workpapers/persona_buffett.md / persona_duan.md / persona_lilu.md），每份输入仅限Phase 1-4底稿、互不参考，全部落盘后才写分歧表。以下为各自结论摘要。</p>
+<h3>10.1 三份独立评估</h3>
+<table>
+<tr><th>大师</th><th>起点问题</th><th>结论</th><th>核心理由</th></tr>
+<tr><td>巴菲特<br><span class="muted">确定性复利路径</span></td><td>十年后经济形态可预测吗？</td><td><span class="tag tag-red">拒绝</span></td><td>可预测地平庸；复利路径不存在（再投资毁灭价值+分红幻觉0.17x）；烟蒂里没有烟（清算0.47 vs 账面6.49）</td></tr>
+<tr><td>段永平<br><span class="muted">商业模式×文化</span></td><td>这是一门什么生意？</td><td><span class="tag tag-red">拒绝</span></td><td>价格接受者的同质化生意；Stop Doing List四条全犯（价格接受/赚假钱/靠会计活着/高杠杆）；「便宜的烂生意」比「贵的烂生意」更具欺骗性</td></tr>
+<tr><td>李录<br><span class="muted">深度认知×能力圈</span></td><td>事实与推断各是什么？</td><td><span class="tag tag-red">拒绝</span></td><td>事实清单支持结构性衰退；认知分歧在定价锚（净资产锚 vs 盈利能力锚）但无催化剂、无时间表；附做空注脚（+17.79%隐含 vs -17.5%历史复合）——本框架只做多不展开</td></tr>
+</table>
+<h3>10.2 分歧对照表</h3>
+<table>
+<tr><th>分歧问题</th><th>巴菲特</th><th>段永平</th><th>李录</th></tr>
+<tr><td>账面净资产6.49元有没有价值？</td><td>资产专用性太强，烟蒂里没有烟</td><td>净资产是别人的历史成本，不是你拿得回的钱</td><td>账面大部分不可实现，但0.385-0.405 PB的市场底证明「资产期权+壳」被持续定价——撕裂本身是本案最重要的认知</td></tr>
+<tr><td>该不该把「供给侧出清」押进估值？</td><td>不押，不预测政策</td><td>不知道的事不做；出清了它也未必是好生意</td><td>方向确定时点不可知——不给估值权重，降级为跟踪变量</td></tr>
+<tr><td>清算悲观值0.47元×30%概率是否过狠？</td><td>国企保壳路径下概率偏高</td><td>概率无所谓，反正不买</td><td>方法正确概率可商；概率降到0也不改档位（红队火力应对准概率而非方法）</td></tr>
+<tr><td>最大的单一风险？</td><td>资本配置的复利损耗</td><td>保壳式经营的路径依赖</td><td>债务滚动（短融12,000）——唯一能把平庸放大为灾难的变量</td></tr>
+</table>
+<p><b>共识</b>：无护城河、长期资本回报低于资本成本；现价无任何情景下的安全边际；「破净」是锚错位不是低估。<b>采纳裁决</b>：三师共识+李录的「锚分歧」框架作叙事主线——档位由双闸门唯一决定（拒绝），三师校准为高置信度。</p>
+<h3>10.3 红队质询（芒格式，不打分）</h3>
+<table>
+<tr><th>质询对象</th><th>挑战</th><th>回应</th></tr>
+<tr><td>base_oe=950禁用主轨</td><td>把周期底当永久？2016-17钢价反弹是否错杀？</td><td>乐观情景3.42已按主轨全额兑现仍低于现价28%——结论对锚稳健；Q3单季-10.43亿方向佐证；若真实反弹，季度跟踪（吨钢毛利/CSPI警戒线）会证伪本判断</td></tr>
+<tr><td>清算悲观0.47元</td><td>*ST鞍钢2013年保壳成功，清算世界几乎不可能？</td><td>情景值是独立方法下行锚而非概率预测，压住「资产价值幻觉」；概率30%可争议但降至0不改档位；无争议的下行证据是H股0.405 PB的真实持续定价</td></tr>
+<tr><td>隐含增速+17.79%</td><td>重资产困境企业反向DCF是失真的「伪共识」？</td><td>接受——已并列解读为「定价不由盈利能力支撑」；无论哪个锚都不是价值投资可参与的定价</td></tr>
+<tr><td>股息率0.94%</td><td>分红幻觉下0.94%本身可持续吗？</td><td>是高估且方向更严：2016年度若零分红，不收敛下限=0%&lt;6%——闸门二②更不过（severity=高，列入跟踪）</td></tr>
+<tr><td>三师结论一致</td><td>独立性是否被污染？</td><td>分离生成协议独立落盘；推理路径完全不同；价格轴1.0雷同由双闸门定量决定（证据压倒观点）；真正分歧在四道分歧题逐条呈现</td></tr>
+</table>
+<h3>10.4 Pre-mortem：五年后这笔「拒绝」会因什么而错？</h3>
+<p>三种失败模式：①供给侧政策强制压产推动钢价翻倍（政策外生冲击，截断日无信号，不进估值只进跟踪）；②壳价值因注册制不及预期继续膨胀（博弈他人定价，本框架不参与）；③母公司资产注入（真实可能但对价与稀释不可知，2013年先例方向是保壳非增厚）。三者共同点：<b>价格可能因非价值原因上涨</b>——本框架对企业内在价值负责，不对市场先生的情绪负责。</p>
+<h3>10.5 持有体验预演</h3>
+<p>2015年内：6/15高点8.51元→8/26低点4.58元，2.5个月<b>-46.2%</b>，年末4.77元仍较高点-43.9%；同期基本面变化（归母+9.23亿→-8.88亿）远小于股价波动——波动主体是市场贝塔。更长维度：2007年景气峰值后EPS从1.04元跌至2012年-0.57元，九年未创新高——这类标的的「长期持有」体验不是回撤修复，而是价值永久性损耗 <span class="eptr">[E:market_snapshot_000898_2015.json][E:metrics_000898_2015.json]</span>。</p>
+<div class="callout"><b>正面拷问</b>：若买入后下跌40%而基本面未变，你敢不敢加仓？——<b>不敢</b>。因为「基本面未变」本身就是坏消息：这门生意的基本面就是ROE 2%的平庸，跌40%后是「更便宜的平庸」。加仓的前提是资产价值有兑现路径（清算/分红/回购），三者在本案都不存在。</div>
+</section>
+
+<!-- ═══════════ 十一、结论与行动 ═══════════ -->
+<section>
+<h2>十一、结论与行动</h2>
+<p><b>最终档位：拒绝（序数1）</b>。双闸门在A股与H股均深度不过；三师独立评估一致拒绝且置信度高。本档位无触发器承诺（拒绝档位不设「等价格」触发器），重入条件完全由证伪线定义：</p>
+<h3>证伪条件（出现即重开估值流程）</h3>
+<ul class="tight">
+<li>价格证伪线：A股跌至≤1.00元（对基准1.31留缓冲、PB≈0.15）</li>
+<li>基本面证伪线：连续两季扣非归母&gt;+500百万元且吨钢毛利回升至400元+ → 重议base_oe至中周期轨</li>
+<li>行业结构证伪线：CSPI连续两季均值&gt;75点且行业亏损面&lt;30%（真实出清证据）→ 重启向上正常化论证</li>
+<li>治理证伪线：母公司资产注入/集团整体上市方案公布 → 重评</li>
+<li>分红证伪线：2016年度恢复分红且派息率&gt;30% → 上调不收敛下限（仍需≥6%才过闸门二②）</li>
+</ul>
+<h3>季度跟踪清单（警戒线）</h3>
+<table>
+<tr><th>跟踪项</th><th>警戒线</th></tr>
+<tr><td>单季归母净利</td><td>单季&lt;-10.43亿连续两季 → 债务与保壳压力升级</td></tr>
+<tr><td>CSPI钢价综合指数季度均值</td><td>&lt;54 → 现金成本区击穿；&gt;75连续两季 → 出清信号</td></tr>
+<tr><td>短融余额与再融资</td><td>滚动失败/发行利率跳升&gt;200bp → 流动性危机前兆</td></tr>
+<tr><td>吨钢毛利（季度）</td><td>&lt;100元/吨 → 微利假设失守；&gt;400元/吨 → 基本面证伪线</td></tr>
+<tr><td>2016年报审计意见与*ST触发</td><td>连续两年亏损触发退市风险警示 → 悲观情景概率上调</td></tr>
+</table>
+</section>
+
+<!-- ═══════════ 附录 ═══════════ -->
+<section>
+<h2>附录：数据来源与校验</h2>
+<h3>A. 信息集与publish_date（全部早于截断日2015-12-31）</h3>
+<table>
+<tr><th>数据</th><th>publish_date / 时点</th><th>来源</th></tr>
+<tr><td>2014年报（A股/港股）</td><td>2015-03-31</td><td>巨潮资讯网年报摘要；披露易ltn20150331035/036</td></tr>
+<tr><td>2015三季报</td><td>2015-10-31（H股2015-10-30）</td><td>深交所公告2015-044；披露易ltn201510301094/095</td></tr>
+<tr><td>盈利预警</td><td>2015-10-14</td><td>公司公告</td></tr>
+<tr><td>行情快照（A/H收盘、10Y国债、中间价）</td><td>2015-12-31</td><td>东方财富日线不复权；中债估值；外汇交易中心中间价0.83778</td></tr>
+<tr><td>钢价/行业（CSPI 54.48、亏损面47.5%）</td><td>2015年内</td><td>中钢协/钢铁工业协会口径（aux_evidence登记）</td></tr>
+</table>
+<h3>B. 禁用数据登记（forbidden_data_encountered）</h3>
+<p>新浪财经2015年年报列（2016-03-31披露：营收5,275,900万元/归母-459,300万元）在抓取时可见，<b>未作为任何估值输入</b>，已登记于manifest.information_cutoff并按纪律披露。</p>
+<h3>C. 校验结果摘要</h3>
+<ul class="tight">
+<li>validate_data.py：0错误（三表勾稽10/10年、spike_notes 19条、crosscheck官方原文3年）</li>
+<li>check_market_snapshot.py：通过（三角校验偏差+0.00%）</li>
+<li>check_business_drivers.py：通过（量×价勾稽5年、0警告）</li>
+<li>check_scenarios.py：<b>0错误0警告</b>（S2b清算重算偏差0.74%、离散度0.36、折现率下限达标、股息率与快照同源）</li>
+<li>verification_strength.py：<b>B级</b>（V1勾稽100% full；V2原文登记full但未经原文机器逐字比对；V3数据窗口10/15年partial——强周期标的置信度相应下调）</li>
+<li>verify_report.py：本报告交付前运行，全部vnum溯源与证据指针校验通过（退出码0）</li>
+</ul>
+<h3>D. 回测工程说明（非投资输入）</h3>
+<p>本案为第二批B2-08案例，与B2-07中国神华（同期同截断日）成对执行、分别独立分析。执行上下文的三层污染披露：①神华案例先于本案完成（其结论「观察等价格」已在先）；②ANSWERS.md的鞍钢答案行曾在数据抓取阶段泄露（已登记于meta.json）；③训练语料后见之明。处理纪律：结论严格由管线定量输出决定，护城河评级从鞍钢自身证据独立推导，meta.json在任何数据抓取前冻结。</p>
+</section>
+
+<footer>鞍钢股份 000898.SZ / 00347.HK ｜ 回放 2015-12-31 ｜ 生成 2026-09-07 ｜ 数字全程vnum溯源校验 ｜ 本报告仅使用2015-12-31及之前的公开信息</footer>
+</div>
+
+<script>
+// 图1：收入与归母净利（2005-2014）
+var c1 = echarts.init(document.getElementById('chart_rev_ni'));
+c1.setOption({
+  tooltip: {trigger: 'axis'},
+  legend: {data: ['营业收入', '归母净利']},
+  xAxis: {type: 'category', data: ['2005','2006','2007','2008','2009','2010','2011','2012','2013','2014']},
+  yAxis: {type: 'value', name: '百万元'},
+  series: [
+  <!-- vchart src=metrics_000898_2015.json path=chart_series.revenue -->
+  {name: '营业收入', type: 'bar', data: [26488, 54596, 65499, 78985, 70126, 92431, 90423, 77748, 75329, 74046], itemStyle: {color: '#93c5fd'}},
+  <!-- vchart src=metrics_000898_2015.json path=chart_series.net_income -->
+  {name: '归母净利', type: 'line', data: [2079, 6845, 7525, 2989, 727, 2039, -2146, -4157, 770, 928], itemStyle: {color: '#d97706'}, lineStyle: {width: 3}}
+  ]
+});
+
+// 图2：净利率与ROE
+var c2 = echarts.init(document.getElementById('chart_margin'));
+c2.setOption({
+  tooltip: {trigger: 'axis'},
+  legend: {data: ['净利率%', 'ROE%']},
+  xAxis: {type: 'category', data: ['2005','2006','2007','2008','2009','2010','2011','2012','2013','2014']},
+  yAxis: {type: 'value', name: '%'},
+  series: [
+  <!-- vchart src=metrics_000898_2015.json path=chart_series.net_margin scale=100 -->
+  {name: '净利率%', type: 'line', data: [7.8, 12.5, 11.5, 3.8, 1.0, 2.2, -2.4, -5.3, 1.0, 1.3], itemStyle: {color: '#1a3a5c'}, lineStyle: {width: 3}},
+  <!-- vchart src=metrics_000898_2015.json path=chart_series.roe scale=100 -->
+  {name: 'ROE%', type: 'line', data: [0, 33.3, 17.9, 5.6, 1.4, 3.7, -4.0, -8.3, 1.6, 2.0], itemStyle: {color: '#b91c1c'}, lineStyle: {width: 3, type: 'dashed'}}
+  ]
+});
+// 注：ROE 2005年无期初权益基数不适用，图中作0绘制
+
+// 图3：三情景与两市场价格
+var c3 = echarts.init(document.getElementById('chart_scenario'));
+c3.setOption({
+  tooltip: {trigger: 'axis'},
+  xAxis: {type: 'category', data: ['悲观(清算)', '基准(EPV)', '乐观(主轨)']},
+  yAxis: {type: 'value', name: '元/股'},
+  series: [
+  <!-- vchart src=scenarios.json path=chart.values_per_share -->
+  {type: 'bar', data: [0.47, 1.31, 3.42], itemStyle: {color: '#1a3a5c'}, barWidth: '45%',
+   markLine: {symbol: 'none', lineStyle: {type: 'dashed', width: 2},
+     data: [
+       {yAxis: 4.77, label: {formatter: 'A股 4.77'}, lineStyle: {color: '#b91c1c'}},
+       {yAxis: 2.6306, label: {formatter: 'H股折人民币 2.6306'}, lineStyle: {color: '#2563eb'}}
+     ]}}
+  ]
+});
+
+window.addEventListener('resize', function(){c1.resize();c2.resize();c3.resize();});
+</script>
+</body>
+</html>

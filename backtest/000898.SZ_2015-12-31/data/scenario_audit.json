@@ -1,0 +1,64 @@
+{
+  "file": "/workspace/value-investing-analyst/backtest/000898.SZ_2015-12-31/data/scenarios.json",
+  "errors": [],
+  "warnings": [],
+  "codes": [],
+  "unmapped_messages": [],
+  "diagnostics": {
+    "scenario_values": {
+      "悲观": 0.47,
+      "基准": 1.31,
+      "乐观": 3.42
+    },
+    "bear_name": "悲观",
+    "base_name": "基准",
+    "margin_of_safety_vs_base": -2.6412213740458013,
+    "bear_method": "liquidation",
+    "bear_recomputed_value": 0.4735,
+    "bear_recompute_deviation": 0.007367,
+    "discount_rate_floor": 0.1,
+    "discount_rate_floor_basis": "硬下限 10%",
+    "bear_stressed": [
+      "asset_recovery_rates",
+      "solvency",
+      "margin"
+    ],
+    "bear_base_ratio": 0.35877862595419846,
+    "non_operating_addback_per_share": {
+      "悲观": 0.0,
+      "基准": 0.0,
+      "乐观": 0.0
+    },
+    "bear_vs_price": 0.09853249475890985,
+    "probability_deviations": {},
+    "intrinsic_value_growth": 0.0,
+    "revenue_decline_streak": 4,
+    "core_driver_decline_years": null,
+    "peak_stagnation": {
+      "peak_year": 2010,
+      "peak_revenue": 92431.0,
+      "latest_revenue": 74046.0,
+      "drawdown_from_peak": 0.19890512923153492,
+      "years_since_peak": 4,
+      "stagnating": true,
+      "thresholds": {
+        "min_drawdown": 0.1,
+        "min_years_since_peak": 3
+      }
+    },
+    "decline_streak_used": 4,
+    "shrinking_reasons": [
+      "收入/核心驱动因子连续 4 年负增长",
+      "收入自 2010 年峰值回撤 20%、已 4 年未收复（峰值回撤停滞口径）"
+    ],
+    "value_trap_triggered": false,
+    "dividend_yield": 0.0094,
+    "snapshot_dividend_yield": {
+      "value": 0.0094,
+      "field": "dividend_yield_ttm_frac",
+      "basis": "键名后缀 _frac",
+      "unit_ambiguous": false
+    }
+  },
+  "passed": true
+}

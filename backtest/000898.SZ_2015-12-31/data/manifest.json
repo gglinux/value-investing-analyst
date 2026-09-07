@@ -103,6 +103,69 @@
       "grade": "-",
       "coverage": "-",
       "verified": "排雷与对立面检索留痕"
+    },
+    {
+      "file": "scenarios.json",
+      "source": "compute_metrics/check_scenarios 管线产物",
+      "grade": "A级（脚本生成/管线产物）",
+      "coverage": "估值与结论链路",
+      "verified": "三情景+清算独立方法+S2b重算输入；已过check_scenarios门禁(exit 0)"
+    },
+    {
+      "file": "scenario_audit.json",
+      "source": "check_scenarios.py 输出",
+      "grade": "A级（脚本生成/管线产物）",
+      "coverage": "估值与结论链路",
+      "verified": "十二项检查审计结果：0错误0警告，S2b清算重算偏差0.75%<2%"
+    },
+    {
+      "file": "fv_base.json",
+      "source": "reverse_dcf.py forward-value",
+      "grade": "A级（脚本生成/管线产物）",
+      "coverage": "估值与结论链路",
+      "verified": "基准OE 950/r10%/g0/10年 → 9,500百万=1.31元/股(终值39%)"
+    },
+    {
+      "file": "fv_bull.json",
+      "source": "reverse_dcf.py forward-value",
+      "grade": "A级（脚本生成/管线产物）",
+      "coverage": "估值与结论链路",
+      "verified": "乐观主轨2,477/r10%/g0/10年 → 24,774百万=3.42元/股(终值39%)"
+    },
+    {
+      "file": "expected_return.json",
+      "source": "reverse_dcf.py expected-return",
+      "grade": "A级（脚本生成/管线产物）",
+      "coverage": "估值与结论链路",
+      "verified": "三情景期望IRR -16.18%；闸门二②0.94%<6%✗③悲观-30.8%✗"
+    },
+    {
+      "file": "verification_strength.json",
+      "source": "verification_strength.py 输出",
+      "grade": "A级（脚本生成/管线产物）",
+      "coverage": "估值与结论链路",
+      "verified": "核验强度B：V1勾稽100% full/V2原文full/V3数据窗口10/15年partial"
+    },
+    {
+      "file": "phase5_workpaper.json",
+      "source": "Phase 4.5/5 工作底稿",
+      "grade": "A级（脚本生成/管线产物）",
+      "coverage": "估值与结论链路",
+      "verified": "三师独立评分+分歧表+共识+红队+持有体验"
+    },
+    {
+      "file": "normalization_000898_2015.json",
+      "source": "Phase 2 正常化裁决底稿（人工裁决+engine双轨并列）",
+      "grade": "A级（分析底稿，引用上述A级行情/财报证据）",
+      "coverage": "Phase 2/3 结论链路",
+      "verified": "禁用主轨2,477，base_oe=950（range 700-950）；六项均值回复检验全败记录"
+    },
+    {
+      "file": "qualitative_000898_2015.json",
+      "source": "Phase 3 五维定性分析底稿",
+      "grade": "A级（分析底稿，引用上述A级行情/财报证据）",
+      "coverage": "Phase 2/3 结论链路",
+      "verified": "护城河评级=无（五源检验+quant_tests）；growth/management/financial_quality五维+ledger 5条"
     }
   ],
   "accounting_note": "统一采用CAS（A股口径）。HKFRS差异：2012年归母HKFRS -4,025 vs CAS -4,157（准则差异非重述）；2013/2014两准则一致（770/928）。2012年OCF以2014年报摘要为准2,568百万（新浪1,453弃用）。",
