@@ -1,0 +1,115 @@
+{
+  "case": "B2-12",
+  "company": "双汇发展",
+  "ticker": "000895.SZ",
+  "as_of": "2019-06-30",
+  "analysis_generated": "2026-09-07",
+  "information_cutoff_discipline": "全部估值输入披露日 ≤2019-06-30：2018 年报（2019-03-16 披露，东财公告列表直核）、2019 一季报（2019-04-30 披露，直核）、农业农村部 5 月存栏/猪价（2019-06-12/06-24 发布）、东财分红序列（历史数据）；forbidden：2019 半年报（2019-08-14）、2019 三季报（2019-10-29）、2019-07 后猪价/存栏数据（官方答案'挤压'主兑现段，禁用即防前视关键）。执行者后见披露（知晓 2019H2-2020 股价走势与猪价兑现）与六重+二重隔离措施见 phase5_workpaper.json red_team_check_5",
+  "final_verdict": "观察等价格",
+  "verdict_ordinal": 2,
+  "verdict_ordinal_scale": {"0": "排除", "1": "拒绝", "2": "观察等价格", "3": "小仓位试探", "4": "核心买入"},
+  "verdict_semantics_note": "档位 2 直配（无 Zoom 案'拒绝（观察等价格）'复合式之需）：gate2 不过使上限为 2，gate1 -21.5% 未触发更严档位条件。与 Zoom 案（档位 1 拒绝）的形态差异是本案最重要的对照发现：同为'不买'，Zoom 是价值毁灭方向（期望 IRR -16.64%/亏损概率 80%/三情景全低于现价），双汇是回报不足方向（期望 IRR +5.55%/亏损概率 0%/乐观值高现价 7.5%）——'观察等价格'在双汇语境下的等待物是'成本冲击兑现后的净利率落点确认'（2019H2-2020 必然发生的信息事件）+'价格回落至悲观值/6 折基准'（罕见事件），两层条件独立验证（见 mos_calc layered_trigger_note）",
+  "gate1": {
+    "pass": false,
+    "margin_of_safety": -0.2153,
+    "margin_basis": "(20.48−24.89)/20.48——分母为基准价值（与 check_scenarios 口径一致）",
+    "moat_rating": "narrow",
+    "required_margin_of_safety": 0.4,
+    "trigger_price": 12.29,
+    "trigger_price_layered_note": "满档行动位 12.29（=基准×0.6，低于 2015-08 股灾底 15.39 达 20.1%，TRIGGER_OUT_OF_HISTORY）/挤压确认观察位 16.3±（=悲观值带，价格把悲观算进+利空落地的重叠区）",
+    "note": "安全边际 -21.5% vs 要求 40%——缺口 18.5pct。乐观极限值 26.76 仅高现价 7.5%（三口径中唯一正值）：现价卡在基准与乐观之间靠上位置=定价充分。与 Zoom 的'参数不可达'（乐观仍低现价 19.6%）不同，双汇是'乐观可达但仅微超'——市场已按隐含增速 8.5%（定性中枢 1.7-4 倍）定价"
+  },
+  "gate2": {
+    "pass": false,
+    "expected_irr": 0.0555,
+    "moat_prerequisite": "窄护城河（narrow）——闸门二①门槛 21.8%（由闸门一 40% 反推，r=10%/H=5）",
+    "item1_consistency_irr": {"value": 0.0555, "hurdle": 0.2183, "pass": false, "note": "期望 IRR 5.55%（三情景 16.32/20.48/26.76 加权 30/50/20）远低于 21.83% 门槛，亦跑输指数门槛 9%（差 -3.45pct）——回报不足的量化主体；但为正值且含 5.83% 股息真实现金回报（分红贡献占比 58%，现金落袋部分）"},
+    "item2_no_convergence_floor": {"value": 0.0783, "hurdle": 0.06, "pass": true, "fragile_flag": true, "note": "不收敛下限 7.83%=股息率 5.83%（归属口径 1.45 元，禁用支付口径 8.03%）+内在价值增速 2%（fade 终点 2.5% 扣健康化侵蚀 0.5pct；无 SBC 稀释与 Zoom 案 iv_growth=0 形成机制对照）。⚠️ 脆弱通过标注（红队 RT4）：若悲观盈利 4,142×支付率回落至 84%（2017 年实际带），股息率降至 4.2-4.4%，下限 6.2-6.4% 仅高门槛 0.2-0.4pct——高分红股的 gate2② 天然与利润周期同步，此脆弱性为 OBS-600660-03 第四维度候选（股息-利润周期同步性）"},
+    "item3_pessimistic_irr": {"value": 0.011, "hurdle": 0.0, "pass": true, "note": "悲观情景年化 +1.10%（悲观值 16.32 vs 现价 24.89，5 年回归仍正）——与 Zoom 案悲观 -29.33% 的本质差异：双汇下行有底（2015-08 股灾底 11.9x 实证 pe_trough 档位+股息缓冲），loss_probability=0%"},
+    "loss_probability": 0.0,
+    "note": "1/3 过——引擎判定'档位最高观察等价格'。①②③的形态组合（IRR 不足+下限够+悲观为正）是'回报不足型'的标准指纹：市场没疯（悲观有底）、公司不差（下限过线）、只是价格不够低（①差 16.3pct）"
+  },
+  "scenarios_value_per_share": {"悲观": 16.32, "基准": 20.48, "乐观": 26.76},
+  "expected_irr": 0.0555,
+  "normalized_base_oe": 4557.9,
+  "base_oe_track_note": "hybrid 轨（引擎 normalization 输出）——弃用引擎推荐当期 5047.3 的改判依据=统计均值化折价 9.7%+前瞻猪周期传导两证据链同向（normalization base_oe_adjudication）；红队 RT2 实测当期基期 gate1 -10.2% 结论不翻转",
+  "moat_rating": "narrow",
+  "moat_trend": "稳态偏侵蚀（健康化慢变量+新渠道毛利稀释），周期暴露由对冲机制部分内化——四态对照中唯一'有护城河但周期位置判定失效'形态",
+  "company_type": "consumer_staples_midstream（屠宰+肉制品双主业传导型）",
+  "discount_rate": 0.1,
+  "discount_rate_basis": "max(10%, 10Y 国债 3.23%+4pct)=10% 下限；上行冲击量级历史首次不支持下调",
+  "codes": [
+    "M_DILUTION",
+    "M_SHARE_INFLATION",
+    "M_DIVIDEND_ILLUSION",
+    "NORM_MARGIN_SHAPE",
+    "M_OWNER_YIELD_NOT_CASH_BACKED",
+    "TRIGGER_OUT_OF_HISTORY",
+    "GATE1_FAIL",
+    "GATE2_FAIL",
+    "GATE2_1_IRR_FAIL"
+  ],
+  "codes_provenance": {
+    "engine_derived": ["M_DILUTION", "M_SHARE_INFLATION", "M_DIVIDEND_ILLUSION", "NORM_MARGIN_SHAPE", "M_OWNER_YIELD_NOT_CASH_BACKED", "TRIGGER_OUT_OF_HISTORY", "GATE2_FAIL", "GATE2_1_IRR_FAIL"],
+    "manually_recorded": ["GATE1_FAIL"],
+    "note": "engine_derived 前 5 项来自 compute_metrics alert_codes（metrics_000895_2019.json），TRIGGER_OUT_OF_HISTORY 来自 trigger_reachability.py 机器判定（12.29 vs 52 周 21.00-30.19），后 2 项来自 reverse_dcf 闸门判定（expected_return_000895_2019.json gate2）。manually_recorded：GATE1_FAIL（mos_calc 派生判定，与 Zoom/中远海控先例同源）。无杜撰 ID：本案全部 codes 均在 alert_codes.py 注册表内（断言 ID 铁律合规，较 Zoom 案改进——无需撤出项）"
+  },
+  "codes_note": "①M_DILUTION/M_SHARE_INFLATION 裁决排除为假警报（2015 年 10 转 5=资本公积转增非现金定增，share_count_change 1.5x 为拆股算术；真实每股盈利增长≈净利 CAGR 5.0%）——code 保留登记但 verdict 不据此扣分；登记引擎观察候选：share_count_change 判据不区分转增/送股与现金定增（单案例不改码）。②M_DIVIDEND_ILLUSION/M_OWNER_YIELD_NOT_CASH_BACKED 裁决'部分成立警示保留'：FCF 覆盖 0.80x 缺口主因 2016 年 157% 支付率+母公司偿债驱动；OCF/归母 1.17x 盈利现金含量本身健康——处置=股息锚强制归属口径 1.45 元（5.83%），支付口径 2.00 元（8.03%）禁用（2018Q3 特别分红的常态化判定信息 2019-08-14 披露 forbidden）。③NORM_MARGIN_SHAPE（周期波动 ρ+0.20/穿越 3 次）被接受为统计判定，但叠加前瞻修正——基期改判 hybrid。④裁决语义登记（无注册表等价物，铁律禁止杜撰 ID 故不进 codes）：a) '股息锚归属口径强制'（特别分红场景下的口径纪律）与 b) 'hybrid 向下折价采用'（NORM_ADJ_HYBRID_REJECTED 特指向上正常化拒绝，方向相反不适用）两项人工裁决语义在此留痕；c) trigger 分层设计（满档 12.29/挤压确认观察位 16.3±）为 mos_calc 新增字段，非告警项",
+  "falsification_conditions": [
+    "净利率挤压证伪线：2019H2-2020 若单季净利率 <8%（击穿悲观锚 8.5%）→ 悲观值重算 13x×7%×TTM 收入，观察档位降为拒绝（若价格未同步回落至 16 以下）",
+    "股息可持续证伪线：支付率 >110% 且有息负债 >40 亿（举债分红形态确认）→ gate2② 脆弱通过转为失败，档位降为拒绝",
+    "集中度提升证伪线：双汇屠宰量增速收敛至行业水平（剪刀差消失）→ 乐观情景 g6% 引擎失效，基准 g 降至 2% 恒定档（18.42），安全边际缺口扩大",
+    "提价传导证伪线：肉制品吨价同比转负（成本涨+提价失败并存）→ 对冲机制 30 年有效性失效，pre_mortem A 形态兑现",
+    "上行证伪线（反向）：若 2020 年前净利率维持 10%+ 且猪价回落（去化不及预期）→ 本案'利润率顶部'判定错误，基准值上修——先验与裁决均需复盘（注意：此条检验的是框架而非补救操作，若兑现不构成追买理由，须重新走全流程）"
+  ],
+  "review_checkpoints": [
+    "2019-08-14（forbidden 边界后首检）：2019 中报分红方案是否含中期分红（2018Q3 特别分红常态化判定——OBS-600660-03 口径分裂的解除或确认）",
+    "2019-10-29：三季报毛利率落点（成本传导首季，pre_mortem A 监测点）",
+    "2020-04：2019 年报全年净利率 vs 8.5% 悲观锚（五证伪线第一判）",
+    "2024-06-30：五年期复盘（pre_mortem 四形态兑现度/股息连续性/集中度剪刀差/吸收合并治理成效）"
+  ],
+  "persona_verdicts": {
+    "buffett": "观察等价格（[4.0,3.5,2.5,1.5,4.5]——'好公司+公道价+周期顶部利润的三明治'）",
+    "duan": "不买，观察（[4.0,3.5,3.0,1.5,4.0]——'最容易骗到聪明人的是好公司+合理价格'）",
+    "li_lu": "观察等价格（[4.0,3.5,3.0,1.0,3.5]——'时间在我这边、价格不在这边'）"
+  },
+  "verification": {"grade": "B-", "key_gaps": ["上行段窗口缺失（挤压锚仅 2016 单点实证）", "2014-2017 新浪转引未直核年报原文"], "detail": "verification_strength.json"},
+  "data_availability_notes": [
+    "2019 半年报/三季报/年报及 2019-07 后农业农村部数据 forbidden（防前视）",
+    "2019H2-2020 猪价兑现段为官方答案'挤压'主兑现期——回放时点仅有方向信号（能繁-23.9%+猪价+26.6%+官方四季度破高点预判），幅度不可知",
+    "卖方一致预期数据无截断保证，未引入（与鞍钢案一致）",
+    "万洲国际（母公司）2019 年动态 forbidden，仅用其 2018 年报与 2013 年 Smithfield 收购公开历史作治理旁证"
+  ],
+  "prior_expectation_comparison": {
+    "prior_verdict_ordinal_frozen_meta": 2,
+    "prior_note": "meta.json 冻结先验（任何数据抓取前）='上游价格暴涨挤压毛利的传导型公司，周期位置判定用净利率是否失效'定位、档位 2（观察等价格）、confidence=low——low 的原因已入 meta：①ANSWERS.md 定位句存在（抓取前已见）②训练语料含猪价后见之明风险③前批次 OBS 复检场预登记锚定。confidence=low 本身即污染披露机制",
+    "prior_verdict_ordinal_decision_log": null,
+    "actual_verdict_ordinal": 2,
+    "actual_gate1": false,
+    "actual_gate2": false,
+    "consistent": true,
+    "independence_note": "一致性来源的显式区分：档位 2 由引擎双闸门独立得出（gate2 不过→上限 2；gate1 缺口未触发更严条件）+三师隔离环境独立收敛（5 轴中安全垫轴 1.0-1.5 全低），非先验校准产物——但鉴于 confidence=low 的三层污染披露，该一致性不能完全排除'管线推理路径被定位句语义隐性锚定'的可能（显式登记，Step5 OBS 裁决时合读）",
+    "direction_analysis": "管线比先验更强的部分：①'观察等价格'的两层等待物被显式分层（挤压确认+价格确认独立验证）②gate2② 的'脆弱通过'标注（先验未预见高分红股 gate2 形态）③M_DILUTION 假警报裁决（转增 vs 定增区分）。先验比管线更弱的部分：无"
+  },
+  "frozen_before_diff": true,
+  "frozen_at": "2026-09-07",
+  "key_artifacts": {
+    "financials": "data/financials_000895_2019.json",
+    "market_snapshot": "data/market_snapshot_000895_2019.json",
+    "dividends": "data/dividends_000895_2019.json",
+    "business_drivers": "data/business_drivers_000895.json",
+    "metrics": "data/metrics_000895_2019.json",
+    "normalization": "data/normalization_000895_2019.json",
+    "qualitative": "data/qualitative_000895_2019.json",
+    "scenarios": "data/scenarios_000895_2019.json",
+    "fv_base": "data/fv_base.json",
+    "fv_bull": "data/fv_bull.json",
+    "expected_return": "data/expected_return_000895_2019.json",
+    "mos_calc": "data/mos_calc_000895_2019.json",
+    "trigger_reachability": "data/trigger_reachability_000895.json",
+    "phase5_workpaper": "data/phase5_workpaper.json",
+    "verification_strength": "data/verification_strength.json",
+    "decision_log": "decision-log.md",
+    "personas": "workpapers/persona_{buffett,duan,lilu}.md"
+  }
+}
