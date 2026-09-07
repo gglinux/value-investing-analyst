@@ -1,0 +1,42 @@
+{
+  "company": "软银集团（SoftBank Group Corp.）",
+  "ticker": "9984.T",
+  "annual_rows": 10,
+  "year_min": 2009,
+  "year_max": 2018,
+  "reconciliation": {
+    "schema": "general（三表勾稽）",
+    "keys_required": [
+      "total_assets",
+      "total_liabilities",
+      "total_equity"
+    ],
+    "covered_years": 0,
+    "total_years": 10,
+    "coverage": 0.0,
+    "level": "weak",
+    "note": "取证检查只在科目齐备的年份执行，缺科目的年份是跳过而非通过。覆盖率必须与「0 错误」一起读（GOOG/TSM 曾以 18% 覆盖率通过校验）。"
+  },
+  "crosscheck": {
+    "years_registered": [],
+    "years_official_source": [],
+    "level": "none",
+    "machine_verified_against_source_text": false,
+    "note": "脚本只能核验 source 字符串是否指向官方原文的**形态**，无法核验数字本身是否与原文一致——编一个数字配一行「2025年报 p.45」同样过闸。因此本项无论哪一级，首屏都必须写明「未经原文机器逐字比对」"
+  },
+  "data_window": {
+    "span_years": 10,
+    "required_years": 10,
+    "cycle_sensitive": false,
+    "stress_years_covered": {
+      "2015": "A股股灾与去杠杆",
+      "2018": "去杠杆与贸易战"
+    },
+    "covers_full_cycle": true,
+    "level": "full",
+    "note": "窗口内不含任何系统性压力年时，该标的的「历史最差」并未被观测到——周期正常化的均值口径与悲观情景的历史锚都不成立，此时正常化基期与悲观情景必须改用行业基率或同类死亡案例"
+  },
+  "grade": "C",
+  "grade_meaning": "核验强度不足：结论的数据地基有明确缺口，档位判定须从严并在首屏说明",
+  "generated_at": "2026-09-07"
+}

@@ -1,0 +1,67 @@
+{
+  "file": "backtest/9984.T_2019-06-30/data/scenarios.json",
+  "errors": [],
+  "warnings": [
+    "S5 未登记 `non_operating_addback_per_share`：若估值用了 --add-back，必须逐情景登记，否则无法门禁分层折价"
+  ],
+  "codes": [
+    "S5_NON_OPERATING_STRESS"
+  ],
+  "unmapped_messages": [],
+  "diagnostics": {
+    "scenario_values": {
+      "悲观": 4465.0,
+      "基准": 6633.0,
+      "乐观": 7976.0
+    },
+    "bear_name": "悲观",
+    "base_name": "基准",
+    "margin_of_safety_vs_base": 0.22131765415347504,
+    "bear_method": "sotp_asset_floor",
+    "bear_recomputed_value": 4464.4149,
+    "bear_recompute_deviation": 0.000131,
+    "discount_rate_floor": 0.1,
+    "discount_rate_floor_basis": "硬下限 10%",
+    "bear_stressed": [
+      "sprint_deal_failure",
+      "vision_fund_fair_value_down25",
+      "governance_discount_55pct",
+      "net_debt_upper_bound"
+    ],
+    "bear_base_ratio": 0.6731494044926881,
+    "non_operating_addback_per_share": {
+      "悲观": null,
+      "基准": null,
+      "乐观": null
+    },
+    "bear_vs_price": 0.8644724104549855,
+    "probability_deviations": {},
+    "intrinsic_value_growth": 0.05,
+    "iv_growth_evidence": "取 5%：NAV 增速的可持续部分——9434 现金流增长（国内电信稳定）+ARM/雅日增长+VF 组合滚动，减本体净债利息侵蚀（6.2 万亿×1.5-2%）；剥离 VF 重估等不可持续贡献（FY2017→2018 每股权益 +57% 为重",
+    "revenue_decline_streak": 0,
+    "core_driver_decline_years": null,
+    "peak_stagnation": {
+      "peak_year": 2018,
+      "peak_revenue": 9602236.0,
+      "latest_revenue": 9602236.0,
+      "drawdown_from_peak": 0.0,
+      "years_since_peak": 0,
+      "stagnating": false,
+      "thresholds": {
+        "min_drawdown": 0.1,
+        "min_years_since_peak": 3
+      }
+    },
+    "decline_streak_used": 0,
+    "shrinking_reasons": [],
+    "value_trap_triggered": false,
+    "dividend_yield": 0.0043,
+    "snapshot_dividend_yield": {
+      "value": null,
+      "field": null,
+      "basis": "快照无股息率字段",
+      "unit_ambiguous": false
+    }
+  },
+  "passed": true
+}

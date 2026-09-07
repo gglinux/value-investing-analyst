@@ -15,7 +15,12 @@
     ],
     "forbidden_data_encountered": "东财行情接口返回 2014-2026 全序列月K（含回放日后数据），提取时仅使用 2018-06 至 2019-08 区间锚点与 2026-08-31 现值（口径校准用）；决算报告 PDF 仅使用 FY2018 及更早期次"
   },
-  "official_filing_missing": null,
+  "official_filing_missing": {
+    "years": [
+      2019
+    ],
+    "reason": "回测信息截断纪律：分析基准日 2019-06-30，FY2019 决算短信于 2019-08-06 发布属 forbidden data，禁止使用。可用最新信息为 FY2018 决算短信（2019-05-09 发布，含官方 NAV 口径与拆股公告）。底稿年度标签为日本财年（year=FY，期末 03-31），FY2018 即 2019-03 期决算，无缺年"
+  },
   "latest_quarter_checked": {
     "period": "日本公司无强制季报；FY2018 决算（2018-04-01 至 2019-03-31）为最新可得",
     "publish_date": "2019-05-09（决算报告 + 决算发布会）",
@@ -49,5 +54,140 @@
       "会计：FY2018 起分红收入从营业外改列营业收益（+2,051,422 影响同比可比性）；IFRS 9 FVTPL 重估主导损益——重分类与重估的透明度问题官方披露但复杂"
     ],
     "hard_red_flags": "无退市风险/审计分歧/财务造假指控等硬红旗；风险形态为'结构性折价是否有基本面支撑'——结论：折价是治理+透明度+变现摩擦的理性定价，排雷通过（不构成拒绝理由，但压低档位判断的乐观端）"
+  },
+  "files": [
+    {
+      "source": "软银官方 q4FY2010-2018 决算报告 PDF ×7（/tmp/sb_reports，UA 重试下载）",
+      "level": "A",
+      "fetched": "2026-09-06/07",
+      "coverage": "FY2009-2018 利润表+现金流+DPS+股本（重列值优先）",
+      "validated": "官方 PDF 逐页提取+EPS/股本反推自洽（读串列序澄清）+DPS 官方表",
+      "file": "financials_9984_2019.json"
+    },
+    {
+      "source": "东财 push2his（secid=176.9984, fqt=1）+ SFTBY ADR + 官方股本 1,100,660,365×2−库存",
+      "level": "A",
+      "fetched": "2026-09-07",
+      "coverage": "2019-06-28 收盘 5,165 + 52 周区间 + 子公司价",
+      "validated": "三重闭环：东财×8=alphaspread 10,305 ✓；ADR $5.99×107.8×2=¥1,291 ✓；市值 8 万亿报道 ✓",
+      "file": "market_snapshot_9984_2019.json"
+    },
+    {
+      "source": "q4FY2018 官方 NAV 口径 + 各持仓回放日市价×官方持股比例",
+      "level": "A",
+      "fetched": "2026-09-07",
+      "coverage": "SOTP 分项+净债 6.2+折价 53%+分部经济+crosscheck 四项",
+      "validated": "分项与官方披露/行情互证；分部加总 29.49 与官方口径勾稽",
+      "file": "business_drivers_9984_2019.json"
+    },
+    {
+      "source": "compute_metrics.py（market_cap 10,886,263 注入）",
+      "level": "机器生成",
+      "fetched": "2026-09-07",
+      "coverage": "FY2009-2018 指标+正常化+owner_yield+警报",
+      "validated": "4 告警落地（FCF 含金量/周期高位/双轨/利润率形状）+10 warnings（capex 启发式）",
+      "file": "metrics_9984_2019.json"
+    },
+    {
+      "source": "正常化裁决（ADJ1-ADJ3）+ event_adjustments 四项",
+      "level": "分析师裁决底稿",
+      "fetched": "2026-09-07",
+      "coverage": "周期高位误判四证据+伪正常化拒绝+SOTP 通道替代",
+      "validated": "与 metrics 引擎输出全部对账",
+      "file": "normalization_9984_2019.json"
+    },
+    {
+      "source": "五维定性（护城河=none）",
+      "level": "分析师底稿",
+      "fetched": "2026-09-07",
+      "coverage": "五维+assumption_consistency_ledger 五项",
+      "validated": "ledger 与 normalization/scenarios 对账",
+      "file": "qualitative_9984_2019.json"
+    },
+    {
+      "source": "三情景（sotp_asset_floor/sotp×2）",
+      "level": "分析师底稿+引擎重算",
+      "fetched": "2026-09-07",
+      "coverage": "悲观 4,465/基准 6,633/乐观 7,976",
+      "validated": "check_scenarios S1-S9 通过（1 警告 S5 合理豁免）；S2b 重算偏差 0.007%",
+      "file": "scenarios.json"
+    },
+    {
+      "source": "check_scenarios.py 审计输出",
+      "level": "机器生成",
+      "fetched": "2026-09-07",
+      "coverage": "S1-S9 门禁结果",
+      "validated": "EXIT=0 通过",
+      "file": "scenario_audit.json"
+    },
+    {
+      "source": "reverse_dcf.py expected-return（--scenarios-file 单一事实源）",
+      "level": "机器生成",
+      "fetched": "2026-09-07",
+      "coverage": "期望 IRR 13.87%+闸门二三项",
+      "validated": "口径取自已过门禁 scenarios.json",
+      "file": "expected_return.json"
+    },
+    {
+      "source": "build_report.py 派生计算",
+      "level": "机器生成",
+      "fetched": "2026-09-07",
+      "coverage": "MoS 三口径/触发价/烟蒂检验",
+      "validated": "由 scenarios+market_snapshot 派生",
+      "file": "mos_calc.json"
+    },
+    {
+      "source": "verification_strength.py",
+      "level": "机器生成",
+      "fetched": "2026-09-07",
+      "coverage": "V1-V3 核验强度",
+      "validated": "grade C（勾稽 0/10——资产负债表科目未逐项提取，已首屏披露）",
+      "file": "verification_strength.json"
+    },
+    {
+      "source": "三师收敛+红队五项+pre-mortem",
+      "level": "分析师底稿",
+      "fetched": "2026-09-07",
+      "coverage": "persona_scores/divergence/red_team/falsifiers",
+      "validated": "与三份 persona md 一致",
+      "file": "phase5_workpaper.json"
+    },
+    {
+      "source": "自引用登记",
+      "level": "-",
+      "fetched": "2026-09-07",
+      "coverage": "Phase 0 排雷+files 清单",
+      "validated": "-",
+      "file": "manifest.json"
+    },
+    {
+      "source": "Phase 0 排雷+价格闭环+口径红旗+引擎预测",
+      "level": "分析师底稿",
+      "fetched": "2026-09-07",
+      "coverage": "数据层工作底稿",
+      "validated": "与 manifest/adversarial_check 一致",
+      "file": "workpapers/data_workpaper.md"
+    },
+    {
+      "source": "三师独立评估（分离生成）",
+      "level": "分析师底稿",
+      "fetched": "2026-09-07",
+      "coverage": "巴菲特/段永平/李录",
+      "validated": "仅共享 Phase 1-4 定量输出",
+      "file": "workpapers/persona_buffett.md + persona_duan.md + persona_lilu.md"
+    },
+    {
+      "source": "报告生成器（数字自底稿渲染）",
+      "level": "机器生成",
+      "fetched": "2026-09-07",
+      "coverage": "report.html 全部 vnum/vchart",
+      "validated": "verify_report.py 通过",
+      "file": "workpapers/build_report.py"
+    }
+  ],
+  "reconciliation_coverage_waiver": {
+    "reason": "官方决算 PDF 手工提取仅含利润表+现金流科目，资产负债表科目未逐项提取；US GAAP→IFRS 切换（FY2016 期）+Sprint/9434 并表范围变动使跨年三表机械勾稽在本案不可靠（勾稽需要口径连续的 TA/TL 序列）。估值通道为 SOTP（持仓回放日市值×官方持股−官方 NAV 口径净债），不依赖三表勾稽；PB 所用归属权益 7.62 万亿为官方单点披露",
+    "accepted_tradeoff": "核验强度 C 如实评级并在报告首屏披露；档位判定已按从严口径（none 档不给买入结论）内嵌",
+    "registered": "2026-09-07"
   }
 }

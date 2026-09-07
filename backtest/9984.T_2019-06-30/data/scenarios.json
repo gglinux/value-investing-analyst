@@ -1,0 +1,63 @@
+{
+  "company": "软银集团",
+  "ticker": "9984.T",
+  "currency": "JPY",
+  "price": 5165,
+  "price_source": "2019-06-28 收盘价（回放日 06-30 为周日休市；2019-06-25 1:2 拆股后口径=东财 1,291.3×4）[E:market_snapshot_9984_2019.json]",
+  "moat": "none",
+  "moat_note": "护城河评级'无'：投资控股公司无经典五源护城河——资本规模/历史投资业绩是关键人资源而非结构性优势；市场长期 NAV 折价 30-50% 本身是资本配置不可验证性的理性定价；无'回购至 NAV'类收敛机制承诺。闸门一安全边际要求从严、闸门二期望 IRR 门槛项结构性不过 [E:qualitative_9984_2019.json]",
+  "discount_rate": 0.1,
+  "discount_rate_note": "纪律下限 max(10%, JGB 10Y 约−0.1% + 4pct = 3.9%) = 10%。JGB 负利率环境不放松 10% 下限 [E:market_snapshot_9984_2019.json macro]",
+  "hold_years": 5,
+  "dividend_yield": 0.0043,
+  "dividend_yield_source": "22 日元/股（拆股后）÷ 5,165 = 0.43%；分红总额 47,166 百万仅占归属净利 3.3%——股东回报以回购为主 [E:market_snapshot_9984_2019.json]",
+  "intrinsic_value_growth": 0.05,
+  "iv_growth_evidence": "取 5%：NAV 增速的可持续部分——9434 现金流增长（国内电信稳定）+ARM/雅日增长+VF 组合滚动，减本体净债利息侵蚀（6.2 万亿×1.5-2%）；剥离 VF 重估等不可持续贡献（FY2017→2018 每股权益 +57% 为重估主导，不外推）。0.43%+5% = 5.43% < 6% → 闸门二②不过（保守口径；即使取 6% 增速亦仅 6.43% 贴线，不改变结论）[E:qualitative_9984_2019.json growth]",
+  "valuation_method_note": "本案估值唯一合法通道为 SOTP+变现/治理折价修正（normalization ADJ3：OE/DCF 通道整体废弃——owner yield 21.1% 的失真实证）。三情景均为 SOTP 口径：毛 NAV（各持仓回放日市价×持股）− SBG 本体净债 → equity NAV × (1−持久折价) → 可投资价值 ÷ 21.07667 亿股（拆股后流通）",
+  "default_probabilities": {
+    "悲观": 0.3,
+    "基准": 0.5,
+    "乐观": 0.2
+  },
+  "probability_rationale": "悲观 30%：Sprint 合并失败概率不低（DOJ/FCC 双审批未决）且 VF 减值风险真实（WeWork 估值争议）；乐观 20%：折价收敛需要治理行动（大额回购/分拆），无当前承诺故概率有限；基准 50%",
+  "scenarios": [
+    {
+      "name": "悲观",
+      "value_per_share": 4465,
+      "probability": 0.3,
+      "method": "sotp_asset_floor",
+      "method_note": "分部资产底价加总（悲观=变现口径，不依赖盈利能力）：毛 NAV = 9434 11.02 + 阿里 12.48 + Sprint 1.2（合并失败，独立价值考虑 $400 亿净债与亏损）+ 雅日 0.71 + VF 1.8（公允价值 −25%，WeWork 等私募估值修正）+ 其他 0.4 = 27.61 万亿；减本体净债 6.7（上界）= equity NAV 20.91 万亿；×(1−55%) 持久折价上界（合并失败+减值冲击下治理折价加深）= 9.41 万亿 ÷ 21.0767 亿股 = 4,465 日元。持仓市值取自回放日收盘 [E:market_snapshot_9984_2019.json source_prices]，SOTP 分项与净债口径 [E:business_drivers_9984_2019.json sotp]",
+      "method_inputs": {
+        "shares_m": 2107.667,
+        "haircut_note": "0.45 = (1−55%) 持久折价上界。折价按 equity NAV 整体施加，故各科目（含净债）统一乘 0.45，数学等价：(Σ资产−净债)×0.45；脚本 _rc_components 重算口径与登记值一致",
+        "components": [
+          {"item": "9434 国内电信 33.45% 持股（回放日收盘 ¥1,399.5×流通股×33.45%）", "amount_m": 11020000, "haircut": 0.45},
+          {"item": "阿里巴巴 BABA 持仓（调整后口径）", "amount_m": 12480000, "haircut": 0.45},
+          {"item": "Sprint（合并失败独立价值：市值减 $400 亿净债与亏损）", "amount_m": 1200000, "haircut": 0.45},
+          {"item": "雅虎日本约 22.5% 持股", "amount_m": 710000, "haircut": 0.45},
+          {"item": "VF 持仓（公允价值 −25%：WeWork 等私募估值修正）", "amount_m": 1800000, "haircut": 0.45},
+          {"item": "其他持仓与自有资产", "amount_m": 400000, "haircut": 0.45},
+          {"item": "SBG 本体净债（上界 6.7 万亿）", "amount_m": -6700000, "haircut": 0.45}
+        ]
+      },
+      "stressed_assumptions": ["sprint_deal_failure", "vision_fund_fair_value_down25", "governance_discount_55pct", "net_debt_upper_bound"],
+      "annualized_note": "(1.10×4465/5165)^0.2−1 = −1.0%/年"
+    },
+    {
+      "name": "基准",
+      "value_per_share": 6633,
+      "probability": 0.5,
+      "method": "sotp",
+      "method_note": "SOTP 基准口径（盈利能力持平的资产加总）：equity NAV 23.3 万亿（毛 NAV 29.49 − 本体净债 6.2，见 business_drivers SOTP 表）×(1−40%) 持久折价（历史 NAV 折价 30-50% 区间中枢略保守）= 13.98 万亿 ÷ 21.0767 亿股 = 6,633 日元 [E:business_drivers_9984_2019.json sotp]",
+      "annualized_note": "(1.10×6633/5165)^0.2−1 = +7.15%/年"
+    },
+    {
+      "name": "乐观",
+      "value_per_share": 7976,
+      "probability": 0.2,
+      "method": "sotp",
+      "method_note": "SOTP 乐观口径（同框架参数上移）：Sprint 合并获批（2.38→2.9 万亿，T-Mobile 映射）+ VF 按公允 2.4 + 其他 0.5 → 毛 NAV 30.01 万亿；减本体净债 6.0；×(1−30%) 持久折价下界（合并成功+回购加大驱动折价部分收敛）= 16.81 万亿 ÷ 21.0767 亿股 = 7,976 日元 [E:business_drivers_9984_2019.json sotp]",
+      "annualized_note": "(1.10×7976/5165)^0.2−1 = +11.18%/年"
+    }
+  ]
+}
