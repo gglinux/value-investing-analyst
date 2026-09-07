@@ -1,0 +1,35 @@
+{
+ "company": "双汇发展",
+ "ticker": "000895.SZ",
+ "replay_date": "2019-06-30",
+ "price_date": "2019-06-28",
+ "price_date_note": "2019-06-30为周日，取最后交易日2019-06-28收盘",
+ "price_unadjusted": 24.89,
+ "price_forward_adjusted": 14.36,
+ "price_backward_adjusted": 388.26,
+ "adjustment_note": "东财push2his fqt=0/1/2三口径(2019-06-28收盘)：不复权24.89(主口径=当时市价)/前复权14.36/后复权388.26；复权因子0.577(前)——高分红史导致前复权价仅为市价58%，OBS-600660-03股息率三口径复检的行情端敏感点：5年总收益计算必须用分红再投资或后复权，纯前复权价会漏计分红收益。",
+ "shares_outstanding": 3299558284,
+ "shares_note": "2019Q1末实收资本3,299,558,284股(1元面值)；吸收合并重组完成后约33.17亿股(摊薄<1%,重组2019-06-30时尚未获批,登记不调整)",
+ "market_cap_yi": 821.3,
+ "market_cap_note": "24.89元×32.9956亿股=821.3亿元",
+ "valuation_snapshot": {
+  "pe_static_2018": 16.7,
+  "pe_ttm": 16.0,
+  "ttm_net_income_yi": 51.3,
+  "pb": 5.76,
+  "div_yield_static_2018": 5.83,
+  "div_yield_ttm": 5.83,
+  "div_yield_paid_2018": 8.04,
+  "yield_note": "PB分母=2019Q1末归母净资产142.66亿；股息率三口径见dividends_000895_2019.json"
+ },
+ "volume_20190628": {
+  "shares_hand": 85681,
+  "amount_yuan": 213167819.0,
+  "vwap_check": 24.88
+ },
+ "source": "东方财富push2his日K接口(WebFetch抓取,curl对东财API失败——既往管线记录复现)",
+ "data_notes": [
+  "52周区间粗核(东财日K 2018-06~2019-06未全量抓取,仅验证回放周)：2019-06月内区间24.05-25.17元,回放日24.89处月内中高位。",
+  "行情为收盘价快照,未含盘中；2019-06-28成交额2.13亿,流动性充足。"
+ ]
+}
