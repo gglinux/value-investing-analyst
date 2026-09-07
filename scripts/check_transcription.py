@@ -95,6 +95,10 @@ def main():
     raw = load_raw(args.raw)
     draft = json.load(open(args.draft, "r", encoding="utf-8"))
     drows = {str(r.get("year")): r for r in draft.get("annual", [])}
+    # 口径裁决豁免：底稿字段与抽取口径的分叉若系冻结裁决（如美股 OE 口径
+    # capex/ocf 调整、拆股全序列调整），在 transcription_exempt 登记说明后
+    # 降级为警告；官方/原始值仍须在底稿扩展字段留存，报告须披露豁免理由。
+    tx_exempt = draft.get("transcription_exempt") or {}
 
     errors, warns, infos = [], [], []
     if not raw:
@@ -147,7 +151,11 @@ def main():
             except (TypeError, ValueError):
                 continue
             if diff is not None and diff > args.tol:
-                mismatch.append(f"{y}.{dk}: 底稿({dv}) vs 抽取({float(rv)/scale:,.2f}) 偏差 {diff:.1%}")
+                if tx_exempt.get(dk):
+                    warns.append(f"{y}.{dk}: 底稿({dv}) vs 抽取({float(rv)/scale:,.2f}) "
+                                 f"偏差 {diff:.1%}——口径豁免（{tx_exempt[dk]}）")
+                else:
+                    mismatch.append(f"{y}.{dk}: 底稿({dv}) vs 抽取({float(rv)/scale:,.2f}) 偏差 {diff:.1%}")
 
         # 多口径字段：底稿值只要匹配任一可接受口径即算搬运正确
         for dk, cands in MULTI_SOURCE.items():
@@ -167,9 +175,13 @@ def main():
                     best = (cname, diff)
             if best and best[1] > args.tol:
                 names = "/".join(c for c, _ in avail)
-                mismatch.append(
-                    f"{y}.{dk}: 底稿({dv}) 与任一抽取口径({names})均不匹配，"
-                    f"最接近的 {best[0]} 偏差 {best[1]:.1%}")
+                if tx_exempt.get(dk):
+                    warns.append(f"{y}.{dk}: 与任一抽取口径({names})均不匹配，"
+                                 f"最接近的 {best[0]} 偏差 {best[1]:.1%}——口径豁免（{tx_exempt[dk]}）")
+                else:
+                    mismatch.append(
+                        f"{y}.{dk}: 底稿({dv}) 与任一抽取口径({names})均不匹配，"
+                        f"最接近的 {best[0]} 偏差 {best[1]:.1%}")
 
     for f, years in sorted(lost.items()):
         dk = FIELD_MAP[f]

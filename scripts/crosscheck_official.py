@@ -179,6 +179,13 @@ def main() -> int:
                 if d is None:
                     print(f"  ❌ {y} {f:16} 底稿缺值，官方 {val:,.1f}")
                     errors += 1
+                elif d > TOL and exempt.get(f):
+                    # 口径裁决豁免（与模式二同语义）：底稿口径系冻结裁决的派生
+                    # 口径（如美股 OE 口径调整、拆股全序列调整），非转录错误；
+                    # 官方原值须在底稿扩展字段留存，报告须披露豁免理由。
+                    print(f"  ⚠️  {y} {f:16} 底稿 {dv:,.1f} vs 官方 {val:,.1f} "
+                          f"偏差 {d:.1%}  [{concept}]——已豁免（{exempt[f]}）")
+                    warns += 1
                 elif d > TOL:
                     print(f"  ❌ {y} {f:16} 底稿 {dv:,.1f} vs 官方 {val:,.1f} "
                           f"偏差 {d:.1%}  [{concept}]")
