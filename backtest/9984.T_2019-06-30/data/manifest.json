@@ -1,0 +1,53 @@
+{
+  "company": "软银集团（SoftBank Group Corp.）",
+  "ticker": "9984.T",
+  "analysis_as_of": "2019-06-30",
+  "case": "B2-10（backtest，第二批案例10）",
+  "information_cutoff": {
+    "date": "2019-06-30",
+    "rules": [
+      "仅使用 2019-06-30 当日或之前公开发布的信息",
+      "最新年度报表 = FY2018 决算报告（IFRS，Tokyo 2019-05-09 发布）",
+      "FY2019Q1 决算（2019-08-06 发布）为 forbidden data",
+      "FY2019 年报（Annual Report 2019，2019-07 发布，含更新 NAV 图）为 forbidden data",
+      "不使用模型对 2019-07 及之后事件（WeWork 危机、Sprint/T-Mobile 合并 2020 年获批、2020 疫情、阿里后续走势、ARM 出售 NVIDIA 等）的记忆",
+      "陷阱已规避：sbkk_annual_report_2019_en_01.pdf 为电信子公司 SoftBank Corp 年报，非集团报告，不使用"
+    ],
+    "forbidden_data_encountered": "东财行情接口返回 2014-2026 全序列月K（含回放日后数据），提取时仅使用 2018-06 至 2019-08 区间锚点与 2026-08-31 现值（口径校准用）；决算报告 PDF 仅使用 FY2018 及更早期次"
+  },
+  "official_filing_missing": null,
+  "latest_quarter_checked": {
+    "period": "日本公司无强制季报；FY2018 决算（2018-04-01 至 2019-03-31）为最新可得",
+    "publish_date": "2019-05-09（决算报告 + 决算发布会）",
+    "finding": "归属净利 1,411,199（+35.8%）创纪录，但其中 VF/Delta 持仓重估收益 1,302,838 为非现金项（现金流量表调整项）；OI 2,353,931（+80.5%）中 +2,051,422 来自分红收入重分类（FY2018 起子公司/权益法分红从营业外改列营业），非经营改善；FCF（OCF−capex）−193,090 连续负值区间（2013-2015、2018 四年为负）；总债 15.69 万亿、合并净债 11.83 万亿；VF 组合公允价值 $72.3bn vs 成本 $60.1bn。形态：控股型主体，利润表被 IFRS 9 重估与重分类双重污染，OCF 为唯一相对干净的现金指标。",
+    "checked_on": "2026-09-07"
+  },
+  "data_quality": {
+    "level": "A（官方决算报告逐页提取）/ B（SOTP 结构近似：VF 价值分配、SBG 本体净债拆分）/ C（Sprint 回放日价格精度）",
+    "primary_sources": [
+      "FY2018 决算报告（q4fy2018）：financial-report_q4fy2018_01_en.pdf（79 页，2019-05-09）——FY2018/FY2017 全部损益/现金流/股本/分红/债务构成/VF 组合明细",
+      "FY2016 决算报告（q4fy2016）：financial-report_q4fy2016_01_en.pdf——FY2016/FY2015（IFRS 重列）",
+      "FY2014/FY2013/FY2012/FY2011/FY2010 决算报告（q4fy2014-q4fy2010）——US GAAP 时期逐年提取",
+      "行情：东方财富 push2his（secid=176.9984 / 176.9434 / 176.4689）+ SFTBY ADR（Yahoo Finance 周线）+ BABA（trading-education 历史日线）",
+      "SOTP 方法论基础：2018 年报 CEO Message NAV 口径说明（2018-07 发布，回放日前可见）"
+    ],
+    "price_calibration": "东财口径 = 真实价经 2019-06-25（1:2，基准日 2019-06-27 官方注明）+ 2025-12-29（1:4）两次拆股累计调整：2019-06-25 前真实 = 东财 × 8，之后 = 东财 × 4。三重互证（alphaspread 拆股前 10,305、SFTBY ADR $5.99×2×107.8、2018 年底市值 8 万亿报道）全部吻合"
+  },
+  "prior_expectation_ref": "见 meta.json prior_expectation：先验档位 2（观察等价格），核心检验点 ①OE 框架对非经营资产主导公司的失真 ②SOTP 能否压过 DCF ③治理折价识别",
+  "adversarial_check": {
+    "checked_on": "2026-09-07",
+    "queries": [
+      "SoftBank 2019 bear case short seller governance Son pledged shares WeWork valuation concern Vision Fund risks"
+    ],
+    "discipline_note": "检索返回的多数材料为 2020 后后见之明（WeWork IPO 失败/疫情亏损/Elliott 进场），已按截断纪律剔除，不进入任何判断；以下仅保留回放日前已公开可查的事实",
+    "findings_usable_asof_20190630": [
+      "治理集中：孙正义为创始人+董事长+CEO+最大股东（约 21%），一人决策风格公开且长期持续；董事会中外部董事制衡有限——软银长期 NAV 折价的结构性原因之一",
+      "关联交易/结构不透明：软银同时是 VF 的 GP（管理费+表现分成）与最大 LP（$28bn）；第三方 LP 出资约 40% 为 7% 优先回报结构（年优先股息约 $20 亿）——软银股东承担下行、与第三方分享上行，结构对软银股东不利的非对称性公开可查",
+      "VF 组合估值依赖第三方私募估值：WeWork 2019-01 最新一轮 $47bn 估值在 2019 年上半年已有公开争议报道（未上市、单位经济恶化数据在 2019-08 S-1 后才全面暴露，回放日仅见争议信号）",
+      "雅日交易（2019-05-08）：SoftBank Corp 举债 4,565 亿认购雅日新股+雅日 5,265 亿回购集团持股——集团层面变现但存在集团内部定价与少数股东稀释问题",
+      "孙正义个人质押股票事实存在（2019 年时点精确规模不完全公开；后续更高比例报道属 forbidden）",
+      "会计：FY2018 起分红收入从营业外改列营业收益（+2,051,422 影响同比可比性）；IFRS 9 FVTPL 重估主导损益——重分类与重估的透明度问题官方披露但复杂"
+    ],
+    "hard_red_flags": "无退市风险/审计分歧/财务造假指控等硬红旗；风险形态为'结构性折价是否有基本面支撑'——结论：折价是治理+透明度+变现摩擦的理性定价，排雷通过（不构成拒绝理由，但压低档位判断的乐观端）"
+  }
+}

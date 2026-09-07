@@ -1,0 +1,172 @@
+{
+  "company": "软银集团（SoftBank Group Corp.）",
+  "ticker": "9984.T",
+  "company_type": "持仓型控股公司（引擎 OE/DCF 框架边界外形态——OBS-2016-12-01 档位轨裁决预登记对象）",
+  "unit_note": "量纲说明：主口径 JPY 十亿（trillion 日元用 T 标注）；SOTP 汇总用 JPY 万亿。所有持仓市值按回放日 2019-06-28 收盘价计；持股比例按 FY2018 决算官方披露（部分经 2019-05-08 雅日交易调整）。1 USD = 107.8 JPY",
+  "drivers_note": "本文件替代常规'量×价'经营驱动底稿——软银集团无独立经营业务，收入与 EBIT 的 80%+ 来自并表上市/可上市子公司（SoftBank Corp 66.49%、Sprint 84.4%），投资价值通过 VF/Delta（FVTPL）与权益法（阿里、Arm China）持有。估值驱动 = 各持仓市场价值 − SBG 本体净债（官方 NAV 口径剔除子公司自身净债）",
+  "drivers": [
+    {
+      "year": 2014,
+      "volume": 8.67,
+      "price": null,
+      "volume_label": "合并营收（万亿日元，FY2014 起 Sprint 全年并表）",
+      "price_label": "不适用（控股公司）",
+      "source": "q4fy2014 官方决算报告",
+      "source_level": "A",
+      "note": "营收驱动全部来自并表子公司：2015 年 SoftBank Corp（国内电信，营收约 3.6 万亿）/Sprint（约 3.4 万亿）/雅日（约 0.75 万亿）/其他（Brightstar、机器人等）。集团股东对并表子公司收入仅按持股比例享有，少数股东损益 FY2018 约 434 亿量级之外，SoftBank Corp 与 Sprint 的利润大头已按比例计入归属——但市值口径的持仓价值法（SOTP）仍是唯一正确的股东价值映射"
+    },
+    {
+      "year": 2016,
+      "volume": 8.90,
+      "price": null,
+      "volume_label": "合并营收（万亿日元，FY2016 IFRS）",
+      "price_label": "不适用",
+      "source": "q4fy2016 官方决算报告",
+      "source_level": "A",
+      "note": "2016-07 ARM 收购（£24.3bn ≈ ¥3.2 万亿）+ 2016-10 Vision Fund 成立（软银出资 $28bn：GP 部分 + LP 部分；第三方 LP $63bn 含优先回报结构）；2017 起投资收益成为利润表主要变量"
+    },
+    {
+      "year": 2018,
+      "volume": 9.60,
+      "price": null,
+      "volume_label": "合并营收（万亿日元，FY2018）",
+      "price_label": "不适用",
+      "source": "q4fy2018 官方决算报告",
+      "source_level": "A",
+      "note": "FY2018：OI 2,353,931（+80.5%——其中 +2,051,422 来自'从子公司及权益法公司收到的分红'重分类进营业收益，非经营改善）；归属净利 1,411,199（+35.8%）主要靠 VF 重估 1,302,838（非现金）"
+    }
+  ],
+  "sotp_holdings": {
+    "as_of": "2019-06-28",
+    "currency": "JPY trillion",
+    "holdings": [
+      {
+        "name": "SoftBank Corp（9434.T，国内电信）",
+        "stake_pct": 66.49,
+        "stake_note": "2018-12-19 IPO 后集团间接持股 66.49%（q4fy2018 官方：通过 SBGJ 持有）",
+        "market_cap": 16.58,
+        "market_cap_note": "2019-06-28 收盘 ¥1,399.5（东财 secid=176.9434）× 11,845,652,700 股（IPO 后总股本）",
+        "value": 11.02,
+        "value_note": "16.58 × 66.49% = 11.02 万亿日元 ≈ $1,022 亿",
+        "source_level": "A",
+        "quality": "高——上市子公司，市价直接可得",
+        "caveat": "IPO 发行价 ¥1,500 为发行估值锚（¥7.2 万亿），2019-06 市价 ¥1,399.5 仍低于发行价约 7%——市场对该资产的独立定价存在但流动性/指数效应可能高估其真实清算价值"
+      },
+      {
+        "name": "阿里巴巴（BABA.N）",
+        "stake_pct": 25.9,
+        "stake_note": "约 25.9%（约 6.7 亿股 ADR 等值；其中部分在 mandatory exchangeable trust 结构内，2019-06 有预付远期交割——q4fy2018：4,37 亿美元借款以阿里股偿还）",
+        "market_cap": 44.7,
+        "market_cap_note": "2019-06-28 收盘 $173.11 × 总股本约 25.8 亿股 = $4,470 亿",
+        "value": 12.48,
+        "value_note": "44.7 × 25.9% ≈ $1,158 亿 × 107.8 = 12.48 万亿日元 ≈ $1,074 亿",
+        "source_level": "A（比例）/B（股数）",
+        "quality": "高——美股上市，市价直接可得",
+        "caveat": "变现折价：25.9% 持仓任何实质性变现都需要折价（预付远期类结构的实际交割已证明可行但存在市场冲击）；税务：离岸结构（SB Investment Holdings）变现的资本利得税负约 10-20% 争议区间"
+      },
+      {
+        "name": "Sprint（S.N，美国电信）",
+        "stake_pct": 84.4,
+        "stake_note": "84.4%（q4fy2018 官方：减值测试 recoverable value 计算用口径）",
+        "market_cap": 2.82,
+        "market_cap_note": "2019-06-28 收盘约 $6.4 × 约 40.9 亿股 = 约 $262 亿",
+        "value": 2.38,
+        "value_note": "262 亿 × 84.4% ≈ $221 亿 × 107.8 = 2.38 万亿日元",
+        "source_level": "A（比例）/C（价格精度）",
+        "quality": "中——上市但价格受合并套利扭曲",
+        "caveat": "①价格受 Sprint/T-Mobile 合并预期支撑：合并若获批（每 Sprint 股换 0.10256 T-Mobile 股+调整），SOTP 值约等于 T-Mobile 股价映射；合并若失败，Sprint 独立价值可能显著低于市价（净债 $400 亿+、连续亏损）。②2019-06-28 判决未出——SOTP 该分项的'公允'区间极宽（$100 亿~$300 亿）",
+        "scenario_adjustment": "合并成功 → ~2.4 万亿；合并失败 → 1.0-1.5 万亿（独立估值，考虑债务与负 FCF）"
+      },
+      {
+        "name": "雅虎日本（4689.T）",
+        "stake_pct": 43.4,
+        "stake_note": "2019-05-08 交易结构公布后拟制 44.64%（q4fy2018 官方口径）；交易前直接+SBGJ 约 43.4%",
+        "market_cap": 1.63,
+        "market_cap_note": "2019-06-28 收盘 ¥316（东财 secid=176.4689）× 5,151,629,615 股（q4fy2018 官方）",
+        "value": 0.71,
+        "value_note": "1.63 × 43.4% ≈ 0.71 万亿日元",
+        "source_level": "A",
+        "quality": "高——东证主板上市",
+        "caveat": "2019-05-08 交易本质：SoftBank Corp 举债 4,565 亿认购雅日新股 + 雅日用 5,265 亿回购集团持股——集团层面换回现金但 SoftBank Corp 少数股东分担持股比例下降；对 SOTP 影响中性略负（关联交易特征）"
+      },
+      {
+        "name": "Vision Fund / Delta Fund 组合（含 ARM）",
+        "stake_pct": null,
+        "stake_note": "结构：总承诺出资约 $91bn（软银 $28bn + 第三方 $63bn 含优先回报 7% hurdle 与 GP 表现分成）",
+        "market_cap": 7.8,
+        "market_cap_note": "VF/Delta 持仓公允价值合计 $72.3bn（2019-03-31，q4fy2018 官方 Portfolio 表；ARM 已 in-kind 注入，其公允价值含在内）+ 累计成本 $60.1bn",
+        "value": 2.4,
+        "value_note": "线性近似：$72.3bn × 28/91 ≈ $22.2bn × 107.8 ≈ 2.40 万亿日元。实际软银经济利益因第三方优先回报结构低于线性比例（下行先亏软银的 GP/LP 出资、上行被表现分成与优先回报截断）——线性近似偏乐观，真实价值区间 1.5-2.4 万亿",
+        "source_level": "B（结构近似）",
+        "quality": "中——持仓公允价值为官方披露但私募估值可信度依赖第三方（WeWork $470 亿估值等），优先回报结构使价值分配非线性",
+        "caveat": "重仓 Uber（IPO 后破发中，2019-06-28 $42.73 vs IPO $45）、WeWork（未上市、估值泡沫争议初现）、Grab/Didi/Coupang/OYO 等；ARM 持仓的公允价值约 3.2 万亿（收购价量级）已含于 $72.3bn"
+      },
+      {
+        "name": "其他（鹰队、Brightstar、直接投资、Arm China 权益法等）",
+        "stake_pct": null,
+        "stake_note": "杂项",
+        "market_cap": null,
+        "market_cap_note": "无可直接引用市价",
+        "value": 0.5,
+        "value_note": "保守估计 0.5 万亿日元（鹰队职业棒球股权、Brightstar（萎缩中）、雅银/其他直接持股）——精度低",
+        "source_level": "D",
+        "quality": "低——量级估计"
+      }
+    ],
+    "gross_nav": 29.49,
+    "gross_nav_note": "11.02 + 12.48 + 2.38 + 0.71 + 2.40 + 0.5 = 29.49 万亿日元 ≈ $2,735 亿",
+    "net_debt": {
+      "sbg_standalone_net_debt": 6.2,
+      "note": "官方 NAV 口径：合并净债 11.83 万亿（总债 15,685,106 − 现金 3,858,518，百万日元）剔除 Sprint/雅日(含 Japan Net Bank)/ARM/VF/Delta 自身净债与其被排除的预付远期负债 730,601 后的 SBG 本体净债。精确拆分官方未逐项披露于 tanshin，6.2 万亿为中间估计（合并 11.83 − Sprint 净债约 3.5-4.0 − 9434/雅日/VF 合计约 1.5-2.0 − 预付远期 0.73）",
+      "alternative_treatment": "若用合并净债 11.83 万亿全额扣减（同时保留子公司 100% 价值而非按持股），会双重计入少数股东应担债务——错误做法，弃用"
+    },
+    "equity_nav": 23.3,
+    "equity_nav_note": "29.49 − 6.2 ≈ 23.3 万亿日元 ≈ $2,160 亿",
+    "nav_discount": {
+      "market_cap": 10.89,
+      "discount_pct": 53,
+      "note": "市值 10.89 万亿 vs equity NAV 23.3 万亿 → 折价约 53%。敏感性：仅把 Sprint 调为失败情景（−1.2 万亿）、VF 调为下界（−0.9 万亿）、净债上界（+0.5 万亿）→ NAV ≈ 20.7 万亿，折价仍有 47%。结论稳健：市场按深度 NAV 折价交易"
+    }
+  },
+  "unit_economics": {
+    "note": "不适用常规单位经济学——按分部现金流归属列示",
+    "segments": [
+      {
+        "segment": "SoftBank Corp（9434，66.49%）",
+        "revenue_fy2018": 3.75,
+        "oi_fy2018": 0.82,
+        "note": "国内电信：稳定现金牛（FY2018 营收 3.75 万亿、OI 8,241 亿、经营现金流约 1.4 万亿——年报口径），5G 投资与降价政治风险（2019 年日本移动资费政治辩论升温）"
+      },
+      {
+        "segment": "Sprint（84.4%）",
+        "revenue_fy2018": 3.35,
+        "oi_fy2018": -0.16,
+        "note": "美国第四大运营商：净债 $400 亿+、FY2018 经营亏损（合并前整合期），价值高度依赖与 T-Mobile 合并——2019-06-28 判决未出"
+      },
+      {
+        "segment": "雅日（43.4%→拟制 44.64%）",
+        "revenue_fy2018": 0.90,
+        "oi_fy2018": 0.09,
+        "note": "日本互联网门户+电商：稳定盈利，2019 年收购 ZOZO"
+      },
+      {
+        "segment": "Vision Fund / Delta（FVTPL）",
+        "revenue_fy2018": null,
+        "oi_fy2018": 1.92,
+        "note": "FY2018 段收益 1.92 万亿（重估主导）；组合 $72.3bn 公允价值 vs $60.1bn 成本"
+      },
+      {
+        "segment": "ARM（100%，已注入 VF）",
+        "revenue_fy2018": 0.17,
+        "oi_fy2018": 0.03,
+        "note": "IP 授权+版税模式，收入 ¥165,346M；2016 收购 £24.3bn；2020 年后才有 NVIDIA 出售/再 IPO 退出路径（回放日不可知）"
+      }
+    ]
+  },
+  "crosscheck": [
+    "市值口径闭环：东财 1,291.3 × 4 = 5,165（拆股后）× 2,107.667M 股 = 10.89 万亿 ✓ 与 SFTBY ADR 独立口径 $5.99×107.8×2=¥1,291 精确吻合",
+    "NAV 折价叙事互证：2019 年市场著名论断'软银市值低于其阿里持股价值'——阿里持仓 $1,158 亿 vs 市值 $1,010 亿 ✓ 成立（差约 13%）",
+    "2018 年底锚：东财 913.1×8 = ¥7,305 × 1,100.7M = 8.0 万亿 ✓ 与公开报道吻合",
+    "SOTP 折价 53% 与当时市场 NAV 折价讨论区间（50-60%）吻合；官方 2018 年报 CEO Message 的 NAV 计算口径（阿里=股数×市价、Sprint=T-Mobile 映射、VF=公允价值×表现分成比例）已作为本 SOTP 的方法论基础（该页为 2018-07 发布的 2018 年报内容，回放日前可见；FY2019 年报 2019-07 发布为 forbidden）"
+  ]
+}
