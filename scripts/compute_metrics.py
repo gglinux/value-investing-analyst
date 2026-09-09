@@ -51,7 +51,7 @@ import math
 import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from alert_codes import AlertBag  # 告警码注册表：唯一事实源
+from alert_codes import AlertBag, EXEMPTIONS  # 告警码/豁免注册表：唯一事实源
 
 DEFAULT_TAX = 0.25
 
@@ -483,6 +483,98 @@ def compute_normalization(series):
 FINANCIAL_TYPES = {"bank", "银行", "insurance", "保险", "broker", "券商",
                    "securities", "金融", "financial"}
 
+
+class ExemptionState:
+    """豁免判定结果容器：fire() 登记命中豁免，suppresses() 供告警点查询。
+
+    抑制必须留痕（合法性第 ④ 条）：每次 suppresses() 命中都记录
+    {code, by}，随 metrics 输出的 exemptions 块落盘——被豁免吞掉的
+    告警必须是可审计的，禁止静默消失。
+    """
+
+    def __init__(self):
+        self.fired = {}       # ex_id -> evidence（命中判据的字段值）
+        self.suppressed = []  # [{code, by}] 因豁免未进 alert_codes 的告警
+
+    def fire(self, ex_id, evidence):
+        self.fired[ex_id] = evidence
+
+    def suppresses(self, code):
+        for ex_id in self.fired:
+            if code in EXEMPTIONS[ex_id]["covers"]:
+                self.suppressed.append({"code": code, "by": ex_id})
+                return True
+        return False
+
+
+def _eval_reinvest_growth(rows, cum_ocf_v, cum_capex_v):
+    """EX_REINVEST_GROWTH 判据（声明见 alert_codes.EXEMPTIONS）。
+
+    三条件同时满足、缺一不豁免：OCF 全期无负值（造血真实存在）×
+    累计 capex ≥ 80% 累计 OCF（造血几乎全部再投入）× 收入增长中的
+    再投入（主动扩张而非收缩期赌博）。判据字段（ocf/capex/revenue）
+    与被豁免告警的触发字段（FCF/净利润覆盖）不同源——证据独立性
+    是豁免合法性的前提，同源判据等于循环重述。
+    """
+    _ocf_list = [get(r, "ocf") for r in rows]
+    ocf_clean = bool(_ocf_list) and not any(
+        v is not None and v <= 0 for v in _ocf_list) and any(
+        v is not None for v in _ocf_list)
+    ratio = (cum_capex_v / cum_ocf_v
+             if (cum_ocf_v and cum_ocf_v > 0 and cum_capex_v is not None)
+             else None)
+    rev_now = get(rows[-1], "revenue") if rows else None
+    rev_prev = get(rows[-2], "revenue") if len(rows) >= 2 else None
+    rev_3ago = get(rows[-4], "revenue") if len(rows) >= 4 else None
+    cagr3 = (cagr(rev_3ago, rev_now, 3)
+             if (rev_now and rev_3ago and rev_now > 0 and rev_3ago > 0)
+             else None)
+    fired = bool(
+        ocf_clean
+        and ratio is not None and ratio >= 0.8
+        and rev_now is not None and rev_prev is not None
+        and rev_now > rev_prev
+        and cagr3 is not None and cagr3 >= 0.10)
+    evidence = {
+        "ocf_all_positive": ocf_clean,
+        "cum_capex_over_cum_ocf": round(ratio, 4) if ratio is not None else None,
+        "latest_revenue_yoy_positive": (
+            rev_now > rev_prev
+            if (rev_now is not None and rev_prev is not None) else None),
+        "revenue_cagr_3y": round(cagr3, 4) if cagr3 is not None else None,
+    }
+    return fired, evidence
+
+
+_EXEMPTION_EVALUATORS = {
+    # 注册表条目 -> 判定函数。新增豁免时两处同步登记（表 + 求值器），
+    # 求值器缺失会在 evaluate_exemptions 里当场报错。
+    "EX_REINVEST_GROWTH": lambda ctx: _eval_reinvest_growth(
+        ctx["rows"], ctx["cum_ocf_v"], ctx["cum_capex_v"]),
+}
+
+
+def evaluate_exemptions(rows, cum_ocf_v, cum_capex_v):
+    """按注册表逐条评估豁免判据，返回 ExemptionState。
+
+    治理声明（covers/criteria/removal）在 alert_codes.EXEMPTIONS；
+    算术判据在这里。两边都以豁免 id 为键，求值器缺失即配置错误。
+    """
+    state = ExemptionState()
+    ctx = {"rows": rows, "cum_ocf_v": cum_ocf_v, "cum_capex_v": cum_capex_v}
+    for ex_id in EXEMPTIONS:
+        evaluator = _EXEMPTION_EVALUATORS.get(ex_id)
+        if evaluator is None:
+            raise KeyError(
+                f"豁免 `{ex_id}` 已在 alert_codes.EXEMPTIONS 声明但引擎侧"
+                f"缺求值器——判据与声明必须同步登记（compute_metrics."
+                f"_EXEMPTION_EVALUATORS）")
+        fired, evidence = evaluator(ctx)
+        if fired:
+            state.fire(ex_id, evidence)
+    return state
+
+
 def compute(data, market_cap=None):
     ctype = str(data.get("company_type", "")).strip().lower()
     if ctype in FINANCIAL_TYPES:
@@ -711,50 +803,18 @@ def compute(data, market_cap=None):
     # 自动警报（AlertBag 同时维护中文文本与稳定机器码）
     alerts = AlertBag()
 
-    # ---- 再投入型公司豁免（OBS-2016-12-01 / B2-09 Netflix 案）----
-    # 官方答案语义（B2-09 must_not_trigger，全部回测唯一带该约束的案例）：
-    # 订阅预收现+主动再投入的公司（Netflix 内容库型），OCF/FCF 为负是商业模式
-    # 特征而非烧钱恶化信号，烧钱告警族（M_DIVIDEND_ILLUSION / M_FCF_QUALITY /
-    # M_OWNER_YIELD_NOT_CASH_BACKED）在此类公司上属误触发——Netflix 实证：
-    # 9 年 OCF 全正（累计 18,684.9M）却因几乎全部再投入内容库（capex/OCF 103%）
-    # 三码齐触发；且 M_DIVIDEND_ILLUSION 在零分红公司上触发即语义误用
-    # （"分红幻觉"预设分红存在）。
-    # 豁免须三条**同时**满足，缺一不豁免：
-    #   ① OCF 序列无任何一年 ≤0（经营有真实造血；真烧钱如亏损年 OCF 为负则
-    #      不豁免。早年字段缺失按 None 跳过，但序列全空不豁免）；
-    #   ② 累计 capex ≥ 80% 累计 OCF（造血几乎全部再投入——"再投入型"的
-    #      必要条件；低再投入公司三码本就极少触发，不受影响）；
-    #   ③ rows ≥4 年、最新年收入同比为正且 3 年收入 CAGR ≥10%（**增长中的
-    #      再投入=主动扩张；收缩期的再投入=产能出清期的赌博**——鞍钢 2015
-    #      回放（底稿至 2014）最新年收入 −1.7% 连续三年下滑故不豁免，其三码
-    #      触发是正确的拒绝证据。防守面：负样本四案例断言重跑全绿为验收标准）。
-    # 豁免动作：三码不进 alert_codes（机器轨不触发，must_not_trigger 通过），
-    # 降级为 warnings 文本留存人工判读线索。已知代理误差：周期股扩张期年份
-    # （收入正增长+高 capex）可能被误豁免——留待真实案例检验；本门控只改
-    # 告警轨，不改闸门数学与档位判别，owner_yield.cash_backed/caveat 数字
-    # 事实标注保留。
-    _ocf_list = [get(r, "ocf") for r in rows]
-    _ex_ocf_clean = bool(_ocf_list) and not any(
-        v is not None and v <= 0 for v in _ocf_list) and any(
-        v is not None for v in _ocf_list)
-    _ex_ratio = (cum_capex_v / cum_ocf_v
-                 if (cum_ocf_v and cum_ocf_v > 0 and cum_capex_v is not None)
-                 else None)
-    _ex_rev_now = get(rows[-1], "revenue") if rows else None
-    _ex_rev_prev = get(rows[-2], "revenue") if len(rows) >= 2 else None
-    _ex_rev_3ago = get(rows[-4], "revenue") if len(rows) >= 4 else None
-    _ex_cagr3 = (cagr(_ex_rev_3ago, _ex_rev_now, 3)
-                 if (_ex_rev_now and _ex_rev_3ago and _ex_rev_now > 0
-                     and _ex_rev_3ago > 0) else None)
-    reinvest_growth_exempt = bool(
-        _ex_ocf_clean
-        and _ex_ratio is not None and _ex_ratio >= 0.8
-        and _ex_rev_now is not None and _ex_rev_prev is not None
-        and _ex_rev_now > _ex_rev_prev
-        and _ex_cagr3 is not None and _ex_cagr3 >= 0.10)
-    if reinvest_growth_exempt:
+    # ---- 告警豁免（注册表驱动；声明=alert_codes.EXEMPTIONS，判据=evaluate_exemptions）----
+    # 命中豁免的告警不进 alert_codes（机器轨不触发），降级 warnings 留痕；
+    # 数字事实标注（owner_yield.cash_backed/caveat）保留不动，本豁免不改
+    # 闸门数学与档位判别。已知代理误差：周期股扩张期年份可能被误豁免——
+    # 移除条件见注册表 removal 字段。
+    exemptions = evaluate_exemptions(rows, cum_ocf_v, cum_capex_v)
+    if exemptions.fired:
+        _ev = next(iter(exemptions.fired.values()))
+        _ex_ratio = _ev["cum_capex_over_cum_ocf"]
+        _ex_cagr3 = _ev["revenue_cagr_3y"]
         warnings.append(
-            f"再投入型公司豁免（OBS-2016-12-01）：经营现金流全期无负值、累计资本开支/"
+            f"再投入型公司豁免（EX_REINVEST_GROWTH）：经营现金流全期无负值、累计资本开支/"
             f"累计经营现金流 {_ex_ratio:.0%}（造血几乎全部主动再投入）、最新年收入同比正增长"
             f"且 3 年 CAGR {_ex_cagr3:.1%} ≥10%——增长中的再投入属主动扩张特征，"
             "烧钱告警族（分红幻觉/利润含金量/所有者收益率不可落袋）不作为告警触发，"
@@ -769,10 +829,21 @@ def compute(data, market_cap=None):
         alerts.add("M_SHARE_INFLATION", f"股本膨胀警报：期间股本增至 {scc:.2f} 倍")
 
     # 分红幻觉警报（v2.12，所有者视角核心）：股东回报未被自由现金流覆盖
+    # 存在性前置：分红幻觉预设分红存在。底稿确认零分红（cum_dividends ≤ 0，
+    # 区别于缺失=None）时该告警语义不适用——股东回报未被覆盖的事实仍在
+    # （回购口径），由 M_OWNER_YIELD_NOT_CASH_BACKED（给了市值时）与下方
+    # warning 留痕覆盖；分红数据缺失时不禁声（缺失≠零，按原逻辑触发）。
     cov = alloc.get("fcf_cover_shareholder_return")
     if cov is not None and cov < 1.0:
-        if reinvest_growth_exempt:
-            pass  # 再投入型豁免（OBS-2016-12-01）：统一 warning 已在豁免判定块留痕
+        _cum_div = alloc.get("cum_dividends")
+        if _cum_div is not None and _cum_div <= 0:
+            warnings.append(
+                f"分红幻觉告警前提不成立：底稿确认全期零分红，该告警预设分红存在。"
+                f"累计股东回报（回购为主）未被累计自由现金流覆盖（{cov:.2f}x）"
+                "的事实仍然成立——回报的资金可持续性由人工按融资结构与现金流量表"
+                "判读，不由本告警代言")
+        elif exemptions.suppresses("M_DIVIDEND_ILLUSION"):
+            pass  # 再投入型豁免：统一 warning 已在豁免判定块留痕
         else:
             _fcf = alloc.get("cum_fcf")
             _ret = alloc.get("cum_shareholder_return")
@@ -796,7 +867,7 @@ def compute(data, market_cap=None):
             "请从现金流量表『分配股利、利润或偿付利息支付的现金』与"
             "『购买子公司少数股权/回购股份』补齐")
     bad_fcf_years = [s["year"] for s in series[-5:] if s["fcf_to_ni"] is not None and s["fcf_to_ni"] < 0.6]
-    if len(bad_fcf_years) >= 3 and not reinvest_growth_exempt:
+    if len(bad_fcf_years) >= 3 and not exemptions.suppresses("M_FCF_QUALITY"):
         alerts.add("M_FCF_QUALITY", f"利润含金量警报：近5年中 {bad_fcf_years} 年 FCF/净利润 < 0.6")
     low_roiic = [s["year"] for s in series if s["roiic_3y"] is not None and s["roiic_3y"] < 0.08]
     if low_roiic and low_roiic[-1] == last["year"]:
@@ -925,9 +996,9 @@ def compute(data, market_cap=None):
                 f"所有者收益率不可落袋：累计自由现金流对股东回报覆盖仅 {cov_:.2f}x"
                 f"（<1.0），Owner Earnings 未转化为可分配现金，"
                 f"该收益率与回本年数仅为账面推算，禁止据此判断低估")
-            # 再投入型豁免（OBS-2016-12-01）：caveat 数字事实标注保留，
-            # 告警码不触发（统一 warning 已在豁免判定块留痕）
-            if not reinvest_growth_exempt:
+            # 再投入型豁免：caveat 数字事实标注保留，告警码不触发
+            # （统一 warning 已在豁免判定块留痕）
+            if not exemptions.suppresses("M_OWNER_YIELD_NOT_CASH_BACKED"):
                 alerts.add(
                     "M_OWNER_YIELD_NOT_CASH_BACKED",
                     f"所有者收益率含金量警报：OE 收益率 {oy:.1%}（回本 "
@@ -977,6 +1048,10 @@ def compute(data, market_cap=None):
         "alerts": alerts.messages,
         "alert_codes": alerts.codes,
         "alerts_structured": alerts.structured,
+        "exemptions": {
+            "fired": exemptions.fired,
+            "suppressed": exemptions.suppressed,
+        },
         "warnings": sorted(set(warnings)),
     }
 

@@ -1717,6 +1717,71 @@ check("alerts 与 alert_codes 等长",
 check("所有产出代号均已注册", not AC.unknown_codes(_r["alert_codes"]),
       str(AC.unknown_codes(_r["alert_codes"])))
 
+# ---- 豁免注册表（语境层）：治理声明在注册表、算术判据在引擎、抑制必须留痕 ----
+check("豁免注册表 covers 全部已注册", not AC.validate_exemptions(),
+      str(AC.validate_exemptions()))
+check("豁免求值器与注册表条目同步",
+      set(cm._EXEMPTION_EVALUATORS) == set(AC.EXEMPTIONS),
+      f"{sorted(cm._EXEMPTION_EVALUATORS)} vs {sorted(AC.EXEMPTIONS)}")
+check("EX_REINVEST_GROWTH 只覆盖烧钱告警族三码",
+      set(AC.EXEMPTIONS["EX_REINVEST_GROWTH"]["covers"]) ==
+      {"M_DIVIDEND_ILLUSION", "M_FCF_QUALITY", "M_OWNER_YIELD_NOT_CASH_BACKED"},
+      str(AC.EXEMPTIONS["EX_REINVEST_GROWTH"]["covers"]))
+check("稀释告警不在任何豁免语境（豁免面禁止外溢）",
+      AC.exemption_covers("M_DILUTION") == [])
+
+
+def _ex_rows(div, growth=1.15, capex_ratio=0.9, buyback=5.0):
+    rows = mk_rows([0.15] * 11, growth=growth, capex_ratio=capex_ratio)
+    for r in rows:
+        r["dividends_paid"] = div
+        r["buyback"] = buyback
+    return rows
+
+
+# 命中豁免：三码不进 alert_codes，exemptions 块留证据与被抑制清单
+_r_ex = cm.compute(base(_ex_rows(2.0)), market_cap=10000.0)
+check("再投入豁免命中：M_FCF_QUALITY 不触发",
+      "M_FCF_QUALITY" not in _r_ex["alert_codes"])
+check("再投入豁免命中：M_OWNER_YIELD_NOT_CASH_BACKED 不触发",
+      "M_OWNER_YIELD_NOT_CASH_BACKED" not in _r_ex["alert_codes"]
+      and any(s["code"] == "M_OWNER_YIELD_NOT_CASH_BACKED"
+              for s in _r_ex["exemptions"]["suppressed"]))
+check("豁免证据落盘（exemptions.fired 带判据字段值）",
+      _r_ex["exemptions"]["fired"].get("EX_REINVEST_GROWTH", {})
+      .get("ocf_all_positive") is True)
+check("低分红非零公司经豁免抑制 M_DIVIDEND_ILLUSION（路径保持）",
+      "M_DIVIDEND_ILLUSION" not in _r_ex["alert_codes"]
+      and any(s["code"] == "M_DIVIDEND_ILLUSION" and s["by"] == "EX_REINVEST_GROWTH"
+              for s in _r_ex["exemptions"]["suppressed"]))
+
+# 存在性前置：确认零分红（cum_dividends ≤ 0，区别于缺失）→ 前提不成立，
+# 走前置路径而非豁免路径
+_r_zero = cm.compute(base(_ex_rows(0.0)))
+check("零分红前置：M_DIVIDEND_ILLUSION 跳过",
+      "M_DIVIDEND_ILLUSION" not in _r_zero["alert_codes"])
+check("零分红前置留痕（前提不成立 warning）",
+      any("前提不成立" in w for w in _r_zero["warnings"]))
+check("零分红走前置路径而非豁免路径（不进 suppressed 清单）",
+      not any(s["code"] == "M_DIVIDEND_ILLUSION"
+              for s in _r_zero["exemptions"]["suppressed"]))
+
+# 负控制：收入下滑的再投入不豁免（收缩期再投入≠主动扩张）→ 三码照常触发
+_r_dec = cm.compute(base(_ex_rows(2.0, growth=0.95)))
+check("收入下滑：M_DIVIDEND_ILLUSION 照常触发",
+      "M_DIVIDEND_ILLUSION" in _r_dec["alert_codes"])
+check("收入下滑：M_FCF_QUALITY 照常触发",
+      "M_FCF_QUALITY" in _r_dec["alert_codes"])
+check("收入下滑：豁免未命中", not _r_dec["exemptions"]["fired"])
+
+# 缺失≠零：分红数据缺失且不满足豁免时不禁声（缺失不禁声纪律）
+_rows_miss = mk_rows([0.15] * 11, growth=0.95, capex_ratio=0.9)
+for r in _rows_miss:
+    r["buyback"] = 5.0
+_r_miss = cm.compute(base(_rows_miss))
+check("分红缺失≠零：告警照常触发",
+      "M_DIVIDEND_ILLUSION" in _r_miss["alert_codes"])
+
 # 断言 runner 端到端：第一批六案例应为 5 全绿 + 1 已知失败（茅台），0 回归
 _rr = subprocess.run([sys.executable, os.path.join(SCRIPTS, "run_backtest_assertions.py"),
                       "--batch", "1"], capture_output=True, text=True, cwd=ROOT)
