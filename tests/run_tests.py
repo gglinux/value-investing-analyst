@@ -2019,6 +2019,7 @@ _EXEMPT = {
     "alert_codes.py": "被 5 个脚本 import 的共享模块，不由 agent 直接调用",
     "run_backtest_assertions.py": "回放测试资产，属 backtest/ 协议而非分析主流程",
     "install-hooks.sh": "仓库开发工具（git hooks 安装），非分析流程",
+    "prepare_case.py": "回放隔离协议资产（答案密封/揭示闸门），由回测会话在 Step 4 调用，非分析主流程",
 }
 _scripts = sorted(f for f in os.listdir(SCRIPTS)
                   if f.endswith((".py", ".sh")) and not f.startswith("_"))
@@ -2067,8 +2068,17 @@ if os.path.exists(_ANSWERS_FP):
     _ANS = open(_ANSWERS_FP, encoding="utf-8").read()
     _RUNNER_SRC = open(os.path.join(SCRIPTS, "run_backtest_assertions.py"),
                        encoding="utf-8").read()
-    check("ANSWERS.md 保有四批答案",
-          all(b in _ANS for b in ("**第一批**", "**第二批**", "**第三批**")) and "第四批" in _ANS)
+    check("ANSWERS.md 保有已执行批次（一/二批）答案",
+          all(b in _ANS for b in ("**第一批**", "**第二批**")))
+    # 2026-09-09 起：未执行批次（三/四批）答案从 ANSWERS.md 密封迁出（B 档文件闸门，
+    # scripts/prepare_case.py --seal），明文不得回流。
+    _SEALED = os.path.join(ROOT, "backtest", "sealed_answers")
+    _enc = sorted(f for f in os.listdir(_SEALED) if f.endswith(".enc")) if os.path.isdir(_SEALED) else []
+    check("密封库保有第三/四批全部 12 案", len(_enc) == 12,
+          f"密封文件 {len(_enc)} 个：{_enc}")
+    check("ANSWERS.md 无未执行批次明文残留（三/四批已密封）",
+          ("**第三批**" not in _ANS or "已密封" in _ANS) and "**第四批" not in _ANS.replace(
+              "**第四批（假阳性专项", ""), "")
     check("PROMPT 已写入第四批假阳性专项",
           "第四批" in _PROMPT and "假阳性专项" in _PROMPT)
     check("PROMPT 已写入三条计分轨",
