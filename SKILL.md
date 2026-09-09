@@ -74,6 +74,7 @@ description: 价值投资深度公司分析。输入一家上市公司（A股/�
 
 1. 判定商业模式类型，按 [references/metric-playbook.md](references/metric-playbook.md) 选定该类型的关键指标集。
 2. **统一口径计算（强制）**：将底稿整理成 `scripts/compute_metrics.py` 要求的标准 JSON（格式见脚本头注释），运行 `python3 scripts/compute_metrics.py data/financials_<公司>.json -o data/metrics_<公司>.json`，A 公司与每家竞对各跑一次。ROIC/ROIIC/Owner Earnings/每股口径/FCF 含金量等指标**只能取自脚本输出**，禁止对话中心算；脚本输出的 alerts（稀释/含金量/增长质量警报）必须逐条回应，写入定量画像小结。
+2.5. **估值语言判型（强制，披露级）**：按 [references/company-types.md](references/company-types.md) 的优先级表与算术判据，从 metrics 输出判定主型 + 全部适用标签 + 逐条判型依据，写入报告首屏决策卡（`valuation_type` 结构见该文件）。判型只挂字段值，禁止凭叙事判型；落在两卡边界时输出双通道敏感性带，不硬猜。商业模式类型（步骤 1）与估值语言主型**并置披露，互不替代**。
 3. **生意驱动因子落盘（强制，先于图表）**：收入是**会计结果**，不是生意本身——所有者看的是"卖了多少个 × 每个赚多少"。按类型把量与价（出货量/ASP、MAU/ARPU、门店数/单店收入…）连来源落盘 `data/business_drivers_<公司>.json`，跑 `python3 scripts/check_business_drivers.py data/business_drivers_<公司>.json --metrics data/metrics_<公司>.json`（做量×价≈收入勾稽，金融类自动跳过），**错误清零才进下一步**。收入增速必须能拆成量增与价增——靠涨价、靠铺货、靠开店，可持续性与所需资本完全不同。口径与实证背景见 [metric-playbook.md](references/metric-playbook.md) 生意视角第零问。
 4. 计算并整理标准图表数据（vs 竞对）：
    - 收入/归母净利润 10 年趋势（含增速）
