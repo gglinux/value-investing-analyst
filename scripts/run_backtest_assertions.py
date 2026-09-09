@@ -25,6 +25,8 @@
     python3 scripts/run_backtest_assertions.py --case EK_2011-06-30
     python3 scripts/run_backtest_assertions.py --rerun        # 附带引擎漂移检测
     python3 scripts/run_backtest_assertions.py --baseline b.json --rerun   # 与基线比对
+    python3 scripts/run_backtest_assertions.py --lint-verdict <case>/verdict.json
+        # Step 3 落盘体检：codes 注册表/provenance/必填字段/档位自洽（无需 answer.json）
 
 退出码：0 全部通过；1 有断言失败或漂移。
 """
@@ -122,7 +124,7 @@ def rerun_engine(case):
     return sorted(set(codes)), notes
 
 
-def _classify_failures(res, answer):
+def _classify_failures(res, answer, do_rerun=False):
     """已知失败 vs 新增回归 归桶。
 
     提前 return 的路径（如 answer 含未注册断言）也必须走这步——否则失败
@@ -141,7 +143,25 @@ def _classify_failures(res, answer):
         (res["known"] if _kind(f) in known_kinds else res["regressions"]).append(f)
     res["stale_known"] = sorted(
         k for k in known_kinds
-        if not any(k == _kind(f) for f in res["failures"]))
+        if not any(k == _kind(f) for f in res["failures"])
+        # engine_drift 只在 --rerun 模式产生失败；非 rerun 模式下登记着它
+        # 不算过期，否则会诱导误删登记、下次 rerun 变红。
+        and (k != "engine_drift" or do_rerun))
+
+
+REQUIRED_DELIVERABLES = ["meta.json", "verdict.json", "answer.json", "diff.md"]
+
+
+def check_deliverables(case, res):
+    """PROMPT 第十节交付物完整性。双汇 B2-12 缺 report.html 跑完全流程未被
+    发现——此类缺口必须由机器拦截而非事后审查。"""
+    d = case["dir"]
+    missing = [f for f in REQUIRED_DELIVERABLES
+               if not os.path.exists(os.path.join(d, f))]
+    if not glob.glob(os.path.join(d, "*.html")):
+        missing.append("report.html（Step 2 标准 HTML 报告）")
+    if missing:
+        res["failures"].append(f"交付物缺失：{missing}")
 
 
 def check_case(case, do_rerun=False):
@@ -149,6 +169,8 @@ def check_case(case, do_rerun=False):
     fired = set(v.get("codes") or [])
     res = {"name": case["name"], "fired": sorted(fired), "failures": [], "notes": [],
            "known": [], "regressions": []}
+
+    check_deliverables(case, res)
 
     bad = unknown_codes(fired)
     if bad:
@@ -159,7 +181,7 @@ def check_case(case, do_rerun=False):
     if bad:
         res["failures"].append(f"answer 含未注册断言 {bad}")
         res["verdict_track"] = "未执行（answer 含未注册断言）"
-        _classify_failures(res, a)
+        _classify_failures(res, a, do_rerun)
         return res
 
     # ---- 排雷/告警轨 ----
@@ -219,7 +241,15 @@ def check_case(case, do_rerun=False):
     # ---- 引擎漂移检测 ----
     if do_rerun:
         actual, notes = rerun_engine(case)
-        recorded = sorted(set((v.get("codes_provenance") or {}).get("engine_derived") or []))
+        prov = v.get("codes_provenance") or {}
+        recorded = sorted(set(prov.get("engine_derived") or []))
+        if not prov.get("engine_derived"):
+            # 神华 B2-07 教训：verdict 缺 codes_provenance 时 recorded 为空，
+            # 全部重跑代号都被误报为「新增」。回退到 codes 全量比对并降级提示。
+            recorded = sorted(set(v.get("codes") or []))
+            res["notes"].append(
+                "verdict 缺 codes_provenance.engine_derived：漂移比对回退到 codes 全量"
+                "（Step 3 schema 不合规，未来案例由 --lint-verdict 在落盘时拦截）")
         res["notes"] += notes
         added = sorted(set(actual) - set(recorded))
         removed = sorted(set(recorded) - set(actual))
@@ -227,13 +257,21 @@ def check_case(case, do_rerun=False):
         if added or removed:
             res["failures"].append(f"引擎代号漂移：新增 {added} / 消失 {removed}")
 
+    # ---- answer schema 咨询性检查（不阻塞：字段名规范化）----
+    # 第二批出现 actual_5y_total_return（模板字段）与 actual_5y_price_total_return
+    # （自定字段）并存——事后回报是元问题 1/2 的统计输入，缺位时提示。
+    if a.get("actual_5y_total_return") is None and a.get("actual_5y_price_total_return") is None:
+        res["notes"].append(
+            "answer 缺 actual_5y_total_return/actual_5y_price_total_return"
+            "（事后回报是元问题统计输入，建议按模板字段补齐）")
+
     # ---- 已知失败 vs 新增回归 ----
     # 茅台档位轨未命中是第一批**记录在案**的真实假阴性（`backtest/REPORT.md` 元问题 3）。
     # 若把它一并算作红灯，本脚本就永远是红的、无法当回归门禁用。故 answer.json 可登记
     # `known_failures`（kind 短名：verdict_track / must_trigger / must_not_trigger /
     # engine_drift / other），只有**未登记**的失败才算回归。这不是掩盖问题——已知失败在
     # 输出中单独列示，且一旦被修好（失败消失）会提示更新登记。
-    _classify_failures(res, a)
+    _classify_failures(res, a, do_rerun)
 
     # 假阳性绕过 known_failures 豁免：无论是否登记，一律计入 regressions（红灯）。
     # 这是刻意的不对称——错买不可逆，不允许用"已知"把它变成不阻塞。
@@ -244,14 +282,62 @@ def check_case(case, do_rerun=False):
     return res
 
 
+def lint_verdict(path):
+    """Step 3 落盘体检——answer.json 尚不存在时，单验 verdict.json。
+
+    第二批两个教训都来自「Step 3 没有机器校验、Step 4 才被 runner 看到」：
+    - Zoom B2-11 落盘时杜撰了 NORM_ADJ_MEAN_REJECTED 等未注册代号（断言 ID
+      铁律违反，靠事后 fix commit 撤出）；
+    - 神华 B2-07 缺 codes_provenance（漂移检测失去比对基准）；
+    - Zoom/Netflix 的 final_verdict 与 verdict_ordinal 文案自相矛盾
+      （「观察等价格(档位1)」）。
+    """
+    v = json.load(open(path, encoding="utf-8"))
+    problems = []
+    fired = set(v.get("codes") or [])
+    bad = unknown_codes(fired)
+    if bad:
+        problems.append(f"codes 含未注册代号 {sorted(bad)}——断言 ID 铁律：禁止杜撰，"
+                        "无注册表等价物的裁决语义移入 codes_note 留痕")
+    for k in ("final_verdict", "verdict_ordinal", "gate1", "gate2",
+              "codes", "frozen_before_diff", "frozen_at"):
+        if v.get(k) is None:
+            problems.append(f"缺必填字段 {k}")
+    prov = v.get("codes_provenance") or {}
+    eng, man = set(prov.get("engine_derived") or []), set(prov.get("manually_recorded") or [])
+    if not eng and not man:
+        problems.append("缺 codes_provenance（engine_derived/manually_recorded 区分是"
+                        "漂移检测的比对基准，缺失时 rerun 比对回退到 codes 全量并降级）")
+    elif fired and (eng | man) != fired:
+        problems.append(f"codes_provenance 两类之并 ≠ codes 全集："
+                        f"多出 {sorted((eng | man) - fired)} / 缺 {sorted(fired - (eng | man))}")
+    ov = ORDINAL_TO_VERDICT.get(v.get("verdict_ordinal"))
+    fv = v.get("final_verdict") or ""
+    if ov and ov not in fv:
+        problems.append(f"final_verdict『{fv}』与 verdict_ordinal={v.get('verdict_ordinal')}"
+                        f"（{ov}）不自洽——复合表述也应包含档位词，如『拒绝（观察等价格）』")
+    if problems:
+        print(f"❌ {path} 落盘体检未通过：")
+        for p in problems:
+            print(f"   - {p}")
+        return 1
+    print(f"✅ {path} 落盘体检通过（codes 注册表/provenance/必填字段/档位自洽）")
+    return 0
+
+
 def main():
     ap = argparse.ArgumentParser(description="回放断言一键重跑")
     ap.add_argument("--batch", type=int, help="只跑指定批次（读 meta.json 的 batch）")
     ap.add_argument("--case", help="只跑指定案例目录名")
     ap.add_argument("--rerun", action="store_true", help="附带重跑引擎做漂移检测")
     ap.add_argument("--baseline", help="基线 JSON 路径：存在则比对，不存在则写入")
+    ap.add_argument("--lint-verdict", metavar="VERDICT_JSON",
+                    help="Step 3 落盘体检：只验 verdict.json（answer.json 尚不存在时用）")
     ap.add_argument("-o", "--output", help="结果 JSON 输出路径")
     args = ap.parse_args()
+
+    if args.lint_verdict:
+        sys.exit(lint_verdict(args.lint_verdict))
 
     cases = []
     for d in sorted(glob.glob(os.path.join(BACKTEST, "*") + os.sep)):

@@ -11,8 +11,10 @@
   "must_not_trigger_note": "『烧钱型现金流告警』映射为引擎告警族三项：M_DIVIDEND_ILLUSION（股东回报未被累计 FCF 覆盖）、M_FCF_QUALITY（近 5 年 ≥3 年 FCF/净利<0.6）、M_OWNER_YIELD_NOT_CASH_BACKED（OE 收益率不可落袋）。官方语义：订阅预收现+主动内容再投入的公司，OCF/FCF 为负是商业模式特征而非烧钱恶化信号，这三类告警在此类公司上属误触发。实际结果：三项全部触发（引擎输出 alert_codes 含全部三项）——must_not_trigger 约束被违反",
   "known_failures": [
     "verdict_track",
-    "must_not_trigger"
+    "must_not_trigger",
+    "engine_drift"
   ],
+  "engine_drift_note": "两段构成，均非引擎回归：①M_DIVIDEND_ILLUSION/M_FCF_QUALITY/M_OWNER_YIELD_NOT_CASH_BACKED 消失——再投入型豁免（OBS-2016-12-01 改码）的**设计内效果**，引擎修复后不再误触发，冻结 verdict 保留历史快照；②GATE1_FAIL/GATE2_*/M_UNIT_SUSPECT 消失——reverse_dcf/mos_calc 不在 rerun 路径且 market_cap 未传参（rerun 机制既有参数缺陷，a193835 改动前后 drift 对照已确认非该次引入）。移除条件：P2-8 RERUN_PARAMS 扩展（含 market_cap）落地后重跑并删除本登记。",
   "known_failures_note": "双轨皆未命中。档位轨缺口 2 档：管线纯 OE 框架下 131x OE 的静态倍数不可能通过任何买入档位；官方期望的『小仓位试探或以上』需要框架具备『远期规模化 OE/收入驱动/单元经济外推』的成长股通道——管线缺此通道。告警轨：官方明确要求烧钱告警在此类公司上不触发，引擎却在零分红公司上触发了分红幻觉（M_DIVIDEND_ILLUSION 的语义是『高股息不可持续』，对股息率 0% 的公司触发即语义误用）——告警的公司类型门控缺失",
   "actual_3y_total_return": 1.6134,
   "actual_5y_total_return": 3.8664,

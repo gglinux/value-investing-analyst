@@ -8,6 +8,7 @@
   "discount_rate": 0.1,
   "hold_years": 5,
   "dividend_yield": 0.0203,
+  "dividend_yield_basis": "annual_plan",
   "dividend_yield_note": "2014年度分配10转1派43.74元已于2015年年中实施：现金分红总额49.94亿(1141.998百万股×4.374元)→/回放日市值2454.23亿=2.03%",
   "intrinsic_value_growth": 0.06,
   "iv_growth_evidence": "茅台出厂价2000-2012年195→819元CAGR约12%+量增约束(2015H1基酒产量24,487吨,年化约4.9万吨水平,2014年报口径产能),长期提价权+产能储备下保守取6%[E:financials_MAOTAI_2015H1.json]",

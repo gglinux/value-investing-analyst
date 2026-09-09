@@ -10,6 +10,7 @@
   "discount_rate_note": "10Y 国债 2.84% 三源 [E:data/manifest.json] + 高周期波动/高杠杆风险溢价，且与两段式 DCF 内部一致",
   "hold_years": 5,
   "dividend_yield": 0.0,
+  "dividend_yield_basis": "annual_plan",
   "dividend_yield_note": "2011-2020 十个分红年度全部为零；2020 年度不分配 [E:filings/zhyk_AR2020.txt:1473]",
   "intrinsic_value_growth": 0.0,
   "iv_growth_evidence_note": "正常化基期下内在价值增速取 0：量增长期靠并购（稀释对冲）、价增长即周期波动无趋势——S7b 不适用（值为零），下限=股息率 0% + 0%",

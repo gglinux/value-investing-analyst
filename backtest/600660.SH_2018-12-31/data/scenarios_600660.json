@@ -10,6 +10,7 @@
   "discount_rate_note": "折现率下限纪律：max(10%, 10Y国债+4pct)——10Y 国债 3.23%（2018-12-28）[E:data/manifest.json cn_10y] + 4pct = 7.23%，低利率环境下限仍为 10%，故取 10.0%；不再额外上调原因：强护城河+财务质量优（十年 OCF/NI 141%）对冲车市下行周期+债务短期化+72 岁交接班风险，取下限而非中高位",
   "hold_years": 5,
   "dividend_yield": 0.033,
+  "dividend_yield_basis": "annual_plan",
   "dividend_yield_note": "2017 年度分红 18.81 亿（每股 0.75 元，2018-06 已实施）/市值 566.3 亿 = 3.32%；分红率 60%（18.81/31.49），十年分红率 66.4%——分红有 OCF 支撑（十年 OCF/NI 141%），但引擎分红幻觉警报（FCF 覆盖 0.58x）要求在报告中区分『OCF 撑起的分红』与『FCF 撑起的分红』，扩张期资本开支是覆盖缺口主因",
   "intrinsic_value_growth": 0.025,
   "base_oe": {

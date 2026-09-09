@@ -10,6 +10,7 @@
   "discount_rate_note": "纪律下限 max(10%, 10Y UST 1.56%+4pct=5.56%)=10%。增长不确定性与侵蚀压力支持更高折现率，取 10% 下限已属对成长股宽容 [E:market_snapshot_ZM_2021.json]",
   "hold_years": 5,
   "dividend_yield": 0.0,
+  "dividend_yield_basis": "annual_plan",
   "dividend_yield_source": "零分红（2021 年 4 月董事会授权 10 亿美元回购计划但从未执行且从未分红；高增长期不分红是正确纪律）[E:financials_ZM_2021.json]",
   "intrinsic_value_growth": 0.0,
   "iv_growth_evidence": "取 0：基准 DCF 永续段 OE 增速 2.5%（fade 终点），但每股口径须再扣 SBC 稀释——FY2021 SBC 275.8M 占收入 10.4%、稀释股本半年 +2.5%（298.1→305.7M），稳态下 SBC 激励结构不会消失，年化稀释 ~2-3% 恰好吃掉 2.5% 的永续 OE 增速。每股内在价值长期增速 ≈ 0，与 normalization ADJ2'SBC 是真实成本'的主锚裁决一致。注意：iv_growth=0 + 股息率 0 → 不收敛下限 0%，远低于 floor hurdle 5%，闸门二该子项直接不过 [E:normalization_ZM_2021.json][E:financials_ZM_2021.json]",

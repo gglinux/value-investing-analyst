@@ -10,6 +10,7 @@
  "discount_rate_discipline": "r = max(10%, US 10Y 3.18% + 4pct) = max(10%, 7.18%) = 10%，合规（Fed H.15 2011-06-30 官方值，manifest 登记）",
  "hold_years": 5,
  "dividend_yield": 0.0,
+ "dividend_yield_basis": "annual_plan",
  "dividend_yield_frac": 0.0,
  "dividend_note": "2008 年起停付股息（FY2007 每股 0.50 → 0），TTM DY=0——不收敛下限加数为零是本案结构性事实（非口径选择）",
  "intrinsic_value_growth": -0.055,
