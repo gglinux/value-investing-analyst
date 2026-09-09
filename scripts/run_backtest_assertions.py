@@ -265,6 +265,18 @@ def check_case(case, do_rerun=False):
             "answer 缺 actual_5y_total_return/actual_5y_price_total_return"
             "（事后回报是元问题统计输入，建议按模板字段补齐）")
 
+    # ---- price_basis 口径声明咨询性检查（P0-2，data-sources.md 复权口径纪律）----
+    # 含事后回报数值的 answer 必须声明收益计算口径（等比后复权渠道+抓取日期），
+    # 否则回报断言不可事后审计（第一批茅台/福耀先例：口径未声明导致不可精确复现）。
+    has_return_value = any(
+        a.get(k) is not None for k in
+        ("actual_5y_total_return", "actual_3y_total_return",
+         "actual_5y_price_total_return", "actual_3y_price_total_return"))
+    if has_return_value and not a.get("price_basis"):
+        res["notes"].append(
+            "answer 含事后回报数值但缺 price_basis 口径声明"
+            "（收益计算唯一合法口径=等比后复权，见 data-sources.md 复权口径纪律）")
+
     # ---- 已知失败 vs 新增回归 ----
     # 茅台档位轨未命中是第一批**记录在案**的真实假阴性（`backtest/REPORT.md` 元问题 3）。
     # 若把它一并算作红灯，本脚本就永远是红的、无法当回归门禁用。故 answer.json 可登记

@@ -310,6 +310,32 @@ def compute_normalization(series):
     # 形状检验（v2.14）：水平比较之外的第二维，区分单向漂移与均值回复
     trend = compute_margin_trend(net_margins, avg_nm)
 
+    # 统计中性 vs 驱动位置的分叉检测（P1-7，v2.17 提示级——非告警码，不进漂移比对）：
+    # 序列窄幅 + 最新值处序列高位时，水平比值（最新/均值）落在"中性区间"，均值化
+    # 看似成立；但最新值的高位可能由可识别成本/价格驱动因子解释（双汇 2019：冻肉
+    # 红利把基期净利率顶到序列高位 10.70%，序列 8.5-10% 窄幅让统计检验失明，靠
+    # 执行者人工判型走 hybrid 轨下修 9.7% 才正确）。此提示把那次成功的人工裁决
+    # 机器化：命中算术条件即要求归因驱动因子、检查 hybrid/分位锚，禁止只凭
+    # "中性"结论按统计均值外推基期。
+    pos_hint = None
+    if net_margins and cur_nm is not None and cyc == "中性区间":
+        anchor = med_nm if med_nm not in (None, 0) else avg_nm
+        band = (safe_div(max(net_margins) - min(net_margins), abs(anchor))
+                if anchor not in (None, 0) else None)
+        sm = sorted(net_margins)
+        q3 = sm[int(round(0.75 * (len(sm) - 1)))]
+        if band is not None and band <= 0.30 and cur_nm >= q3:
+            pos_hint = {
+                "margin_band_relative": round(band, 4),
+                "latest_net_margin": cur_nm,
+                "series_q3": q3,
+                "trigger": "序列窄幅(≤30%) + 最新净利率≥序列75分位 + 水平判定中性区间",
+                "note": ("统计中性可能掩盖驱动位置失真：最新净利率处序列高位且序列窄幅，"
+                         "若存在可识别的成本/价格驱动因子解释该高位（如冻肉红利、一次性"
+                         "成本红利），基期不得按统计均值外推——检查 hybrid 轨/分位锚/"
+                         "驱动因子归因（双汇 2019 先例，OBS-000895）"),
+            }
+
     shares = latest.get("shares_diluted")
     out = {
         "status": "ok",
@@ -329,6 +355,7 @@ def compute_normalization(series):
         "oe_mid_cycle": med_oem * rev_latest if med_oem is not None else None,
         "shares_diluted": shares,
         "margin_trend": trend,
+        "position_distortion_hint": pos_hint,
         "mean_distortion": {
             "distorted": mean_distorted,
             "years": distortion_years,

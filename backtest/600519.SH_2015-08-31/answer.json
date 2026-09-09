@@ -12,6 +12,13 @@
   ],
   "actual_5y_total_return": 8.062,
   "actual_3y_total_return": 2.375,
+  "price_basis": {
+    "retro_check": "2026-09-09 事后核对补录（原批次无此字段，记录值未改动）",
+    "replay_close_basis": "不复权（腾讯 ifzq 日K，2015-08-31 收盘 195.37 元，触及检验口径正确）",
+    "return_recomputation": "等比后复权（腾讯 hfq 月K，与东财 fqt=2 交叉验证渠道）按回放日锚重算：5y(2015-08-31→2020-08-31)=8.552x，3y(2018-08-31→2020-08-31)=2.642x",
+    "recorded_value_note": "记录值 8.062/2.375 无法用标准口径复现，系统性偏低 0.8%~11%；锚定扫描显示与回放日前一个月末起点（2015-07-31/2018-07-31，重算 8.125x/2.412x）一致（差<1.5%），疑取数窗口月末对齐缺陷，非复权方法错误",
+    "conclusion": "档位结论不翻：8.55x 与 8.06x 同为约8倍量级，假阴性判定不变"
+  },
   "actual_max_drawdown": -0.32,
   "earnings_driven_return": null,
   "multiple_driven_return": null,

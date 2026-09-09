@@ -116,10 +116,19 @@ python3 scripts/run_backtest_assertions.py --baseline backtest/assertion_baselin
   "actual_5y_total_return": 8.062,
   "earnings_driven_return": null,
   "multiple_driven_return": null,
+  "price_basis": {
+    "source": "东方财富 push2his 月K fqt=2 后复权（抓取 2026-XX-XX，secid=…）",
+    "note": "收益计算唯一合法口径=等比后复权；触及检验=不复权；见 data-sources.md 复权口径纪律"
+  },
   "outcome_note": "…",
   "answer_source": "…"
 }
 ```
+
+**`price_basis` 字段纪律（P0-2）**：凡 answer 含 `actual_*_total_return` 数值，`price_basis.source`
+必填且必须写明复权口径与抓取渠道/日期。第一批茅台/福耀缺该字段导致事后回报不可审计
+（2026-09-09 补做核对：记录值与等比后复权重算差 0.8%~11%，疑月末对齐缺陷，结论不翻，
+详见 data-sources.md 先例核对段）。事后补录的 price_basis 必须标注"事后核对补录、记录值未动"。
 
 **档位序数**：`排除=0 / 拒绝=1 / 观察等价格=2 / 小仓位试探=3 / 核心买入=4`。
 `expected_verdict_set: null` 表示官方不约束档位（如福耀）→ 档位轨不计分。
@@ -153,4 +162,27 @@ python3 scripts/run_backtest_assertions.py --baseline backtest/assertion_baselin
 
 `check_scenarios.py` 的 `derive_codes()` 对任何无法映射前缀的消息会输出
 `[BUG] …` 并记入 `unmapped_messages`——**漏映射意味着断言会漏判该规则，
-必须当 bug 修，不得静默放过。**
+必须当 bug 修，不得静默放过。`
+
+---
+
+## 六、股本事件三态判据（候选——P1-6，待第三批第二例接线）
+
+> 来源：OBS-000895-01（双汇 2015 年 10 转 5 触发 M_DILUTION / M_SHARE_INFLATION 双假警报；
+> 转增不损股东权益，与现金定增语义相反；每股 CAGR 被除权算术压低 8.1%）。
+> 当前 `M_DILUTION`（"稀释：收入总量 CAGR 显著高于每股 CAGR"）与
+> `M_SHARE_INFLATION`（"股本膨胀：期间股本增至 > 1.3 倍"）**不区分股本事件的性质**，
+> 共用一族告警——事件性质语境缺失是 E 矩阵的第三层问题的实例。
+
+纯算术配对判据（现有 financials 序列可算，零新增数据；资本公积/权益字段缺年时按可得年份判）：
+
+| 事件 | 算术特征 | 告警处理 |
+|---|---|---|
+| **转增/送股** | 股本 ↑ + 资本公积 ↓（或转增科目结转）+ 股东权益**不变**、无现金流入 | M_DILUTION / M_SHARE_INFLATION **豁免**（挂本算术判据，非类型标签豁免）；每股 CAGR 仍须按复权股本重算，除权算术压低不得计入稀释叙事 |
+| **现金定增** | 股本 ↑ + 现金流入（募资到账） | 告警**保留**（真稀释，摊薄原股东） |
+| **回购注销** | 股本 ↓ + 现金流出 | 当前告警族**完全无此正向语义**（候选新增正向提示，同待第二例） |
+
+**实施状态（2026-09-09）**：判据文档化完成；**引擎接线未做**——单案例（双汇）不达
+2 案例门槛，检验场=第三批伊利 2013-12（高送转概率高）。若伊利重现同根因，按本表
+实施于 `compute_metrics.py` 的股本事件检测，并同步进 E 矩阵 `M_DILUTION` 行
+（类型无关，配对判据豁免）。

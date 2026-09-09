@@ -9,6 +9,13 @@
   ],
   "actual_5y_total_return": null,
   "actual_3y_total_return": 1.856,
+  "price_basis": {
+    "retro_check": "2026-09-09 事后核对补录（原批次无此字段，记录值未改动）",
+    "replay_close_basis": "不复权（CSMAR 日线 22.78 元 + 东财互证，触及检验口径正确；腾讯前复权 13.08 已弃用并登记理由）",
+    "return_recomputation": "等比后复权（腾讯 hfq 月K）按回放日锚重算：3y(2018-12-28→2021-12-31)=1.922x",
+    "recorded_value_note": "记录值 1.856 偏低 3.4%，与茅台同型的取数窗口对齐缺陷方向一致；非复权方法错误",
+    "conclusion": "档位结论不翻：3y 回报非档位闸门（本案档位轨官方不约束），仅作 outcome 语境"
+  },
   "actual_max_drawdown": null,
   "earnings_driven_return": -0.297,
   "multiple_driven_return": 2.91,
