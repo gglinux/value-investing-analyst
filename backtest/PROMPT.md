@@ -145,6 +145,8 @@
 **Step 1 — 建档冻结（不得含任何答案）**
 在 `backtest/<ticker>_<replay_date>/` 下创建 `meta.json`，**只**登记：`ticker` / `company` / `replay_date` / `information_cutoff` / `batch` / `case_id` / `purpose` / `prior_expectation`（你在跑分析之前的先验档位与理由）/ `contamination_disclosure` / `information_set` / `frozen_at`。写入后不得修改，用于事后检验你有没有被答案带偏。
 
+**建档后立即提交**：`git add <case>/meta.json <case>/data/ && git commit -m "meta(<case>): 建档冻结"`——该 commit 必须早于 verdict commit。第二批神华案 verdict commit 先于 data+meta 提交，导致 Step 1 冻结无 git 时序证据，只能靠 meta 自陈。
+
 **禁止**写入 `expected_verdict` / `must_trigger` / `actual_*` 等任何答案字段——它们属于 `answer.json`（Step 4 才创建）。第一批的教训：第九节原格式把答案字段与先验混在一个「跑前冻结」的文件里，自相矛盾，执行者只能把答案字段全留空，结果 6 个案例的 `actual_*` 与 `outcome_note` 全是 `null`，断言库实质为空。
 
 **Step 2 — 完整跑一遍 skill**
@@ -152,6 +154,8 @@
 
 **Step 3 — 落盘存档结论 + 时序存证**
 把以下内容写入 `verdict.json`：`final_verdict` 与 `verdict_ordinal`（档位序数）、闸门一/闸门二结果、`codes`（本次触发的全部告警代号，取自 `scripts/alert_codes.py` 注册表）、`codes_provenance`（区分 engine_derived 与 manually_recorded）、三情景每股价值、期望年化 IRR、`frozen_before_diff: true` 与 `frozen_at`。
+
+**落盘后、提交前先体检**：`python3 scripts/run_backtest_assertions.py --lint-verdict <case>/verdict.json`——校验 codes 全部在注册表内（第二批 Zoom 曾杜撰 2 个不存在的告警 ID）、`codes_provenance` 必填（缺失时漂移检测比对降级，第二批神华即缺）、必填字段与档位文案自洽。**体检通过才允许提交**。
 
 **落盘后立即单独提交**：`git add <case>/verdict.json && git commit -m "verdict(<case>): 结论落盘，未读答案"`。git 历史即时序证据，机器可验、事后无法伪造——第一批只有 3/6 案例有自陈的 `frozen_before_diff` 字段，文件 mtime 又会被 git 检出覆盖，「先落盘再看答案」这条纪律没有任何可验证痕迹。**此步完成后才允许进入 Step 4。**
 
@@ -162,6 +166,14 @@
 
 **Step 5 — 判定是否需要改引擎**
 只有同一根因在 **≥2 个案例**中重现，才允许改代码。**门槛按「档位不匹配的案例数」计，不按「观察到该机制的案例数」计**——第一批的 R1 修法曾用两个**完全命中**的案例（苹果、柯达）凑够 2 案例门槛，实际只有茅台 1 例产生档位错误，事后验算证明该修法对任何案例都无效。单案例不匹配先记入 `observations.md` 观察，防止为拟合个案破坏通用性。
+
+**改码门槛的三类例外（立法自第二批实践，防例外解释权自我扩张）**。批次裁决中援引例外必须**显式引用编号 E1/E2/E3**，不得援引「合理性」；未在此立法的例外一律无效：
+
+- **E1 官方预声明的引擎缺陷**：`must_not_trigger` 类断言失败，且该缺陷在 `ANSWERS.md` 中**先于执行被官方预判**（如 Netflix 烧钱告警误触发是官方预设的测试点）——此类修复属「对齐官方预设的测试意图」，非拟合个案。允许**单案例**修复，验收硬条件 = **负样本零漂移**（受影响告警族在其余全部案例的 codes 逐字不变）。
+- **E2 输入校验 / 披露哨兵类改动**：不改变档位判定的纯 WARN / 纯披露改动（量纲哨兵、股息口径哨兵、schema 校验、敏感性带披露）。门槛按**观察到该机制的案例数**计（≥2），不按档位不匹配数计——此类改动本就无档位影响可计（S9b 先例：茅台档位不匹配 + 双汇档位命中，按机制观察数 2 例达标）。
+- **E3 工程卫生**：不改变任何判别行为的修补（错误提示结构化、两脚本检查对齐、文档补全、采集科目覆盖、rerun 参数补全），不适用门槛（第一批 R4 先例）。
+
+**判别逻辑的放松性改动无任何例外**：严格 2 案例（按档位不匹配计）+ 第四批假阳性基线（第五之二节）+ 红灯规则（第九节）。「官方预声明」不得扩张用于档位轨——官方预期与系统输出在**档位**上冲突时，无论预判看起来多合理，都只能等第二例（Netflix 档位轨即如此处理，见 OBS-2016-12-01）。
 
 改动前后必须跑：① `python3 tests/run_tests.py`；② `python3 scripts/run_backtest_assertions.py --rerun --baseline backtest/assertion_baseline.json`（断言 + 引擎代号漂移 + 基线比对，**只有「回归失败」才是红灯**，已登记的 `known_failures` 不阻塞）；③ 既有 `cases/` 目录的报告校验。判别逻辑改动尤其要确认**四个该拒绝的样本不破防**（柯达/康美/海控/福耀）。
 
