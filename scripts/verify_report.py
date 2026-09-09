@@ -427,7 +427,10 @@ def main():
     # 「观察等价格」就会退化为永不触发的观察而用户不自知。
     _tp = re.search(r'data-trigger-price="([0-9.]+)"', html)
     if _tp:
-        _tb = re.search(r'data-trigger-band-pct="([0-9.]+)"', html)
+        # 负分位合法：触发价低于 52 周最低价时 band<0（TRIGGER_OUT_OF_HISTORY，
+        # 双汇 B2-12 实证 -94.8%）——正则必须接受负号，否则 out-of-history
+        # 触发器反而无法通过可达性披露校验。
+        _tb = re.search(r'data-trigger-band-pct="(-?[0-9.]+)"', html)
         if not _tb:
             failed.append(("report", "trigger:band",
                            "声明了 data-trigger-price 但缺 data-trigger-band-pct"

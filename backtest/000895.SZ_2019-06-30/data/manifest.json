@@ -1,0 +1,32 @@
+{
+  "company": "双汇发展",
+  "ticker": "000895.SZ",
+  "as_of": "2019-06-30",
+  "purpose": "证据清单：报告 [E:] 指针的可核验登记（verify_report.py 规则一）。补录于 2026-09-09（与 report.html 补录同步），登记范围为全部管线底稿与工作底稿",
+  "files": [
+    {"file": "financials_000895_2019.json", "kind": "底稿", "note": "新浪三表 FY2014-2018+2019Q1，5 年勾稽全平"},
+    {"file": "metrics_000895_2019.json", "kind": "底稿", "note": "compute_metrics 输出（5 警报+图表序列）"},
+    {"file": "normalization_000895_2019.json", "kind": "底稿", "note": "正常化五裁决（hybrid 基期 4,557.9 改判）"},
+    {"file": "qualitative_000895_2019.json", "kind": "底稿", "note": "五维定性（护城河 narrow）"},
+    {"file": "scenarios_000895_2019.json", "kind": "底稿", "note": "三情景 16.32/20.48/26.76，check_scenarios 0 错 0 警"},
+    {"file": "expected_return_000895_2019.json", "kind": "底稿", "note": "期望 IRR 5.55%+双闸门 gate2 判定"},
+    {"file": "mos_calc_000895_2019.json", "kind": "底稿", "note": "安全边际三口径+分层触发位"},
+    {"file": "market_snapshot_000895_2019.json", "kind": "底稿", "note": "2019-06-28 行情三口径快照"},
+    {"file": "dividends_000895_2019.json", "kind": "底稿", "note": "分红序列与股息率三口径"},
+    {"file": "business_drivers_000895.json", "kind": "底稿", "note": "猪周期证据链（能繁 -23.9%/猪价 +26.6%）"},
+    {"file": "trigger_reachability_000895.json", "kind": "底稿", "note": "触发价 12.29 可达性机器判定（out_of_history）"},
+    {"file": "phase5_workpaper.json", "kind": "底稿", "note": "三师评分+红队五项+pre-mortem 四形态"},
+    {"file": "verification_strength.json", "kind": "底稿", "note": "核验强度 B-（勾稽 full/三源核对 full/窗口 5 年）"},
+    {"file": "fv_base.json", "kind": "底稿", "note": "反向 DCF forward-value 基准"},
+    {"file": "fv_bull.json", "kind": "底稿", "note": "反向 DCF forward-value 乐观"},
+    {"file": "meta.json", "kind": "登记", "note": "Step 1 建档冻结（案例根目录）"},
+    {"file": "workpapers/build_step2.py", "kind": "工作底稿", "note": "Phase 2 指标构建脚本"},
+    {"file": "workpapers/parse_sina_tables.py", "kind": "工作底稿", "note": "新浪三表解析脚本"},
+    {"file": "workpapers/mk_adj_201906_202406.txt", "kind": "工作底稿", "note": "Step 4 三口径月K复核原始记录"},
+    {"file": "workpapers/step4_5y_review.py", "kind": "工作底稿", "note": "Step 4 五年复盘脚本"},
+    {"file": "workpapers/step4_5y_review_result.json", "kind": "工作底稿", "note": "Step 4 五年复盘结果"},
+    {"file": "workpapers/persona_buffett.md", "kind": "工作底稿", "note": "巴菲特评估全文"},
+    {"file": "workpapers/persona_duan.md", "kind": "工作底稿", "note": "段永平评估全文"},
+    {"file": "workpapers/persona_lilu.md", "kind": "工作底稿", "note": "李录评估全文"}
+  ]
+}
