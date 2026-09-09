@@ -125,10 +125,9 @@ python3 scripts/run_backtest_assertions.py --baseline backtest/assertion_baselin
 }
 ```
 
-**`price_basis` 字段纪律（P0-2）**：凡 answer 含 `actual_*_total_return` 数值，`price_basis.source`
-必填且必须写明复权口径与抓取渠道/日期。第一批茅台/福耀缺该字段导致事后回报不可审计
-（2026-09-09 补做核对：记录值与等比后复权重算差 0.8%~11%，疑月末对齐缺陷，结论不翻，
-详见 data-sources.md 先例核对段）。事后补录的 price_basis 必须标注"事后核对补录、记录值未动"。
+**`price_basis` 字段纪律**：凡 answer 含 `actual_*_total_return` 数值，`price_basis.source`
+必填且必须写明复权口径与抓取渠道/日期；事后补录必须标注补录性质、原记录值不动。
+复权口径规则见 data-sources.md「行情复权口径纪律」。
 
 **档位序数**：`排除=0 / 拒绝=1 / 观察等价格=2 / 小仓位试探=3 / 核心买入=4`。
 `expected_verdict_set: null` 表示官方不约束档位（如福耀）→ 档位轨不计分。
@@ -136,9 +135,6 @@ python3 scripts/run_backtest_assertions.py --baseline backtest/assertion_baselin
 **两条独立计分轨**（不得互相抵扣、不得合并为单一「命中」）：
 - **告警轨**：`must_trigger` 命中数 / 漏判数 / `must_not_trigger` 误触发数
 - **档位轨**：`verdict_ordinal` 是否落入 `expected_verdict_set`
-
-第一批曾把福耀同时计入「命中」与「错误拒绝」两个互斥的桶，头条战绩因此偏乐观。
-分轨计分是对该问题的结构性修正。
 
 **`known_failures`**：登记**已知且已记录在案**的失败类型（`verdict_track` /
 `must_trigger` / `must_not_trigger` / `engine_drift`）。只有未登记的失败才算回归。
@@ -166,23 +162,14 @@ python3 scripts/run_backtest_assertions.py --baseline backtest/assertion_baselin
 
 ---
 
-## 六、股本事件三态判据（候选——P1-6，待第三批第二例接线）
+## 六、股本事件三态判据（候选，未接线引擎）
 
-> 来源：OBS-000895-01（双汇 2015 年 10 转 5 触发 M_DILUTION / M_SHARE_INFLATION 双假警报；
-> 转增不损股东权益，与现金定增语义相反；每股 CAGR 被除权算术压低 8.1%）。
-> 当前 `M_DILUTION`（"稀释：收入总量 CAGR 显著高于每股 CAGR"）与
-> `M_SHARE_INFLATION`（"股本膨胀：期间股本增至 > 1.3 倍"）**不区分股本事件的性质**，
-> 共用一族告警——事件性质语境缺失是 E 矩阵的第三层问题的实例。
-
-纯算术配对判据（现有 financials 序列可算，零新增数据；资本公积/权益字段缺年时按可得年份判）：
+`M_DILUTION`（"稀释：收入总量 CAGR 显著高于每股 CAGR"）与 `M_SHARE_INFLATION`
+（"股本膨胀：期间股本增至 > 1.3 倍"）**不区分股本事件的性质**。解读告警时按纯算术
+配对判据区分（现有 financials 序列可算，零新增数据；资本公积/权益字段缺年时按可得年份判）：
 
 | 事件 | 算术特征 | 告警处理 |
 |---|---|---|
 | **转增/送股** | 股本 ↑ + 资本公积 ↓（或转增科目结转）+ 股东权益**不变**、无现金流入 | M_DILUTION / M_SHARE_INFLATION **豁免**（挂本算术判据，非类型标签豁免）；每股 CAGR 仍须按复权股本重算，除权算术压低不得计入稀释叙事 |
 | **现金定增** | 股本 ↑ + 现金流入（募资到账） | 告警**保留**（真稀释，摊薄原股东） |
 | **回购注销** | 股本 ↓ + 现金流出 | 当前告警族**完全无此正向语义**（候选新增正向提示，同待第二例） |
-
-**实施状态（2026-09-09）**：判据文档化完成；**引擎接线未做**——单案例（双汇）不达
-2 案例门槛，检验场=第三批伊利 2013-12（高送转概率高）。若伊利重现同根因，按本表
-实施于 `compute_metrics.py` 的股本事件检测，并同步进 E 矩阵 `M_DILUTION` 行
-（类型无关，配对判据豁免）。
