@@ -1,0 +1,43 @@
+{
+  "case": "B3-13",
+  "company": "招商银行",
+  "ticker": "600036.SH",
+  "analysis_date": "2014-12-31",
+  "verdict": {"ordinal": 2, "label": "观察等价格"},
+  "gates": {
+    "gate1": {"pass": false, "mos": 0.196, "requirement": 0.40, "moat": "narrow"},
+    "gate2": {"pass": false, "consistency_irr": [0.1441, 0.2239, false], "no_convergence_floor": [0.0824, 0.06, true], "pessimistic_irr": [-0.0004, 0.0, false]}
+  },
+  "phases_completed": {
+    "phase0": "类型=银行（行业专属口径管线 compute_metrics_bank）；能力圈：杠杆生意在圈内但资产质量确认节奏为已知黑箱；排雷：无一票否决项，红旗2项（非标3,803亿+79% 与轻资本叙事矛盾、关注类占比连续两年回升）",
+    "phase1": "2004-2013十年年报（官方PDF为主源）+2014三季报+市场快照；opin=nii+nonii勾稽偏差0%；2006年采用2007年报重述口径；2004-2005旧CAS流量科目置空、存量保留；validate_data通过",
+    "phase2": "compute_metrics_bank 输出11年序列；credit-cost-rising警报触发（9M14计提21,998 > 全期均值×1.3，本案核心测试点）；SM-migration未触发（关注1.24%<2%阈值，登记为管线缺口候选）；leverage警报3年（2004/2005/2009历史披露）；net_income_cagr 0.3072因9M行混入失真，人工弃用，改用bvps_cagr 14.67%",
+    "phase3": "五维定性：护城河窄（侵蚀中）、增长9-11%但质量恶化、管理层可信（两次配股+分红连续提升，非标矛盾减分）、财务质量（逾期/不良1.69x剪刀差）、无卖方一致预期→主锚改用价格隐含ROE 11.46%降档",
+    "phase4": "pb_roe两阶段（分红折现+终期BVPS×终期PB，禁用单阶段Gordon——招行实证误差+141%）；信用成本警报→人工将sustainable ROE从21.66%下调至19→13.5路径；悲观=pb_trough 0.84×11.97=10.05（S2d证据：不复权+最低点）；乐观32.97；S1-S9通过0警告；Gate1 FAIL（19.7%<40%）；Gate2①FAIL（14.41%<22.39%）②PASS（8.24%≥6%）③FAIL（-0.04%<0，差0.02元）",
+    "phase4_5": "关键变量收敛3项：①信用成本路径（不良生成率是否冲2%）②负债优势衰减速度（利率市场化节奏）③拨备/资本约束（覆盖率的资本反噬）；变异认知：市场叙事12月已从'ROE回归资本成本'（0.84倍PB）升级为'收敛但存活'（隐含永续ROE 11.46%）——基准路径比市场隐含略乐观，便宜的是赔率不是价值",
+    "phase5": "三师分立推演（workpapers/persona_*.md）：buffett/duan/lilu一致观察等价格；分歧4项（护城河宽度/ROE路径偏悲观或偏乐观/减值+170%解读/疯牛追不追）；红队4条亏钱路径（悲观锚不够悲观severity高、非标兜底不可验证、连续降息未单独建模、坏账年股息下限失守）；持有体验预演：2007顶买入7年未解套（46.33→16.59），本档位常态路径为浮亏30-40%"
+  },
+  "key_judgment_chain": [
+    "银行专属管线首次实盘使用：bvps_reported/roe_reported schema + 坏账周期起点告警全部按设计触发",
+    "信用成本警报（计提>均值1.3倍）→人工下调sustainable ROE：管线后视镜均值21.66%被否，采用19→13.5十年衰减路径——周期起点的人工周期调整是管线现有能力之外的关键判断",
+    "悲观情景用实测pb_trough 0.84（2014-03，不复权+最低点证据链）而非假设倍数；gate2③差0.02元时拒绝用0.845凑门槛（反p-hack）",
+    "两阶段PB-ROE估值树：PV分红5.45+终期价值折现15.20（终值占比74%）→IV 20.65，MoS 19.7%<40%闸门一不过",
+    "期望IRR 14.41%<22.39%闸门二①不过；悲观年化-0.04%差0.02元不过零线③不过；②不收敛下限8.24%过——三项须全过，闸门二FAIL",
+    "触发价12.39元52周带内41.3%分位、需自16.59下跌25.3%——可达性正常，观察等价格不退化为永久观望"
+  ],
+  "prior_expectation_check": {
+    "verdict_ordinal": {"expected": 2, "actual": 2, "match": true},
+    "gate1": {"expected": false, "actual": false, "match": true},
+    "gate2": {"expected": null, "actual": false, "note": "先验未评级，本次明确判定①③未过；先验冻结时仅知12月大涨后位置偏高，未预判到信用成本警报会同步触发"}
+  },
+  "red_team_high_severity": "悲观锚0.84倍PB系2014-03单月恐慌价，若不良冲2%+则谷底更深——已挂触发价重估前移条款（不等待12.39）",
+  "verification": {
+    "validate_data": "pass",
+    "check_market_snapshot": "pass（三角校验偏差0.00%，52周区间已补入快照）",
+    "check_scenarios": "pass（0警告；S2b悲观重算达标；S9股息口径ttm_paid登记）",
+    "reverse_dcf": "expected-return模式（银行口径：隐含永续ROE 11.46%替代OE隐含增长）",
+    "trigger_reachability": "pass（TRIGGER_REACHABLE，41.3%分位）",
+    "verify_report": "待跑（HTML报告生成后执行）"
+  },
+  "next_review": "2015-03下旬年报（重点：全年计提、不良率、关注类是否加速）；触发价12.39元；股息率≥6%且关注类连续两季回落的加仓条件"
+}
