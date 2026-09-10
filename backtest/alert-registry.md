@@ -4,6 +4,9 @@
 > 断言组、档位序数全部定义在那里，引擎与回放 runner 共用同一份 import。
 > 新增或修改代号请改 `.py`，然后同步本文件。
 >
+> **归属说明**：本文档服务于回测与引擎维护（批次执行者、改码维护者），分析运行时不加载——
+> SKILL.md 不引用本文件；分析侧对引擎告警的解读规则在 `references/metric-playbook.md`。
+>
 > 之所以这样安排：若代号表以 markdown 为准，引擎写错代号不会被发现（静默产生一个
 > 查不到的告警）；定义在 Python 里，`AlertBag.add()` 会对未注册代号直接抛
 > `KeyError`，写错当场炸掉。
@@ -118,7 +121,7 @@ python3 scripts/run_backtest_assertions.py --baseline backtest/assertion_baselin
   "multiple_driven_return": null,
   "price_basis": {
     "source": "东方财富 push2his 月K fqt=2 后复权（抓取 2026-XX-XX，secid=…）",
-    "note": "收益计算唯一合法口径=等比后复权；触及检验=不复权；见 data-sources.md 复权口径纪律"
+    "note": "收益计算唯一合法口径=等比后复权；触及检验=不复权；见 data-sourcing.md 复权口径纪律"
   },
   "outcome_note": "…",
   "answer_source": "…"
@@ -127,7 +130,7 @@ python3 scripts/run_backtest_assertions.py --baseline backtest/assertion_baselin
 
 **`price_basis` 字段纪律**：凡 answer 含 `actual_*_total_return` 数值，`price_basis.source`
 必填且必须写明复权口径与抓取渠道/日期；事后补录必须标注补录性质、原记录值不动。
-复权口径规则见 data-sources.md「行情复权口径纪律」。
+复权口径规则见 data-sourcing.md「行情复权口径纪律」。
 
 **档位序数**：`排除=0 / 拒绝=1 / 观察等价格=2 / 小仓位试探=3 / 核心买入=4`。
 `expected_verdict_set: null` 表示官方不约束档位（如福耀）→ 档位轨不计分。

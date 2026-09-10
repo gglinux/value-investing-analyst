@@ -220,7 +220,7 @@ def main() -> int:
 
     # 已知缺口提醒：即使推荐源可用，这几项仍需手工补
     print("\n" + "-" * 64)
-    print("已知缺口（推荐源也覆盖不到，须按 data-sources.md 应对）：")
+    print("已知缺口（推荐源也覆盖不到，须按 data-sourcing.md 应对）：")
     print("  · A股 capex/D&A 无独立科目 → 年报现金流量表原文 或 研报序列（B级）")
     print("  · A股 TotalAssets 缺失 → 负债+全口径权益 推导")
     print("  · 银行不良/拨备/NIM/资本充足率 → 评级报告附录（B级）+ 年报转引")

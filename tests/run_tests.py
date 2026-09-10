@@ -2178,7 +2178,7 @@ _EXEMPT = {
 _scripts = sorted(f for f in os.listdir(SCRIPTS)
                   if f.endswith((".py", ".sh")) and not f.startswith("_"))
 # 引用可写成 `scripts/xxx.py` 或裸文件名 `xxx.py`（后者见 SKILL.md 9.5 与
-# references/data-sources.md 对 extract_edgar_annual.py 的引用），两种都算接入。
+# references/data-sourcing.md 对 extract_edgar_annual.py 的引用），两种都算接入。
 _orphans = [f for f in _scripts if f not in _EXEMPT and f not in _DOCS]
 check("无孤儿脚本（未被 SKILL.md/references 引用且未登记豁免）",
       not _orphans,
@@ -2296,6 +2296,19 @@ check("路线图快照已并入 BATCH2_FINDINGS（8.1-8.7 齐全）",
       all(s in _B2 for s in ("## 八、优化路线图快照", "8.1 两批教训分层", "8.4 P2", "8.7 第三批检验场")))
 check("BATCH2_FINDINGS 无 SKILL-UPGRADE 活引用（仅第八节来源声明可提及）",
       "见 SKILL-UPGRADE" not in _B2 and "SKILL-UPGRADE 审核建议" not in _B2)
+
+# ===== 膨胀守卫（MAINTENANCE.md 红线的机器执行）=====
+check("MAINTENANCE.md 存在（维护纪律已从 SKILL.md 迁出）",
+      os.path.exists(os.path.join(ROOT, "MAINTENANCE.md")))
+_skill_size = os.path.getsize(os.path.join(ROOT, "SKILL.md"))
+check("SKILL.md 体积红线 ≤ 45KB（只减不增纪律）",
+      _skill_size <= 45 * 1024,
+      f"当前 {_skill_size / 1024:.1f}KB 超线——红线是意识闸：确有价值则按 MAINTENANCE.md 第 1 节压缩等量后上调，过程性叙述则搬批次归档")
+_ref_total = sum(os.path.getsize(p)
+                 for p in glob.glob(os.path.join(ROOT, "references", "*.md")))
+check("references/ 总体积红线 ≤ 150KB",
+      _ref_total <= 150 * 1024,
+      f"当前 {_ref_total / 1024:.1f}KB 超线——过程性叙述归宿是 backtest/BATCH*_FINDINGS.md")
 
 print()
 if FAILED:

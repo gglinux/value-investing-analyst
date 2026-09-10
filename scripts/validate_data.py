@@ -166,7 +166,7 @@ def main():
                       "通用底稿/compute_metrics 管道不适用（利息收支/浮存金/准备金口径不同），"
                       "请按 metric-playbook 银行/保险专属指标集单独建稿")
     elif not is_insurance and not ctype:
-        warns.append("行业门控：company_type 缺失——Phase 0 必须判定商业模式类型（metric-playbook 十类）"
+        warns.append("行业门控：company_type 缺失——Phase 0 必须判定商业模式类型（metric-playbook 十一类）"
                      "并写入底稿头字段，金融类严禁走通用管道")
 
     # 1. 口径注册表

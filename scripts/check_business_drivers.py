@@ -6,7 +6,7 @@
 Phase 2 名为"定量画像"，但此前**只画了财务的像，没画生意的像**。
 实证普查 25 份 metrics 底稿：驱动因子字段命中数为 **0**——
 台积电没有晶圆出货量/ASP，泡泡玛特没有门店数/单店收入，微博没有 MAU/ARPU。
-metric-playbook 为十类商业模式规定了专属指标，但那些指标
+metric-playbook 为十一类商业模式规定了专属指标，但那些指标
 **从未进入任何一份结构化底稿**。
 
 后果不是"少算了几个数"，而是三条链路同时断裂：
@@ -110,7 +110,7 @@ def main() -> int:
     ctype = norm_type(args.company_type or d.get("company_type", ""))
     if not ctype:
         errors.append("company_type 缺失——驱动因子的选取依赖商业模式类型"
-                      "（见 metric-playbook 十类）")
+                      "（见 metric-playbook 十一类）")
 
     if ctype in FINANCIAL_TYPES:
         print(f"[跳过] {ctype} 为金融类，驱动因子走专属管道"

@@ -24,11 +24,12 @@
 
 ```
 SKILL.md                     主流程（七阶段流水线 + 纪律卡 + 数据分级协议）
+MAINTENANCE.md                维护纪律（修改本仓库任何文件前必读；膨胀红线由 tests 机器强制）
 assets/report_template.html  HTML 报告模板（首屏决策卡 + ECharts）
 references/
   forensic-checklist.md      排雷清单（一票否决 + 红旗项 + A股防割）
-  data-sourcing.md           各市场数据采集实操与踩坑记录（美股/A股/港股/银行均实证）
-  metric-playbook.md         商业模式十类型 → 专属指标映射
+  data-sourcing.md           数据源能力矩阵 + 各市场采集实操与踩坑（美股/A股/港股/银行均实证）
+  metric-playbook.md         商业模式十一类型 → 专属指标映射（金融三类：银行/保险/券商）
   moat-framework.md          商业模式 + 护城河五源 + 定价权测试 + 产业链议价权
   growth-framework.md        TAM/S曲线/增长分解 + ROIIC 增长质量
   management-checklist.md    资本配置评分 + 言行一致追踪

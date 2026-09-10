@@ -44,7 +44,7 @@ python3 scripts/verification_strength.py --financials data/financials_<公司>.j
 | 命门科目原文登记 | 最近 3 年齐备且全为官方原文 | 部分或含降级来源 | 无 crosscheck |
 | 数据窗口 | 达年限要求（金融/强周期 15 年，其余 10 年）**且**覆盖过至少一个系统性压力年 | 覆盖压力年但年限不足 | 未覆盖任何压力年 |
 
-总评：三项 full → A；含 partial 无 weak → B；含 weak/none → C。**C 级不阻断交付**（它是要被披露的事实，不是要被拦住的错误），但档位判定须从严并在首屏说明。归档实测：A=7、B=3、C=1（台积电，勾稽 18% + 原文登记 partial，与仓库自标的"底稿待重建"一致）。
+总评：三项 full → A；含 partial 无 weak → B；含 weak/none → C。**C 级不阻断交付**（它是要被披露的事实，不是要被拦住的错误），但档位判定须从严并在首屏说明。
 
 窗口内不含任何系统性压力年时，该标的的"历史最差"并未被观测到——**周期正常化的均值口径与悲观情景的历史锚都不成立**，此时正常化基期与悲观情景必须改用行业基率或同类死亡案例。
 
@@ -61,7 +61,7 @@ python3 scripts/verification_strength.py --financials data/financials_<公司>.j
 - 摘要页的每个结论都能在正文找到数据支撑。
 - **关键结论数字必须用 vnum 溯源标签包裹**：`<span class="vnum" data-src="<底稿文件>" data-path="<取值路径>" data-fmt="<格式>">显示值</span>`，供 `scripts/verify_report.py` 自动比对（格式定义见脚本头注释）。覆盖范围至少包括：摘要页全部数字、估值区间与安全边际、CAGR/ROIC/ROIIC 等长期指标、市场快照卡。
 - **图表 series 必须带 vchart 锚点且数据取自 metrics 底稿的 `chart_series` 区块**：在每条 series 的 data 数组上方紧跟注释 `/*<!-- vchart src=metrics_X.json path=chart_series.net_margin scale=100 -->*/`（scale=100 用于小数→百分数）。禁止手抄数组进 HTML——图表数据唯一来源是 compute_metrics 输出的 chart_series。锚点供 verify_report.py 校验，能逮住位数错误与顺序错位。
-- **ECharts 键名陷阱：radar 用 `value`，bar/line 用 `data`**。radar 系列的数据项写成 `data:` 时不会报错，坐标轴与图例照常渲染，但所有数据点塌缩到圆心，肉眼看就是"图表数据是空的"。写雷达图（三大师评分、资本配置评分卡）时必须用 `value: [...]`。verify_report.py 已内置守卫，但生成时就写对可省一轮返工。
+- **ECharts 键名陷阱**：radar 系列数据项必须用 `value: [...]`，写成 `data:` 不报错但所有点塌缩圆心（verify_report 已内置守卫，生成时写对可省一轮返工）。
 - 报告中每个关键数字都能溯源到 `data/` 底稿；交付前必须通过数字校验脚本（见 SKILL.md Phase 5 第 6 步），无法溯源的数字删除或改为定性表述。
 - **定性论断也要挂证据（防幻觉的最后防线）**：影响结论的定性判断（如"管理层言行一致""转换成本高""定价权强"）必须在句末标注证据指针 `[E:<manifest文件编号或文件名>]`，指向 manifest 中登记的证据文件（年报附注页码、电话会纪要、研报事实段）。规则：① 五维分析每一维至少 3 条关键论断带指针；② 大师评估中引用的事实必须能在 Phase 1~4 产物中找到原文；③ 红队抽查 5 条带指针论断核对原文，任一条查无实据 → 该维度结论降级并在报告标注。无证据可挂的论断只能写成"推断"并说明推断链条。
 - 报告中不出现"可能、大概、似乎"堆砌的和稀泥段落；不确定就明说"此处证据不足，置信度低"。
