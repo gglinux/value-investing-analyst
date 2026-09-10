@@ -1,0 +1,90 @@
+{
+  "company": "招商银行",
+  "ticker": "600036.SH",
+  "currency": "CNY",
+  "price": 16.59,
+  "price_source": "2014-12-31 A股收盘价，不复权 [E:market_snapshot_600036_2014.json]",
+  "moat": "narrow",
+  "moat_note": "窄护城河（侵蚀中）：负债端成本优势真实（活期存款占比约46.6%+零售AUM转换成本），全期ROE均值21.7%远超股权成本；但贷款定价是价格接受者、利率市场化直接侵蚀负债优势（2014-11-21降息+上浮区间扩大）、核心一级9.48%缓冲薄且有2010/2013配股摊薄史。闸门一门槛MoS≥40%、闸门二期望IRR门槛21.8% [E:qualitative_600036_2014.json][E:metrics_600036_2014_bank.json]",
+  "discount_rate": 0.105,
+  "discount_rate_note": "股权成本：2014-12-31十年国债3.62%[E:market_snapshot_600036_2014.json] + 股权风险溢价~6.9% ≈ 10.5%，落在compute_metrics_bank建议带（10~11%）中点；敏感性10%/11%见sensitivity",
+  "hold_years": 5,
+  "dividend_yield": 0.0374,
+  "dividend_yield_source": "FY2013每股股息0.62元（2014-07已实施）/现价16.59元=3.74% [E:market_snapshot_600036_2014.json][E:financials_600036_2014.json]",
+  "intrinsic_value_growth": 0.045,
+  "iv_growth_evidence": "基准情景每股内在价值长期增速4.5%：终期（2024年后）ROE收敛13.5%×留存70%的BVPS内生增速约9.5%中，扣除信用成本周期反复与资本约束后取终期名义增长锚4.5%（≈中国长期名义GDP下修路径，未超基率）；2004-2013 BVPS CAGR 14.7%含行业景气与配股增厚，不可外推 [E:metrics_600036_2014_bank.json][E:qualitative_600036_2014.json]",
+  "default_probabilities": {
+    "悲观": 0.25,
+    "基准": 0.5,
+    "乐观": 0.25
+  },
+  "scenarios": [
+    {
+      "name": "悲观",
+      "value_per_share": 10.05,
+      "probability": 0.25,
+      "method": "pb_trough",
+      "method_note": "独立路径（不走PB-ROE两阶段模型）：历史谷底PB×当期每股净资产。谷底样本：2014-03月度最低价9.41元（不复权，搜狐行情期间最低点）÷2014Q1末每股净资产11.23元（归母权益283,335百万/股本25,220百万股，三季报比较期勾稽）=0.84倍——2012-2014观察期内银行板块信用怀疑定价的最低点，破净是坏账周期深化期A股银行的常态下限（2014-11-21降息前招行PB长期在0.85-1.0x区间）。0.84×当期BPS 11.97=10.05元 [E:market_snapshot_600036_2014.json][E:financials_600036_2014.json][E:filings/CMB_2014Q1.txt]",
+      "method_inputs": {
+        "trough_pb": 0.84,
+        "bvps": 11.97,
+        "trough_pb_evidence": "不复权口径：2014-03月度最低收盘9.41元（搜狐月线，52周最低点）÷2014Q1末BPS 11.23元=0.84倍（若以2013年末BPS 10.53计为0.89倍，取低沿0.84）——期间最低点定价样本，非上涨段 [E:market_snapshot_600036_2014.json][E:filings/CMB_2014Q1.txt]"
+      },
+      "stressed_assumptions": [
+        "valuation_multiple（谷底0.84x vs 现1.386x）",
+        "book_value_quality（潜在不良池：关注+逾期3.10% vs 账面不良1.10%，迁徙率28.15%，坏账深化期市场按破净给账面净资产定价）"
+      ],
+      "probability_evidence": "坏账周期深化概率：不良+46.9% YTD、迁徙率半年28.15%（年化超2013全年）、逾期/不良剪刀差1.69倍、地产敞口6.64%+产能过剩行业集中到期——先行指标一致指向2015-2016不良继续上行为大概率路径（对本案而言'坏账周期深化'几乎是基准，此处25%指'深化至破净定价'的尾部组合）[E:filings/CMB_2014H1.txt][E:filings/CMB_2014Q3.txt]",
+      "non_operating_addback_per_share": 0.0
+    },
+    {
+      "name": "基准",
+      "value_per_share": 20.65,
+      "probability": 0.5,
+      "method": "pb_roe",
+      "method_note": "两阶段现价回归（分红折现+终期BVPS×终期PB，估值方法树银行行；单阶段Gordon禁用——可持续ROE×(1−分红率)逼近r时发散）。基期BVPS=11.97（2014Q3披露）；ROE路径19%/18%/17%/16.5%/16%/15.5%/15%/14.5%/14%/13.5%（信用成本常态化0.8-1.0% vs 历史均值0.45%=ROA拖累约-0.35pct，叠加NIM下行通道2.82%→2.4%区间，部分被中收增长对冲；管道可持续ROE 21.66%为后视口径，按信用成本上行alert下修）；分红率30%（2010-2013实际24-30%，取近两年上限）；r=10.5%；终期PB=1.2x（justified公式(13.5−4.5)/(10.5−4.5)=1.5与A股银行长期分位中枢1.0-1.2x孰低）。PV股息5.45+PV终值15.20=20.65元/股 [E:metrics_600036_2014_bank.json][E:qualitative_600036_2014.json][E:fv_base.json]",
+      "probability_evidence": "信用成本路径决定论：2015-2017年不良上行几成定局（先行指标四箭齐发），争议仅在幅度；招行拨备228%+认定相对严格+零售负债优势使ROE收敛斜率慢于同业是合理中枢假设",
+      "non_operating_addback_per_share": 0.0
+    },
+    {
+      "name": "乐观",
+      "value_per_share": 32.97,
+      "probability": 0.25,
+      "method": "pb_roe",
+      "method_note": "信用周期温和路径：不良上行一年后见顶回落，信用成本维持0.6-0.8%不显著侵蚀，ROE维持21%→19%平台（NIM受益降息后负债成本重定价，中收双位数增长），分红率30%，终期PB 1.6x（A股银行乐观分位，justified公式1.9上限内取1.6）。PV股息+终值=32.97元/股 [E:fv_bull.json][E:metrics_600036_2014_bank.json]",
+      "probability_evidence": "2014-11-21降息开启宽松周期+财政稳增长发力，若2015年地产销售企稳则产能过剩风险敞口边际缓和；招行拨备充足度允许利润平滑——乐观路径概率约25%",
+      "non_operating_addback_per_share": 0.0
+    }
+  ],
+  "sensitivity": {
+    "note": "估值最敏感三假设：①折现率r（±0.5pct）②终期PB（0.9-1.6x）③ROE收敛斜率",
+    "discount_rate_pm05": "r=10%时IV=21.48（MoS 22.8%）；r=11%时IV=19.85（MoS 16.4%）",
+    "terminal_pb_range": "PB_term=0.9x时IV≈16.5（MoS≈0，即熊市敏感下界12.95-16.5区间）；PB_term=1.5x（纯justified）时IV≈22.9（MoS 27.5%）",
+    "roe_path_bear": "ROE快速收敛路径（17%→11%）+PB 0.9x → IV=12.95（MoS −28.1%）：坏账危机+利率市场化双杀的组合后果 [E:fv_base.json]"
+  },
+  "reverse_expectation_note": "价格反向锚（银行版反向DCF——PE/FCF不适用，反解隐含永续ROE）：PB=0.3R/(r−0.7R)，代入现价PB 1.386x、r=10.5%得市场隐含永续ROE≈11.5%；对比2014-03低点PB 0.84x隐含≈10.1%——12月行情本质是市场从'ROE向股权成本完全回归'上修到'收敛但不消失'；我方基准终期13.5%略高于市场隐含11.5%，分歧幅度温和（认知优势有限，变异认知测试据此降档）[E:qualitative_600036_2014.json]",
+  "non_operating_note": "银行估值直接对股东现金流（分红+终期净资产）折现，与市值同口径，无非经营资产调整项",
+  "chart": {
+    "names": [
+      "悲观",
+      "基准",
+      "乐观"
+    ],
+    "values_per_share": [
+      10.05,
+      20.65,
+      32.97
+    ],
+    "price_a": [
+      16.59
+    ],
+    "values_per_share_price": [
+      10.05,
+      16.59,
+      20.65,
+      32.97
+    ]
+  },
+  "dividend_yield_basis": "ttm_paid",
+  "dividend_yield_basis_note": "TTM已付口径：FY2013每股股息0.62元于2014-07实施完毕（截断前落袋），无单次/特别分红成分，可持续外推性好；2014年度分红截至快照日未宣告"
+}

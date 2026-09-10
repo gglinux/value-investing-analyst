@@ -1,0 +1,51 @@
+{
+  "file": "backtest/600036.SH_2014-12-31/data/scenarios.json",
+  "errors": [],
+  "warnings": [],
+  "codes": [],
+  "unmapped_messages": [],
+  "diagnostics": {
+    "scenario_values": {
+      "悲观": 10.05,
+      "基准": 20.65,
+      "乐观": 32.97
+    },
+    "bear_name": "悲观",
+    "base_name": "基准",
+    "margin_of_safety_vs_base": 0.19661016949152532,
+    "bear_method": "pb_trough",
+    "bear_recomputed_value": 10.0548,
+    "bear_recompute_deviation": 0.000478,
+    "discount_rate_floor": 0.1,
+    "discount_rate_floor_basis": "硬下限 10%",
+    "bear_stressed": [
+      "valuation_multiple（谷底0.84x vs 现1.386x）",
+      "book_value_quality（潜在不良池：关注+逾期3.10% vs 账面不良1.10%，迁徙率28.15%，坏账深化期市场按破净给账面净资产定价）"
+    ],
+    "bear_base_ratio": 0.4866828087167071,
+    "non_operating_addback_per_share": {
+      "悲观": 0.0,
+      "基准": 0.0,
+      "乐观": 0.0
+    },
+    "bear_vs_price": 0.6057866184448464,
+    "probability_deviations": {},
+    "intrinsic_value_growth": 0.045,
+    "iv_growth_evidence": "基准情景每股内在价值长期增速4.5%：终期（2024年后）ROE收敛13.5%×留存70%的BVPS内生增速约9.5%中，扣除信用成本周期反复与资本约束后取终期名义增长锚4.5%（≈中国长期名义GDP下修路径，未超基率）；2004-2013",
+    "revenue_decline_streak": null,
+    "core_driver_decline_years": null,
+    "peak_stagnation": null,
+    "decline_streak_used": null,
+    "shrinking_reasons": [],
+    "value_trap_triggered": false,
+    "dividend_yield": 0.0374,
+    "dividend_yield_basis": "ttm_paid",
+    "snapshot_dividend_yield": {
+      "value": null,
+      "field": null,
+      "basis": "快照无股息率字段",
+      "unit_ambiguous": false
+    }
+  },
+  "passed": true
+}

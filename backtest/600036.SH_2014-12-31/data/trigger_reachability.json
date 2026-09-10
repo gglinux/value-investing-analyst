@@ -1,0 +1,14 @@
+{
+  "trigger": 12.39,
+  "price": 16.59,
+  "low_52w": 9.41,
+  "high_52w": 16.62,
+  "band_source": "low_52w/high_52w",
+  "verdict": "reachable",
+  "band_position": 0.4133148404993065,
+  "codes": [
+    "TRIGGER_REACHABLE"
+  ],
+  "note": "触发价在 52 周价格带 41.3% 分位，可达性正常；需自现价 16.59 下跌 25.3%",
+  "reachable": true
+}
