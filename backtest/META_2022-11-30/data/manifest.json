@@ -1,0 +1,66 @@
+{
+ "case": "META_2022-11-30",
+ "generated_at": "2026-09-10",
+ "data_sources": [
+  {
+   "source": "SEC EDGAR companyfacts XBRL",
+   "version": "2026-09-10 抓取",
+   "used_for": [
+    "三表年度序列 2012-2021",
+    "季度序列 2021Q1-2022Q3",
+    "机器核对 crosscheck"
+   ],
+   "level": "A"
+  },
+  {
+   "source": "SEC EDGAR R-files（FilingSummary → R70/R72/R1）",
+   "version": "accn 0001326801-22-000018 / 0001326801-22-000108",
+   "used_for": [
+    "分部数据 FoA/RL",
+    "cover 股本 A+B"
+   ],
+   "level": "A"
+  },
+  {
+   "source": "SEC EDGAR 8-K EX-99.1",
+   "version": "accn 0001326801-22-000116（2022-11-09）",
+   "used_for": [
+    "裁员公告全文/管理层资本配置自认"
+   ],
+   "level": "A"
+  },
+  {
+   "source": "Meta IR 财报新闻稿（PRNewswire 转载）",
+   "version": "2022-10-26",
+   "used_for": [
+    "DAP/MAP/headcount/恒汇收入/SBC/回购/资本开支口径"
+   ],
+   "level": "B+（与 XBRL 逐项互证一致）"
+  },
+  {
+   "source": "东财行情 105.META（WebFetch 服务端通道）",
+   "version": "2026-09-10 抓取",
+   "used_for": [
+    "2022-11-30 收盘价 118.10",
+    "52 周高低（月K klt=103）"
+   ],
+   "level": "A-（历史时点行情）"
+  }
+ ],
+ "official_filing_missing": {
+  "years": [
+   2022
+  ],
+  "reason": "回放信息截断日 2022-11-30：FY2022 年报尚未发布（实际 filed 2023-02-02，晚于截断日禁用）。2022 年度数据以 9M22 10-Q（filed 2022-10-27）为最新合法口径，估值用 9M 实际+保守外推，不以任何形式充当年报。"
+ },
+ "adversarial_check": {
+  "status": "pending（Phase 0 执行后回填）",
+  "planned": "Meta + 做空报告/财务造假/监管处罚/集体诉讼/审计意见——截断日前已知：FTC 反垄断诉讼（2020-12 起诉）、Cambridge Analytica FTC 和解 2019-04（5B 罚款）、GSR/Six4Three 等集体诉讼、CMA/GDPR 罚单；EY 审计意见无保留（2021 10-K）"
+ },
+ "latest_quarter_checked": {
+  "latest_quarter": "2022Q3（10-Q filed 2022-10-27，截断日前 34 天）",
+  "conclusion": "截断日距最新季报 34 天 < 100 天时效线；期间重大事件已覆盖：2022-11-09 裁员 8-K（本案例信息集内）、2022-11 公布 Quest Pro 发售（10-25）。无未消化的剧变。"
+ },
+ "files": {},
+ "reconciliation_coverage_note": "三表勾稽：assets/liabilities/equity 仅 2022Q3 时点+部分年度有值（XBRL 抽取口径），详见 validate_data 覆盖率输出——若 <60% 登记 waiver 及原因"
+}

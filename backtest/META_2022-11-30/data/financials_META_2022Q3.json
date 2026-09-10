@@ -1,0 +1,580 @@
+{
+ "company": "Meta Platforms, Inc.",
+ "ticker": "META",
+ "currency": "USD",
+ "unit": "million",
+ "accounting_standard": "US-GAAP",
+ "fiscal_year_end": "12-31",
+ "company_type": "互联网平台/网络效应（社交广告），单一主业——FoA 广告占收入 97.7%（9M22），Reality Labs 为亏损分部",
+ "replay_date": "2022-11-30",
+ "information_cutoff": "2022-11-30",
+ "annual": [
+  {
+   "year": 2012,
+   "revenue": null,
+   "ebit": 538.0,
+   "net_income": 53.0,
+   "interest_expense": 51.0,
+   "d_and_a": 649.0,
+   "capex": 1235.0,
+   "wc_change": null,
+   "ocf": 1612.0,
+   "total_equity": 11755.0,
+   "total_assets": 15103.0,
+   "total_liabilities": 3348.0,
+   "total_debt": 1500.0,
+   "cash": 9626.0,
+   "cash_eq_only": 2384.0,
+   "marketable_sec": 7242.0,
+   "goodwill": 587.0,
+   "shares_diluted": 2166.0,
+   "buyback": 0.0,
+   "r_and_d": 1399.0,
+   "publish_date": "2015-01-29",
+   "source": "SEC XBRL companyfacts（10-K filed 2015-01-29，scripted extraction 零转录）"
+  },
+  {
+   "year": 2013,
+   "revenue": null,
+   "ebit": 2804.0,
+   "net_income": 1500.0,
+   "interest_expense": 56.0,
+   "d_and_a": 1011.0,
+   "capex": 1362.0,
+   "wc_change": null,
+   "ocf": 4222.0,
+   "total_equity": 15470.0,
+   "total_assets": 17895.0,
+   "total_liabilities": 2425.0,
+   "total_debt": 0.0,
+   "cash": 11449.0,
+   "cash_eq_only": 3323.0,
+   "marketable_sec": 8126.0,
+   "goodwill": 839.0,
+   "shares_diluted": 2517.0,
+   "buyback": 0.0,
+   "r_and_d": 1415.0,
+   "publish_date": "2016-01-28",
+   "source": "SEC XBRL companyfacts（10-K filed 2016-01-28，scripted extraction 零转录）"
+  },
+  {
+   "year": 2014,
+   "revenue": null,
+   "ebit": 4994.0,
+   "net_income": 2940.0,
+   "interest_expense": 23.0,
+   "d_and_a": 1243.0,
+   "capex": 1831.0,
+   "wc_change": null,
+   "ocf": 7326.0,
+   "total_equity": 36096.0,
+   "total_assets": 39966.0,
+   "total_liabilities": 3870.0,
+   "total_debt": 0.0,
+   "cash": 11199.0,
+   "cash_eq_only": 4315.0,
+   "marketable_sec": 6884.0,
+   "goodwill": 17981.0,
+   "shares_diluted": 2664.0,
+   "buyback": 0.0,
+   "r_and_d": 2666.0,
+   "publish_date": "2017-02-03",
+   "source": "SEC XBRL companyfacts（10-K filed 2017-02-03，scripted extraction 零转录）"
+  },
+  {
+   "year": 2015,
+   "revenue": null,
+   "ebit": 6225.0,
+   "net_income": 3688.0,
+   "interest_expense": 23.0,
+   "d_and_a": 1945.0,
+   "capex": 2523.0,
+   "wc_change": null,
+   "ocf": 10320.0,
+   "total_equity": 44218.0,
+   "total_assets": 49407.0,
+   "total_liabilities": 5189.0,
+   "total_debt": 0.0,
+   "cash": 18434.0,
+   "cash_eq_only": 4907.0,
+   "marketable_sec": 13527.0,
+   "goodwill": 18026.0,
+   "shares_diluted": 2853.0,
+   "buyback": 0.0,
+   "r_and_d": 4816.0,
+   "publish_date": "2018-02-01",
+   "source": "SEC XBRL companyfacts（10-K filed 2018-02-01，scripted extraction 零转录）"
+  },
+  {
+   "year": 2016,
+   "revenue": 27638.0,
+   "ebit": 12427.0,
+   "net_income": 10217.0,
+   "interest_expense": 10.0,
+   "d_and_a": 2342.0,
+   "capex": 4491.0,
+   "wc_change": null,
+   "ocf": 16108.0,
+   "total_equity": 59194.0,
+   "total_assets": 64961.0,
+   "total_liabilities": 5767.0,
+   "total_debt": 0.0,
+   "cash": 29449.0,
+   "cash_eq_only": 8903.0,
+   "marketable_sec": 20546.0,
+   "goodwill": 18122.0,
+   "shares_diluted": 2925.0,
+   "buyback": 0.0,
+   "r_and_d": 5919.0,
+   "publish_date": "2019-01-31",
+   "source": "SEC XBRL companyfacts（10-K filed 2019-01-31，scripted extraction 零转录）"
+  },
+  {
+   "year": 2017,
+   "revenue": 40653.0,
+   "ebit": 20203.0,
+   "net_income": 15934.0,
+   "interest_expense": 6.0,
+   "d_and_a": 3025.0,
+   "capex": 6733.0,
+   "wc_change": null,
+   "ocf": 24216.0,
+   "total_equity": 74347.0,
+   "total_assets": 84524.0,
+   "total_liabilities": 10177.0,
+   "total_debt": 0.0,
+   "cash": 41711.0,
+   "cash_eq_only": 8079.0,
+   "marketable_sec": 33632.0,
+   "goodwill": 18221.0,
+   "shares_diluted": 2956.0,
+   "buyback": 1976.0,
+   "r_and_d": 7754.0,
+   "publish_date": "2020-01-30",
+   "source": "SEC XBRL companyfacts（10-K filed 2020-01-30，scripted extraction 零转录）"
+  },
+  {
+   "year": 2018,
+   "revenue": 55838.0,
+   "ebit": 24913.0,
+   "net_income": 22112.0,
+   "interest_expense": 9.0,
+   "d_and_a": 4315.0,
+   "capex": 13915.0,
+   "wc_change": null,
+   "ocf": 29274.0,
+   "total_equity": 84127.0,
+   "total_assets": 97334.0,
+   "total_liabilities": 13207.0,
+   "total_debt": 0.0,
+   "cash": 41114.0,
+   "cash_eq_only": 10019.0,
+   "marketable_sec": 31095.0,
+   "goodwill": 18301.0,
+   "shares_diluted": 2921.0,
+   "buyback": 12879.0,
+   "r_and_d": 10273.0,
+   "publish_date": "2021-01-28",
+   "source": "SEC XBRL companyfacts（10-K filed 2021-01-28，scripted extraction 零转录）"
+  },
+  {
+   "year": 2019,
+   "revenue": 70697.0,
+   "ebit": 23986.0,
+   "net_income": 18485.0,
+   "interest_expense": 20.0,
+   "d_and_a": 5741.0,
+   "capex": 15102.0,
+   "wc_change": null,
+   "ocf": 36314.0,
+   "total_equity": 101054.0,
+   "total_assets": 133376.0,
+   "total_liabilities": 32322.0,
+   "total_debt": 0.0,
+   "cash": 54855.0,
+   "cash_eq_only": 19079.0,
+   "marketable_sec": 35776.0,
+   "goodwill": 18715.0,
+   "shares_diluted": 2876.0,
+   "buyback": 4202.0,
+   "r_and_d": 13600.0,
+   "publish_date": "2022-02-03",
+   "source": "SEC XBRL companyfacts（10-K filed 2022-02-03，scripted extraction 零转录）"
+  },
+  {
+   "year": 2020,
+   "revenue": 85965.0,
+   "ebit": 32671.0,
+   "net_income": 29146.0,
+   "interest_expense": null,
+   "d_and_a": 6862.0,
+   "capex": 15115.0,
+   "wc_change": null,
+   "ocf": 38747.0,
+   "total_equity": 128290.0,
+   "total_assets": 159316.0,
+   "total_liabilities": 31026.0,
+   "total_debt": 0.0,
+   "cash": 61954.0,
+   "cash_eq_only": 17576.0,
+   "marketable_sec": 44378.0,
+   "goodwill": 19050.0,
+   "shares_diluted": 2888.0,
+   "buyback": 6272.0,
+   "r_and_d": 18447.0,
+   "publish_date": "2022-02-03",
+   "source": "SEC XBRL companyfacts（10-K filed 2022-02-03，scripted extraction 零转录）"
+  },
+  {
+   "year": 2021,
+   "revenue": 117929.0,
+   "ebit": 46753.0,
+   "net_income": 39370.0,
+   "interest_expense": null,
+   "d_and_a": 7967.0,
+   "capex": 18567.0,
+   "wc_change": null,
+   "ocf": 57683.0,
+   "total_equity": 124879.0,
+   "total_assets": 165987.0,
+   "total_liabilities": 41108.0,
+   "total_debt": 0.0,
+   "cash": 47998.0,
+   "cash_eq_only": 16601.0,
+   "marketable_sec": 31397.0,
+   "goodwill": 19197.0,
+   "shares_diluted": 2859.0,
+   "buyback": 44537.0,
+   "r_and_d": 24655.0,
+   "publish_date": "2022-02-03",
+   "source": "SEC XBRL companyfacts（10-K filed 2022-02-03，scripted extraction 零转录）"
+  }
+ ],
+ "balance_2022Q3_0930": {
+  "Assets": 178894.0,
+  "Liabilities": 54800.0,
+  "StockholdersEquity": 124094.0,
+  "CashAndCashEquivalentsAtCarryingValue": 14308.0,
+  "MarketableSecuritiesCurrent": 27468.0,
+  "LongTermDebtNoncurrent": 9922.0,
+  "Goodwill": 20268.0,
+  "AccountsReceivableNetCurrent": 11227.0
+ },
+ "quarters": {
+  "revenue": [
+   {
+    "end": "2021-03-31",
+    "val": 26171.0
+   },
+   {
+    "end": "2021-06-30",
+    "val": 29077.0
+   },
+   {
+    "end": "2021-09-30",
+    "val": 29010.0
+   },
+   {
+    "end": "2021-12-31",
+    "val": 33671.0
+   },
+   {
+    "end": "2022-03-31",
+    "val": 27908.0
+   },
+   {
+    "end": "2022-06-30",
+    "val": 28821.0
+   },
+   {
+    "end": "2022-09-30",
+    "val": 27715.0
+   }
+  ],
+  "net_income": [
+   {
+    "end": "2021-03-31",
+    "val": 9497.0
+   },
+   {
+    "end": "2021-06-30",
+    "val": 10395.0
+   },
+   {
+    "end": "2021-09-30",
+    "val": 9193.0
+   },
+   {
+    "end": "2021-12-31",
+    "val": 10285.0
+   },
+   {
+    "end": "2022-03-31",
+    "val": 7465.0
+   },
+   {
+    "end": "2022-06-30",
+    "val": 6687.0
+   },
+   {
+    "end": "2022-09-30",
+    "val": 4395.0
+   }
+  ],
+  "operating_income": [
+   {
+    "end": "2021-03-31",
+    "val": 11378.0
+   },
+   {
+    "end": "2021-06-30",
+    "val": 12367.0
+   },
+   {
+    "end": "2021-09-30",
+    "val": 10423.0
+   },
+   {
+    "end": "2021-12-31",
+    "val": 12585.0
+   },
+   {
+    "end": "2022-03-31",
+    "val": 8524.0
+   },
+   {
+    "end": "2022-06-30",
+    "val": 8357.0
+   },
+   {
+    "end": "2022-09-30",
+    "val": 5664.0
+   }
+  ],
+  "ocf": [
+   {
+    "end": "2021-03-31",
+    "val": 12242.0
+   },
+   {
+    "end": "2021-06-30",
+    "val": 13247.0
+   },
+   {
+    "end": "2021-09-30",
+    "val": 14090.0
+   },
+   {
+    "end": "2021-12-31",
+    "val": 18104.0
+   },
+   {
+    "end": "2022-03-31",
+    "val": 14076.0
+   },
+   {
+    "end": "2022-06-30",
+    "val": 12196.0
+   },
+   {
+    "end": "2022-09-30",
+    "val": 9692.0
+   }
+  ],
+  "capex": [
+   {
+    "end": "2021-03-31",
+    "val": 4303.0
+   },
+   {
+    "end": "2021-06-30",
+    "val": 4641.0
+   },
+   {
+    "end": "2021-09-30",
+    "val": 4346.0
+   },
+   {
+    "end": "2021-12-31",
+    "val": 5277.0
+   },
+   {
+    "end": "2022-03-31",
+    "val": 5441.0
+   },
+   {
+    "end": "2022-06-30",
+    "val": 7572.0
+   },
+   {
+    "end": "2022-09-30",
+    "val": 9375.0
+   }
+  ]
+ },
+ "segments": {
+  "source": "2021 10-K R72（Segment Revenue and Operating Results，accn 0001326801-22-000018）+ 2022Q3 10-Q R70（Segment Information，accn 0001326801-22-000108）——分部附注原文（A 级）",
+  "note": "2021 10-K 重列口径：2019 起分部重列（FoA/RL）；RL 分部 2018 年及以前不存在。单位 M USD。",
+  "annual": [
+   {
+    "segment": "Family of Apps",
+    "year": 2021,
+    "revenue": 115655,
+    "operating_income": 56946
+   },
+   {
+    "segment": "Reality Labs",
+    "year": 2021,
+    "revenue": 2274,
+    "operating_income": -10193
+   },
+   {
+    "segment": "Family of Apps",
+    "year": 2020,
+    "revenue": 84826,
+    "operating_income": 39294
+   },
+   {
+    "segment": "Reality Labs",
+    "year": 2020,
+    "revenue": 1139,
+    "operating_income": -6623
+   },
+   {
+    "segment": "Family of Apps",
+    "year": 2019,
+    "revenue": 70196,
+    "operating_income": 28489
+   },
+   {
+    "segment": "Reality Labs",
+    "year": 2019,
+    "revenue": 501,
+    "operating_income": -4503
+   }
+  ],
+  "nine_months": [
+   {
+    "segment": "Family of Apps",
+    "period": "2022 9M",
+    "revenue": 83011,
+    "operating_income": 31983
+   },
+   {
+    "segment": "Reality Labs",
+    "period": "2022 9M",
+    "revenue": 1433,
+    "operating_income": -9438
+   },
+   {
+    "segment": "Family of Apps",
+    "period": "2021 9M",
+    "revenue": 82861,
+    "operating_income": 41058
+   },
+   {
+    "segment": "Reality Labs",
+    "period": "2021 9M",
+    "revenue": 1397,
+    "operating_income": -6890
+   }
+  ],
+  "quarter_q3": [
+   {
+    "segment": "Family of Apps",
+    "period": "2022Q3",
+    "revenue": 27429,
+    "operating_income": 9336
+   },
+   {
+    "segment": "Reality Labs",
+    "period": "2022Q3",
+    "revenue": 285,
+    "operating_income": -3672
+   },
+   {
+    "segment": "Family of Apps",
+    "period": "2021Q3",
+    "revenue": 28452,
+    "operating_income": 13054
+   },
+   {
+    "segment": "Reality Labs",
+    "period": "2021Q3",
+    "revenue": 558,
+    "operating_income": -2631
+   }
+  ],
+  "advertising_revenue": {
+   "2022_9M": 82387,
+   "2021_9M": 82294,
+   "2022Q3": 27237,
+   "2021Q3": 28276
+  }
+ },
+ "users": {
+  "source": "Q3 2022 财报新闻稿（2022-10-26，IR 站/PRNewswire，B+ 级）",
+  "DAP_sep_2022_billion": 2.93,
+  "DAP_yoy_pct": 4,
+  "MAP_sep_2022_billion": 3.71,
+  "MAP_yoy_pct": 4,
+  "headcount_20220930": 87314,
+  "headcount_yoy_pct": 28,
+  "ARPP_note": "官方 ARPP 表在 10-Q MD&A（WebFetch 截断未取得）——用 代理ARPP = Q收入 ÷ 季末月DAP 代替，底稿注明近似口径（低估约 0.5-1%，因季均 DAP < 季末月 DAP）",
+  "ARPP_proxy_2022Q3_usd": 9.458703071672355,
+  "ARPP_proxy_2021Q3_usd": 10.30550621669627,
+  "DAP_sep_2021_billion": 2.815,
+  "DAP_2021_source": "2.93B ÷ 1.04 反推（官方 +4% yoy），B- 级近似"
+ },
+ "shares_cover_20221021": {
+  "class_a_m": 2248.672204,
+  "class_b_m": 402.87647,
+  "total_m": 2651.548674,
+  "source": "Q3 2022 10-Q R1 Cover Page（2022-10-21）"
+ },
+ "cfo_outlook": {
+  "status": "新闻稿 CFO Outlook Commentary 静态页不可得（JS 折叠，两次抓取失败）——走 C 级检索登记（待补），估值不依赖该指引，改用 9M 实际 + 保守外推",
+  "known_from_layoff_8k": "2022-11-09 裁员公告（A 级 8-K EX-99.1）：>11,000 人 / 13%，招聘冻结延至 2023Q1，削减可支配支出"
+ },
+ "spike_notes": {
+  "2013.net_income": "1,500 vs 53（+2730%）：2012 年 IPO 一次性费用（SBC ~1.8B）压低基数；移动广告货币化启动（News Feed ads 2012 下半年上线），业务正常加速——年报 MD&A 确认",
+  "2013.ocf": "+162% 同上：净利基数效应 + 现金回收随广告收入放大",
+  "2014.net_income": "+96%：移动端收入占比 2014 年达 66%（vs 2013 49%，年报 MD&A），WhatsApp/Oculus 并购不影响当年利润（19,000M 对价大部分为股权）",
+  "2014.ocf": "+74% 与净利同源",
+  "2014.total_equity": "+133%：2014-03 190M 股增发 + WhatsApp（15,222M）/Oculus（2,003M）股权对价入账，官方 10-K 股本变动表",
+  "2016.net_income": "+177%（3,688→10,217）：①15% 税率低基数（2015 年 42% 递延税释放为一次性费用压低 2015 净利）；②视频广告（Facebook Live/Audience Network）收入 +54%，年报 MD&A 确认 2016 有效税率 15%（2015 42%）",
+  "2016.ocf": "+56% 与净利同源",
+  "2016.capex": "+78%（2,523→4,491）：数据中心与网络基础设施扩建（Luleå/Clonee 数据中心），年报 MD&A 资本开支章节",
+  "2017.net_income": "+56%：美国 TCJA 税改 2017Q4 一次性收益（递延税负债重估 2.3B 减费用），叠加广告业务 +47%",
+  "2017.ocf": "+50% 与净利同源",
+  "2018.capex": "+107%（6,733→13,915）：数据中心/服务器/租赁资产扩张加速（年报 MD&A：2018 资本开支主要为数据中心、服务器、网络基础设施及办公设施）",
+  "2020.net_income": "+58%（18,485→29,146）：疫情电商红利（广告主线上转移），有效税率降 12.2%（vs 2019 21.7%）+ 收入 +22%（正常化后增速 ~25%），需求前置——2022-11-09 裁员信官方承认该红利被误判为永久"
+ },
+ "crosscheck_exempt": {},
+ "crosscheck": [
+  {
+   "year": 2019,
+   "revenue": 70697.0,
+   "source": "[E:companyfacts_META_2022-11-30.json] EDGAR XBRL 自动核对",
+   "net_income": 18485.0,
+   "ocf": 36314.0,
+   "shares_diluted": 2876.0
+  },
+  {
+   "year": 2020,
+   "revenue": 85965.0,
+   "source": "[E:companyfacts_META_2022-11-30.json] EDGAR XBRL 自动核对",
+   "net_income": 29146.0,
+   "ocf": 38747.0,
+   "shares_diluted": 2888.0
+  },
+  {
+   "year": 2021,
+   "revenue": 117929.0,
+   "source": "[E:companyfacts_META_2022-11-30.json] EDGAR XBRL 自动核对",
+   "net_income": 39370.0,
+   "ocf": 57683.0,
+   "shares_diluted": 2859.0
+  }
+ ]
+}
