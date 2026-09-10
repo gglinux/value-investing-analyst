@@ -1,0 +1,110 @@
+{
+ "company": "Meta Platforms",
+ "ticker": "META",
+ "currency": "USD",
+ "price": 118.1,
+ "price_source": "market_snapshot_META_2022Q3.json（2022-11-30 收盘，东财 105.META fqt=0，A- 级，三角校验 +0.00%）",
+ "moat": "wide",
+ "moat_note": "宽护城河（有损伤证据）：①用户侧网络效应与规模未受损——DAP 2022Q3 2.93B 仍 +4%，用户没有离开（量价分解：2022 下滑 100% 来自价格侧，量在增长）；②盈利能力即便重创年（9M22）FoA OPM 38.5% 仍为竞对最高（GOOGL 全司 OPM ~26%）；③ROIC 5y 46.2% vs GOOGL 38.2%，资本回报质量为同业之冠；④ATT/TikTok 是对'定价权'的损伤证据而非'网络效应'的破坏证据——降级条件：若 DAP 停止增长或 FoA OPM 跌破 25% 则降 narrow。反方证据登记：平台对苹果生态的单向依赖（ATT 单事件 10B 冲击）证明其护城河有外部可击点，非全知全能",
+ "discount_rate": 0.1,
+ "discount_rate_basis": "美股大盘长期名义回报 ~9-10% 区间取上限 10%（保守）；与 reverse_dcf 全链一致",
+ "hold_years": 5,
+ "dividend_yield": 0.0,
+ "dividend_yield_basis": "sustainable_forward",
+ "dividend_yield_basis_note": "Meta 截至 2022-11-30 从未派息（2022-02-25 首次宣布股息是 2024 年的事，截断日不可知不可用）——无股息；不收敛下限完全依赖内在价值增速",
+ "intrinsic_value_growth": 0.06,
+ "iv_growth_note": "基准情景每股内在价值长期增速 6%（保守合成）：OE 长期增速 fade 终点 ~3.5-4%（2022 结构+效率修复后）+ 净股本缩减 ~2-3%/年（2021 回购 44,193M≈市值 7%/年、9M22 回购 21,093M≈6.7%/年，减 SBC 稀释 ~1.5-2%/年）→ 名义 ~7-9% 再保守打折取 6%；悲观情景下回购会收缩（2022 已收缩）故不给更高",
+ "default_probabilities": {
+  "悲观": 0.3,
+  "基准": 0.5,
+  "乐观": 0.2
+ },
+ "scenarios": [
+  {
+   "name": "悲观",
+   "value_per_share": 73.73,
+   "probability": 0.3,
+   "method": "pe_trough_multiple",
+   "method_note": "极端市盈率触底法（与基准 DCF 完全独立）：悲观盈利 23,000（2022 全年外推 25,350×0.9：Q4 指引下限+RL 'significantly grow' 官方指引+ATT 尾部）× 历史极端悲观 PE 8.5x（现价 PE-TTM 10.86 已为上市以来最低分位；8.5x 假设衰退正式确认+RL 二轮裁员使市场把 Meta 定价为'低增长成熟广告公司'——对标 2022-11 谷歌 17x/PINS 30x 亏损期 SNAP 无意义的极端下沿，取上市以来 PE 分位 <5% 外推）；净现金 31,854 不加回（机器重算口径——恐慌定价极端下现金不参与倍数，保守）= 195,500 → /2,651.548674 = 73.73 [E:market_snapshot_META_2022Q3.json][E:financials_META_2022Q3.json]",
+   "method_inputs": {
+    "shares_m": 2651.548674,
+    "pessimistic_ni_m": 23000,
+    "pessimistic_ni_basis": "2022 外推 25,350（9M 实际 18,547 + Q4 指引中值收入 31,250、费用指引 85-87B 隐含 OI 8,150、税率 16%）× 0.9",
+    "trough_pe_basis": "现价 PE-TTM 10.86=上市最低分位；再压 22% 模拟'衰退确认+RL 失控'双杀；与 peer_death_analogy 交叉：2022-11 美股互联网最低 PE 组（META 10.9/SNAP n.m./PINS 亏损）再压至 8-9x 即完全丧失高质量溢价",
+    "net_cash_haircut_m": 0,
+    "net_cash_basis": "机器重算口径：pe_trough_multiple = 悲观盈利×触底倍数÷股本，不含净现金加回——接受更保守口径（市场恐慌定价极端下净现金不参与倍数，与本情景 PE 触底假设自洽）",
+    "trough_multiple": 8.5,
+    "trough_multiple_type": "PE（对悲观盈利 23,000 的市盈率倍数）",
+    "recompute": "23,000 × 8.5 = 195,500 百万 → ÷2,651.548674 = 73.73/股（净现金 31,854 不加回，保守）",
+    "earnings_m": 23000
+   },
+   "stressed_assumptions": [
+    "ATT 结构损伤永久化 + TikTok 分流不逆转：悲观盈利固化",
+    "RL 2023 亏损 'significantly grow'（官方原文）且永不贡献经营利润",
+    "市场将 Meta 重定价为无增长成熟广告公司：PE 触底 8.5x 并长期锁死",
+    "回购收缩+现金不分配：净现金仅按半价计入"
+   ],
+   "probability_evidence": "[E:meta.json] 先验逻辑；事件证据：CFO 官方 ATT 2022 影响 ~10B（2022-02-02 电话会多源交叉）+ RL 9M 亏 9,438 + Q4 指引中值低于卖方预期 32.2B + 2022-11-22 欧盟隐私监管再击落 6.8%（现价 114.12）——悲观概率 30% 对应'以上全部同时固化'的路径",
+   "non_operating_addback_per_share": 0.0,
+   "non_operating_addback_note": "0——本方法（pe_trough_multiple）不加回净现金（机器口径，更保守）；净现金保护已隐含在「悲观盈利仍为正」中"
+  },
+  {
+   "name": "基准",
+   "value_per_share": 199.14,
+   "probability": 0.5,
+   "method": "dcf_owner_earnings",
+   "method_note": "业主盈利 DCF fade 模式：正常化 NI 28,500（2022 结构 + 效率年修复 3,000+：2022-11-09 裁员 13% 官方信'爬两倍效率坡'+2023 费用指引 96-101B 相对 2022 的增幅收敛）+ D&A 7,000 − 维持 capex 8,000 = OE 27,500；期初 g=8% 线性衰减到 3% 永续，r=10%，10 年，终值占比 54% <60% [E:reverse_dcf 输出]",
+   "method_inputs": {
+    "shares_m": 2651.548674,
+    "base_oe_m": 27500,
+    "norm_ni_m": 28500,
+    "norm_ni_basis": "2021 实际 39,370 × 0.72；等价于 2022 外推 25,350 + 效率修复 ~3,150；TTM PE 10.86 市场定价隐含 −5.7%/年 vs 此处 +8%——差异即本案争论核心",
+    "growth": 0.08,
+    "terminal_growth": 0.03,
+    "discount_rate": 0.1,
+    "years": 10,
+    "fade": true,
+    "add_back_net_cash_m": 31854
+   },
+   "stressed_assumptions": [],
+   "probability_evidence": "[E:meta.json] 先验主逻辑：估值极端便宜 + FoA 质地未损 + 管理层已自证纠错（裁员 8-K）——50% 为缺省档",
+   "non_operating_addback_per_share": 12.01,
+   "non_operating_addback_note": "净现金加回 31854M（悲观 50% 折价变现/基准与乐观全额）÷ 2,651.548674 股"
+  },
+  {
+   "name": "乐观",
+   "value_per_share": 275.64,
+   "probability": 0.2,
+   "method": "dcf_owner_earnings",
+   "method_note": "业主盈利 DCF fade：正常化 NI 34,000（介于 2021 39,370 与 2022 25,350 之间偏上：价格回吐 2021 过热 + 广告 2023 回暖 + Reels 货币化差距收敛 + RL 亏损受控）+ D&A 7,500 − 维持 capex 8,500 = OE 33,000；期初 g=12% 衰减到 3%，r=10%，10 年，终值占比 55% [E:reverse_dcf 输出]",
+   "method_inputs": {
+    "shares_m": 2651.548674,
+    "base_oe_m": 33000,
+    "norm_ni_m": 34000,
+    "norm_ni_basis": "FoA 单独看 9M22 OI 31,983（年化 ~42B）×(1−16%) ≈ 35.7B，RL 按官方'2023 后 pacing'承诺收敛至 −2B/年 → ~33.7B；本情景假设该路径在 2024-2025 达成",
+    "growth": 0.12,
+    "terminal_growth": 0.03,
+    "discount_rate": 0.1,
+    "years": 10,
+    "fade": true,
+    "add_back_net_cash_m": 31854
+   },
+   "stressed_assumptions": [],
+   "probability_evidence": "[E:meta.json] 缺省档；上行证据：2021 单价 +30.8% 证明需求弹性和宏观红利可以快速回归；Reels 已有 140B 日播放量级（Q3 新闻稿口径）+ 竞价市场 2023 通胀缓解（保守不给宏观信用）",
+   "non_operating_addback_per_share": 12.01,
+   "non_operating_addback_note": "净现金加回 31854M（悲观 50% 折价变现/基准与乐观全额）÷ 2,651.548674 股"
+  }
+ ],
+ "no_real_downside_check": "悲观 73.73 vs 现价 118.10 = −37.6%——存在真实下行；保护层=悲观盈利 23,000×8.5x 为资产质量极端定价（含「净现金不参与倍数」的双重悲观），悲观 IRR ~0.1%/年≈名义保本但十年机会成本真实",
+ "expected_value_per_share": 176.82,
+ "expected_value_calc": "0.3×73.73 + 0.5×199.14 + 0.2×275.64 = 22.12+99.57+55.13 = 176.82 —— 期望值高于现价 +49.7%",
+ "value_trap": null,
+ "implied_growth_cross": {
+  "market_implied_oe_growth": -0.057,
+  "implied_growth_run": "reverse_dcf implied-growth --market-cap 313139 --base-oe 27500 --r 10% --g 3% --years 10 --fade --deduct 31854",
+  "reading": "市场定价隐含业主盈利 10 年 −5.7%/年（fade 至 3%）——比本案悲观情景（0 实质增长）更悲观。这是『市场认定元宇宙烧毁公司』叙事的定量表达；系统需要在情绪极值处回答：用户 +4%、FoA OPM 38.5%、净现金 31.8B 的事实链是否支持比 −5.7% 更好的预期"
+ },
+ "test_point_note": "本案为假阴性专项：市场情绪把'元宇宙烧钱'叙事推至极端（52 周 price position 11.3%、PE-TTM 10.86 上市最低、市场隐含负增长），检验系统是否被情绪带走而误拒优质资产；闸门判定留待 verdict 与官方答案比对",
+ "iv_growth_evidence": "[E:financials_META_2022Q3.json] 2021 回购 44,193M（市值 7.1%）、9M22 回购 21,093M（6.7%）、SBC 9M22 8,984M（稀释 ~1.5-2%/年）→ 净股本缩减 ~3-5%/年；[E:scenarios.json 基准 fade] OE 长期增速 fade 终点 ~3.5-4%；合成 7-9% 保守取 6%（悲观情形回购会收缩，故不打满）——合成链条每一环均为底稿数字",
+ "non_operating_addback_basis": "净现金 31,854M = 现金+有价证券 41,776 − 长期债 9,922 [A]；悲观情景按 50% 变现折价（S5 分层要求），基准/乐观全额（回购能力与现金分配为基准假设的组成部分）"
+}
