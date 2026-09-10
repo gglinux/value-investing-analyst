@@ -224,6 +224,16 @@ ASSERTIONS = {
     "OCF_PROFIT_DIVERGENCE": {"P0_R1_OCF_PROFIT_DIVERGENCE", "M_FCF_QUALITY"},
     # 福耀负样本用：任一造假类告警触发即视为误杀
     "ANY_FRAUD_ALERT": _FRAUD_VETO | _FRAUD_REDFLAG,
+    # 杠杆与资金链压力（观察级，非造假形态）：短债长投期限错配 + 融资依赖
+    # （累计融资 > 3x 累计分红+回购）。第三批恒大案官方断言「杠杆与资金链风险」
+    # 的注册表等价物——立案前软银案「官方 must_trigger 无等价物」缺口的补全。
+    # P0 码由 Phase 0 按 checklist 赋码（manually_recorded 先例）。
+    "DEBT_LIQUIDITY_STRESS": {
+        "P0_R9_SHORT_DEBT_LONG_ASSET", "P0_R11_FINANCING_VS_RETURN"},
+    # 商誉/并购驱动增长（观察级）：商誉占净资产 > 30%。第四批 Valeant 案官方
+    # 断言「商誉/并购驱动增长、add-back 不可持续」的等价物。刻意不入
+    # ANY_FRAUD_ALERT 复用（该组语义是造假误杀防护，商誉重不等于造假）。
+    "GOODWILL_ACQUISITION_DRIVEN": {"P0_R6_GOODWILL_HEAVY"},
 
     # ---- 周期与基期纪律 ----
     # 海控案的等价关系在此显式化：引擎输出 NORM_BASE_UNUSABLE（均值路径失效、

@@ -7,7 +7,7 @@ B 档协议 = 双会话 + 文件闸门：答案在 Step 3 verdict commit 之前*
 
 用法：
   python3 scripts/prepare_case.py --seal backtest/ANSWERS.md
-      # 把第三/四批答案从 ANSWERS.md 抽出，逐案例写入 backtest/sealed_answers/
+      # 把未执行批次（第三/四/五批）答案从 ANSWERS.md 抽出，逐案例写入 backtest/sealed_answers/
   python3 scripts/prepare_case.py --reveal backtest/<ticker>_<date>/
       # 机器校验该案例 verdict.json 已被 git 提交后，解码落地 answer_source.md
   python3 scripts/prepare_case.py --status
@@ -56,9 +56,18 @@ ALIAS_TO_CASE = {
     "福特": "F_2005-06-30",
     "新城": "601155.SH_2019-06-30",
     "新城控股": "601155.SH_2019-06-30",
+    # 第五批（类型卡阈值锚 + 豁免收窄验证，2026-09-10 设计）
+    "长电": "600900.SH_2013-12-31",
+    "长江电力": "600900.SH_2013-12-31",
+    "格力": "000651.SZ_2015-09-30",
+    "腾讯": "0700.HK_2018-10-30",
+    "诺基亚": "NOK_2007-10-31",
+    "康师傅": "0322.HK_2014-01-31",
+    "牧原": "002714.SZ_2021-02-22",
 }
 
-SEALED_BATCHES = [3, 4]  # 这两批未执行，答案必须密封；一/二批已执行，保留明文
+SEALED_BATCHES = [3, 4, 5]  # 未执行批次，答案必须密封；一/二批已执行，保留明文
+_BATCH_CN = {3: "三", 4: "四", 5: "五"}
 
 
 def _git(args, cwd=REPO_ROOT):
@@ -72,7 +81,7 @@ def _seal(answers_md: Path) -> int:
 
     for batch in SEALED_BATCHES:
         # 段落标记形如 **第三批** 或 **第四批（假阳性专项——…）**
-        m = re.search(rf"^\*\*第{'三四'[batch - 3]}批.*?\*\*\s*$", text, re.M)
+        m = re.search(rf"^\*\*第{_BATCH_CN[batch]}批.*?\*\*\s*$", text, re.M)
         if not m:
             print(f"⚠ 未找到第{batch}批段落标记，跳过")
             continue

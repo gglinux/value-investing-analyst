@@ -105,8 +105,23 @@ def rerun_engine(case):
     try:
         fin = sorted(glob.glob(os.path.join(data, "financials_*.json")))
         if fin:
+            # 金融类路由（第三批招行/平安）：通用管道对 bank/保险硬拒绝，
+            # 按 company_type 分发到专属管道。银行/保险管道不产注册表告警码
+            # （输出字段无 alert_codes），对 codes 的贡献为空属预期——
+            # 金融案的 engine_derived 主要来自 check_scenarios 侧。
+            try:
+                _fin_head = json.load(open(fin[0], encoding="utf-8"))
+            except Exception:
+                _fin_head = {}
+            _ctype = str(_fin_head.get("company_type", "")).strip().lower()
+            if _ctype in ("bank", "银行"):
+                _engine = "compute_metrics_bank.py"
+            elif _ctype in ("保险", "保险集团", "财险", "寿险", "insurance"):
+                _engine = "compute_metrics_insurance.py"
+            else:
+                _engine = "compute_metrics.py"
             o = os.path.join(tmp, "m.json")
-            cmd = [_py(), os.path.join(REPO, "scripts", "compute_metrics.py"),
+            cmd = [_py(), os.path.join(REPO, "scripts", _engine),
                    fin[0]]
             # P2-8：市值传参以复现 engine_derived 为准（见 RERUN_PARAMS 注释）
             _p = RERUN_PARAMS.get(name) or {}

@@ -2228,7 +2228,7 @@ if os.path.exists(_ANSWERS_FP):
     # scripts/prepare_case.py --seal），明文不得回流。
     _SEALED = os.path.join(ROOT, "backtest", "sealed_answers")
     _enc = sorted(f for f in os.listdir(_SEALED) if f.endswith(".enc")) if os.path.isdir(_SEALED) else []
-    check("密封库保有第三/四批全部 12 案", len(_enc) == 12,
+    check("密封库保有第三/四/五批全部 18 案", len(_enc) == 18,
           f"密封文件 {len(_enc)} 个：{_enc}")
     check("ANSWERS.md 无未执行批次明文残留（三/四批已密封）",
           ("**第三批**" not in _ANS or "已密封" in _ANS) and "**第四批" not in _ANS.replace(
