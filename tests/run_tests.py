@@ -2284,6 +2284,62 @@ check("_git_first_commit_time 对仓库内文件返回正时间戳",
 check("_git_first_commit_time 对不存在路径返回 None",
       _RBA._git_first_commit_time(os.path.join(ROOT, "_no_such_file_.xyz") + "/verdict.json") is None)
 
+# ── 13.5 FP/FN 双向统计（REQ-P0-01 假阳性专项前置，2026-09-10）──
+print("\n== 13.5 FP/FN 双向统计（REQ-P0-01） ==")
+
+
+def _mkcase(name, exp, got, must=None, fired=None, fp_control=False, batch=1):
+    return {"name": name, "dir": "/nonexistent/" + name, "meta": {"batch": batch},
+            "verdict": {"verdict_ordinal": got, "codes": fired or [],
+                        "codes_provenance": {"engine_derived": fired or []}},
+            "answer": {"expected_verdict_set": exp, "must_trigger": must or [],
+                       "fp_control": fp_control, "known_failures": []}}
+
+
+_r_neg = _RBA.check_case(_mkcase("neg_ok", [0, 1], 1))
+check("期望 <3 → sample_role=negative", _r_neg["sample_role"] == "negative")
+check("negative 且档位 <3 → 无假阳性", not _r_neg["false_positive"])
+_r_fp = _RBA.check_case(_mkcase("neg_fp", [1, 2], 3))
+check("negative 且档位 ≥3 → 假阳性", _r_fp["false_positive"])
+check("假阳性进入 regressions（不接受豁免）",
+      any("假阳性轨红灯" in x for x in _r_fp["regressions"]))
+_r_pos = _RBA.check_case(_mkcase("pos_fn", [3, 4], 2))
+check("期望 ≥3 → sample_role=positive", _r_pos["sample_role"] == "positive")
+check("positive 且档位 <3 → 假阴性", _r_pos["false_negative"])
+check("档位=2 → abstained", _r_pos["abstained"])
+_r_mix = _RBA.check_case(_mkcase("mixed", [2, 3], 2))
+check("期望跨 3 → sample_role=mixed，不计 FP 也不计 FN",
+      _r_mix["sample_role"] == "mixed" and not _r_mix["false_positive"]
+      and not _r_mix["false_negative"])
+_r_un = _RBA.check_case(_mkcase("unscored", None, 2))
+check("官方不约束档位 → sample_role=unscored", _r_un["sample_role"] == "unscored")
+_r_ctrl_hit = _RBA.check_case(_mkcase("ctrl_hit", [0, 1], 1, must=["CYCLE_PEAK"],
+                                      fired=["NORM_CYCLE_PEAK"], fp_control=True))
+check("fp_control 对照：must_trigger 命中且无假阳性 → 红灯命中",
+      _r_ctrl_hit["fp_control"] and _r_ctrl_hit["fp_control_redlight_hit"])
+_r_ctrl_miss = _RBA.check_case(_mkcase("ctrl_miss", [0, 1], 3, must=["CYCLE_PEAK"],
+                                       fired=[], fp_control=True))
+check("fp_control 对照：放行且漏判 → 红灯未命中",
+      _r_ctrl_miss["fp_control"] and not _r_ctrl_miss["fp_control_redlight_hit"])
+
+_s = _RBA.fp_fn_summary([_r_neg, _r_fp, _r_pos, _r_mix, _r_un, _r_ctrl_hit, _r_ctrl_miss])
+check("FP 率分母 = negative 样本数（4）", _s["negative_n"] == 4, str(_s))
+check("FP 率 = 2/4（neg_fp + ctrl_miss）", abs(_s["fp_rate"] - 0.5) < 1e-9, str(_s["fp_rate"]))
+check("FN 率分母 = positive 样本数（1），FN 率 = 1/1", _s["positive_n"] == 1 and _s["fn_rate"] == 1.0)
+check("对照红灯命中率 = 1/2", _s["fp_control_n"] == 2 and abs(_s["fp_control_redlight_hit_rate"] - 0.5) < 1e-9)
+check("弃权率分母只含有角色样本（6，剔除 unscored）", _s["scored_n"] == 6, str(_s["scored_n"]))
+_s_none = _RBA.fp_fn_summary([_r_pos])
+check("无负向样本 → fp_rate=None（表述为「未被检验」而非 0）", _s_none["fp_rate"] is None)
+check("目标区间不对称：FP 目标 < FN 目标",
+      _RBA.FP_RATE_TARGET < _RBA.FN_RATE_TARGET)
+check("PROMPT 已写入 FP/FN 目标区间与 fp_control 字段",
+      "FP ≤10%、FN ≤40%" in _PROMPT and "fp_control" in _PROMPT)
+check("PROMPT 已写入执行顺序 1 → 2 → 4 → 3 → 5（假阳性前置）",
+      "1 → 2 → 4 → 3 → 5" in _PROMPT)
+check("PROMPT 已写入假阳性对照替补池", "假阳性对照替补池" in _PROMPT)
+_bl = json.load(open(os.path.join(ROOT, "backtest", "assertion_baseline.json"), encoding="utf-8"))
+check("assertion_baseline.json 含 _fp_fn 段", "_fp_fn" in _bl and "false_positives" in _bl["_fp_fn"])
+
 check("PROMPT 已写入批次收官闭环（第八之二节）",
       "八之二" in _PROMPT and "闭环六步" in _PROMPT and "移交清单" in _PROMPT)
 check("闭环声明 observations.md 为未决项事实源（不设独立路线图文件）",

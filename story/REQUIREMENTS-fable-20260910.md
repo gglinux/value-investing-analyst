@@ -105,7 +105,14 @@
 - 验收：`assertion_baseline.json` 新增假阳性轨指标（FP 率、红灯命中率）；`BATCH3_FINDINGS.md` 起每批报告 FP/FN 比值。
 - 涉及文件：`backtest/PROMPT.md`、`backtest/ANSWERS.md`、`backtest/sealed_answers/`、`scripts/run_backtest_assertions.py`
 - 依赖：REQ-P0-05
-- 状态：todo
+- 状态：**doing**（2026-09-10 基础设施完成，等第四批案例执行）
+- 进展：
+  - ✅ `run_backtest_assertions.py` 新增 FP/FN 双向统计：按 `expected_verdict_set` 自动分样本角色（negative / positive / mixed / unscored），输出假阳性率、假阴性率、弃权率、对照红灯命中率；负向样本为 0 时输出「未被检验」而非 0；目标区间常量 `FP_RATE_TARGET=0.10` / `FN_RATE_TARGET=0.40`。
+  - ✅ `answer.json` 新增 `fp_control` 字段标记假阳性对照；`assertion_baseline.json` 新增 `_fp_fn` 段，`--baseline` 比对时假阳性集合相对基线新增即红灯。旧基线归档至 `archive/assertion_baseline.v2_batch1-2_pre_fpfn.json`。
+  - ✅ `PROMPT.md` 排期表改为执行顺序 1 → 2 → 4 → 3 → 5（批次编号不改，避免波及密封库与检验场引用）；第三批起每批强制混入 ≥1 个 `fp_control=true` 对照；第五之二节新增 7 个假阳性对照替补池（康得新、瑞幸、Wirecard、乐视、Kraft Heinz、东阿阿胶、长生生物）并标注各自放行路径；元问题 4 新增 FP/FN 双向报告要求。
+  - ✅ `tests/run_tests.py` 新增 13.5 节 19 项测试，全部通过；12 案 rerun 零漂移。
+  - 📊 两批基线量化：FP 0%（0/7，对照数 0，未被检验）、FN 75%（3/4：茅台、神华、Netflix）、弃权率 45%（5/11）。「系统性保守」目前只有一侧证据，与本需求动因一致。
+  - ⏳ 待办：执行第四批 6 案（GE / 中石油 / Valeant / 分众 / 福特 / 新城）并写入基线；`BATCH4_FINDINGS.md` 首次填报双向统计；第三批案例表补入 1 个对照（建议 Wirecard，与金融口径批同型）。
 
 ### REQ-P0-02 排雷算术条款落码 `forensic_screen.py`
 - 来源：A1、D
@@ -496,3 +503,4 @@
 |---|---|---|
 | 2026-09-10 | v1.0 | 初版，基于 skill 全面评审与第一、二批回测复盘建立 34 条需求 |
 | 2026-09-10 | v1.1 | 每条需求补充"现状 / 为什么做 / 价值"三字段；新增 1.4 需求与投资者收益映射表；第 7 节增加排序理由与无依赖启动项；文件迁移至 `story/` |
+| 2026-09-10 | v1.2 | REQ-P0-01 基础设施落地：runner FP/FN 双向统计 + `fp_control` 字段 + 基线 `_fp_fn` 段 + PROMPT 执行顺序 1→2→4→3→5 + 对照替补池；状态 todo → doing |

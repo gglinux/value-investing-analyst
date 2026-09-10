@@ -17,6 +17,11 @@
 2. **漂移检测**（`--rerun`）：对存在底稿的案例重跑引擎，把引擎实际产出的代号
    与 `verdict.json` 记录的 `engine_derived` 比对。改引擎后代号集合发生变化
    即为漂移——这才是「有没有把修好的东西弄坏」的直接答案。
+3. **FP/FN 双向统计**（REQ-P0-01，每次运行自动输出）：按 answer.json 的
+   `expected_verdict_set` 把案例分为负向（期望 <3）/ 正向（期望 >=3）样本，
+   分别算假阳性率与假阴性率，并对 `fp_control=true` 的假阳性对照案例统计
+   红灯命中率。负向样本为 0 时假阳性率输出「未被检验」而非 0。基线文件附带
+   `_fp_fn` 段，`--baseline` 比对时假阳性集合相对基线新增即红灯。
 
 ## 用法
 
@@ -44,6 +49,16 @@ from alert_codes import (ASSERTIONS, ORDINAL_TO_VERDICT, assertion_satisfied,
 
 REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 BACKTEST = os.path.join(REPO, "backtest")
+
+# 档位序数分界（与 alert_codes.VERDICT_ORDINAL 一致）
+POSITIVE_ORDINAL = 3   # >=3 为正面档位（小仓位试探 / 核心买入）
+ABSTAIN_ORDINAL = 2    # =2 观察等价格 = 弃权档
+
+# REQ-P0-01 假阳性专项前置：FP / FN 双向统计的目标区间（PROMPT 第八节元问题 4）。
+# 刻意不对称——容忍错过（FN）远高于容忍错买（FP），是「不错买优先于不错过」
+# 原则的可度量形态。区间可调，但调整须在 backtest/PROMPT.md 同步并登记动因。
+FP_RATE_TARGET = 0.10
+FN_RATE_TARGET = 0.40
 
 # 重跑引擎所需的逐案参数（三类键独立可选，改动它等于改动案例本身，须走案例
 # 修订而非脚本调参）：
@@ -322,18 +337,40 @@ def check_case(case, do_rerun=False):
     # 单独成轨的理由见 PROMPT.md 第九节：错买与错过的代价不对称，合并进总分会让
     # 「救回 2 个错过 + 新增 2 个错买」显示为战绩不变，而系统实际已显著变危险。
     # 与另两轨的**不对称设计**：假阳性一旦出现即红灯，刻意不允许登记豁免。
-    POSITIVE_ORDINAL = 3
+    #
+    # REQ-P0-01：同时给每个案例贴样本角色标签，供批次级 FP/FN 率统计——
+    #   negative  官方期望最高档位 <3（该拒/该观察）→ 假阳性轨的分母
+    #   positive  官方期望最低档位 >=3（该买）        → 假阴性率的分母
+    #   mixed     期望集跨越 3（如 [2,3]）             → 两侧都不计入分母
+    #   unscored  官方不约束档位或缺 verdict_ordinal
     if exp is None or got is None:
         res["false_positive_track"] = "不计分（无档位期望或缺 verdict_ordinal）"
         res["false_positive"] = False
-    elif got >= POSITIVE_ORDINAL and max(exp) < POSITIVE_ORDINAL:
-        res["false_positive_track"] = (
-            f"假阳性（实际 {ORDINAL_TO_VERDICT.get(got)}，官方期望最高 "
-            f"{ORDINAL_TO_VERDICT.get(max(exp))}）")
-        res["false_positive"] = True
+        res["false_negative"] = False
+        res["sample_role"] = "unscored"
     else:
-        res["false_positive_track"] = "无假阳性"
-        res["false_positive"] = False
+        if max(exp) < POSITIVE_ORDINAL:
+            res["sample_role"] = "negative"
+        elif min(exp) >= POSITIVE_ORDINAL:
+            res["sample_role"] = "positive"
+        else:
+            res["sample_role"] = "mixed"
+        res["false_negative"] = (res["sample_role"] == "positive"
+                                 and got < POSITIVE_ORDINAL)
+        if got >= POSITIVE_ORDINAL and max(exp) < POSITIVE_ORDINAL:
+            res["false_positive_track"] = (
+                f"假阳性（实际 {ORDINAL_TO_VERDICT.get(got)}，官方期望最高 "
+                f"{ORDINAL_TO_VERDICT.get(max(exp))}）")
+            res["false_positive"] = True
+        else:
+            res["false_positive_track"] = "无假阳性"
+            res["false_positive"] = False
+    res["abstained"] = (got == ABSTAIN_ORDINAL) if got is not None else False
+    # 假阳性对照案例（answer.json 的 fp_control=true）：Phase 0 / 闸门红灯
+    # 是否命中——「刹车片有没有踩下」。命中 = must_trigger 全部命中且无假阳性。
+    res["fp_control"] = bool(a.get("fp_control"))
+    if res["fp_control"]:
+        res["fp_control_redlight_hit"] = (not misses) and (not res["false_positive"])
 
     # ---- 引擎漂移检测 ----
     if do_rerun:
@@ -389,6 +426,73 @@ def check_case(case, do_rerun=False):
         res["failures"].append(msg)
         res["regressions"].append(msg)
     return res
+
+
+def fp_fn_summary(results):
+    """REQ-P0-01：批次级假阳性 / 假阴性双向统计。
+
+    只在样本角色明确的案例上计算（见 check_case 的 sample_role）：
+      fp_rate = 假阳性数 / 负向样本数（官方期望 <3 的案例）
+      fn_rate = 假阴性数 / 正向样本数（官方期望 >=3 的案例）
+      abstain_rate = 档位=2 的案例 / 全部有档位的案例（系统弃权率，健康度体温计）
+    负向样本数为 0 时 fp_rate 为 None——此时**不得**把「0 假阳性」表述为「无假阳性」，
+    只能表述为「未被检验」（PROMPT 第八节元问题 4 的硬约束）。
+    """
+    neg = [r for r in results if r.get("sample_role") == "negative"]
+    pos = [r for r in results if r.get("sample_role") == "positive"]
+    scored = [r for r in results if r.get("sample_role") in ("negative", "positive", "mixed")]
+    fps = [r["name"] for r in neg if r.get("false_positive")]
+    fns = [r["name"] for r in pos if r.get("false_negative")]
+    abst = [r["name"] for r in scored if r.get("abstained")]
+    ctrl = [r for r in results if r.get("fp_control")]
+    ctrl_hit = [r["name"] for r in ctrl if r.get("fp_control_redlight_hit")]
+    out = {
+        "negative_n": len(neg), "positive_n": len(pos), "scored_n": len(scored),
+        "false_positives": fps, "false_negatives": fns, "abstained": abst,
+        "fp_rate": (len(fps) / len(neg)) if neg else None,
+        "fn_rate": (len(fns) / len(pos)) if pos else None,
+        "abstain_rate": (len(abst) / len(scored)) if scored else None,
+        "fp_rate_target": FP_RATE_TARGET, "fn_rate_target": FN_RATE_TARGET,
+        "fp_control_n": len(ctrl), "fp_control_redlight_hits": ctrl_hit,
+        "fp_control_redlight_hit_rate": (len(ctrl_hit) / len(ctrl)) if ctrl else None,
+    }
+    if out["fp_rate"] is not None and out["fn_rate"] is not None and out["fp_rate"] > 0:
+        out["fp_fn_ratio"] = out["fn_rate"] / out["fp_rate"]
+    else:
+        out["fp_fn_ratio"] = None
+    return out
+
+
+def _fmt_rate(x):
+    return "n/a" if x is None else f"{x * 100:.0f}%"
+
+
+def print_fp_fn_summary(s):
+    """三轨分行陈述之外的第四段：双向错误率。禁止合并为单一数字。"""
+    print("\n[FP/FN 双向统计]（REQ-P0-01；两者不得抵扣、不得合并）")
+    if s["negative_n"] == 0:
+        print("  假阳性率：未被检验（本轮无官方期望 <3 的负向样本）——不得表述为『无假阳性』")
+    else:
+        flag = "⛔ 超标" if s["fp_rate"] > s["fp_rate_target"] else "达标"
+        print(f"  假阳性率：{_fmt_rate(s['fp_rate'])}（{len(s['false_positives'])}/{s['negative_n']}，"
+              f"目标 ≤{_fmt_rate(s['fp_rate_target'])}）{flag}"
+              + (f" → {s['false_positives']}" if s["false_positives"] else ""))
+    if s["positive_n"] == 0:
+        print("  假阴性率：未被检验（本轮无官方期望 >=3 的正向样本）")
+    else:
+        flag = "⚠ 超标（保守度过高）" if s["fn_rate"] > s["fn_rate_target"] else "达标"
+        print(f"  假阴性率：{_fmt_rate(s['fn_rate'])}（{len(s['false_negatives'])}/{s['positive_n']}，"
+              f"目标 ≤{_fmt_rate(s['fn_rate_target'])}）{flag}"
+              + (f" → {s['false_negatives']}" if s["false_negatives"] else ""))
+    if s["abstain_rate"] is not None:
+        print(f"  弃权率（观察等价格）：{_fmt_rate(s['abstain_rate'])}"
+              f"（{len(s['abstained'])}/{s['scored_n']}）")
+    if s["fp_control_n"]:
+        print(f"  假阳性对照红灯命中率：{_fmt_rate(s['fp_control_redlight_hit_rate'])}"
+              f"（{len(s['fp_control_redlight_hits'])}/{s['fp_control_n']}）")
+    else:
+        print("  假阳性对照案例：0（fp_control=true 的 answer 尚无）——"
+              "放松性改动前须先建立对照，见 PROMPT 第五之二节")
 
 
 def lint_verdict(path):
@@ -497,6 +601,9 @@ def main():
         print("假阳性轨：未被检验（本轮无『官方期望拒绝/观察』的可判定案例）"
               "——不得表述为『无假阳性』。")
 
+    fpfn = fp_fn_summary(results)
+    print_fp_fn_summary(fpfn)
+
     for r in results:
         if r["failures"] or r["notes"] or r.get("stale_known"):
             print(f"\n[{r['name']}]")
@@ -513,7 +620,8 @@ def main():
                 print(f"  命中明细：{'; '.join(r['assert_hits'])}")
 
     payload = {"results": results, "clean": clean, "known_only": known_only,
-               "regressed": [r["name"] for r in regressed], "total": len(results)}
+               "regressed": [r["name"] for r in regressed], "total": len(results),
+               "fp_fn": fpfn}
     if args.output:
         json.dump(payload, open(args.output, "w", encoding="utf-8"),
                   ensure_ascii=False, indent=2)
@@ -521,22 +629,40 @@ def main():
 
     if args.baseline:
         snap = {r["name"]: r["fired"] for r in results}
+        # REQ-P0-01：基线附带 FP/FN 轨指标快照（下划线键，不参与代号集合比对）。
+        # 放松性改动前后比较 _fp_fn.false_positives 集合，新增 ≥1 即红灯。
+        snap_meta = {"fp_rate": fpfn["fp_rate"], "fn_rate": fpfn["fn_rate"],
+                     "abstain_rate": fpfn["abstain_rate"],
+                     "false_positives": fpfn["false_positives"],
+                     "false_negatives": fpfn["false_negatives"],
+                     "fp_control_n": fpfn["fp_control_n"],
+                     "fp_control_redlight_hit_rate": fpfn["fp_control_redlight_hit_rate"]}
         if os.path.exists(args.baseline):
             base = json.load(open(args.baseline, encoding="utf-8"))
+            base_meta = base.get("_fp_fn") or {}
             diffs = []
             for k in sorted(set(base) | set(snap)):
+                if k.startswith("_"):
+                    continue
                 b, s = set(base.get(k, [])), set(snap.get(k, []))
                 if b != s:
                     diffs.append(f"  {k}: 新增 {sorted(s - b)} / 消失 {sorted(b - s)}")
+            new_fp = sorted(set(fpfn["false_positives"]) - set(base_meta.get("false_positives") or []))
+            if new_fp:
+                diffs.append(f"  ⛔ 假阳性轨相对基线新增：{new_fp}（红灯规则：直接否决，不得抵扣）")
             if diffs:
                 print("\n与基线不一致：")
                 print("\n".join(diffs))
                 sys.exit(1)
-            print(f"\n与基线一致（{len(snap)} 案例代号集合无变化）")
+            print(f"\n与基线一致（{len([k for k in snap if not k.startswith('_')])} 案例代号集合无变化"
+                  + (f"，假阳性轨 {len(fpfn['false_positives'])} 例无新增" if base_meta else "") + "）")
+            if not base_meta:
+                print("  注意：基线缺 _fp_fn 段（旧版基线）——下次以 --baseline 写入新基线时自动补齐")
         else:
+            snap["_fp_fn"] = snap_meta
             json.dump(snap, open(args.baseline, "w", encoding="utf-8"),
                       ensure_ascii=False, indent=2)
-            print(f"\n已写入基线 {args.baseline}")
+            print(f"\n已写入基线 {args.baseline}（含 _fp_fn 段）")
 
     # 回归失败才是红灯；已知失败不阻塞（但会单独列示）
     sys.exit(1 if regressed else 0)

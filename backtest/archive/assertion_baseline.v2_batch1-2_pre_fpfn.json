@@ -140,18 +140,5 @@
     "NORM_CYCLE_PEAK",
     "NORM_DUAL_TRACK",
     "NORM_MARGIN_SHAPE"
-  ],
-  "_fp_fn": {
-    "fp_rate": 0.0,
-    "fn_rate": 0.75,
-    "abstain_rate": 0.45454545454545453,
-    "false_positives": [],
-    "false_negatives": [
-      "600519.SH_2015-08-31",
-      "601088.SH_2015-12-31",
-      "NFLX_2016-12-31"
-    ],
-    "fp_control_n": 0,
-    "fp_control_redlight_hit_rate": null
-  }
+  ]
 }
