@@ -2257,6 +2257,46 @@ check("PROMPT 元问题含假阳性（第 4 问）", "假阳性成本" in _PROMP
 check("PROMPT 已写入 2 案例门槛按「档位不匹配」计",
       "档位不匹配的案例数" in _PROMPT)
 
+# ── 13. 隔离证据机器校验（PROMPT 第七节 B 档 + 第八之二闭环，2026-09-10）──
+print("\n== 13. 隔离证据机器校验（batch>=3 硬校验） ==")
+sys.path.insert(0, SCRIPTS)
+import run_backtest_assertions as _RBA  # noqa: E402
+
+_res = {"failures": []}
+_RBA.check_isolation_evidence({"meta": {"batch": 2}, "dir": "/nonexistent"}, _res)
+check("批次<3 案例豁免隔离证据校验（历史案已按污染降级）", not _res["failures"])
+
+with tempfile.TemporaryDirectory() as _td:
+    _res = {"failures": []}
+    _RBA.check_isolation_evidence({"meta": {"batch": 3}, "dir": _td}, _res)
+    check("batch=3 无 answer_source.md 判隔离缺失",
+          any("answer_source.md" in f for f in _res["failures"]), str(_res["failures"]))
+    # 造出 answer_source.md 后，git 时序证据不可验仍判缺失（tempdir 不在仓库）
+    open(os.path.join(_td, "answer_source.md"), "w").write("x")
+    _res = {"failures": []}
+    _RBA.check_isolation_evidence({"meta": {"batch": 3}, "dir": _td}, _res)
+    check("batch=3 有 reveal 痕迹但无 git 时序证据仍判缺失",
+          any("git 首次提交" in f for f in _res["failures"]), str(_res["failures"]))
+
+_t = _RBA._git_first_commit_time(os.path.join(ROOT, "SKILL.md"))
+check("_git_first_commit_time 对仓库内文件返回正时间戳",
+      isinstance(_t, int) and _t > 0, str(_t))
+check("_git_first_commit_time 对不存在路径返回 None",
+      _RBA._git_first_commit_time(os.path.join(ROOT, "_no_such_file_.xyz") + "/verdict.json") is None)
+
+check("PROMPT 已写入批次收官闭环（第八之二节）",
+      "八之二" in _PROMPT and "闭环六步" in _PROMPT and "移交清单" in _PROMPT)
+check("闭环声明 observations.md 为未决项事实源（不设独立路线图文件）",
+      "未决项台账" in _PROMPT and "不设独立路线图文件" in _PROMPT)
+check("SKILL-UPGRADE.md 已删除（并入 BATCH2_FINDINGS 第八节）",
+      not os.path.exists(os.path.join(ROOT, "SKILL-UPGRADE.md")))
+with open(os.path.join(ROOT, "backtest", "BATCH2_FINDINGS.md"), encoding="utf-8") as _f:
+    _B2 = _f.read()
+check("路线图快照已并入 BATCH2_FINDINGS（8.1-8.7 齐全）",
+      all(s in _B2 for s in ("## 八、优化路线图快照", "8.1 两批教训分层", "8.4 P2", "8.7 第三批检验场")))
+check("BATCH2_FINDINGS 无 SKILL-UPGRADE 活引用（仅第八节来源声明可提及）",
+      "见 SKILL-UPGRADE" not in _B2 and "SKILL-UPGRADE 审核建议" not in _B2)
+
 print()
 if FAILED:
     print(f"结果：{len(FAILED)} 项失败 → {FAILED}")

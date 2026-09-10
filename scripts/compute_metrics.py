@@ -1062,7 +1062,7 @@ def _snapshot_equation_check(snap_path, market_cap_million, warnings):
     双汇「元」错位实证：check_market_snapshot 的三角校验只覆盖快照文件本身，
     CLI 手抄 market_cap 不经过它。本函数把同一三角搬到 CLI 入口：
       市值 ≈ 股价 × 股本（A/H 双上市用分部口径）
-    三处设计（与 SKILL-UPGRADE F 节一致）：
+    三处设计（与 BATCH2_FINDINGS.md 第八节 F 项一致）：
     ① 容差 10% 而非 1%——快照日与传参日差 1-2 个交易日（日常波动 2-3%）
        就会击穿 1%；这条校验的使命是拦 10 倍量纲错位（90%+ 偏差）与
        亿/百万混淆（900%+），不是拦日期漂移；

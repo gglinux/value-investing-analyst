@@ -187,6 +187,52 @@ def _classify_failures(res, answer, do_rerun=False):
 REQUIRED_DELIVERABLES = ["meta.json", "verdict.json", "answer.json", "diff.md"]
 
 
+def _git_first_commit_time(path):
+    """文件首次进入 git 的提交时间戳（int）；未被追踪 / 不在仓库返回 None。"""
+    r = subprocess.run(["git", "log", "--diff-filter=A", "--format=%ct", "--", path],
+                       capture_output=True, text=True, cwd=REPO)
+    if r.returncode != 0:
+        return None
+    lines = [l for l in r.stdout.split() if l.strip()]
+    return int(lines[-1]) if lines else None  # 输出按新→旧排列，末行 = 最早提交
+
+
+def check_isolation_evidence(case, res):
+    """PROMPT 第七节 B 档隔离协议的机器可验痕迹（第三批起硬校验）。
+
+    第二批的教训：口头宣称「subagent 隔离」与实际执行脱节（6 案仅 1 案真隔离），
+    事后只能靠证据强度降级补救。第三批起隔离证据本身进门禁——「宣称隔离」与
+    「机器可验的隔离」从此是两回事：
+      ① answer_source.md 存在——答案必须经 prepare_case.py --reveal 揭示落地
+         （G1/G2/G3 闸门在揭示时已机器校验 verdict 提交时序），手写 answer.json
+         无 reveal 痕迹，按未隔离处理；
+      ② verdict.json 首次提交早于 answer.json 首次提交——「先落盘结论再看答案」
+         的 git 时序证据（第七节共同兜底条款）。
+    本项不接受 known_failures 登记（与假阳性轨同属不对称设计）——隔离违规的
+    案例结论不得采信，登记豁免等于允许污染计分。
+    批次 <3 的历史案例不适用（已按污染降级处理，见 BATCH2_FINDINGS 战绩表）。
+    """
+    try:
+        batch = int(case["meta"].get("batch") or 0)
+    except (TypeError, ValueError):
+        batch = 0
+    if batch < 3:
+        return
+    d = case["dir"]
+    if not os.path.exists(os.path.join(d, "answer_source.md")):
+        res["failures"].append("隔离证据缺失：answer_source.md 不存在——第三批起答案必须"
+                               "经 prepare_case.py --reveal 揭示（B 档协议），手写 answer.json"
+                               "视为未隔离")
+    tv = _git_first_commit_time(os.path.join(d, "verdict.json"))
+    ta = _git_first_commit_time(os.path.join(d, "answer.json"))
+    if tv is None or ta is None:
+        res["failures"].append("隔离证据缺失：verdict/answer 无 git 首次提交记录，"
+                               "时序证据不可验")
+    elif tv > ta:
+        res["failures"].append("隔离证据违规：answer.json 首次提交早于 verdict.json——"
+                               "「先落盘结论再看答案」时序被破坏，该案结论不得采信")
+
+
 def check_deliverables(case, res):
     """PROMPT 第十节交付物完整性。双汇 B2-12 缺 report.html 跑完全流程未被
     发现——此类缺口必须由机器拦截而非事后审查。"""
@@ -206,6 +252,7 @@ def check_case(case, do_rerun=False):
            "known": [], "regressions": []}
 
     check_deliverables(case, res)
+    check_isolation_evidence(case, res)
 
     bad = unknown_codes(fired)
     if bad:
