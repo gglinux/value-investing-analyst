@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>招商银行 价值投资分析报告（回放 2014-12-31）</title>
+<script src="https://cdn.jsdelivr.net/npm/echarts@5/dist/echarts.min.js"></script>
+<style>
+  :root {
+    --primary: #1a3a5c; --accent: #d97706; --bg: #f7f8fa; --card: #ffffff;
+    --text: #24292f; --muted: #6b7280; --green: #15803d; --red: #b91c1c; --border: #e5e7eb;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif; background: var(--bg); color: var(--text); line-height: 1.75; font-size: 15px; }
+  .container { max-width: 1080px; margin: 0 auto; padding: 24px 20px 80px; }
+  header.report-header { background: var(--primary); color: #fff; border-radius: 12px; padding: 40px 36px; margin-bottom: 28px; }
+  header.report-header h1 { font-size: 26px; font-weight: 700; }
+  header.report-header .meta { margin-top: 8px; opacity: .75; font-size: 13px; }
+  .verdict-banner { display: flex; align-items: center; gap: 24px; margin-top: 24px; background: rgba(255,255,255,.08); border-radius: 10px; padding: 20px 24px; }
+  .verdict-label { font-size: 34px; font-weight: 800; letter-spacing: 2px; }
+  .verdict-watch { color: #fbbf24; }
+  .verdict-score { font-size: 15px; opacity: .92; }
+  .snapshot-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 10px; margin-top: 16px; }
+  .snapshot-item { background: rgba(255,255,255,.08); border-radius: 8px; padding: 10px 14px; }
+  .snapshot-item .k { font-size: 12px; opacity: .65; }
+  .snapshot-item .v { font-size: 17px; font-weight: 700; margin-top: 2px; }
+  .snapshot-time { font-size: 11px; opacity: .55; margin-top: 8px; }
+  section { background: var(--card); border-radius: 12px; padding: 32px 36px; margin-bottom: 24px; border: 1px solid var(--border); }
+  h2 { font-size: 20px; color: var(--primary); padding-bottom: 10px; margin-bottom: 18px; border-bottom: 3px solid var(--accent); display: inline-block; }
+  h3 { font-size: 16px; color: var(--primary); margin: 22px 0 10px; }
+  p { margin-bottom: 12px; }
+  .chart { width: 100%; height: 400px; margin: 12px 0 4px; }
+  .chart-note { font-size: 12px; color: var(--muted); margin-bottom: 16px; }
+  table { width: 100%; border-collapse: collapse; margin: 14px 0; font-size: 14px; }
+  th { background: var(--primary); color: #fff; padding: 10px 12px; text-align: left; font-weight: 600; }
+  td { padding: 9px 12px; border-bottom: 1px solid var(--border); }
+  tr:nth-child(even) td { background: #fafbfc; }
+  .tag { display: inline-block; padding: 2px 10px; border-radius: 20px; font-size: 12px; font-weight: 600; }
+  .tag-green { background: #dcfce7; color: var(--green); }
+  .tag-amber { background: #fef3c7; color: #b45309; }
+  .tag-red { background: #fee2e2; color: var(--red); }
+  blockquote.persona { border-left: 4px solid var(--accent); background: #fffbf5; padding: 16px 20px; margin: 14px 0; border-radius: 0 8px 8px 0; font-size: 14px; }
+  blockquote.persona .persona-name { font-weight: 700; color: var(--primary); display: block; margin-bottom: 6px; }
+  .redteam { background: #1f2937; color: #e5e7eb; border-radius: 10px; padding: 24px 28px; margin: 16px 0; }
+  .redteam h3 { color: #fbbf24; margin-top: 0; }
+  .redteam li { margin-bottom: 8px; }
+  .checklist li { margin-bottom: 8px; }
+  .source-note { font-size: 12px; color: var(--muted); }
+  .verification-strength { font-size: 12px; line-height: 1.7; margin: 12px 0; padding: 10px 14px; border-left: 3px solid var(--border); background: rgba(127,127,127,.08); border-radius: 4px; color: #e5e7eb; }
+  .verification-strength[data-grade="A"] { border-left-color: #1D9E75; }
+  .verification-strength[data-grade="B"] { border-left-color: #BA7517; }
+  .verification-strength[data-grade="C"] { border-left-color: #E24B4A; }
+  .verification-strength .vs-meaning { color: rgba(255,255,255,.65); }
+  .decision-card { background: #fff; border: 1px solid var(--border); border-radius: 10px; padding: 18px 22px; margin: 14px 0; }
+  .falsify { background: #fef2f2; border: 1px solid #fecaca; border-radius: 10px; padding: 18px 22px; margin: 14px 0; }
+  footer.disclaimer { font-size: 12px; color: var(--muted); text-align: center; margin-top: 40px; padding-top: 20px; border-top: 1px solid var(--border); }
+  @media print { section { break-inside: avoid; } .chart { height: 360px; } }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <header class="report-header">
+    <h1>招商银行（600036.SH）价值投资分析报告</h1>
+    <div class="meta">历史回放案件 B3-13（第三批·行业专属口径与坏账周期测试）｜ 信息截断：2014-12-31（最新年报 2013 年报 2014-03-28 披露，最新季报 2014 三季报 2014-10-30 披露）｜ 银行专属管线（compute_metrics_bank）首次实盘 ｜ 现价：<span class="vnum" data-src="market_snapshot_600036_2014.json" data-path="price.value" data-fmt="num2">16.59</span> 元 ｜ 市值：约 4,184 亿元</div>
+    <div class="verdict-banner">
+      <div class="verdict-label verdict-watch">观察等价格</div>
+      <div class="verdict-score">
+        <b>闸门一</b>：安全边际 <span class="vnum" data-src="scenario_audit.json" data-path="diagnostics.margin_of_safety_vs_base" data-fmt="pct1">19.7%</span> vs 要求 ≥40%（护城河「窄」<span data-moat="narrow"></span>）→ <b style="color:#f87171">未达标 ✗</b><br>
+        <b>闸门二（三项全过才算通过）</b>：① 期望 IRR <span class="vnum" data-src="expected_return.json" data-path="expected_annualized_irr" data-fmt="pct1">14.4%</span> vs <span class="vnum" data-src="expected_return.json" data-path="gate2.consistency_expected_irr.hurdle" data-fmt="pct1">22.4%</span>（<i>自洽性校验，与闸门一同源</i>）✗
+        ② 不收敛下限 <span class="vnum" data-src="expected_return.json" data-path="gate2.no_convergence_floor.value" data-fmt="pct1">8.2%</span> vs 6.0%（<i>独立：股息率+内在价值增速</i>）✓
+        ③ 悲观情景年化 <span class="vnum" data-src="expected_return.json" data-path="gate2.pessimistic_irr.value" data-fmt="pct2">-0.04%</span> vs 0%（<i>独立：pb_trough 法推导，差 0.02 元不过零线</i>）✗ → <b style="color:#f87171">未通过 ✗</b><br>
+        三位大师独立判断：巴菲特【观察等价格】｜ 段永平【观察等价格】｜ 李录【观察等价格】<br>
+        内在价值区间：<span class="vnum" data-src="scenarios.json" data-path="scenarios.0.value_per_share" data-fmt="num2">10.05</span> ~ <span class="vnum" data-src="scenarios.json" data-path="scenarios.2.value_per_share" data-fmt="num2">32.97</span> 元（基准 <span class="vnum" data-src="fv_base.json" data-path="outputs.intrinsic_value_per_share" data-fmt="num2">20.65</span> 元）｜ 悲观值为现价的 <span class="vnum" data-src="scenario_audit.json" data-path="diagnostics.bear_vs_price" data-fmt="pct1">60.6%</span> ｜ 5 年持有期情景口径亏损概率 <span class="vnum" data-src="expected_return.json" data-path="loss_probability" data-fmt="pct0">25%</span>（悲观情景年化 −0.04%）
+      </div>
+    </div>
+    <div class="snapshot-grid">
+      <div class="snapshot-item"><div class="k">现价（2014-12-31 收盘）</div><div class="v">16.59 元</div></div>
+      <div class="snapshot-item"><div class="k">每股净资产（2014Q3）</div><div class="v"><span class="vnum" data-src="market_snapshot_600036_2014.json" data-path="valuation_context.bvps_2014q3" data-fmt="num2">11.97</span> 元</div></div>
+      <div class="snapshot-item"><div class="k">市净率</div><div class="v">1.39 倍</div></div>
+      <div class="snapshot-item"><div class="k">股息率（ttm 实付）</div><div class="v"><span class="vnum" data-src="scenarios.json" data-path="dividend_yield" data-fmt="pct2">3.74%</span></div></div>
+      <div class="snapshot-item"><div class="k">52 周区间</div><div class="v">9.41 ~ 16.62 元</div></div>
+      <div class="snapshot-item"><div class="k">52 周位置</div><div class="v">99.6%（高位）</div></div>
+    </div>
+    <div class="snapshot-time">快照三角校验偏差 0.00%；无风险利率 3.62%（2014-12-31 一年期定存基准，双源核对：光大/工行挂牌一致）</div>
+    <div class="verification-strength" data-verification-strength="1"
+     data-grade="B"
+     data-reconciliation-coverage="1.0000"
+     data-crosscheck-level="partial"
+     data-window-years="11"
+     data-covers-full-cycle="false">
+      <b>核验强度 B</b>：三表勾稽覆盖率 100%（11/11 年，达标） ｜ 命门科目原文登记 部分（<u>未经原文机器逐字比对</u>） ｜ 数据窗口 11 年，含全球金融危机（部分——银行业周期敏感类要求 15 年）<br>
+      <span class="vs-meaning">存在部分核验缺口：结论可用，但相关章节须显式降低置信度</span>
+    </div>
+  </header>
+
+  <section>
+    <h2>商业模式：拿了短钱放长钱的收租生意</h2>
+    <p>招商银行是把"短期负债换长期资产"的杠杆生意做到中国银行业最好水平的一家：存款 <b>32,655 亿</b> vs 贷款 <b>24,455 亿</b> [E:financials_600036_2014.json]，存贷结构留有充足余量；9M14 营收 1,250.27 亿中，净利息收入 822.67 亿、手续费及佣金 342.46 亿、其他 85.14 亿 [E:financials_600036_2014.json]——中间业务占营收 27% 以上，这不是靠规模堆出来的对公银行，是靠客户关系收租的零售银行。NIM（9M14）2.50%，成本收入比降至 28.1% [E:metrics_600036_2014_bank.json]，两项效率指标均为股份行最优梯队。</p>
+    <p>这门生意的本质决定了它的两个命门：一是<b>杠杆近 20 倍</b>——资产质量恶化 1% 就能吃掉数年的利润增长；二是<b>利差受政策与周期双重挤压</b>——2014-11-21 央行非对称降息（贷款端降幅大于存款端）直接压制 2015 年 NIM，存款保险征求意见稿（2014-11-30）则宣告利率市场化进入终点阶段 [E:qualitative_600036_2014.json]。</p>
+  </section>
+
+  <section>
+    <h2>护城河：窄（侵蚀中）<span data-moat="narrow"></span></h2>
+    <p><b>真实存在的一部分</b>：零售客群带来的低成本存款——这是行业内最接近富国银行模式的结构，也是 11 年平均 ROE <span class="vnum" data-src="metrics_600036_2014_bank.json" data-path="summary.roe_avg" data-fmt="pct1">21.7%</span> 的根基 [E:metrics_600036_2014_bank.json]。财富管理通道费模式（手续费占比 27%+）在欧美被反复验证过 [E:qualitative_600036_2014.json]。</p>
+    <p><b>正在消失的一部分</b>：存款利率管制品折价。存款保险条例征求意见稿（50 万限额，2014-11-30）+ 利率市场化路线图意味着"管制品折价"这一护城河的立法基础在 2-3 年内拆除 [E:qualitative_600036_2014.json]。资产端没有任何转换成本——企业贷款人永远在比价。</p>
+    <p><b>裁决：窄</b>。零售获客的结构性优势（品牌+网点+习惯的复合）会在市场化后保留一部分，但两道闸门的门槛直接挂在这个评级上：安全边际 ≥40%、IRR ≥21.8%——本案 MoS <span class="vnum" data-src="scenario_audit.json" data-path="diagnostics.margin_of_safety_vs_base" data-fmt="pct1">19.7%</span> [E:scenario_audit.json] 距门槛差距巨大。</p>
+  </section>
+
+  <section>
+    <h2>增长：9-11% 的名义增长，质量正在恶化</h2>
+    <p>2004-2013 十一年，每股净资产年复合 <span class="vnum" data-src="metrics_600036_2014_bank.json" data-path="summary.bvps_cagr" data-fmt="pct1">14.7%</span>，BVPS 从 3.05 元增至 11.97 元 [E:metrics_600036_2014_bank.json]——真实复利的直接证据。分红率全期均值 <span class="vnum" data-src="metrics_600036_2014_bank.json" data-path="summary.payout_avg" data-fmt="pct1">23.7%</span>（2010-2013 稳定在 24-30%，取 30% 为基准假设）[E:metrics_600036_2014_bank.json]。</p>
+    <p>向前看（截断前信息集内可推导的）：名义 GDP 9-10% + 银行业资产扩张略高于 GDP → 营收增速 9-11%；但<b>信用成本上行会吃掉其中 3-5 个百分点</b>——9M14 减值计提 219.98 亿 vs 9M13 仅 81.62 亿 [E:financials_600036_2014.json]，年化信用成本从约 0.35% 跳升至 0.9% 量级 [E:qualitative_600036_2014.json]。利润增长的质量比速度重要。</p>
+    <p>2014 年行数据为 9M YTD 口径 [E:financials_600036_2014.json]，图表中已标注；管线输出的净利 CAGR 30.7% 因 YTD 行混入而失真，本报告弃用 [E:metrics_600036_2014_bank.json]。</p>
+  </section>
+
+  <section>
+    <h2>管理层：可信，但有一处叙事矛盾</h2>
+    <p><b>加分项</b>：分红连续十年提升（DPS 0.11 → 0.62 元）[E:metrics_600036_2014_bank.json]，2014 年 7 月已实施 2013 年度每股 0.62 元（截断前落袋）[E:market_snapshot_600036_2014.json]；2010/2013 两次配股补充资本而非硬扛杠杆 [E:qualitative_600036_2014.json]；马蔚华时代留下的零售组织能力与企业文化是行业公认的软资产。</p>
+    <p><b>减分项</b>：2013 年末应收款项类投资（非标）3,802.79 亿、同比 +79.26% [E:qualitative_600036_2014.json]——对外讲"轻资本转型"，资产负债表在加影子银行敞口。非标资产不受五级分类纪律约束，拨备是否真实存在不可验证；127 号文（2014-05）后监管收紧压缩该业务收益。这处矛盾是定性评分的最大扣分项 [E:qualitative_600036_2014.json]。</p>
+  </section>
+
+  <section>
+    <h2>财务质量：剪刀差与计提跳升——坏账周期的起点</h2>
+    <p>三个截断前证据指向同一件事——<b>2014 年末是本轮坏账周期的起点</b>：</p>
+    <p>① <b>计提跳升</b>：9M14 减值 219.98 亿 vs 9M13 81.62 亿 [E:financials_600036_2014.json]，管线触发 credit-cost-rising 警报（最新计提 > 全期均值 1.3 倍）[E:metrics_600036_2014_bank.json]——本案核心测试点，警报按设计触发。</p>
+    <p>② <b>先行指标回升</b>：关注类占比 1.24%（2013 年 1.12%、2012 年 1.02%），2011 年以来首次加速 [E:qualitative_600036_2014.json]；账面不良率 <span class="vnum" data-src="metrics_600036_2014_bank.json" data-path="summary.npl_ratio_latest" data-fmt="pct2">1.10%</span> 仍在低位 [E:metrics_600036_2014_bank.json]。</p>
+    <p>③ <b>剪刀差</b>：逾期贷款/不良 = 1.69 倍 [E:qualitative_600036_2014.json]——不良确认慢于真实风险，潜在不良池（关注+逾期）占贷款 3.10% vs 账面不良 1.10%，按 28.15% 迁徙率推演的市场恐慌锚已在悲观情景计入 [E:scenario_audit.json]。</p>
+    <p>拨备覆盖率 <span class="vnum" data-src="metrics_600036_2014_bank.json" data-path="summary.provision_coverage_latest" data-fmt="pct0">228%</span>、核心一级资本充足率 <span class="vnum" data-src="metrics_600036_2014_bank.json" data-path="summary.core_tier1_latest" data-fmt="pct2">9.48%</span> [E:metrics_600036_2014_bank.json]——缓冲垫厚实但方向向下（覆盖率为 2011 年 400% 顶点以来连续第三年回落）。<b>须降低置信度之处</b>：核验强度 B 级（数据窗口 11 年，未含完整信用出清周期），"历史最差"锚的强度受限。</p>
+    <div id="chart-npl" class="chart"></div>
+    <div class="chart-note">不良率（%）与拨备覆盖率（%）11 年走势。2004-2013 为年报口径，2014 为三季报口径。不良率 2011 年见底 0.56% 后连续三年回升；拨备覆盖率自 2011 年顶点持续回落——银行在用存量缓冲消化增量风险。</div>
+  </section>
+
+  <section>
+    <h2>定量画像：被前七年超级周期污染的均值</h2>
+    <p>管线输出的可持续 ROE = min(全期均值 <span class="vnum" data-src="metrics_600036_2014_bank.json" data-path="summary.roe_avg" data-fmt="pct1">21.7%</span>, 近 3 年 <span class="vnum" data-src="metrics_600036_2014_bank.json" data-path="summary.roe_recent3" data-fmt="pct1">23.1%</span>) = <span class="vnum" data-src="metrics_600036_2014_bank.json" data-path="summary.roe_avg" data-fmt="pct1">21.7%</span> [E:metrics_600036_2014_bank.json]。<b>本报告否决该值作为估值输入</b>：这是后视镜均值——2004-2013 包含了利差黄金期（NIM 2.5-3.4%）与资产质量下行前夜，而 credit-cost 警报已经触发。人工周期调整：ROE 路径取 19% 起步、十年衰减至 13.5% [E:fv_base.json]（信用成本常态化 0.8-1.0% vs 历史均值 0.45%，拖累 ROA 约 0.35pct；NIM 2.82%→2.4% 区间下行，中收部分对冲）。<b>周期起点的人工调整是管线现有能力之外的关键判断</b>（登记为引擎观察项）。</p>
+    <div id="chart-roe" class="chart"></div>
+    <div class="chart-note">ROE（%）与每股净资产（元）11 年走势。ROE 在 2007-2008（27.4%/27.4% 附近）见顶后进入 21-25% 平台，2014（9M 口径）21.3%——尚无崩塌，但利差收窄+信用成本上行两个挤压已在途。BVPS 曲线即银行复利的本体。</div>
+    <div id="chart-bvps" class="chart"></div>
+    <div class="chart-note">每股净资产（元）2004-2014（2014 为 Q3 披露值 11.97 元）。十一年增长 2.9 倍；2008 年受 40 亿减值确认与市场冲击增速放缓。</div>
+  </section>
+
+  <section>
+    <h2>估值：两阶段 PB-ROE 树与三情景</h2>
+    <p><b>方法</b>：银行专属两阶段 PB-ROE 估值树（分红折现 + 终期 BVPS×终期 PB）；单阶段 Gordon 模型禁用——分红率 30% &lt; g/r 隐含条件时模型发散（招行实证误差 +141%）。基准参数：ROE 路径 19%→13.5%、payout 30%、终期 PB 1.2（min(justified 1.5, 分位上限)）、r 10.5% [E:fv_base.json]。</p>
+    <p>基准内在价值 = PV(分红) <span class="vnum" data-src="fv_base.json" data-path="outputs.pv_dividends_per_share" data-fmt="num2">5.45</span> + PV(终值) <span class="vnum" data-src="fv_base.json" data-path="outputs.pv_terminal_per_share" data-fmt="num2">15.20</span> = <span class="vnum" data-src="fv_base.json" data-path="outputs.intrinsic_value_per_share" data-fmt="num2">20.65</span> 元，十年终期 BVPS <span class="vnum" data-src="fv_base.json" data-path="outputs.bvps_year10" data-fmt="num2">34.37</span> 元，终值占比 <span class="vnum" data-src="fv_base.json" data-path="outputs.terminal_value_share" data-fmt="pct0">74%</span> [E:fv_base.json]。乐观情景（ROE 21→19、终期 PB 1.6）32.97 元、MoS <span class="vnum" data-src="fv_bull.json" data-path="outputs.mos" data-fmt="pct1">49.7%</span> [E:fv_bull.json]；悲观情景用实测谷底 PB 0.84 × BPS 11.97 = <span class="vnum" data-src="scenarios.json" data-path="scenarios.0.value_per_share" data-fmt="num2">10.05</span> 元（2014-03 不复权最低价 9.41 元，S2d 证据链齐备）[E:scenarios.json]。</p>
+    <div id="chart-scenarios" class="chart"></div>
+    <div class="chart-note">三情景每股价值 vs 现价 16.59 元。概率 25/50/25，期望值 <span class="vnum" data-src="expected_return.json" data-path="expected_value_per_share" data-fmt="num2">21.08</span> 元 [E:expected_return.json]。</p>
+    <p><b>敏感性</b>：r=10% 时 IV <span class="vnum" data-src="fv_base.json" data-path="sensitivity.r_10pct.iv" data-fmt="num2">21.48</span> 元（MoS 22.8%）；r=11% 时 IV <span class="vnum" data-src="fv_base.json" data-path="sensitivity.r_11pct.iv" data-fmt="num2">19.85</span> 元（MoS 16.4%）；熊市组合（ROE 快速收敛 17→11% + PB 0.9x）IV <span class="vnum" data-src="fv_base.json" data-path="sensitivity.bear_roe_path_pb09.iv" data-fmt="num2">12.95</span> 元（MoS <span class="vnum" data-src="fv_base.json" data-path="sensitivity.bear_roe_path_pb09.mos" data-fmt="pct1">-28.1%</span>）[E:fv_base.json]——若坏账深度失控，现价并无安全边际，这正是闸门二③存在的意义。</p>
+    <p><b>反向定价</b>：PB 1.386 倍隐含永续 ROE 11.46% [E:scenarios.json]——12 月这波金融股疯牛（52 周位置 99.6% [E:market_snapshot_600036_2014.json]）= 市场叙事从"ROE→COE 完全回归"（2014-03 的 0.84 倍 PB）升级为"收敛但存活"。基准路径十年终值 13.5% 比市场隐含 11.46% 还乐观——<b>便宜的不是价值，是赔率</b>。</p>
+  </section>
+
+  <section>
+    <h2>双闸门定档</h2>
+    <div class="decision-card">
+      <h3>闸门一：安全边际（窄护城河门槛 40%）</h3>
+      <p>MoS = 1 − 16.59/20.65 = <span class="vnum" data-src="scenario_audit.json" data-path="diagnostics.margin_of_safety_vs_base" data-fmt="pct1">19.7%</span> &lt; 40% → <b style="color:#b91c1c">FAIL</b> [E:scenario_audit.json]。触发价 = 20.65 × 0.6 = <b data-trigger-price="12.39" data-trigger-band-pct="41.3">12.39 元</b>，位于 52 周价格带 [9.41, 16.62] 内 41.3% 分位、需自现价下跌 25.3%——可达性正常（TRIGGER_REACHABLE）[E:trigger_reachability.json]，观察等价格不会退化为永久观望。</p>
+      <h3>闸门二：三项独立检查（须全过）</h3>
+      <p>① 自洽性：期望 IRR <span class="vnum" data-src="expected_return.json" data-path="expected_annualized_irr" data-fmt="pct1">14.4%</span> vs 门槛 <span class="vnum" data-src="expected_return.json" data-path="gate2.consistency_expected_irr.hurdle" data-fmt="pct1">22.4%</span>（40% MoS 反推）→ <b style="color:#b91c1c">FAIL</b>；② 不收敛下限：股息率 3.74% + 内在价值增速 4.5% = <span class="vnum" data-src="expected_return.json" data-path="gate2.no_convergence_floor.value" data-fmt="pct1">8.2%</span> ≥ 6% → <b style="color:#15803d">PASS</b>；③ 悲观年化 <span class="vnum" data-src="expected_return.json" data-path="gate2.pessimistic_irr.value" data-fmt="pct2">-0.04%</span> &lt; 0 → <b style="color:#b91c1c">FAIL</b> [E:expected_return.json]。③的边缘性须诚实披露：悲观 10.05 元 vs 通过线 10.07 元——差 0.02 元。曾核算 trough_pb 取 0.845 即可过线，<b>保留实测值 0.84，拒绝 p-hack</b>。期望 IRR 14.4% 超指数门槛 9%（超额 <span class="vnum" data-src="expected_return.json" data-path="excess_vs_index" data-fmt="pct1">5.4%</span>）[E:expected_return.json]——"及格的投资"，但不是本系统的买入信号。</p>
+      <p><b>档位裁决：两闸皆不过 → 档位上限「观察等价格」（序数 2）</b>。</p>
+    </div>
+  </section>
+
+  <section>
+    <h2>三位大师独立评估</h2>
+    <div id="chart-radar" class="chart" style="height:360px"></div>
+    <div class="chart-note">五维评分雷达（5 分制）：生意质量 / 护城河 / 管理层 / 价格安全垫 / 能力圈契合。三人共同的低分轴是"价格安全垫"（2.0-2.5）——这正是闸门一 FAIL 的定性投影。</div>
+    <blockquote class="persona">
+      <span class="persona-name">巴菲特：观察等价格</span>
+      "用 1.39 倍净资产买全行业最好的银行，等坏账周期的报价——好生意正在变贵的时候变坏，我等它跌回'坏透了'的价格。信用成本历史上总是超调，周期起点的后视镜均值（21.66%）不能用。"[E:phase5_workpaper.json]
+    </blockquote>
+    <blockquote class="persona">
+      <span class="persona-name">段永平：观察等价格</span>
+      "这是中国最好的银行，但 12 月刚涨完疯牛，1.39 倍 PB 买 20 倍杠杆的生意不叫便宜——我不猜坏账多深，我只等价格替我兜底。跌到 10 元附近股息率上 6%，那才叫机会。"[E:phase5_workpaper.json]
+    </blockquote>
+    <blockquote class="persona">
+      <span class="persona-name">李录：观察等价格</span>
+      "市场 12 月的报价已经从'招行会死'升级为'招行会衰'（隐含永续 ROE 11.46%）——如果信用周期浅于这个定价，现价是便宜的；但验证需要两三年，我在 52 周高点 99.6% 分位没有下注的赔率。便宜的不是价值，是赔率。"[E:phase5_workpaper.json]
+    </blockquote>
+    <h3>分歧与共识</h3>
+    <table>
+      <tr><th>问题</th><th>巴菲特</th><th>段永平</th><th>李录</th></tr>
+      <tr><td>负债优势算宽护城河吗</td><td>窄：立法基础在消失</td><td>窄：银行无定价权</td><td>窄偏宽：零售获客结构性优势，纪律按窄执行</td></tr>
+      <tr><td>ROE 路径 19→13.5 偏悲观还是偏乐观</td><td>可能还不够悲观（信用成本超调）</td><td>不猜，触发价兜底</td><td>比市场隐含乐观；若不良冲 2%+ 则 13.5% 都保不住</td></tr>
+      <tr><td>减值 +170% 怎么解读</td><td>周期起点确认信号</td><td>分不清就不下注</td><td>与关注类回升、剪刀差互证：是起点，问题在确认节奏滞后</td></tr>
+      <tr><td>12 月疯牛追不追</td><td>不追：改叙事不是变好</td><td>不追：公司价值不因涨价变多</td><td>不追：99.6% 分位赔率最差</td></tr>
+    </table>
+    <p><b>共识</b>：① 招行是中国银行业生意结构最好的（负债+零售+中收），行业贝塔之下有真阿尔法；② 2014 年末处信用成本上行起点，现价不构成 40% 安全边际；③ 疯牛不追，观察等价格。采纳裁决：李录的周期调整 + 巴菲特的超调警告 → 触发价 12.39 元 [E:phase5_workpaper.json]。</p>
+  </section>
+
+  <section>
+    <div class="redteam">
+      <h3>芒格红队：四条亏钱路径的反演</h3>
+      <ul>
+        <li><b>路径一（severity 高）：悲观锚本身不够悲观。</b>0.84 倍 PB 是 2014-03 单月恐慌价；若不良率冲向 2%+、资本被侵蚀，谷底会更深（熊市组合 IV 12.95 元已示警）。回应：0.84 是截断前唯一有完整证据链的实测谷底（S2d），不虚构更深的锚；已挂触发价重估前移条款——若 2015 年不良生成率加速至 2%+，不等 12.39 直接重估。[E:phase5_workpaper.json]</li>
+        <li><b>路径二（中）：非标 3,803 亿的兜底不可验证。</b>表外通道资产不受五级分类纪律约束，损失率既可能远低于表内（反向风险），也可能爆雷时一次性冲击。回应：按最不利方向处理，不为乐观面加分。</li>
+        <li><b>路径三（中）：连续降息未单独建模。</b>2014-11-21 非对称降息只计了一次；若 2015 年继续降息，重定价压力叠加信用成本，减值前利润会先恶化。回应：登记为跟踪项，若再降息则基准 IV 重算。</li>
+        <li><b>路径四（中高）：坏账年股息下限失守。</b>不收敛下限 8.2% 中的股息按 ttm 实付计；若 2015 年利润下滑 + 拨备要求提升，0.62 元 DPS 不可比照常态化，下限可能逼近 6% 红线。回应：列入证伪条件 F3 与季度跟踪。</li>
+      </ul>
+    </div>
+  </section>
+
+  <section>
+    <h2>证伪条件、跟踪清单与持有体验</h2>
+    <div class="falsify" data-reeval-trigger="quarterly-tracking">
+      <h3>证伪条件（任一触发即重估档位）</h3>
+      <ul class="checklist">
+        <li><b>F1</b>：不良生成率加速——不良率突破 1.6% 或关注类占比突破 1.6%（向 2% 迁徙的路径信号）→ 触发价重估前移，悲观情景换锚。</li>
+        <li><b>F2</b>：2015 年央行再次降息（非对称）→ NIM 假设下修，基准 IV 重算。</li>
+        <li><b>F3</b>：年度 DPS 下调或分红率跌破 22% → 不收敛下限逼近 6% 红线，闸门二②复核。</li>
+        <li><b>F4</b>：非标敞口（应收款项类投资）继续 +40% 以上扩张 → 管理层叙事矛盾升级为治理问题。</li>
+      </ul>
+      <h3>季度跟踪清单（quarterly-tracking）</h3>
+      <ul class="checklist">
+        <li>不良率 / 关注类占比 / 逾期率三线（剪刀差收敛还是发散）</li>
+        <li>单季减值计提与年化信用成本（0.9% 量级是否继续上行）</li>
+        <li>存款成本与活期占比（负债优势衰减速度——利率市场化节奏）</li>
+        <li>拨备覆盖率与核心一级资本（资本反噬约束分红）</li>
+        <li>价格触发器：12.39 元（52 周带内 41.3% 分位）；加仓条件 = 股息率 ≥6% 且关注类连续两季回落</li>
+      </ul>
+    </div>
+    <h3>持有体验预演</h3>
+    <p>用截断前的历史回答"买入后会经历什么"：2007-11 不复权高点 46.33 元 → 2008 年低点 10.71 元，回撤约 <b>−77%</b>；至 2014-12-31（16.59 元）<b>七年后仍仅为高点 36%</b>——同一家公司，2007 年顶买入者 7 年未解套，2011 年初（约 11.5 元）买入者浮盈 44% + 十年股息 [E:financials_600036_2014.json]。本档位（52 周位置 99.6% 买入）的常态路径必须假设：先经历坏账周期杀估值（银行业 2014-03 刚出现 0.84 倍 PB 的恐慌价），<b>浮亏 30-40% 是常态而非尾部</b>。跌 40% 敢不敢加仓：当股息率 ≥6% 且不良生成率出现见顶证据（连续两季度关注类回落）时敢——触发价 12.39 元就是该问题的第一档价格化 [E:phase5_workpaper.json]。</p>
+  </section>
+
+  <footer class="disclaimer">
+    本报告为历史回放研究（案件 B3-13），信息截断于 2014-12-31：2014 年报（2015-03-19 披露）及此后一切信息均未使用；采集期间曾暴露的 2014 年报片段已登记于 manifest.forbidden_data_encountered 且未回填任何估值输入。本报告不构成投资建议。
+  </footer>
+</div>
+
+<script>
+function initChart(id, option) {
+  var el = document.getElementById(id);
+  if (!el || typeof echarts === 'undefined') return;
+  var c = echarts.init(el); c.setOption(option);
+  window.addEventListener('resize', function(){ c.resize(); });
+}
+
+/* ---- 不良率 & 拨备覆盖率 ---- */
+initChart('chart-npl', {
+  tooltip: { trigger: 'axis' },
+  legend: { data: ['不良率%', '拨备覆盖率%'] },
+  grid: { left: 60, right: 70, bottom: 40 },
+  xAxis: { type: 'category', data: [2004,2005,2006,2007,2008,2009,2010,2011,2012,2013,2014] },
+  yAxis: [
+    { type: 'value', name: '不良率%', scale: true },
+    { type: 'value', name: '拨备覆盖率%', max: 450 }
+  ],
+  series: [
+    { name: '不良率%', type: 'bar',
+      /*<!-- vchart src=metrics_600036_2014_bank.json path=chart_series.npl_ratio scale=100 -->*/
+      data: [2.87,2.58,2.12,1.54,1.11,0.82,0.68,0.56,0.61,0.83,1.10],
+      itemStyle: { color: '#b91c1c' } },
+    { name: '拨备覆盖率%', type: 'line', yAxisIndex: 1,
+      /*<!-- vchart src=metrics_600036_2014_bank.json path=chart_series.provision_coverage scale=100 -->*/
+      data: [101.36,111.04,135.62,180.39,223.29,246.66,302.41,400.13,351.79,266.00,227.99],
+      itemStyle: { color: '#1a3a5c' } }
+  ]
+});
+
+/* ---- ROE ---- */
+initChart('chart-roe', {
+  tooltip: { trigger: 'axis' },
+  grid: { left: 60, right: 40, bottom: 40 },
+  xAxis: { type: 'category', data: [2004,2005,2006,2007,2008,2009,2010,2011,2012,2013,2014] },
+  yAxis: { type: 'value', name: 'ROE%', scale: true },
+  series: [
+    { name: 'ROE%', type: 'line',
+      /*<!-- vchart src=metrics_600036_2014_bank.json path=chart_series.roe scale=100 -->*/
+      data: [16.06,16.16,17.52,24.76,27.41,21.18,21.75,24.17,24.78,23.12,21.33],
+      lineStyle: { width: 3 }, itemStyle: { color: '#d97706' },
+      markLine: { data: [{ yAxis: 21.66, name: '全期均值' }] } }
+  ]
+});
+
+/* ---- BVPS ---- */
+initChart('chart-bvps', {
+  tooltip: { trigger: 'axis' },
+  grid: { left: 60, right: 40, bottom: 40 },
+  xAxis: { type: 'category', data: [2004,2005,2006,2007,2008,2009,2010,2011,2012,2013,2014] },
+  yAxis: { type: 'value', name: 'BVPS(元)', scale: true },
+  series: [
+    { name: 'BVPS', type: 'bar',
+      /*<!-- vchart src=metrics_600036_2014_bank.json path=chart_series.bvps -->*/
+      data: [3.05,2.51,3.75,4.62,5.41,4.85,6.21,7.65,9.29,10.53,11.97],
+      itemStyle: { color: '#1a3a5c' } }
+  ]
+});
+
+/* ---- 三情景 ---- */
+initChart('chart-scenarios', {
+  tooltip: { trigger: 'axis' },
+  grid: { left: 60, right: 40, bottom: 40 },
+  xAxis: { type: 'category', data: ['悲观 25%','基准 50%','乐观 25%'] },
+  yAxis: { type: 'value', name: '每股价值(元)', max: 36 },
+  series: [
+    { name: '每股价值', type: 'bar',
+      /*<!-- vchart src=scenarios.json path=chart.values_per_share -->*/
+      data: [10.05,20.65,32.97],
+      itemStyle: { color: function(p){ return ['#94a3b8','#d97706','#15803d'][p.dataIndex]; } },
+      markLine: { data: [{ yAxis: 16.59, name: '现价' }, { yAxis: 12.39, name: '触发价' }] } }
+  ]
+});
+
+/* ---- 三师雷达 ---- */
+var RADAR_IND = [
+  { name: '生意质量', max: 5 }, { name: '护城河', max: 5 }, { name: '管理层', max: 5 },
+  { name: '价格安全垫', max: 5 }, { name: '能力圈契合', max: 5 }
+];
+initChart('chart-radar', {
+  tooltip: {},
+  legend: { data: ['巴菲特','段永平','李录'], bottom: 0 },
+  radar: { indicator: RADAR_IND, radius: '62%' },
+  series: [{
+    type: 'radar',
+    data: [
+      {/*<!-- vchart src=phase5_workpaper.json path=persona_scores.buffett -->*/ value: [3.5,3.0,3.5,2.0,4.0], name: '巴菲特', itemStyle: { color: '#1a3a5c' } },
+      {/*<!-- vchart src=phase5_workpaper.json path=persona_scores.duan -->*/ value: [3.5,3.0,3.5,2.5,3.5], name: '段永平', itemStyle: { color: '#d97706' } },
+      {/*<!-- vchart src=phase5_workpaper.json path=persona_scores.lilu -->*/ value: [4.0,3.5,3.5,2.0,4.5], name: '李录', itemStyle: { color: '#15803d' } }
+    ]
+  }]
+});
+</script>
+</body>
+</html>
