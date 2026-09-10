@@ -1,0 +1,105 @@
+{
+ "company": "中国平安",
+ "ticker": "601318.SH",
+ "currency": "CNY",
+ "price": 56.1,
+ "price_source": "2018-12-28 A股收盘价（2018年最后交易日），不复权 [E:market_snapshot_601318_2018.json]",
+ "moat": "narrow",
+ "moat_note": "窄偏宽：寿险NBV利润率38.5%（代理人渠道48.1%）行业最高档+产险COR 95.8%承保盈利+30.8%客户持有多家子公司合同——A股保险最强质地；但寿险产品无定价权天花板、监管统一（134号文）、代理人产能-17.7%为渠道质量警报。闸门一门槛MoS≥40%、闸门二①门槛由40%反推 [E:qualitative_601318_2018.json][E:metrics_601318_2018_insurance.json]",
+ "discount_rate": 0.102,
+ "discount_rate_note": "股权成本：2018-12-28十年国债3.27%（中债估值）+股权风险溢价6.9%≈10.2%，与同批次招行案（2014年rf 3.62%+6.9%=10.5%）同公式不同期；满足S2e下限max(10%, rf+4pct)=10%；敏感性10%/10.5%登记于fv_base",
+ "hold_years": 5,
+ "dividend_yield": 0.0267,
+ "dividend_yield_source": "FY2017每股股息1.50元（中期0.50已派+末期1.00预案，2017年报摘要）/现价56.10元=2.67% [E:financials_601318_insurance.json][E:market_snapshot_601318_2018.json]",
+ "intrinsic_value_growth": 0.06,
+ "iv_growth_evidence": "基准情景每股内在价值长期增速6.0%：EV增长由ROEV（2017年26.7%）经分红拖累与负债端减速修正——2018年NBV增速骤降至+0.2%（H1）显示旧增长断档，终期收敛至≈名义GDP+1pct（寿险渗透率仍有空间但代理人红利消退）；2011-2017集团EV CAGR 23.2%含偿一代→二代与高基数行业景气，不可外推 [E:metrics_601318_2018_insurance.json][E:qualitative_601318_2018.json]",
+ "default_probabilities": {
+  "悲观": 0.25,
+  "基准": 0.5,
+  "乐观": 0.25
+ },
+ "scenarios": [
+  {
+   "name": "悲观",
+   "value_per_share": 38.05,
+   "probability": 0.25,
+   "method": "pe_trough_multiple",
+   "method_note": "独立路径（不走EV增长贴现）：历史/同业谷底P/EV × 当期每股内含价值。谷底倍数0.75x锚定两类实证：①同业锚——2018年12月末A股上市险企P/EV区间约0.7-0.9x（国寿/新华/太保A股，基于各自2018H1内含价值，截断日市场公开数据），平安1.1x的独享溢价在『负债端恶化+利差持续为负+EV假设可信度坍塌』情景下消失，收敛至同业区间中枢；②历史锚——2014年6月平安A股月度最低价38.10元（不复权，期间最低点）对当时股本91.5亿股（79.16亿+转债转股）市值约3,486亿元，对2013年报集团EV 329,653百万（2014-03披露）P/EV≈1.06x、对2014H1 EV约3,625亿P/EV≈0.96x（偿一代口径；偿二代对平安EV影响仅-0.24%[2015回溯551,514 vs 偿一代552,853]），历史谷底未破1x但在EV重估情景（假设下调致EV本身下修）下按0.75x计入双杀。0.75×2018H1每股内含价值50.73元（927,376百万/18,280.24百万股，2018-08-21披露）=38.05元 [E:market_snapshot_601318_2018.json][E:financials_601318_insurance.json][E:metrics_601318_2018_insurance.json]",
+   "method_inputs": {
+    "trough_multiple": 0.75,
+    "eps": 50.73,
+    "eps_basis": "2018H1集团内含价值927,376百万÷总股本18,280.24百万股=50.73元/股（2018中期报告摘要，2018-08-21披露；第三方财务指标页同值交叉确认）",
+    "trough_pb_evidence": "不复权口径声明：38.10元为2014-06月度不复权最低价（期间最低点，非上涨段）；0.75x谷底倍数取同业A股P/EV区间0.7-0.9x中枢（2018-12截断日可得）与平安2014-06历史实测谷底0.96-1.06x之间的双杀折价——悲观情景含EV假设下调（长期投资回报假设5.0% vs 2018H1实际4.0%，利差-1.0pct）触发市场对EV内含假设的重估折价 [E:market_snapshot_601318_2018.json][E:financials_601318_insurance.json]"
+   },
+   "stressed_assumptions": [
+    "valuation_multiple（谷底0.75x vs 现1.106x[2018H1 EV口径]）",
+    "assumption_credibility（利差-1.0pct若持续→EV期望回报假设5.0%下修，EV口径本身下修10-15%由谷底倍数吸收）",
+    "liability_deterioration（NBV连续负增长、代理人产能继续下滑-17.7%趋势延续）"
+   ],
+   "probability_evidence": "负债端双杀延续概率：2018H1 NBV仅+0.2%（Q1负增长）、代理人产能-17.7%、总投资收益率4.0%<假设5.0%利差转负、华夏幸福137.7亿敞口对方资金链紧张（负债率81.1%+上交所问询）——负面因子全部为截断日前已披露事实；25%指『利差损失持续+NBV负增长组合』的尾部概率，基准仍是温和修复 [E:financials_601318_insurance.json interim_latest][E:qualitative_601318_2018.json]",
+   "non_operating_addback_per_share": 0.0,
+   "dividend_note_bear": "悲观情景下股息按1.50元维持不增长计入（payout已提至30.8%，偿付能力217%下无削减必要）"
+  },
+  {
+   "name": "基准",
+   "value_per_share": 59.0,
+   "probability": 0.5,
+   "method": "ev_growth_two_stage",
+   "method_note": "保险方法树主轨：EV增长两阶段贴现（P/EV判定法）。基础=2018H1每股EV 50.73元（截断日最新官方口径；2017年报口径EVPS 45.14对应P/EV 1.243x，2018H1口径P/EV 1.106x，取更新者）；前5年EV增长11%/年（2016-2017实际+15.3%/+29.4%、2018H1年化约+25%的大幅下修——NBV增速断档+利差转负+134号文余波），后5年7%/年；终期P/EV 1.0x（A股保险长期中枢0.8-1.2取中，对终期ROEV约15%）；折现率10.2%。终值PV=50.73×1.11^5×1.07^5×1.0/1.102^10=119.9/2.646=45.31元；股息PV（DPS 1.60起、前5年+10%/后5年+6%，锚=2017营运利润每股5.18×payout 31%）=13.65元；内在价值≈45.31+13.65=58.96≈59.0元。MoS=(59.0−56.10)/59.0=+4.9% [E:metrics_601318_2018_insurance.json][E:financials_601318_insurance.json][E:fv_base.json]",
+   "method_inputs": {
+    "evps_base": 50.73,
+    "ev_growth_y1_5": 0.11,
+    "ev_growth_y6_10": 0.07,
+    "terminal_pev": 1.0,
+    "discount_rate": 0.102,
+    "pv_terminal_per_share": 45.31,
+    "pv_dividends_per_share": 13.65
+   },
+   "value_drivers": [
+    "EV增长路径（ROEV向分红与负债端减速的传导）",
+    "终期P/EV（ROEV收敛水平与A股保险估值中枢）",
+    "股息率与分红提升空间（payout 22%→30.8%的提升轨迹）"
+   ],
+   "non_operating_addback_per_share": 0.0
+  },
+  {
+   "name": "乐观",
+   "value_per_share": 93.0,
+   "probability": 0.25,
+   "method": "ev_growth_two_stage",
+   "method_note": "同主轨但参数上移：前5年EV增长15%/年（负债端修复至NBV双位数增长、代理人产能企稳——2018Q3 NBV单季+10.9%已现拐点信号）、后5年9%/年、终期P/EV 1.3x（ROEV持续20%+的友邦式溢价，A+H两地对高ROEV集团的估值锚）；EVPS_2023=50.73×1.15^5=102.1、EVPS_2028=102.1×1.09^5=157.1→终值PV=157.1×1.3/2.646=77.2元；股息PV=15.93元（DPS增速前5年12%/后5年8%）；内在价值≈93.1≈93.0元。对应P/EV(2018H1)≈1.83x，仍在2018年初市场曾给出的估值区间内 [E:metrics_601318_2018_insurance.json][E:fv_bull.json]",
+   "method_inputs": {
+    "evps_base": 50.73,
+    "ev_growth_y1_5": 0.15,
+    "ev_growth_y6_10": 0.09,
+    "terminal_pev": 1.3,
+    "discount_rate": 0.102,
+    "pv_terminal_per_share": 77.2,
+    "pv_dividends_per_share": 15.93
+   },
+   "value_drivers": [
+    "负债端修复弹性（Q3 NBV +10.9%拐点延续）",
+    "利率企稳后投资端利差回正（2018-10起长端利率已从3.5%高位回落至3.3%附近企稳）",
+    "科技独角兽价值显性化（医保科技88亿美元+壹账通75亿美元+陆金所，2018H1财报披露估值）"
+   ],
+   "non_operating_addback_per_share": 0.0
+  }
+ ],
+ "reverse_expectation_note": "反向定价：现价56.10对应P/EV(2018H1) 1.106x——市场在给ROEV 26.7%的集团约1.1倍内含价值，隐含『EV增长的中长期期权价值≈0』（P/EV=1仅购买存量EV+贴现损耗），即市场已按『负债端增长断档常态化』定价；这不是2014年招行式『ROE→COE完全收敛』的深度怀疑，而是对『NBV增速中枢下移』的定向定价 [E:metrics_601318_2018_insurance.json]",
+ "insurance_specific_notes": {
+  "pev_caliber": "P/EV双口径：2017年报EVPS 45.14→1.243x；2018H1 EVPS 50.73→1.106x。主用2018H1口径（截断日最新、含中报EV +12.4%增长），2017口径作年报口径参考——两者差异即EV半年增长，口径选择本身是本案测试点",
+  "spread_alarm_pipeline_gap": "2018H1利差-1.0pct（4.0%实际vs5.0%假设）未触发管线警报——管线只读年报行（2015-2017利差+2.8/+0.3/+1.0pct平均1.37%≥0.5%），半年报利差在管线视野外，为人工五维与情景压力项",
+  "gordon_forbidden": "保险估值禁用Gordon（与银行同理），主轨为EV增长两阶段+P/EV判定法+股息模型三轨中的前两轨；股息模型单独评估：股息率2.67%<无风险3.27%+风险溢价，股息单轨不支持买入"
+ },
+ "dividend_yield_basis": "annual_plan",
+ "dividend_yield_basis_note": "annual_plan口径：FY2017全年每股股息1.50元（中期0.50已派+末期1.00已宣告预案）÷现价56.10=2.67%；不含2018年30周年特别股息0.20元（一次性成分，避免单次分红高估闸门二②的保底回报语义）与FY2018中期0.62（属于下一财年提升轨迹）；2018日历年实际派发1.82元（ttm_paid=3.24%）登记于market_snapshot作参考 [E:market_snapshot_601318_2018.json][E:financials_601318_insurance.json]",
+ "chart": {
+  "values_per_share": [
+   38.05,
+   59.0,
+   93.0
+  ]
+ },
+ "bear_vs_price_ratio": 0.6783,
+ "chart_note": "三情景每股价值（悲观/基准/乐观），供报告vchart锚点引用"
+}

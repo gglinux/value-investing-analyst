@@ -1,0 +1,52 @@
+{
+  "file": "backtest/601318.SH_2018-12-31/data/scenarios.json",
+  "errors": [],
+  "warnings": [],
+  "codes": [],
+  "unmapped_messages": [],
+  "diagnostics": {
+    "scenario_values": {
+      "悲观": 38.05,
+      "基准": 59.0,
+      "乐观": 93.0
+    },
+    "bear_name": "悲观",
+    "base_name": "基准",
+    "margin_of_safety_vs_base": 0.04915254237288136,
+    "bear_method": "pe_trough_multiple",
+    "bear_recomputed_value": 38.0475,
+    "bear_recompute_deviation": 6.6e-05,
+    "discount_rate_floor": 0.1,
+    "discount_rate_floor_basis": "硬下限 10%",
+    "bear_stressed": [
+      "valuation_multiple（谷底0.75x vs 现1.106x[2018H1 EV口径]）",
+      "assumption_credibility（利差-1.0pct若持续→EV期望回报假设5.0%下修，EV口径本身下修10-15%由谷底倍数吸收）",
+      "liability_deterioration（NBV连续负增长、代理人产能继续下滑-17.7%趋势延续）"
+    ],
+    "bear_base_ratio": 0.6449152542372881,
+    "non_operating_addback_per_share": {
+      "悲观": 0.0,
+      "基准": 0.0,
+      "乐观": 0.0
+    },
+    "bear_vs_price": 0.67825311942959,
+    "probability_deviations": {},
+    "intrinsic_value_growth": 0.06,
+    "iv_growth_evidence": "基准情景每股内在价值长期增速6.0%：EV增长由ROEV（2017年26.7%）经分红拖累与负债端减速修正——2018年NBV增速骤降至+0.2%（H1）显示旧增长断档，终期收敛至≈名义GDP+1pct（寿险渗透率仍有空间但代理人红利消退）",
+    "revenue_decline_streak": null,
+    "core_driver_decline_years": null,
+    "peak_stagnation": null,
+    "decline_streak_used": null,
+    "shrinking_reasons": [],
+    "value_trap_triggered": false,
+    "dividend_yield": 0.0267,
+    "dividend_yield_basis": "annual_plan",
+    "snapshot_dividend_yield": {
+      "value": 0.0267,
+      "field": "dividend_yield",
+      "basis": "裸键名，按小数",
+      "unit_ambiguous": false
+    }
+  },
+  "passed": true
+}

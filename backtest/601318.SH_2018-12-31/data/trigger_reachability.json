@@ -1,0 +1,14 @@
+{
+  "trigger": 35.4,
+  "price": 56.1,
+  "low_52w": 54.33,
+  "high_52w": 81.28,
+  "band_source": "low_52w/high_52w",
+  "verdict": "out_of_history",
+  "band_position": null,
+  "codes": [
+    "TRIGGER_OUT_OF_HISTORY"
+  ],
+  "note": "触发价 35.4 低于 52 周最低 54.33（还差 34.8% 才到历史下限）——历史上没人用这个价格买到过，「等它」按罕见事件定价",
+  "reachable": false
+}
