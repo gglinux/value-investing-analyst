@@ -1,6 +1,8 @@
 {
   "case": "ZM_2021-10-31",
-  "expected_verdict_set": [1],
+  "expected_verdict_set": [
+    1
+  ],
   "expected_verdict_set_note": "官方答案（ANSWERS.md 第二批第 32 行，仅一行定性）：『Zoom 2021-10：拒绝。事后长期下跌超 80%。』——『拒绝』映射档位 {1}：官方语义是全面回避而非等价格——官方事后提示（跌超 80%）确认这不仅仅是『保护不足』而是方向性陷阱。管线 final_verdict=拒绝（观察等价格）（ordinal 1，Netflix 先例式复合表述）命中",
   "expected_gate1": null,
   "expected_gate2": null,
@@ -10,8 +12,7 @@
   "must_trigger_unmapped": [],
   "must_trigger_note": "官方答案行无 must_trigger 字段（纯定性+事后提示），无需映射",
   "must_not_trigger": [],
-  "known_failures": ["engine_drift"],
-  "engine_drift_note": "rerun 机制既有参数缺陷（非引擎回归）：reverse_dcf 不在 rerun 路径（GATE2_1_IRR_FAIL/GATE2_2_FLOOR_FAIL/GATE2_3_BEAR_FAIL/GATE2_FAIL 不可复现）且 market_cap 未传参（M_UNIT_SUSPECT 量纲哨兵不可复现）。第一批 S9b 底稿口径回填后（2026-09-09 补登 dividend_yield_basis=annual_plan，零分红）S9 漂移已消除。移除条件：P2-8 RERUN_PARAMS 扩展（含 market_cap）落地后重跑并删除本登记。",
+  "known_failures": [],
   "known_failures_note": "档位轨命中：管线 verdict_ordinal 1 ∈ 官方 {1}。本案无 must_trigger 断言需求；must_not_trigger 无登记。告警轨无可判定的官方断言——本案的引擎行为价值在 OBS 证据层（估值警报全部正确触发且方向无误）而非断言比对层",
   "actual_5y_price_total_return": -0.631,
   "actual_5y_price_annualized": -0.1857,

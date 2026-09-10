@@ -1,6 +1,8 @@
 {
   "case": "000895.SZ_2019-06-30",
-  "expected_verdict_set": [2],
+  "expected_verdict_set": [
+    2
+  ],
   "expected_verdict_set_note": "官方答案（ANSWERS.md 第二批第 33 行，一行定性+机制提示）：『双汇 2019-06：观察等价格。猪价周期挤压毛利，净利率法判周期位置会失真。』——『观察等价格』映射档位 {2}，无余地。管线 final_verdict=观察等价格（ordinal 2）唯一命中",
   "expected_gate1": null,
   "expected_gate2": null,
@@ -10,8 +12,10 @@
   "must_trigger_unmapped": [],
   "must_trigger_note": "官方答案行无 must_trigger 字段（一行定性+机制提示）。机制断言『净利率法失真』由 normalization 裁决④ 实证（见 expected_gate_note），非 alert code 轨道",
   "must_not_trigger": [],
-  "known_failures": ["engine_drift"],
-  "engine_drift_note": "两段构成，均非引擎回归：①新增 S9_DIVIDEND_YIELD_DIMENSION——S9b 口径哨兵对本案底稿（basis=annual_plan+alt=0.0803，两口径差 38%）的 25-50% 分裂 WARN 为**设计内触发**（S9b 实施时以此 WARN 精确触发为验收标准），verdict 冻结于 S9b 实施前故 engine_derived 无此码；②GATE2_1_IRR_FAIL/GATE2_FAIL/M_OWNER_YIELD_NOT_CASH_BACKED/TRIGGER_OUT_OF_HISTORY 消失——reverse_dcf/trigger_reachability 不在 rerun 路径且 market_cap 未传参（rerun 机制既有参数缺陷）。2026-09-09 带 market_cap=82130 全参数重跑与冻结 metrics 底稿逐字一致。移除条件：P2-8 RERUN_PARAMS 扩展落地后重跑并删除本登记。",
+  "known_failures": [
+    "engine_drift"
+  ],
+  "engine_drift_note": "残差收窄至两段，均非引擎回归：①新增 S9_DIVIDEND_YIELD_DIMENSION——S9b 口径哨兵对本案底稿（basis=annual_plan+alt=0.0803，两口径差 38%）的分裂 WARN 为设计内触发，verdict 冻结于 S9b 实施前故 engine_derived 无此码；②TRIGGER_OUT_OF_HISTORY 消失——trigger_reachability.py 不在 rerun 路径。P2-8 落地（2026-09-10：--market-cap-million 传参 + expected-return 接入 + scenarios.json 命名修复）后 GATE2_1_IRR_FAIL/GATE2_FAIL/M_OWNER_YIELD_NOT_CASH_BACKED 已复现。移除条件：trigger_reachability 接入 rerun 路径，或案例重新冻结。",
   "known_failures_note": "档位轨命中：管线 verdict_ordinal 2 ∈ 官方 {2}。本案断言价值在机制实证层（传导型公司周期位置判定）而非告警比对层",
   "actual_5y_price_total_return": 0.187,
   "actual_5y_price_annualized": 0.0349,

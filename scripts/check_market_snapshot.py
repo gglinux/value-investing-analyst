@@ -47,14 +47,36 @@ import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
-UNIT_TO_MILLION = {"million": 1.0, "yi": 100.0, "亿": 100.0,
-                   "yuan": 0.000001, "元": 0.000001}
+UNIT_TO_MILLION = {"million": 1.0, "百万": 1.0, "yi": 100.0, "亿": 100.0,
+                   "亿元": 100.0, "yuan": 0.000001, "元": 0.000001}
+
+
+def unit_to_million(unit):
+    """宽松单位归一：精确匹配优先，前缀匹配兜底。
+
+    底稿 unit 字段存在自由文本（如 "million USD（股本为 million shares）"、
+    "百万元（除每股/每股本数据）"），精确匹配失败时按 million/亿 前缀识别；
+    仍无法识别返回 None（调用方负责拒绝执行而非静默按百万算）。
+    """
+    if not isinstance(unit, str):
+        return None
+    u = unit.strip().lower()
+    if u in UNIT_TO_MILLION:
+        return UNIT_TO_MILLION[u]
+    if u.startswith("million") or u.startswith("百万"):
+        return 1.0
+    if u.startswith("亿") or u.startswith("yi"):
+        return 100.0
+    return None
 
 # 旧命名 -> 规范字段 的已知映射。每个 tuple = (规范字段, 旧字段名, 隐含单位说明)
-_PRICE_LEGACY = ["price", "price_cny", "price_usd", "price_hkd", "price_a"]
+# price_unadjusted 放最后：双汇式三价并列快照（unadjusted/forward/backward）
+# 只有未复权价与快照日市值自洽（复权价是收益计算口径，不是市值口径）。
+_PRICE_LEGACY = ["price", "price_cny", "price_usd", "price_hkd", "price_a",
+                 "price_unadjusted"]
 _SHARES_LEGACY = ["shares_outstanding", "total_shares_million"]  # 均为百万股
 _MCAP_NUMERIC = ["market_cap", "total_market_cap_cny_million"]
-_MCAP_YI = ["total_market_cap_usd_yi", "total_market_cap_cny_yi"]  # 字段名明示单位为亿
+_MCAP_YI = ["total_market_cap_usd_yi", "total_market_cap_cny_yi", "market_cap_yi"]  # 字段名明示单位为亿
 
 
 def _err(errors, code, msg):
@@ -97,9 +119,20 @@ def read_shares_million(d, warnings):
         return None
     for k in _SHARES_LEGACY:
         if isinstance(d.get(k), (int, float)):
-            _warn(warnings, "SNAPSHOT_LEGACY_SCHEMA",
-                  f"股本使用旧命名 `{k}`；规范为 shares.value + shares.unit")
-            return float(d[k])
+            v = float(d[k])
+            # 量级自检：旧命名裸数字的股数单位无字段佐证（双汇案实证——
+            # shares_outstanding=3,301,693,093 是原始股数，非百万股）。
+            # 上市公司总股本（原始计数）必然 ≥10^6；而以百万计的股本
+            # >10^6 意味着 10^12 股（无真实案例）。>10^6 按原始股数归一。
+            if v > 1e6:
+                _warn(warnings, "SNAPSHOT_LEGACY_SCHEMA",
+                      f"股本旧命名 `{k}`={v:,.0f} 量级为原始股数（非百万股），"
+                      f"已自动 ÷10^6 归一；规范为 shares.value + shares.unit")
+                v = v / 1e6
+            else:
+                _warn(warnings, "SNAPSHOT_LEGACY_SCHEMA",
+                      f"股本使用旧命名 `{k}`（百万股）；规范为 shares.value + shares.unit")
+            return v
     return None
 
 
@@ -109,7 +142,7 @@ def read_market_cap_million(d, warnings):
     if isinstance(m, dict):
         if isinstance(m.get("value"), (int, float)):
             unit = m.get("unit")
-            f = UNIT_TO_MILLION.get(unit)
+            f = unit_to_million(unit)
             if f:
                 return float(m["value"]) * f, m.get("currency")
             _warn(warnings, "SNAPSHOT_SCHEMA",

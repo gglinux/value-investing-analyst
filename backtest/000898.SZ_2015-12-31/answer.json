@@ -1,6 +1,9 @@
 {
   "case": "000898.SZ_2015-12-31",
-  "expected_verdict_set": [1, 2],
+  "expected_verdict_set": [
+    1,
+    2
+  ],
   "expected_verdict_set_note": "官方答案（ANSWERS.md 第二批第 29 行，仅一行定性）：『鞍钢 2015-12：拒绝 或 观察等价格。无成本优势，盈利长期在盈亏线附近震荡。』——两可区间映射档位 {1, 2}；答案行未设定量字段，未设 must_trigger/must_not_trigger",
   "expected_gate1": false,
   "expected_gate2": false,
@@ -8,8 +11,10 @@
   "must_trigger": [],
   "must_trigger_any": [],
   "must_not_trigger": [],
-  "known_failures": ["engine_drift"],
-  "engine_drift_note": "rerun 机制既有参数缺陷（非引擎回归）：reverse_dcf 不在 rerun 路径（GATE1_FAIL/GATE2_2_FLOOR_FAIL/GATE2_3_BEAR_FAIL/GATE2_FAIL/GATE2_UNRATED 不可复现）且 market_cap 未传参（M_OWNER_YIELD_NOT_CASH_BACKED 不可复现）。2026-09-09 带 market_cap=29331 全参数重跑 compute_metrics，输出与冻结 metrics 底稿逐字一致——再投入豁免未破防负样本（门控条件③收入下滑拦截）。移除条件：P2-8 RERUN_PARAMS 扩展（含 market_cap）落地后重跑并删除本登记。",
+  "known_failures": [
+    "engine_drift"
+  ],
+  "engine_drift_note": "残差收窄至两段，均非引擎回归：①新增 S9_DIVIDEND_YIELD_DIMENSION——check_scenarios 接入 rerun（scenarios.json 命名修复）后首次运行产出，verdict 冻结于 S9b 实施前；②GATE1_FAIL 消失——mos_calc 派生判定（与 Zoom/海控先例同源），不在任何 rerun 脚本路径，属永久覆盖外。P2-8 落地后 GATE2_2_FLOOR_FAIL/GATE2_3_BEAR_FAIL/GATE2_FAIL/GATE2_UNRATED/M_OWNER_YIELD_NOT_CASH_BACKED 已复现（market_cap_million=32187）。移除条件：案例重新冻结。",
   "known_failures_note": "系统输出拒绝(1) ∈ 官方区间 {1, 2}——档位轨命中，第二批首个无缺口案例；告警轨官方未约束，自动满足。与神华（B2-07，verdict_track 缺口 1~2 档）构成同批分化",
   "actual_3y_total_return": 0.1506,
   "actual_5y_total_return": -0.0527,
@@ -41,7 +46,7 @@
   },
   "trigger_price_outcome": {
     "gate1_trigger_price": 0.79,
-    "falsify_price_line": 1.00,
+    "falsify_price_line": 1.0,
     "touched": false,
     "note": "闸门一触发价 0.79 元与价格证伪线 1.00 元在 5 年持有期内均未接近（不复权月收盘最低 2.45，2020-06；距证伪线尚有 −59% 空间）——若按『观察等价格』执行，将是茅台型『永不触发的观察』；事后事实站在官方两可区间的『拒绝』端"
   },

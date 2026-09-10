@@ -31,7 +31,8 @@ SaaS=客户数×ACV／零售=门店数×单店收入／公用事业=发电量×�
 3. **我这一份会不会被稀释？** 每股口径 CAGR vs 总量 CAGR（每股 Owner Earnings/每股收入/每股净资产）。总量增长而每股不增长，等于增长被增发吃掉，对所有者是**价值毁灭型增长**。持续回购注销则相反，每股价值增速 > 总量增速。
 
 4. **如果用现在的市值把整家公司买下，我愿意吗？** 看 `owner_yield`（需给
-   `compute_metrics.py` 传 `--market-cap`）：Owner Earnings / 市值 = 整体买下每年拿几个点，
+   `compute_metrics.py` 传 `--market-cap-million`，或 `--snapshot` 从快照自读）：
+   Owner Earnings / 市值 = 整体买下每年拿几个点，
    以及回本年数。这比 PE 更接近所有者体验（净利润含应计，OE 是可分配现金）。
    **必看 `cash_backed` 标志**：为 False 时该收益率不可落袋——中国建筑正常化 OE
    收益率算出 21.3%、回本 4.7 年，看似天赐良机，但累计 FCF −1314 亿，

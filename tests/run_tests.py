@@ -1042,13 +1042,13 @@ with tempfile.TemporaryDirectory() as td:
         out = os.path.join(td, "m.json")
         cmd = [sys.executable, os.path.join(SCRIPTS, "compute_metrics.py"), pth, "-o", out]
         if mc is not None:
-            cmd += ["--market-cap", str(mc)]
+            cmd += ["--market-cap-million", str(mc)]
         subprocess.run(cmd, capture_output=True, text=True)
         return json.load(open(out)) if os.path.exists(out) else None
 
     # A. 未传市值时 owner_yield 为 None（不伪造）
     d = _run(_mk(dividends=30.0))
-    check("未传 --market-cap 时 owner_yield 为 None", d["owner_yield"] is None)
+    check("未传 --market-cap-million 时 owner_yield 为 None", d["owner_yield"] is None)
 
     # B. 传市值：OE 收益率与回本年数
     d = _run(_mk(dividends=30.0), mc=1000.0)
@@ -1803,7 +1803,7 @@ def _ms(case, mc):
     f = [x for x in os.listdir(fin) if x.startswith("financials")][0]
     o = os.path.join(tempfile.mkdtemp(prefix="ms_"), "out.json")
     subprocess.run([sys.executable, os.path.join(SCRIPTS, "compute_metrics.py"),
-                    os.path.join(fin, f), "--market-cap", str(mc), "-o", o],
+                    os.path.join(fin, f), "--market-cap-million", str(mc), "-o", o],
                    capture_output=True)
     return json.load(open(o, encoding="utf-8"))
 
@@ -1817,6 +1817,95 @@ check("量纲哨兵逮住 10 倍错位（福耀 566294）",
 _r_hk = _ms("601919.SH_2021-07-31", 2535137)
 check("量纲哨兵逮住海控历史错位（2535137）",
       "M_UNIT_SUSPECT" in _r_hk["alert_codes"])
+
+# ── F/P2-8：CLI 等式校验 + 单位归一 + provenance（关闭传参绕过快照的缝隙）──
+print("== 12b CLI 等式校验 + 单位归一 + provenance（F/P2-8） ==")
+with tempfile.TemporaryDirectory() as td:
+    def _eq_draft(unit="million"):
+        return {"company": "EQ", "ticker": "EQ", "currency": "CNY",
+                "unit": unit, "company_type": "制造业",
+                "annual": [{"year": 2020 + i, "revenue": 1000.0,
+                            "net_income": 100.0, "ocf": 150.0, "capex": 40.0,
+                            "d_and_a": 40.0, "total_equity": 800.0,
+                            "total_debt": 100.0, "cash": 100.0,
+                            "shares_diluted": 100.0, "dividends": 30.0}
+                           for i in range(6)]}
+
+    def _eq_cli(draft, snap=None, mc=None, old_param=False):
+        p = os.path.join(td, "d.json")
+        json.dump(draft, open(p, "w"), ensure_ascii=False)
+        o = os.path.join(td, "o.json")
+        cmd = [sys.executable, os.path.join(SCRIPTS, "compute_metrics.py"), p]
+        if mc is not None:
+            cmd += (["--market-cap", str(mc)] if old_param
+                    else ["--market-cap-million", str(mc)])
+        if snap is not None:
+            sp = os.path.join(td, "s.json")
+            json.dump(snap, open(sp, "w"), ensure_ascii=False)
+            cmd += ["--snapshot", sp]
+        cmd += ["-o", o]
+        r = subprocess.run(cmd, capture_output=True, text=True)
+        return (json.load(open(o)) if os.path.exists(o) else None), r
+
+    def _eq_warns(d):
+        return [w for w in (d or {}).get("warnings", [])
+                if "等式" in w or "矛盾" in w or "跳过" in w]
+
+    # 1. 单位归一：底稿 unit=亿，传参固定百万，引擎内部 ÷100 换算
+    d, r = _eq_cli(_eq_draft("yi"), mc=1000.0)
+    check("亿底稿传百万：内部换算到亿（1000 百万 = 10 亿）",
+          (d.get("owner_yield") or {}).get("market_cap") == 10.0,
+          str((d.get("owner_yield") or {}).get("market_cap")))
+    check("provenance 块记录百万原值",
+          d["provenance"]["market_cap_million"] == 1000.0)
+
+    # 2. A+H 分部等式校验：分部口径一致 → 零 EQUATION WARN
+    snap_ah = {
+        "price": {"value": 20.0, "currency": "CNY"},
+        "price_a": 20.0, "price_h": 18.0,
+        "fx": {"cny_per_hkd": 0.9},
+        "shares": {"a_million": 4000.0, "h_million": 1000.0},
+        "market_cap": {"value": 96200.0, "unit": "million", "currency": "CNY"},
+    }  # 分部推导 = 20×4000 + 18×1000×0.9 = 96,200 百万
+    d, r = _eq_cli(_eq_draft(), snap=snap_ah, mc=96200.0)
+    check("A+H 分部口径传参一致：零等式 WARN", not _eq_warns(d), str(_eq_warns(d)))
+
+    # 3. 容差内日期漂移（5%）不报警——拦 10 倍错位不拦日常波动
+    d, r = _eq_cli(_eq_draft(), snap=snap_ah, mc=96200.0 * 1.05)
+    check("容差内偏差（5%）：不报警", not _eq_warns(d), str(_eq_warns(d)))
+
+    # 4. 10 倍量纲错位：矛盾 WARN（双汇「元」错位的拦截位）
+    d, r = _eq_cli(_eq_draft(), snap=snap_ah, mc=962000.0)
+    check("10 倍错位：传参与快照矛盾 WARN",
+          any("矛盾" in w for w in _eq_warns(d)), str(_eq_warns(d)))
+
+    # 5. A+H 缺分部拆分：跳过留痕，不禁声（缺证据不裁决）
+    snap_ah_nobreak = dict(snap_ah)
+    snap_ah_nobreak["shares"] = {"value": 5000.0, "unit": "million_shares"}
+    d, r = _eq_cli(_eq_draft(), snap=snap_ah_nobreak, mc=100000.0)
+    check("A+H 缺分部拆分：跳过留痕",
+          any("跳过" in w for w in _eq_warns(d)), str(_eq_warns(d)))
+
+    # 6. 未传市值时从快照推导（单一事实源，免手抄）
+    d, r = _eq_cli(_eq_draft(), snap=snap_ah)
+    check("快照推导市值进 owner_yield",
+          (d.get("owner_yield") or {}).get("market_cap") == 96200.0,
+          str((d.get("owner_yield") or {}).get("market_cap")))
+    check("provenance 记录快照来源", d["provenance"]["snapshot"].endswith("s.json"))
+
+    # 7. 旧参数名拒绝：allow_abbrev=False 防 --market-cap 前缀静默生效
+    d, r = _eq_cli(_eq_draft(), mc=1000.0, old_param=True)
+    check("旧参数名 --market-cap 被拒绝（单位进参数名）",
+          r.returncode != 0 and "unrecognized" in (r.stderr or ""),
+          f"rc={r.returncode}, err={(r.stderr or '')[:80]}")
+
+    # 8. 快照缺 market_cap 且未传参：拒绝执行（存在性前置，不静默按 0 算）
+    snap_nomcap = {"price": {"value": 20.0, "currency": "CNY"},
+                   "shares": {"value": 5000.0, "unit": "million_shares"}}
+    d, r = _eq_cli(_eq_draft(), snap=snap_nomcap)
+    check("快照缺市值且未传参：拒绝执行",
+          r.returncode != 0 and "无法推导市值" in (r.stderr or ""),
+          f"rc={r.returncode}, err={(r.stderr or '')[:80]}")
 
 # 护城河一致性：报告 data-moat 与底稿 scenarios.moat
 _case_dir = os.path.join(ROOT, "backtest", "600519.SH_2015-08-31")

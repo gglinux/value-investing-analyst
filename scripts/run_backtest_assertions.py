@@ -45,14 +45,37 @@ from alert_codes import (ASSERTIONS, ORDINAL_TO_VERDICT, assertion_satisfied,
 REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 BACKTEST = os.path.join(REPO, "backtest")
 
-# 重跑引擎所需的逐案参数（护城河档位与内在价值增速取自各案 verdict/scenarios，
-# 不是自由参数——改动它等于改动案例本身，须走案例修订而非脚本调参）。
+# 重跑引擎所需的逐案参数（三类键独立可选，改动它等于改动案例本身，须走案例
+# 修订而非脚本调参）：
+#   moat + iv_growth —— reverse_dcf expected-return 传参，**两键齐备才跑反推**。
+#     值与各案 scenarios 文件一致（scenarios 是单一事实源，CLI 只是回显）。
+#     软银（9984.T）故意不设：其 GATE 判定经 ADJ2 人工裁决，反推会产出
+#     engine_derived 之外的 GATE2_UNRATED——假漂移，不接。
+#   market_cap_million —— compute_metrics 市值传参（百万，见 --market-cap-million）。
+#     取值以「复现该案 verdict.codes_provenance.engine_derived」为准：
+#     engine_derived 含市值依赖码（M_UNIT_SUSPECT / M_OWNER_YIELD_NOT_CASH_BACKED）
+#     的案例传原运行值；不含的不传——今日引擎的市值依赖码对冻结 verdict 是
+#     「新增漂移」而非复现（福耀/海控实证：传参会新增 engine_derived 之外的码）。
+#     batch-3 起新案例可从冻结 metrics 的 provenance 块自读本值，不再手工维护。
 RERUN_PARAMS = {
-    "600519.SH_2015-08-31": {"moat": "wide", "iv_growth": "0.06"},
-    "AAPL_2016-04-30": {"moat": "wide", "iv_growth": "0.07"},
-    "EK_2011-06-30": {"moat": "none", "iv_growth": "-0.055"},
+    "600519.SH_2015-08-31": {"moat": "wide", "iv_growth": "0.06",
+                             "market_cap_million": 245433},
+    "AAPL_2016-04-30": {"moat": "wide", "iv_growth": "0.07",
+                        "market_cap_million": 519403},
+    "EK_2011-06-30": {"moat": "none", "iv_growth": "-0.055",
+                      "market_cap_million": 962.7},
     "600660.SH_2018-12-31": {"moat": "narrow", "iv_growth": "0.025"},
     "601919.SH_2021-07-31": {"moat": "none", "iv_growth": "0.0"},
+    "601088.SH_2015-12-31": {"moat": "narrow", "iv_growth": "0.02"},
+    "000898.SZ_2015-12-31": {"moat": "none", "iv_growth": "0.0",
+                             "market_cap_million": 32187},
+    "000895.SZ_2019-06-30": {"moat": "narrow", "iv_growth": "0.02",
+                             "market_cap_million": 82126},
+    "NFLX_2016-12-31": {"moat": "narrow", "iv_growth": "0.0",
+                        "market_cap_million": 53128},
+    "ZM_2021-10-31": {"moat": "narrow", "iv_growth": "0.0",
+                      "market_cap_million": 83948},
+    "9984.T_2019-06-30": {"market_cap_million": 10886263},
 }
 
 
@@ -83,13 +106,23 @@ def rerun_engine(case):
         fin = sorted(glob.glob(os.path.join(data, "financials_*.json")))
         if fin:
             o = os.path.join(tmp, "m.json")
-            r = subprocess.run([_py(), os.path.join(REPO, "scripts", "compute_metrics.py"),
-                                fin[0], "-o", o], capture_output=True, text=True)
+            cmd = [_py(), os.path.join(REPO, "scripts", "compute_metrics.py"),
+                   fin[0]]
+            # P2-8：市值传参以复现 engine_derived 为准（见 RERUN_PARAMS 注释）
+            _p = RERUN_PARAMS.get(name) or {}
+            if _p.get("market_cap_million") is not None:
+                cmd += ["--market-cap-million", str(_p["market_cap_million"])]
+            cmd += ["-o", o]
+            r = subprocess.run(cmd, capture_output=True, text=True)
             if os.path.exists(o):
                 codes += json.load(open(o, encoding="utf-8")).get("alert_codes", [])
             else:
                 notes.append(f"compute_metrics 失败：{(r.stderr or '')[:120]}")
-        scen = sorted(glob.glob(os.path.join(data, "scenarios_*.json")))
+        # 两类命名并存于库内：scenarios_*.json（规范）与 scenarios.json
+        # （鞍钢/神华/NFLX 等第二批早期案例）——后者曾使 check_scenarios/
+        # reverse_dcf 在 rerun 路径被静默跳过，GATE 码全部误判为不可复现
+        scen = sorted(glob.glob(os.path.join(data, "scenarios_*.json"))
+                      + glob.glob(os.path.join(data, "scenarios.json")))
         if scen:
             met = sorted(glob.glob(os.path.join(data, "metrics_*.json")))
             o = os.path.join(tmp, "s.json")
@@ -106,7 +139,9 @@ def rerun_engine(case):
             else:
                 notes.append(f"check_scenarios 失败：{(r.stderr or '')[:120]}")
             p = RERUN_PARAMS.get(name)
-            if p:
+            # moat+iv_growth 两键齐备才跑反推：软银类经人工裁决的案例只有
+            # market_cap_million 键，反推会产生 engine_derived 之外的假漂移
+            if p and "moat" in p and "iv_growth" in p:
                 o2 = os.path.join(tmp, "e.json")
                 r = subprocess.run([_py(), os.path.join(REPO, "scripts", "reverse_dcf.py"),
                                     "expected-return", "--scenarios-file", scen[0],

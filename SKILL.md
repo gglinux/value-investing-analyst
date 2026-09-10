@@ -86,7 +86,7 @@ description: 价值投资深度公司分析。输入一家上市公司（A股/�
    - 总股本变动（稀释追踪）+ **每股口径复核**（每股收入/每股 Owner Earnings/每股净资产 10 年 CAGR vs 总量 CAGR，增长被摊薄吃掉即重大警报）
    - 估值历史分位（PE/PB/EV-EBIT 十年分位带）
    - 商业模式专属指标图（按 playbook）
-5. **所有者三问（强制，写入定量画像小结）**：专属指标答"生意做得好不好"，还须答"**这门生意的好有多少属于我**"：① 每年产出多少可分配现金（Owner Earnings 与 FCF 含金量，非净利润）；② 归谁、怎么分配（现金去向 + 股东回报率 + `capital_allocation.fcf_cover_shareholder_return`，<1.0x 触发"分红幻觉警报"＝回报靠融资而非经营）；③ 我这份会不会被稀释（每股 CAGR vs 总量 CAGR）。**④ 整体买下愿不愿意**：传 `--market-cap` 得 `owner_yield`（OE/市值＝每年拿几个点、回本年数），`cash_backed=False` 时该收益率不可落袋（中国建筑实证 21.3%＋回本 4.7 年，但累计 FCF −1314 亿）。详见 [metric-playbook.md](references/metric-playbook.md) 所有者三问节。
+5. **所有者三问（强制，写入定量画像小结）**：专属指标答"生意做得好不好"，还须答"**这门生意的好有多少属于我**"：① 每年产出多少可分配现金（Owner Earnings 与 FCF 含金量，非净利润）；② 归谁、怎么分配（现金去向 + 股东回报率 + `capital_allocation.fcf_cover_shareholder_return`，<1.0x 触发"分红幻觉警报"＝回报靠融资而非经营）；③ 我这份会不会被稀释（每股 CAGR vs 总量 CAGR）。**④ 整体买下愿不愿意**：传 `--market-cap-million`（或 `--snapshot` 自读）得 `owner_yield`（OE/市值＝每年拿几个点、回本年数），`cash_backed=False` 时该收益率不可落袋（中国建筑实证 21.3%＋回本 4.7 年，但累计 FCF −1314 亿）。详见 [metric-playbook.md](references/metric-playbook.md) 所有者三问节。
 6. 写出定量画像小结：数字讲了什么故事、与竞对最大的三个差异，**并明确"这门生意的增长引擎是量、价还是新业务"**（须与量价分解图一致）。
 
 ### Phase 3：五维定性分析

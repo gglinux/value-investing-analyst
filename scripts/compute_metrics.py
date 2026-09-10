@@ -1056,19 +1056,143 @@ def compute(data, market_cap=None):
     }
 
 
+def _snapshot_equation_check(snap_path, market_cap_million, warnings):
+    """CLI 入口的量纲等式校验（WARN 级）——关闭「传参绕过快照三角校验」的缝隙。
+
+    双汇「元」错位实证：check_market_snapshot 的三角校验只覆盖快照文件本身，
+    CLI 手抄 market_cap 不经过它。本函数把同一三角搬到 CLI 入口：
+      市值 ≈ 股价 × 股本（A/H 双上市用分部口径）
+    三处设计（与 SKILL-UPGRADE F 节一致）：
+    ① 容差 10% 而非 1%——快照日与传参日差 1-2 个交易日（日常波动 2-3%）
+       就会击穿 1%；这条校验的使命是拦 10 倍量纲错位（90%+ 偏差）与
+       亿/百万混淆（900%+），不是拦日期漂移；
+    ② 只 WARN 不拦——A+H 结构性偏差（H 股按 A 价计约 +5~12%，海控 11.5%
+       实证）、汇率日间波动都会造成合理偏差，硬拦必误报；
+    ③ A/H 分部优先——神华/鞍钢/福耀/海控快照均含 a_million/h_million/
+       price_h/fx 分部数据时用分部公式；有 price_h 但缺分部拆分时单靠
+       A 价×总股本结构性失真，跳过并留痕（缺证据不裁决）。
+    """
+    import check_market_snapshot as CMS
+    with open(snap_path, "r", encoding="utf-8") as f:
+        d = json.load(f)
+    sink = []  # 快照读取自身的 legacy 告警不外溢，只留等式校验结论
+    price, _cur = CMS.read_price(d, sink)
+    shares_m = CMS.read_shares_million(d, sink)
+    mcap_m, mcap_cur = CMS.read_market_cap_million(d, sink)
+    dual = CMS._dual_listed(d)
+    if dual:
+        implied, formula = dual
+        basis = f"A/H 分部（{formula}）"
+    elif price is not None and shares_m:
+        # 有 price_h 说明是 A+H 但缺分部拆分：单价×总股本结构性失真
+        if isinstance(d.get("price_h"), (int, float)):
+            warnings.append(
+                "快照等式校验跳过：A/H 双上市但快照缺 a_million/h_million 分部拆分，"
+                "单价×总股本会把 H 股按 A 价计（结构性高估约 5~12%），无证据不裁决；"
+                "请补分部数据后重校")
+            return
+        implied, basis = price * shares_m, "price×shares"
+    else:
+        warnings.append("快照等式校验跳过：快照缺 price/shares，无法勾稽市值")
+        return
+    # 三角一：快照自洽（推导市值 vs 快照声明市值）
+    if mcap_m:
+        dev = implied / mcap_m - 1
+        if abs(dev) > 0.10:
+            warnings.append(
+                f"快照等式校验 WARN：{basis} = {implied:,.0f} 百万 vs 快照市值 "
+                f"{mcap_m:,.0f} 百万，偏差 {dev:+.1%} > 10%——量纲错位是最常见原因"
+                f"（数值按亿填写标注 million 等），请先核对再谈估值")
+    # 三角二：CLI 传参 vs 快照推导（双汇「元」错位的直接拦截位）
+    if market_cap_million and mcap_m:
+        dev2 = market_cap_million / mcap_m - 1
+        if abs(dev2) > 0.10:
+            warnings.append(
+                f"传参与快照矛盾 WARN：--market-cap-million {market_cap_million:,.0f} "
+                f"vs 快照推导 {mcap_m:,.0f} 百万，偏差 {dev2:+.1%} > 10%——"
+                f"手抄数字与快照不一致，量纲错位高发位，请核对来源")
+    # 币种链提示（勾稽不拦，跨币种换算是 check_market_snapshot 的职责）
+    # 底稿币种在调用方对齐，这里只提示快照侧
+
+
 def main():
-    ap = argparse.ArgumentParser(description="统一口径指标计算器")
+    # allow_abbrev=False：禁止 --market-cap 作为 --market-cap-million 的前缀缩写
+    # 静默生效——旧参数语义（底稿同单位）与新参数（固定百万）不同，前缀兼容
+    # 会让旧习惯调用被静默换算，等于把「单位进参数名」的设计废掉。
+    ap = argparse.ArgumentParser(description="统一口径指标计算器",
+                                  allow_abbrev=False)
     ap.add_argument("input", help="标准格式财务数据 JSON（数据底稿）")
     ap.add_argument("-o", "--output", help="输出 JSON 路径；缺省打印到 stdout")
-    ap.add_argument("--market-cap", type=float, default=None,
-                    help="总市值（与底稿同单位同币种），用于计算所有者收益率"
-                         "（Owner Earnings/市值 = 整体买下每年拿几个点）；"
-                         "取自 data/market_snapshot.json")
+    ap.add_argument("--market-cap-million", type=float, default=None,
+                    metavar="MILLION",
+                    help="总市值，单位固定百万、币种=底稿币种（Owner Earnings/市值"
+                         "= 整体买下每年拿几个点）。底稿单位非百万时引擎按底稿"
+                         "unit 字段自动换算。旧参数名 --market-cap（底稿同单位、"
+                         "隐式假设）已废弃——单位进参数名，消灭双汇式「元/百万」错位")
+    ap.add_argument("--snapshot", default=None, metavar="SNAPSHOT_JSON",
+                    help="market_snapshot.json 路径。提供时：①未传 --market-cap-million"
+                         " 则从快照读取市值（单一事实源，免手抄）；②执行量纲等式校验"
+                         "（A/H 分部优先，容差 10%，WARN 级——拦 10 倍量纲错位，"
+                         "不拦快照日/传参日的正常日期漂移）")
     args = ap.parse_args()
 
     with open(args.input, "r", encoding="utf-8") as f:
         data = json.load(f)
-    result = compute(data, market_cap=args.market_cap)
+
+    # ---- 单位归一：--market-cap-million 固定百万，引擎内部换算到底稿单位 ----
+    # compute() 的 OE/市值派生值全部在底稿单位下运算，market_cap 必须同单位。
+    market_cap_internal = None
+    unit_factor = None
+    if args.market_cap_million is not None or args.snapshot:
+        import check_market_snapshot as CMS
+        if data.get("unit") is not None:
+            unit_factor = CMS.unit_to_million(data.get("unit"))
+            if unit_factor is None:
+                raise SystemExit(
+                    f"错误：底稿 unit={data.get('unit')!r} 无法识别（支持 million/"
+                    f"百万元/亿/yi 等前缀）。市值换算需要明确的底稿单位——拒绝执行"
+                    f"而非静默按百万计算（存在性前置）")
+        else:
+            raise SystemExit(
+                "错误：底稿缺 unit 字段，无法把 --market-cap-million（百万）换算到"
+                "底稿单位。请补底稿 unit 字段——市值与 OE 的单位契约必须是显式的")
+
+    mcm = args.market_cap_million
+    if mcm is None and args.snapshot:
+        # 从快照推导市值（canonical + legacy 命名兼容读取）
+        import check_market_snapshot as CMS
+        with open(args.snapshot, "r", encoding="utf-8") as f:
+            sd = json.load(f)
+        sink = []
+        mcap_m, _cur = CMS.read_market_cap_million(sd, sink)
+        if mcap_m is None:
+            raise SystemExit(
+                "错误：--snapshot 提供但快照缺 market_cap（value+unit+currency），"
+                "无法推导市值。请补快照或改用 --market-cap-million 显式传参")
+        mcm = mcap_m
+
+    eq_warnings = []
+    if args.snapshot:
+        _snapshot_equation_check(args.snapshot, mcm, eq_warnings)
+
+    if mcm is not None:
+        if unit_factor is None:
+            unit_factor = 1.0  # 无市值可传时不会走到这里；防御性缺省
+        market_cap_internal = mcm / unit_factor  # 百万 → 底稿单位
+
+    result = compute(data, market_cap=market_cap_internal)
+    # ---- 调用留痕（provenance）：rerun 自读的单一事实源 ----
+    # batch-3 起重跑引擎可从冻结 metrics 的本块读取 market_cap 等参数，
+    # 替代手工维护 RERUN_PARAMS（本批 12 案冻结底稿无此块，仍走 RERUN_PARAMS）。
+    result["provenance"] = {
+        "argv": sys.argv,
+        "market_cap_million": mcm,
+        "market_cap_internal_unit": (data.get("unit") if market_cap_internal
+                                      is not None else None),
+        "snapshot": args.snapshot,
+    }
+    if eq_warnings:
+        result["warnings"] = sorted(set(result["warnings"]) | set(eq_warnings))
     out = json.dumps(result, ensure_ascii=False, indent=2)
     if args.output:
         with open(args.output, "w", encoding="utf-8") as f:
@@ -1076,6 +1200,8 @@ def main():
         print(f"已写入 {args.output}；警报 {len(result['alerts'])} 条，warnings {len(result['warnings'])} 条")
         for a in result["alerts"]:
             print("  [ALERT]", a)
+        for w in eq_warnings:
+            print("  [EQUATION-WARN]", w)
     else:
         print(out)
 
