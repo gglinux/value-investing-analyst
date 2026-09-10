@@ -93,47 +93,112 @@
   "latest_quarter": "2022Q3（10-Q filed 2022-10-27，截断日前 34 天）",
   "conclusion": "截断日距最新季报 34 天 < 100 天时效线；期间重大事件已覆盖：2022-11-09 裁员 8-K（本案例信息集内）、2022-11 公布 Quest Pro 发售（10-25）。无未消化的剧变。"
  },
- "files": {
-  "meta.json": {
-   "desc": "Step 1 冻结档（先验/污染披露/信息集）",
-   "level": "A 级（先验冻结档）"
+ "files": [
+  {
+   "file": "meta.json",
+   "source": "Step 1 建档冻结（commit f53407a，先验 ordinal 3）",
+   "grade": "A级（先验自陈，结构化登记）",
+   "coverage": "先验档位/信息集/污染披露",
+   "verified": "先验早于全部估值计算；git 时序证据"
   },
-  "data/financials_META_2022Q3.json": {
-   "desc": "三表+分部+用户+股本底稿（companyfacts 脚本化抽取）",
-   "level": "A 级（companyfacts 脚本化抽取；revenue 2012-2015 tag fallback 已登记；ARPP 代理为 B+ 级）"
+  {
+   "file": "financials_META_2022Q3.json",
+   "source": "SEC companyfacts XBRL（accn 0001326801-22-000108 等）+ 2021 10-K R72/2022Q3 10-Q R70 分部附注原文 + Q3 2022 新闻稿",
+   "grade": "A 级（XBRL 机器抽取+分部原文转录）",
+   "coverage": "2012-2021 年度序列+9M22+分部 FoA/RL+用户量+季度序列+资产负债",
+   "verified": "crosscheck 2019-2021 三年 XBRL 互证 12/12；spike_notes 15 条；tag_fallback 登记（ASC 606 前收入 tag 切换）"
   },
-  "data/market_snapshot_META_2022Q3.json": {
-   "desc": "2022-11-30 收盘快照（东财 105.META，三角校验通过）",
-   "level": "A- 级（东财历史时点行情，三角校验通过）"
+  {
+   "file": "market_snapshot_META_2022Q3.json",
+   "source": "东财 105.META fqt=0 日K/月K（WebFetch 服务端通道）",
+   "grade": "A- 级（收盘价 A、52 周区间月K 口径）",
+   "coverage": "2022-11-30 收盘 118.10+52 周区间 88.09~352.71+股本 cover 口径",
+   "verified": "市值三角校验 +0.00%（price×shares vs market_cap）"
   },
-  "data/consensus.json": {
-   "desc": "C 级卖方一致预期（仅对照不输入）",
-   "level": "C 级（卖方一致预期，仅对照不输入）"
+  {
+   "file": "consensus.json",
+   "source": "Reuters/Refinitiv IBES+FT 引 S&P Capital IQ+Benzinga 大行汇编（C 级）+Meta Q3 官方新闻稿指引（A 级）",
+   "grade": "C 级（预期对照专用，不进估值公式）",
+   "coverage": "Q3 预期 vs 实际/Q4 指引/2023 费用指引/大行 PT 谱系 $100-260",
+   "verified": "仅作市场预期定位；FY2022 指引隐含 114,444~116,944 与 9M 实际勾稽"
   },
-  "data/competitor_GOOGL.json": {
-   "desc": "竞对 Alphabet 底稿（companyfacts 抽取）",
-   "level": "A 级（companyfacts 抽取）"
+  {
+   "file": "competitor_GOOGL.json",
+   "source": "SEC companyfacts XBRL 机器抽取（脚本 /tmp/b316/build_competitors.py，多 tag fallback+重述 filed 最晚者胜出）",
+   "grade": "A 级（XBRL）",
+   "coverage": "≤2021 年度+9M22 YTD",
+   "verified": "2017 OI 重述冲突（26,146 vs 26,178）取 filed 最晚并登记"
   },
-  "data/competitor_SNAP.json": {
-   "desc": "竞对 Snap 底稿",
-   "level": "A 级（companyfacts 抽取）"
+  {
+   "file": "competitor_SNAP.json",
+   "source": "SEC companyfacts XBRL 机器抽取",
+   "grade": "A 级（XBRL）",
+   "coverage": "≤2021 年度+9M22 YTD",
+   "verified": "六年全亏序列完整"
   },
-  "data/competitor_PINS.json": {
-   "desc": "竞对 Pinterest 底稿",
-   "level": "A 级（companyfacts 抽取）"
+  {
+   "file": "competitor_PINS.json",
+   "source": "SEC companyfacts XBRL 机器抽取",
+   "grade": "A 级（XBRL）",
+   "coverage": "≤2021 年度+9M22 YTD",
+   "verified": "2021 首利/2022 转亏轨迹完整"
   },
-  "data/competitors_baseline.json": {
-   "desc": "竞对对比基线（对照表+key_reads）",
-   "level": "A 级（派生对照表）"
+  {
+   "file": "competitors_baseline.json",
+   "source": "四司对比表派生自上四底稿",
+   "grade": "A 级（派生，输入全 A）",
+   "coverage": "ROIC/增速/盈利质量/资本回报对比+key_reads 五条",
+   "verified": "ROIC caveat：SNAP/PINS 负利期 n.m. 已登记"
   },
-  "data/business_drivers_META.json": {
-   "desc": "量价驱动因子（DAP/DAU×ARPP/ARPU，8-K EX-99.1 官方）",
-   "level": "A 级（8-K EX-99.1 官方量价；2022 price 代理 B+ 级已标注）"
+  {
+   "file": "business_drivers_META.json",
+   "source": "六份 Q4 财报新闻稿 8-K EX-99.1（accn 逐项登记）+Q3 2022 新闻稿",
+   "grade": "A 级（量全官方；价为派生序列）",
+   "coverage": "2016-2022 量价序列+价格变化率+量价读数四条",
+   "verified": "2022 行 price 为代理口径已注明；官方单价 −18%/曝光 +17% 为新闻稿原文"
   },
-  "data/filings/": {
-   "desc": "原始证据归档（.gitignore 排除，来源可复现）",
-   "level": "A 级（SEC 原件归档）"
+  {
+   "file": "scenarios.json",
+   "source": "Phase 4 三情景底稿（check_scenarios.py 门禁 EXIT=0）",
+   "grade": "A 级（方法与算术全登记）",
+   "coverage": "悲观 73.73（pe_trough 独立法）/基准 199.14（DCF fade）/乐观 275.64+概率 30/50/20+期望 176.82",
+   "verified": "S2 悲观方法独立性/S2b 重算容差 2% 内/S4 离散/S5 折价/S7b iv-growth 证据全过"
+  },
+  {
+   "file": "expected_return.json",
+   "source": "scripts/reverse_dcf.py expected-return 全参数输出（--scenarios-file --index-hurdle 0.09 --discount-rate 0.10 --moat wide --iv-growth 0.06）",
+   "grade": "A 级（工具生成）",
+   "coverage": "Gate2 三项判定+期望 IRR 17.15%+有效门槛披露+loss_probability 0",
+   "verified": "verdict gate2 冻结数字的数据投影"
+  },
+  {
+   "file": "verification_strength.json",
+   "source": "scripts/verification_strength.py（--financials+--manifest）",
+   "grade": "工具生成",
+   "coverage": "V1 勾稽 100% full/V2 原文登记 full/V3 窗口 10 年 full",
+   "verified": "grade A——HTML 首屏强制披露"
+  },
+  {
+   "file": "phase5_workpaper.json",
+   "source": "Phase 3/4.5/5 底稿（五维定性+收敛+三师评分+分歧表+红队+adoption_ruling）",
+   "grade": "A 级（分析过程稿）",
+   "coverage": "五维结论+三人独立评估+芒格红队",
+   "verified": "与 verdict persona 结论一致（落盘后补登记）"
+  },
+  {
+   "file": "filings/*",
+   "source": "SEC EDGAR 原文归档（10-K R72 分部/10-Q R1 cover+R70 分部/8-K 2022-11-09 裁员 EX-99.1/companyfacts）",
+   "grade": "A 级（原文）",
+   "coverage": "分部附注/股本 cover/裁员公告原文/XBRL 全量 facts",
+   "verified": "引用行号登记于各底稿 provenance"
+  },
+  {
+   "file": "metrics_META_2022Q3.json",
+   "source": "scripts/compute_metrics.py（2012-2021 年度序列+chart_series）",
+   "grade": "A 级（工具生成，输入全 A）",
+   "coverage": "ROIC/roe/FCF/owner_earnings/稀释/CAGR+capex 拆分启发式+chart_series 数组",
+   "verified": "告警码 M_DILUTION/M_SHARE_INFLATION/NORM_MARGIN_SHAPE；capex 维持性拆分为启发式已登记（估值用真实 FCF 区间修正）"
   }
- },
- "reconciliation_coverage_note": "三表勾稽：assets/liabilities/equity 仅 2022Q3 时点+部分年度有值（XBRL 抽取口径），详见 validate_data 覆盖率输出——若 <60% 登记 waiver 及原因"
+ ],
+ "reconciliation_coverage_note": "V1 勾稽覆盖率 100%（10/10 年三表勾稽，verification_strength A）；[E:] 指针文件名与 files[].file 一一对应（verify_report 校验口径）"
 }
