@@ -11,7 +11,7 @@
  "annual": [
   {
    "year": 2012,
-   "revenue": null,
+   "revenue": 5089.0,
    "ebit": 538.0,
    "net_income": 53.0,
    "interest_expense": 51.0,
@@ -31,11 +31,14 @@
    "buyback": 0.0,
    "r_and_d": 1399.0,
    "publish_date": "2015-01-29",
-   "source": "SEC XBRL companyfacts（10-K filed 2015-01-29，scripted extraction 零转录）"
+   "source": "SEC XBRL companyfacts（10-K filed 2015-01-29，scripted extraction 零转录）",
+   "provenance_notes": [
+    "revenue 2012-2015 修复：Meta ASC 606 采用(2018)前收入行在 us-gaap:Revenues tag（2026-09-10 复查 companyfacts 补齐，10-K 形式年度行）"
+   ]
   },
   {
    "year": 2013,
-   "revenue": null,
+   "revenue": 7872.0,
    "ebit": 2804.0,
    "net_income": 1500.0,
    "interest_expense": 56.0,
@@ -55,11 +58,14 @@
    "buyback": 0.0,
    "r_and_d": 1415.0,
    "publish_date": "2016-01-28",
-   "source": "SEC XBRL companyfacts（10-K filed 2016-01-28，scripted extraction 零转录）"
+   "source": "SEC XBRL companyfacts（10-K filed 2016-01-28，scripted extraction 零转录）",
+   "provenance_notes": [
+    "revenue 2012-2015 修复：Meta ASC 606 采用(2018)前收入行在 us-gaap:Revenues tag（2026-09-10 复查 companyfacts 补齐，10-K 形式年度行）"
+   ]
   },
   {
    "year": 2014,
-   "revenue": null,
+   "revenue": 12466.0,
    "ebit": 4994.0,
    "net_income": 2940.0,
    "interest_expense": 23.0,
@@ -79,11 +85,14 @@
    "buyback": 0.0,
    "r_and_d": 2666.0,
    "publish_date": "2017-02-03",
-   "source": "SEC XBRL companyfacts（10-K filed 2017-02-03，scripted extraction 零转录）"
+   "source": "SEC XBRL companyfacts（10-K filed 2017-02-03，scripted extraction 零转录）",
+   "provenance_notes": [
+    "revenue 2012-2015 修复：Meta ASC 606 采用(2018)前收入行在 us-gaap:Revenues tag（2026-09-10 复查 companyfacts 补齐，10-K 形式年度行）"
+   ]
   },
   {
    "year": 2015,
-   "revenue": null,
+   "revenue": 17928.0,
    "ebit": 6225.0,
    "net_income": 3688.0,
    "interest_expense": 23.0,
@@ -103,7 +112,10 @@
    "buyback": 0.0,
    "r_and_d": 4816.0,
    "publish_date": "2018-02-01",
-   "source": "SEC XBRL companyfacts（10-K filed 2018-02-01，scripted extraction 零转录）"
+   "source": "SEC XBRL companyfacts（10-K filed 2018-02-01，scripted extraction 零转录）",
+   "provenance_notes": [
+    "revenue 2012-2015 修复：Meta ASC 606 采用(2018)前收入行在 us-gaap:Revenues tag（2026-09-10 复查 companyfacts 补齐，10-K 形式年度行）"
+   ]
   },
   {
    "year": 2016,
@@ -548,14 +560,17 @@
   "2017.net_income": "+56%：美国 TCJA 税改 2017Q4 一次性收益（递延税负债重估 2.3B 减费用），叠加广告业务 +47%",
   "2017.ocf": "+50% 与净利同源",
   "2018.capex": "+107%（6,733→13,915）：数据中心/服务器/租赁资产扩张加速（年报 MD&A：2018 资本开支主要为数据中心、服务器、网络基础设施及办公设施）",
-  "2020.net_income": "+58%（18,485→29,146）：疫情电商红利（广告主线上转移），有效税率降 12.2%（vs 2019 21.7%）+ 收入 +22%（正常化后增速 ~25%），需求前置——2022-11-09 裁员信官方承认该红利被误判为永久"
+  "2020.net_income": "+58%（18,485→29,146）：疫情电商红利（广告主线上转移），有效税率降 12.2%（vs 2019 21.7%）+ 收入 +22%（正常化后增速 ~25%），需求前置——2022-11-09 裁员信官方承认该红利被误判为永久",
+  "2014.revenue": "收入 +58%（7,872→12,466）：移动广告货币化爆发年——移动广告收入占比首超 50% 且广告加载率提升 + WhatsApp/FB 移动使用时长迁移；为业务变化而非数据修正（10-K 2014 原文：移动广告收入贡献约 69%）",
+  "2016.revenue": "收入 +54%（17,928→27,638）：视频广告（Facebook Live/视频 feed）加载率快速提升 + Instagram 广告全面商业化（2015-09 开放）+ 目标客户自助广告工具扩张；为业务变化而非数据修正（10-K 2016 披露收入同比 +54% 由广告曝光 +61% 驱动）",
+  "2013.revenue": "收入 +55%（5,089→7,872）：移动广告货币化起飞年——News Feed 信息流广告加载率持续提升 + 移动 DAU 占比首次过半；为业务变化而非数据修正（10-K 2013：广告收入 +57% 由曝光 +42% 与单价 +10% 共同驱动）"
  },
  "crosscheck_exempt": {},
  "crosscheck": [
   {
    "year": 2019,
    "revenue": 70697.0,
-   "source": "[E:companyfacts_META_2022-11-30.json] EDGAR XBRL 自动核对",
+   "source": "[E:companyfacts.json] EDGAR XBRL 自动核对",
    "net_income": 18485.0,
    "ocf": 36314.0,
    "shares_diluted": 2876.0
@@ -563,7 +578,7 @@
   {
    "year": 2020,
    "revenue": 85965.0,
-   "source": "[E:companyfacts_META_2022-11-30.json] EDGAR XBRL 自动核对",
+   "source": "[E:companyfacts.json] EDGAR XBRL 自动核对",
    "net_income": 29146.0,
    "ocf": 38747.0,
    "shares_diluted": 2888.0
@@ -571,10 +586,15 @@
   {
    "year": 2021,
    "revenue": 117929.0,
-   "source": "[E:companyfacts_META_2022-11-30.json] EDGAR XBRL 自动核对",
+   "source": "[E:companyfacts.json] EDGAR XBRL 自动核对",
    "net_income": 39370.0,
    "ocf": 57683.0,
    "shares_diluted": 2859.0
   }
- ]
+ ],
+ "provenance": {
+  "tag_fallbacks": [
+   "revenue 2012-2015 来自 us-gaap:Revenues（ASC 606 前 tag）；2016+ 来自 RevenueFromContractWithCustomerExcludingAssessedTax；两 tag 在 2016/2017 重叠年份值一致（27,638/40,653）——拼接安全"
+  ]
+ }
 }

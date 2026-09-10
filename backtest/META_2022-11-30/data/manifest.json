@@ -54,13 +54,86 @@
   "reason": "回放信息截断日 2022-11-30：FY2022 年报尚未发布（实际 filed 2023-02-02，晚于截断日禁用）。2022 年度数据以 9M22 10-Q（filed 2022-10-27）为最新合法口径，估值用 9M 实际+保守外推，不以任何形式充当年报。"
  },
  "adversarial_check": {
-  "status": "pending（Phase 0 执行后回填）",
-  "planned": "Meta + 做空报告/财务造假/监管处罚/集体诉讼/审计意见——截断日前已知：FTC 反垄断诉讼（2020-12 起诉）、Cambridge Analytica FTC 和解 2019-04（5B 罚款）、GSR/Six4Three 等集体诉讼、CMA/GDPR 罚单；EY 审计意见无保留（2021 10-K）"
+  "status": "done（2026-09-10 Phase 0 WebSearch 四路对立面检索完成，仅登记 ≤2022-11-30 公开事实）",
+  "forensic_findings": [
+   {
+    "item": "反垄断：FTC v. Meta Platforms（D.D.C.）",
+    "timeline_cutoff": "2020-12-08 FTC+46 州起诉（寻求剥离 Instagram/WhatsApp）→ 2021-06-28 初次起诉被驳回（法律不充分）→ 2021-08-19 修正起诉 → 2022-01-11 法院驳回 Meta 撤案动议，案件进入 discovery；并行州案（NY AG 领衔）2021-06-28 因 laches 被驳回且不得再诉",
+    "status_at_cutoff": "无判决、无和解金额；尾部风险=若 FTC 胜诉或诉中不利披露可致 Instagram/WhatsApp 剥离主张重提。评估：10 年量级诉讼、拆分救济法律门槛极高，定性为'长期尾部'而非'近期可量化'。",
+    "level": "A（法院记录/官方）"
+   },
+   {
+    "item": "隐私监管：Cambridge Analytica 系列",
+    "timeline_cutoff": "2019-07 FTC 和解令：$5B 罚款（史上最大隐私罚款）+20 年合规令（董事会独立隐私委员会/季度认证）；2019-07 SEC $100M 和解；2018-07 英国 ICO £500K（当时法定上限）",
+    "status_at_cutoff": "已结、已计提、已支付——无新增敞口；但 20 年合规令使任何新隐私违规面临轻则民事重则刑事的个人认证责任。",
+    "level": "A（FTC/SEC 官方）"
+   },
+   {
+    "item": "集体诉讼与州检察长",
+    "timeline_cutoff": "① Illinois BIPA 人脸识别 $650M 集体和解 2021-02-26 最终批准，2022-05 起付款（费用已实现）；② Cambridge Analytica 消费者隐私集体诉讼 $725M 和解 2022-08 披露（截断日前已知，Q3 10-Q Legal Proceedings 披露范畴）；③ 德州总检察长 2022-02-15 起诉生物识别违规（CUBI 每违规 $25K 法定金，官方称寻求数十亿美元）；④ 华盛顿特区 AG 反垄断并行诉讼进行中",
+    "status_at_cutoff": "①②为已知可量化成本（合计 ~$1.4B，均不设 admit-fault 条款）；③未决、量级上限高但每违规基数取证难度大；④与 FTC 案同性质。评估：隐私诉讼已呈'周期性税负'形态，单案 $0.5-1B 量级、相对 $313B 市值单项不致命。",
+    "level": "B+（法院文件+主流媒体交叉）"
+   },
+   {
+    "item": "欧盟数据传输（Schrems II 后续）",
+    "timeline_cutoff": "2022-07-06 爱尔兰 DPC 草案决定：Meta EU→US 数据传输违反 GDPR Art.46(1)、应暂停；CSAs 分歧提交 EDPB Art.65 裁决，EDPB 裁定更严厉措施；截断日最终决定未公布。Meta 2022-09/10 官方渠道警告若强制停传或被迫暂停欧洲 Facebook 服务；EU-US 新数据框架 2022-03 原则达成、Meta 表述其或于停传期限前生效",
+    "status_at_cutoff": "悬置高压状态——二元尾部风险（停传=欧盟服务中断 vs 新框架如期落地）。评估：Q3 10-Q Risk Factors 已正式披露；作为定性风险计入悲观情景，不做点估计。",
+    "level": "A（DPC 程序文件+Meta 官方表态）"
+   },
+   {
+    "item": "审计意见",
+    "timeline_cutoff": "EY 自 2007 年任审计师；FY2021 10-K（filed 2022-02-02）EY 无保留意见 + ICFR 404(b) 有效证明勾选；FY2022 年报（filed 2023-02-02）在截断日后禁用",
+    "status_at_cutoff": "无保留意见、无 going concern、无内控重大缺陷披露——会计质量通道干净。",
+    "level": "A（SEC 官方封面+审计条款）"
+   }
+  ],
+  "net_conclusion": "排雷未发现'会计造假/审计红灯/资本链断裂'类致命项——公司现金+证券 $41.8B、净现金 $31.9B、审计干净。风险集中于：①监管尾部（FTC 拆分主张/DPC 停传/德州生物识别）②ATT 结构性收入损伤（CFO 官方口径 2022 影响 ~$10B，2022-02-02 Q4 2021 电话会，多源交叉）③RL 无限亏损承诺。均按定性情景处理，不做单点折价。"
  },
  "latest_quarter_checked": {
   "latest_quarter": "2022Q3（10-Q filed 2022-10-27，截断日前 34 天）",
   "conclusion": "截断日距最新季报 34 天 < 100 天时效线；期间重大事件已覆盖：2022-11-09 裁员 8-K（本案例信息集内）、2022-11 公布 Quest Pro 发售（10-25）。无未消化的剧变。"
  },
- "files": {},
+ "files": {
+  "meta.json": {
+   "desc": "Step 1 冻结档（先验/污染披露/信息集）",
+   "level": "A 级（先验冻结档）"
+  },
+  "data/financials_META_2022Q3.json": {
+   "desc": "三表+分部+用户+股本底稿（companyfacts 脚本化抽取）",
+   "level": "A 级（companyfacts 脚本化抽取；revenue 2012-2015 tag fallback 已登记；ARPP 代理为 B+ 级）"
+  },
+  "data/market_snapshot_META_2022Q3.json": {
+   "desc": "2022-11-30 收盘快照（东财 105.META，三角校验通过）",
+   "level": "A- 级（东财历史时点行情，三角校验通过）"
+  },
+  "data/consensus.json": {
+   "desc": "C 级卖方一致预期（仅对照不输入）",
+   "level": "C 级（卖方一致预期，仅对照不输入）"
+  },
+  "data/competitor_GOOGL.json": {
+   "desc": "竞对 Alphabet 底稿（companyfacts 抽取）",
+   "level": "A 级（companyfacts 抽取）"
+  },
+  "data/competitor_SNAP.json": {
+   "desc": "竞对 Snap 底稿",
+   "level": "A 级（companyfacts 抽取）"
+  },
+  "data/competitor_PINS.json": {
+   "desc": "竞对 Pinterest 底稿",
+   "level": "A 级（companyfacts 抽取）"
+  },
+  "data/competitors_baseline.json": {
+   "desc": "竞对对比基线（对照表+key_reads）",
+   "level": "A 级（派生对照表）"
+  },
+  "data/business_drivers_META.json": {
+   "desc": "量价驱动因子（DAP/DAU×ARPP/ARPU，8-K EX-99.1 官方）",
+   "level": "A 级（8-K EX-99.1 官方量价；2022 price 代理 B+ 级已标注）"
+  },
+  "data/filings/": {
+   "desc": "原始证据归档（.gitignore 排除，来源可复现）",
+   "level": "A 级（SEC 原件归档）"
+  }
+ },
  "reconciliation_coverage_note": "三表勾稽：assets/liabilities/equity 仅 2022Q3 时点+部分年度有值（XBRL 抽取口径），详见 validate_data 覆盖率输出——若 <60% 登记 waiver 及原因"
 }

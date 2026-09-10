@@ -1,0 +1,92 @@
+{
+ "company": "Alphabet Inc.",
+ "ticker": "GOOGL",
+ "currency": "USD",
+ "unit": "million",
+ "tax_rate": 0.16,
+ "annual": [
+  {
+   "year": 2016,
+   "revenue": 90272.0,
+   "net_income": 19478.0,
+   "ebit": 23716.0,
+   "d_and_a": null,
+   "capex": 10212.0,
+   "ocf": 36036.0,
+   "total_equity": 139036.0,
+   "total_debt": 4000.0,
+   "cash": 12918.0
+  },
+  {
+   "year": 2017,
+   "revenue": 110855.0,
+   "net_income": 12662.0,
+   "ebit": 26178.0,
+   "d_and_a": null,
+   "capex": 13184.0,
+   "ocf": 37091.0,
+   "total_equity": 152502.0,
+   "total_debt": 4026.0,
+   "cash": 101871.0
+  },
+  {
+   "year": 2018,
+   "revenue": 136819.0,
+   "net_income": 30736.0,
+   "ebit": 27524.0,
+   "d_and_a": null,
+   "capex": 25139.0,
+   "ocf": 47971.0,
+   "total_equity": 177628.0,
+   "total_debt": 4062.0,
+   "cash": 109140.0
+  },
+  {
+   "year": 2019,
+   "revenue": 161857.0,
+   "net_income": 34343.0,
+   "ebit": 34231.0,
+   "d_and_a": null,
+   "capex": 23548.0,
+   "ocf": 54520.0,
+   "total_equity": 201442.0,
+   "total_debt": 4685.0,
+   "cash": 119675.0
+  },
+  {
+   "year": 2020,
+   "revenue": 182527.0,
+   "net_income": 40269.0,
+   "ebit": 41224.0,
+   "d_and_a": null,
+   "capex": 22281.0,
+   "ocf": 65124.0,
+   "total_equity": 222544.0,
+   "total_debt": 15319.0,
+   "cash": 136694.0
+  },
+  {
+   "year": 2021,
+   "revenue": 257637.0,
+   "net_income": 76033.0,
+   "ebit": 78714.0,
+   "d_and_a": null,
+   "capex": 24640.0,
+   "ocf": 91652.0,
+   "total_equity": 251635.0,
+   "total_debt": 15440.0,
+   "cash": 139649.0
+  }
+ ],
+ "note": "竞对底稿（B3-16 定量画像对照用）：companyfacts 脚本化抽取 ≤2021 年度（截断日口径）；9M22 YTD 见 _ytd_9m22；shares_diluted 置 null（每股口径不对竞对使用）；equity/cash/mkt_sec 为各年 12-31 时点（filed 最新版）",
+ "_ytd_9m22": {
+  "rev_9m22": 206788.0,
+  "ni_9m22": 46348.0,
+  "oi_9m22": 56682.0,
+  "ocf_9m22": 67881.0,
+  "capex_9m22": 23890.0,
+  "rev_9m21": 182312.0,
+  "ni_9m21": 55391.0
+ },
+ "_restatements": []
+}

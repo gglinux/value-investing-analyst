@@ -1,0 +1,127 @@
+{
+ "company": "Meta Platforms",
+ "ticker": "META",
+ "company_type": "互联网平台",
+ "unit_note": "volume 单位=百万（Facebook DAU：Dec 月均；2022 行为 Family DAP：Sep 月均）；price 单位=美元/人（全年收入÷Dec DAU；2022 行为 Q3 季度 ARPP proxy）",
+ "provenance": {
+  "method": "volume 全部取自 8-K EX-99.1 财报新闻稿官方披露（accn 逐项登记）；price=revenue÷volume 派生（派生口径恒过勾稽，价值在于序列的逐年对比而非绝对值）；勾稽容差内恒等已标注 tautological",
+  "8k_accn": {
+   "Q4_2016": "0001326801-17-000004",
+   "Q4_2017": "0001326801-18-000006",
+   "Q4_2018": "0001326801-19-000003",
+   "Q4_2019": "0001326801-20-000010",
+   "Q4_2020": "0001326801-21-000011",
+   "Q4_2021": "0001326801-22-000015"
+  },
+  "originals": "/tmp/b316/pr_Q4_2016~2021.htm（本地归档，不入库）"
+ },
+ "drivers": [
+  {
+   "year": 2016,
+   "volume": 1230,
+   "price": 22.47,
+   "volume_label": "Facebook DAU（Dec-2016 月均，十亿→百万）",
+   "price_label": "全年收入÷Dec DAU（美元/人·年）",
+   "source": "Q4 2016 8-K EX-99.1（DAU 1.23B）+ 10-K 2016 收入",
+   "source_level": "A"
+  },
+  {
+   "year": 2017,
+   "volume": 1400,
+   "price": 29.04,
+   "volume_label": "Facebook DAU（Dec-2017 月均）",
+   "price_label": "全年收入÷Dec DAU（美元/人·年）",
+   "source": "Q4 2017 8-K EX-99.1（DAU 1.40B）+ 10-K 2017 收入",
+   "source_level": "A"
+  },
+  {
+   "year": 2018,
+   "volume": 1520,
+   "price": 36.73,
+   "volume_label": "Facebook DAU（Dec-2018 月均）",
+   "price_label": "全年收入÷Dec DAU（美元/人·年）",
+   "source": "Q4 2018 8-K EX-99.1（DAU 1.52B）+ 10-K 2018 收入",
+   "source_level": "A"
+  },
+  {
+   "year": 2019,
+   "volume": 1660,
+   "price": 42.59,
+   "volume_label": "Facebook DAU（Dec-2019 月均）",
+   "price_label": "全年收入÷Dec DAU（美元/人·年）",
+   "source": "Q4 2019 8-K EX-99.1（DAU 1.66B；并首次披露 Family DAP 2.26B）",
+   "source_level": "A"
+  },
+  {
+   "year": 2020,
+   "volume": 1840,
+   "price": 46.72,
+   "volume_label": "Facebook DAU（Dec-2020 月均）",
+   "price_label": "全年收入÷Dec DAU（美元/人·年）",
+   "source": "Q4 2020 8-K EX-99.1（DAU 1.84B；Family DAP 2.60B）",
+   "source_level": "A"
+  },
+  {
+   "year": 2021,
+   "volume": 1930,
+   "price": 61.1,
+   "volume_label": "Facebook DAU（Dec-2021 月均）",
+   "price_label": "全年收入÷Dec DAU（美元/人·年）",
+   "source": "Q4 2021 8-K EX-99.1（DAU 1.93B；Family DAP 2.82B）",
+   "source_level": "A"
+  },
+  {
+   "year": 2022,
+   "volume": 2930,
+   "price": 9.46,
+   "volume_label": "Family DAP（Sep-2022 月均；FB DAU 自 2022 停止单独披露，口径切换）",
+   "price_label": "Q3 单季 ARPP proxy=Q3收入÷Sep DAP（美元/人·季；派生近似，低估约 0.5-1%）",
+   "source": "Q3 2022 新闻稿（2022-10-26 IR/PRNewswire，与 XBRL 互证）DAP 2.93B 官方原文；price 为代理口径（官方 ARPP 表在 10-Q MD&A，WebFetch 截断未取得）——量价数字本身为官方披露",
+   "source_level": "A"
+  }
+ ],
+ "drivers_alt_dap": [
+  {
+   "year": 2019,
+   "dap": 2.26
+  },
+  {
+   "year": 2020,
+   "dap": 2.6
+  },
+  {
+   "year": 2021,
+   "dap": 2.82
+  },
+  {
+   "year": 2022,
+   "dap": 2.93,
+   "note": "Sep 月均；2022 前三季 2.87/2.88/2.93"
+  }
+ ],
+ "unit_economics": {
+  "metric": "价格变化率（price yoy，FB DAU 口径）",
+  "series": {
+   "2017": 0.292,
+   "2018": 0.265,
+   "2019": 0.16,
+   "2020": 0.097,
+   "2021": 0.308
+  },
+  "trend": "先升后降再暴冲——2020 涨价动能已减（+9.7%，ATT 影响初显+汇率），2021 疫情红利 +30.8% 为周期峰值（e-commerce 广告竞拍过热），2022Q3 官方口径单价 −18%（广告曝光 +17% 量增价跌）",
+  "note": "2021 价格暴冲是典型周期高位信号：竞价市场通胀不可持续，2022 的 −18% 是对 2021 过热的部分回吐 + ATT 结构性损伤 + TikTok 竞争三力叠加",
+  "source": "派生自上述 A 级序列；2022Q3 价格 −18%/曝光 +17% 为 Q3 2022 新闻稿官方原文（A）"
+ },
+ "volume_price_reads": [
+  "量的增长（FB DAU）已系统性放缓：2017 +13.8% → 2018 +8.6% → 2019 +9.2% → 2020 +10.8% → 2021 +4.9% → 2022（DAP 口径）+4%——量接近天花板（全球网民渗透），未来增长只能靠价",
+  "价的周期位置：2021 price +30.8% 是均值（+22.4% 均值）上方 1.4 倍的极端值，compute_metrics 利润率判型『周期波动』在量价维度得到独立印证——2021/TTM 利润不可直接作基期",
+  "2022 的本质：量 +4% 还在涨，价崩了（Q3 官方 −18%）——收入下滑 100% 由价格侧贡献，其中汇率约 7pct（Q4 指引口径）、ATT 约 10B/年（CFO 官方 2022-02-02 估计）、TikTok 分流为剩余项",
+  "ARPP 代理口径 2022Q3 9.46 vs 2021Q3 10.31（−8.2%）：即使在量价最悲观的读数下，单用户季度变现仍处绝对高位（2019 年全年才 42.6/人·年=10.7/人·季）"
+ ],
+ "arpp_proxy_compare": {
+  "2021Q3": 10.306,
+  "2022Q3": 9.459,
+  "yoy": -0.082,
+  "source": "主底稿 financials users 段（Q收入÷季末月DAP，B+ 近似）"
+ }
+}
