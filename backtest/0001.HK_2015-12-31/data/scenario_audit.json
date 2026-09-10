@@ -1,0 +1,56 @@
+{
+  "file": "backtest/0001.HK_2015-12-31/data/scenarios.json",
+  "errors": [],
+  "warnings": [
+    "S5 未登记 `non_operating_addback_per_share`：若估值用了 --add-back，必须逐情景登记，否则无法门禁分层折价"
+  ],
+  "codes": [
+    "S5_NON_OPERATING_STRESS"
+  ],
+  "unmapped_messages": [],
+  "diagnostics": {
+    "scenario_values": {
+      "悲观": 17.64,
+      "基准": 46.46,
+      "乐观": 60.84
+    },
+    "bear_name": "悲观",
+    "base_name": "基准",
+    "margin_of_safety_vs_base": -1.251399052948773,
+    "bear_method": "sotp_asset_floor",
+    "bear_recomputed_value": 17.6379,
+    "bear_recompute_deviation": 0.000119,
+    "discount_rate_floor": 0.1,
+    "discount_rate_floor_basis": "硬下限 10%",
+    "bear_stressed": [
+      "listed_stake_liquidity_haircut_20pct",
+      "ws_anchor_haircut_40pct",
+      "non_listed_segments_zero",
+      "net_debt_full_no_deduction"
+    ],
+    "bear_base_ratio": 0.3796814464055101,
+    "non_operating_addback_per_share": {
+      "悲观": null,
+      "基准": null,
+      "乐观": null
+    },
+    "bear_vs_price": 0.16864244741873807,
+    "probability_deviations": {},
+    "intrinsic_value_growth": 0.0,
+    "revenue_decline_streak": null,
+    "core_driver_decline_years": null,
+    "peak_stagnation": null,
+    "decline_streak_used": null,
+    "shrinking_reasons": [],
+    "value_trap_triggered": false,
+    "dividend_yield": 0.0134,
+    "dividend_yield_basis": "sustainable_forward",
+    "snapshot_dividend_yield": {
+      "value": null,
+      "field": null,
+      "basis": "快照无股息率字段",
+      "unit_ambiguous": false
+    }
+  },
+  "passed": true
+}

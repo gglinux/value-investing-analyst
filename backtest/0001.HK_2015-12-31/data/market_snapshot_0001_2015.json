@@ -1,0 +1,95 @@
+{
+  "company": "長江和記實業有限公司 / CK Hutchison Holdings",
+  "ticker": "0001.HK",
+  "currency": "HKD",
+  "price_date": "2015-12-31",
+  "price_close": 104.60,
+  "price_basis": "未复权收盘价（东财 116.0001 日线 fqt=0），2015-12-31 收盘 104.60 港元。A 级。",
+  "total_shares_million": 3859.6785,
+  "total_shares_source": "长和 2015 中报註 7：2015-06-30 已发行 3,859,678,500 股 [E:长和 2015 中报业绩摘要註 7]；东财 116.0001 当前总股本一致（无 2015H2 增发记录，B+ 级时点近似）",
+  "market_cap_yi_hkd": 4037.2,
+  "market_cap_check": "104.60 × 3,859,678,500 = 403,722,365,100 ≈ 4,037.2 亿港元",
+  "per_share_book": {
+    "nav_per_share": 114.10,
+    "pb": 0.917,
+    "source": "每股净资产 114.10 港元 = 股东权益及永续 440,389 百万 / 3,859.6785 百万股 [E:长和 2015 中报简明综合资产负债表]；P/B = 104.60/114.10 = 0.917x"
+  },
+  "corporate_actions_2015": [
+    {
+      "date": "2015-05-27",
+      "type": "实物分派除权",
+      "detail": "长江实业地产有限公司实物分派 1:1（每持 1 股和黄获 1 股长实地产），除权前收盘 165.10 → 除权参考价 118.00",
+      "treatment": "52 周区间与回报计算分除权前后处理；除权后可比区间自 2015-06 起"
+    },
+    {
+      "date": "2015-09-09",
+      "type": "中期股息除净",
+      "detail": "2015 中期股息每股 0.70 港元（2015-10-06 派发）[E:长和 2015 中报业绩摘要]",
+      "treatment": "回报计算按除息日逐笔扣除（与 B3-14 第一性口径一致）"
+    }
+  ],
+  "week52_after_ex_right": {
+    "window": "2015-06-01 ~ 2015-12-31（除权后可比区间）",
+    "high": 124.70,
+    "low": 97.50,
+    "note": "除权前区间（2014-12~2015-05）参考价 165.10 不可比，仅登记不用于触发距离计算"
+  },
+  "hsi_close_20151231": 21914.40,
+  "benchmark_return_hurdle": {
+    "value": 0.09,
+    "basis": "OBS-VAL-01 港股门槛接线规则：恒生全收益指数（HSTI）2015 可靠序列取不到 → 沿用框架缺省 9%，已在 meta.json 港股专项登记"
+  },
+  "fx_snapshot_20151231": {
+    "USDHKD": 7.7508,
+    "USDCAD": 1.3840,
+    "CADHKD": 5.6000,
+    "sources": "USDHKD = Xe.com 2015-12-31 17:00 UTC 快照 7.75084；USDCAD = 加拿大央行 2015-12-31 收盘 1.3840（SEC 注册文件引用，A 级）；CADHKD = 7.7508/1.3840 = 5.6000（派生）",
+    "note": "长和集团呈报货币为港元，赫斯基以 CAD 计价、HPH Trust 以 USD 计价、3 集团以 EUR/GBP 等计价——SOTP 各分部按各自上市地货币锚换算港元"
+  },
+  "related_listed_entities_prices_20151231": {
+    "CKI_01038_HK": {
+      "close": 71.80,
+      "currency": "HKD",
+      "source": "东财 116.01038 日线 fqt=0（Phase 0-2 已取）",
+      "shares": 2519610945,
+      "shares_source": "东财当前总股本 2,519,610,945 与财新报道反推 25.19 亿双源一致；长建 2015-01 配售 8,000 万股新股@58.00 后无增发 [E:长建 2015 中报：'於二零一五年一月配售八千萬股新股，每股作價港幣五十八元']——A- 级",
+      "market_cap_m_hkd": 180908.1
+    },
+    "Husky_HSE_TO": {
+      "close": 14.31,
+      "currency": "CAD",
+      "source": "SEC 委托书文件（EX-99.2）官方两处引用 'closing price of the Common Shares on the TSX on December 31, 2015 of $14.31'，并与 Fok 250,000 股×14.31=$3,577,500 自洽——A 级",
+      "shares": 1005451854,
+      "shares_source": "同文件 'As of February 29, 2016, there were 1,005,451,854 Common Shares outstanding'——2016-02-29 与 2015-12-31 间无增发公告，B+ 级时点近似",
+      "market_cap_m_cad": 14388.0,
+      "market_cap_m_hkd": 80572.9
+    },
+    "HPH_Trust_NS8U_SGX": {
+      "close": 0.53,
+      "currency": "USD",
+      "source": "HPH Trust 2015 年报官方：'a distribution yield of 8.3% based on the market price of US$0.53 on 31 December 2015'——A 级",
+      "units": 8711101022,
+      "units_source": "HPH Trust 2015 年报：8,711,101,022 units in issue（2015 年末）——A 级",
+      "market_cap_m_usd": 4616.9,
+      "market_cap_m_hkd": 35783.4,
+      "nav_per_unit_hkd": 4.76,
+      "note": "单位以 USD 报价（SGX 上市）；NAV/unit HK$4.76 为年报披露，市价 0.53×7.7508=4.11 港元 ≈ 0.86x NAV"
+    },
+    "Hutchison_Telecom_HK_00215": {
+      "close": 2.69,
+      "currency": "HKD",
+      "source": "东财 116.00215 日线 fqt=0：2015-12-31 收盘 2.690——A 级",
+      "shares": 4819096208,
+      "shares_source": "东财当前总股本 4,819,096,208（B+ 级时点近似，与 2015 年末差异估计 <1%，敏感性影响 <0.1 亿港元）",
+      "market_cap_m_hkd": 12963.4
+    }
+  },
+  "dividend_record": {
+    "interim_2015_dps": 0.70,
+    "ex_date": "2015-09-09（除净）",
+    "paid_date": "2015-10-06",
+    "source": "长和 2015 中报：'董事會宣佈…派發中期股息每股港幣 7 角'——A 级",
+    "annualized_yield_basis": "sustainable_forward（0.70×2=1.40 年化）/ 104.60 = 1.34%",
+    "ttm_note": "TTM 口径不可用：2015-05 付息为和黄 2014 末期股息（旧实体），重组后序列断裂，混合 TTM 会高估——按 OBS-600660-03 口径纪律登记 sustainable_forward"
+  }
+}
