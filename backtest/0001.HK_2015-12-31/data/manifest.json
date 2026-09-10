@@ -56,18 +56,81 @@
   },
   "latest_quarter_checked": "2015H1 中报即最新（截断日 2015-12-31 时 Q3 报告无强制披露义务，港股无季报制度——登记：2015-11/12 期间无重大中期公告检索义务，SOTP 行情锚取 2015-12-31 收盘）",
   "files": [
-    {"file": "market_snapshot_0001_2015.json", "source": "东财日线 fqt=0（WebFetch 通道）+SEC 官方引用+HPH 年报官方+Xe/Bank of Canada 汇率", "grade": "A（赫斯基/HPH 价格 A 级官方引用；和电香港/长建股本 B+/A- 时点近似已逐条登记）", "coverage": "2015-12-31 收盘+除权事件+52 周区间+汇率快照+四个上市关联方行情", "verified": "长建市值双源反推一致（25.19 亿股）；赫斯基价×股本算术自洽（Fok 持股 $3,577,500/250,000=14.31）"},
-    {"file": "financials_0001_2015.json", "source": "长和 2015 中报官方原文（HKEX PDF→pdftotext）+和黄 2014 经审核业绩摘要（hkexnews）", "grade": "A级（2015H1 备考全套+2013/2014FY 摘要级）", "coverage": "三年度 crosscheck（2015H1 四科目全+2013/2014FY 收益与溢利）+spike_notes 三条+分部 EBITDA/资产全套", "verified": "净债务自洽（173,855−336,314=−162,459）；勾稽 1,079,536=522,438+557,098；OCF/shares 对 2013/2014 豁免已登记（非估值命门）"},
-    {"file": "fv_base_sotp.json", "source": "上市四项市场锚（A 级价）+屈臣氏淡马锡交易锚+3 集团 EBITDA 倍数（B-）+长建中报净债务（A）", "grade": "A-（锚 A 级；3 集团净债务 B- 透明近似；港口非上市/财投纪律性归零）", "coverage": "SOTP 全分部底稿+防双计声明+OBS-VAL-01 折价依据纪律+测试点五项失控实证+汇率/关联交易素材", "verified": "四项上市权益金额逐笔可复算；净债务调整 149,846=162,459−10,113−2,500"},
-    {"file": "scenarios.json", "source": "Phase 4 三情景底稿（经 check_scenarios.py 门禁 EXIT=0）", "grade": "A级", "coverage": "悲观 sotp_asset_floor（S2b 结构化重算 17.64）+基准 sotp 46.46+乐观 60.84+期望值 40.69", "verified": "悲观/基准 0.38 过 S4；折现率 0.10 过 S2e（OBS-VAL-01 恒生门槛 9% 被 S2e 硬下限覆盖，已登记）"},
-    {"file": "scenario_audit.json", "source": "check_scenarios.py 输出", "grade": "A级", "coverage": "门禁诊断", "verified": "脚本生成（S2b 重算一致、S4 离散度、S2e 下限）"}
+    {
+      "file": "market_snapshot_0001_2015.json",
+      "source": "东财日线 fqt=0（WebFetch 通道）+SEC 官方引用+HPH 年报官方+Xe/Bank of Canada 汇率",
+      "grade": "A（赫斯基/HPH 价格 A 级官方引用；和电香港/长建股本 B+/A- 时点近似已逐条登记）",
+      "coverage": "2015-12-31 收盘+除权事件+52 周区间+汇率快照+四个上市关联方行情",
+      "verified": "长建市值双源反推一致（25.19 亿股）；赫斯基价×股本算术自洽（Fok 持股 $3,577,500/250,000=14.31）"
+    },
+    {
+      "file": "financials_0001_2015.json",
+      "source": "长和 2015 中报官方原文（HKEX PDF→pdftotext）+和黄 2014 经审核业绩摘要（hkexnews）",
+      "grade": "A级（2015H1 备考全套+2013/2014FY 摘要级）",
+      "coverage": "三年度 crosscheck（2015H1 四科目全+2013/2014FY 收益与溢利）+spike_notes 三条+分部 EBITDA/资产全套",
+      "verified": "净债务自洽（173,855−336,314=−162,459）；勾稽 1,079,536=522,438+557,098；OCF/shares 对 2013/2014 豁免已登记（非估值命门）"
+    },
+    {
+      "file": "fv_base_sotp.json",
+      "source": "上市四项市场锚（A 级价）+屈臣氏淡马锡交易锚+3 集团 EBITDA 倍数（B-）+长建中报净债务（A）",
+      "grade": "A-（锚 A 级；3 集团净债务 B- 透明近似；港口非上市/财投纪律性归零）",
+      "coverage": "SOTP 全分部底稿+防双计声明+OBS-VAL-01 折价依据纪律+测试点五项失控实证+汇率/关联交易素材",
+      "verified": "四项上市权益金额逐笔可复算；净债务调整 149,846=162,459−10,113−2,500"
+    },
+    {
+      "file": "scenarios.json",
+      "source": "Phase 4 三情景底稿（经 check_scenarios.py 门禁 EXIT=0）",
+      "grade": "A级",
+      "coverage": "悲观 sotp_asset_floor（S2b 结构化重算 17.64）+基准 sotp 46.46+乐观 60.84+期望值 40.69",
+      "verified": "悲观/基准 0.38 过 S4；折现率 0.10 过 S2e（OBS-VAL-01 恒生门槛 9% 被 S2e 硬下限覆盖，已登记）"
+    },
+    {
+      "file": "scenario_audit.json",
+      "source": "check_scenarios.py 输出",
+      "grade": "A级",
+      "coverage": "门禁诊断",
+      "verified": "脚本生成（S2b 重算一致、S4 离散度、S2e 下限）"
+    },
+    {
+      "file": "expected_return.json",
+      "source": "verdict gate2 冻结数字的数据投影（期望值/IRR/门槛/三情景 IRR 全套）",
+      "grade": "A级（全部数字与 verdict.json 一致性转录，期望值复算 0.3×17.64+0.5×46.46+0.2×60.84=40.69 机器验证）",
+      "coverage": "Gate2 三项判定+loss_probability=1.0+index_hurdle 9%（OBS-VAL-01）",
+      "verified": "no_convergence_floor 门槛口径差异（verdict 冻结 0.0134 vs 注册表 6% 语义）已在字段内显式登记，diff.md 根因节收尾"
+    },
+    {
+      "file": "trigger_reachability.json",
+      "source": "scripts/trigger_reachability.py（CLI 传入 52 周区间 97.50/124.70——快照嵌套键 week52_after_ex_right 脚本不读取，已用参数显式传入）",
+      "grade": "A级（工具生成）",
+      "coverage": "TRIGGER_OUT_OF_HISTORY 判定与 verdict codes 一致",
+      "verified": "27.88 < 97.50 差 71.4%，与 verdict gate1.note 逐字一致"
+    },
+    {
+      "file": "verification_strength.json",
+      "source": "scripts/verification_strength.py（--financials+--manifest 读豁免登记）",
+      "grade": "工具生成",
+      "coverage": "V1 勾稽 33%（weak，2013/2014 豁免）/V2 原文登记 full/V3 窗口 3 年 partial",
+      "verified": "grade C——HTML 首屏强制披露"
+    },
+    {
+      "file": "phase5_workpaper.json",
+      "source": "Phase 4.5/5 底稿（三师评分+分歧表+红队+adoption_ruling）",
+      "grade": "A级（分析过程稿）",
+      "coverage": "adoption_ruling Gate1 PASS(偏弱)+Gate2 FAIL(深度)→档位 2",
+      "verified": "与 verdict persona_verdicts 一致；补登记（verdict 提交时疏漏，不影响时序隔离）"
+    }
   ],
   "official_filing_missing": {
-    "years": [2016],
+    "years": [
+      2016
+    ],
     "reason": "历史回放截断纪律：信息截断日 2015-12-31，2015 年报（2016-03 披露）及以后按 B3-15 案件纪律禁用（meta.json 已冻结），非公司延迟申报；底稿 annual 行 year=2015 实为 2015H1 管理层备考（period 字段已注明），为截断日最新合法集团报表"
   },
   "reconciliation_coverage_waiver": {
-    "years": [2013, 2014],
+    "years": [
+      2013,
+      2014
+    ],
     "reason": "2013/2014 行为和黄旧实体全年原口径（经审核业绩摘要，仅收益/EBITDA/EBIT/应占溢利/股息级科目）：和黄资产负债表未转录——三表勾稽对 2015 行完整执行（总资产 1,079,536 = 负债 522,438 + 权益 557,098 自洽）；2013/2014 为规模参照与 spike 语境，非估值输入"
   }
 }
