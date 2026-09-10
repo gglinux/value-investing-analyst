@@ -11,3 +11,6 @@ backtest/*/data/filings/
 backtest/*/data/*companyfacts*.json
 # companyfacts 原始抓取（1-2MB级）不入库：manifest 登记来源（CIK+API）可复现
 backtest/*/data/raw/companyfacts*.json
+
+# 会话工作记忆（本地文件，不入库）
+.workbuddy/
