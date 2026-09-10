@@ -2,7 +2,7 @@
 
 SKILL.md 只保留数据分级与降级协议的原则；**源能力矩阵、强制动作、各市场实操与踩坑记录全部集中在本文件**。本文件提到的「接口」除特别说明外均指 `westock-data`（腾讯自选股，推荐默认源）。**每次实跑踩到新坑，固化到这里，不要写回 SKILL.md。**
 
-已实证覆盖：美股（NVDA/AMD/INTC/AVGO + 中概 PDD）、A股（海天采集链路 + 伊利全流程 + 招行银行管道）、港股（泡泡玛特 + 腾讯全流程）。尚未实证：保险/券商（无专属管道，须手工建稿）。
+已实证覆盖：美股（NVDA/AMD/INTC/AVGO + 中概 PDD）、A股（海天采集链路 + 伊利全流程 + 招行银行管道）、港股（泡泡玛特 + 腾讯全流程）。尚未实证：保险/券商（无专属管道，须手工建稿）、周期低位真实标的（引擎逻辑有合成数据测试，未遇到真实底部周期股）。
 
 ## 一、核心原则：不绑定单一源
 
@@ -67,7 +67,7 @@ SKILL.md 只保留数据分级与降级协议的原则；**源能力矩阵、强
 
 ## 六、信息覆盖度强制动作
 
-0. **搬运完整性（最隐蔽的一类事故）**：抽取产物拿到了、底稿却没搬进去——比"数据源没有"更危险，因为分析师以为自己有。事故原型：GOOG 与 TSM 的 raw 抽取产物 9 个年度全都成功抓到 `assets`/`liabilities`/`equity`，但底稿只有 1 年有值，三表勾稽覆盖率仅 18% 而入口校验照样打印"通过"。纪律：凡有抽取中间产物，必须跑 `scripts/check_transcription.py` 比对；建稿脚本化优先于手工转录。附带发现：`cash` 在底稿通常取"现金+短期投资"（`cash_sti`），这是估值正确口径，不要为"过校验"改成狭义口径。
+0. **搬运完整性（最隐蔽的一类事故）**：抽取产物拿到了、底稿却没搬进去——比"数据源没有"更危险，因为分析师以为自己有。事故原型：GOOG 与 TSM 的 raw 抽取产物 9 个年度全都成功抓到 `assets`/`liabilities`/`equity`，但底稿只有 1 年有值，三表勾稽覆盖率仅 18% 而入口校验照样打印"通过"（已验证可补齐：从 raw 回填后覆盖率 91%，回填年度全部通过勾稽——数据本身是好的，只是从未被验证过）。纪律：凡有抽取中间产物，必须跑 `scripts/check_transcription.py` 比对；建稿脚本化优先于手工转录。附带发现：`cash` 在底稿通常取"现金+短期投资"（`cash_sti`），这是估值正确口径，不要为"过校验"改成狭义口径。
 1. **分部数据只认财报原文**：`data/segments.json` 的分部收入必须从年报/20-F 的**分部报告附注**提取（A 级，登记 filings 文件名+页码）；接口主营构成与新闻转述只作交叉验证。五维定性一半论断压在分部数据上，这里降级等于全楼地基降级。
 2. **对立面检索（Phase 0 排雷强制步）**：逐项检索 `公司名 + 做空报告/财务造假/监管处罚/集体诉讼/审计意见`，命中进排雷清单评估；未命中也要在 manifest 登记"对立面检索已做、无发现"（`adversarial_check`，含检索日期与结论；validate_data 无痕迹即告警——纯文档纪律没有执行力，10 个归档案例只有 1 个留了痕）。
 3. **信息时效检查**：分析日距最新财报披露日超过 100 天时（validate_data 会提示），强制核对最新季报/盈利预告是否有未消化的剧变（腾讯 AI capex +176% 是季中爆出的教训），核对结果写入 manifest 的 `latest_quarter_checked`。
@@ -87,7 +87,7 @@ SKILL.md 只保留数据分级与降级协议的原则；**源能力矩阵、强
 ### A股（已实证：海天链路 + 伊利全流程）
 
 - `westock-data` 三表可直接建底稿：income/balance/cashflow 全拉，报告期取 12-31 年报行，单位元→百万。
-- 踩坑：**权益科目必须用 `TotalShareholderEquity`（含少数股东），不能用 `SEWithoutMI`（归母）**，否则三表勾稽过不了——但回报率与估值只认归母，底稿另存 `roe_parent`/`bvps_parent`；**TotalAssets 缺失**，用 `TotalLiability + TotalShareholderEquity` 推导（伊利实测误差 <0.1%）；**capex 无独立科目**（现金流量表只有净额 NetInvestCashFlow），从年报现金流量表原文（巨潮 PDF）或研报历史序列补，标 B 级；接口缺摊薄股本明细同样从年报补；字段名与港股不同（归母净利 `NPParentCompanyOwners`、经营现金流 `NetOperateCashFlow`、营业成本 `OperatingCost`），营收字段完整（`OperatingRevenue`）；`publish_date` 用接口 `InfoPublDate`。
+- 踩坑：**权益科目必须用 `TotalShareholderEquity`（含少数股东），不能用 `SEWithoutMI`（归母）**，否则三表勾稽过不了——但回报率与估值只认归母，底稿另存 `roe_parent`/`bvps_parent`；**TotalAssets 缺失**，用 `TotalLiability + TotalShareholderEquity` 推导（伊利实测误差 <0.1%）；**capex 无独立科目**（现金流量表只有净额 NetInvestCashFlow），从年报现金流量表原文（巨潮 PDF）或研报历史序列补，标 B 级，补不到时 `compute_metrics` 会用 D&A 兜底并进 warnings，**须在报告中确认披露**；接口缺摊薄股本明细同样从年报补；字段名与港股不同（归母净利 `NPParentCompanyOwners`、经营现金流 `NetOperateCashFlow`、营业成本 `OperatingCost`），营收字段完整（`OperatingRevenue`）；`publish_date` 用接口 `InfoPublDate`。
 - **减值年必须标注**：含大额一次性减值的年份（伊利 2024 年 52.3 亿）必须在 spike_notes 说明"还原后真实增长"，否则次年高增长会被突变检测误报、估值基期被低基数扭曲。成熟公司 spike 标注约 18 条，IPO 高增长公司 40+ 条。
 - 命门科目双源核对强制走巨潮年报原文；处罚记录与问询函也查巨潮。
 
