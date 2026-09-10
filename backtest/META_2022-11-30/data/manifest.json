@@ -198,6 +198,13 @@
    "grade": "A 级（工具生成，输入全 A）",
    "coverage": "ROIC/roe/FCF/owner_earnings/稀释/CAGR+capex 拆分启发式+chart_series 数组",
    "verified": "告警码 M_DILUTION/M_SHARE_INFLATION/NORM_MARGIN_SHAPE；capex 维持性拆分为启发式已登记（估值用真实 FCF 区间修正）"
+  },
+  {
+   "file": "manifest.json",
+   "source": "Phase 0 排雷对立检索五项（adversarial_check）+ 数据源登记 + files 清单",
+   "grade": "A/B+ 级（五项排雷逐条定级）",
+   "coverage": "FTC 反垄断/隐私监管/集体诉讼/欧盟数据传输/审计意见（全部 ≤2022-11-30 事实）",
+   "verified": "net_conclusion：无致命项，风险集中于监管尾部+ATT+RL"
   }
  ],
  "reconciliation_coverage_note": "V1 勾稽覆盖率 100%（10/10 年三表勾稽，verification_strength A）；[E:] 指针文件名与 files[].file 一一对应（verify_report 校验口径）"
