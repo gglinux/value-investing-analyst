@@ -1,0 +1,114 @@
+{
+  "case": "B3-16",
+  "company": "Meta Platforms, Inc.",
+  "ticker": "META",
+  "replay_date": "2022-11-30",
+  "information_cutoff_discipline": {
+    "cutoff": "2022-11-30",
+    "latest_annual": "FY2021 10-K（filed 2022-02-03，accn 0001326801-22-000018：收入 117,929 / 净利 39,370 / 分部 R72 / EY 无保留意见+ICFR 有效）",
+    "latest_interim": "2022 Q3 10-Q（filed 2022-10-27，accn 0001326801-22-000108）+ Q3 8-K EX-99.1 财报新闻稿（2022-10-26）+ 裁员 8-K EX-99.1（2022-11-09，'I got this wrong' 原文）",
+    "forbidden": "FY2022 10-K（filed 2023-02-02 含全年分部）、Q4 2022 财报与'效率之年'表述（2023-02-01）、2022-11-30 后一切股价/事件（LLaMA/股息政策/TikTok 禁令演化）",
+    "forbidden_data_encountered": "companyfacts 原始 facts 含 2022-2025 年度值（截断日后 filing 产生）——抽取脚本严格按 filing 时点过滤，2022 全年及以后年度值零入档（manifest/financials provenance 登记）",
+    "training_memory_no_backfill": "2023 '效率之年'成本收缩、2023-02-01 Q4 财报后单日 +23%、2024-02 首次分红、2023-2025 股价历史新高——零回填，仅登记于 meta.json contamination_disclosure 与 manifest"
+  },
+  "final_verdict": "小仓位试探",
+  "verdict_ordinal": 3,
+  "prior_expectation_alignment": {
+    "prior": "小仓位试探(3)（meta.json 建档冻结，gate1/gate2 不预判）",
+    "final": "小仓位试探(3)",
+    "alignment": "序数一致。先验按『TTM PE ~11x 极端便宜 + RL 十年黑洞 + ATT 结构性损伤 + 管理层资本配置记录』定性分布预估；Phase 3-5 定量后：Gate1 MoS 40.7% vs 25%（wide）+ Gate2 三项全近失通过 + 悲观情景 -37.6% 真实存在——先验与终判一致且证据链升级（先验为定性五步推演，终判为双闸门机器读数+三师红队全流程）"
+  },
+  "gate1": {
+    "pass": true,
+    "margin_of_safety": 0.407,
+    "requirement": 0.25,
+    "moat": "wide",
+    "intrinsic_value_base": 199.14,
+    "price": 118.10,
+    "note": "MoS = 1−118.10/199.14 = 40.7% vs wide 档 ≥25%（references/moat-framework 25% 门槛），余量 15.7pct。基准 IV 由正常化基期推导：NI 28,500 = 2022 外推 25,350 + 效率修复 ~3,150（比 2021 实际 39,370 低 27.6%——周期波动判型下禁止 2021 直接外推，NORM_MARGIN_SHAPE 已触发；ATT 结构性折扣已内含于 27.6% 的下修）。护城河 wide 带损伤证据与降级条件（DAP 停增或 FoA OPM<25% 则降 narrow），数据支撑：scenarios.json moat_note + check_scenarios S_MOAT_RATING_INVALID 通过"
+  },
+  "gate2": {
+    "pass": true,
+    "item1": {
+      "name": "自洽性校验（期望 IRR vs 护城河反推门槛）",
+      "value": 0.17154854455709845,
+      "hurdle": 0.16514622515369348,
+      "pass": true,
+      "independent": false,
+      "hurdle_derivation": "(1+0.10)×(1/(1-0.25))^(1/5)-1 = 16.51%（wide 反推）；期望 IRR 17.15% = 概率加权（0.3×0.11% + 0.5×22.1% + 0.2×30.3%）",
+      "note": "近失通过（余量 0.64pct）。与闸门一同源（自洽性校验），真正的独立信息在 item2/item3"
+    },
+    "item2": {
+      "name": "价值不收敛下限（股息率+内在价值增速）",
+      "value": 0.06,
+      "hurdle": 0.06,
+      "pass": true,
+      "note": "恰好达标：dividend_yield 0（Meta 截断日从未派息）+ intrinsic_value_growth 6%（iv_growth_evidence：OE fade 终点 3.5-4% + 净股本缩减 2-3%/年=回购 6.7-7.1%/年 − SBC 稀释 1.5-2%/年，合成 7-9% 保守取 6%）——回购持续性是该下限的命门，已列入跟踪清单"
+    },
+    "item3": {
+      "name": "悲观情景年化",
+      "value": 0.00108637924686672,
+      "hurdle": 0.0,
+      "pass": true,
+      "note": "近失通过（0.11%≈名义保本，真实机会成本=十年国债 3.89%）。前提有效性：悲观值 73.73 由 pe_trough_multiple 独立法推导（S2 白名单方法，拒绝 DCF 同源），23,000×8.5x÷2,651.5 机器重算一致（S2b 容差内），净现金不加回双重保守——独立下行构造成立"
+    }
+  },
+  "scenarios_value_per_share": {
+    "悲观": 73.73, "基准": 199.14, "乐观": 275.64,
+    "probabilities": [0.3, 0.5, 0.2],
+    "expected_value": 176.82,
+    "scenario_terminal_5y": {"悲观": 118.74, "基准": 320.72, "乐观": 443.92},
+    "scenario_irr": {"悲观": 0.00108637924686672, "基准": 0.2211651624416704, "乐观": 0.30320024781101607},
+    "loss_probability": 0.0,
+    "methods": {"悲观": "pe_trough_multiple（S2b 机器重算一致：23,000×8.5=195,500÷2,651.5=73.73，净现金不加回）", "基准": "dcf_owner_earnings fade（OE 27,500，g 8%→3%，r 10%，10 年+净现金 12.01/股）", "乐观": "dcf_owner_earnings fade（OE 33,000，g 12%→3%）"},
+    "note": "悲观/基准离散 0.37（S4 通过：下行独立非打折重复）；期望值 176.82 = 0.3×73.73+0.5×199.14+0.2×275.64 = 现价 +49.7%；reverse DCF 交叉：市场定价隐含业主盈利 10 年 −5.7%/年（fade 至 3%）——比系统悲观情景更悲观，本案 test_point 的定量表达"
+  },
+  "expected_irr": 0.17154854455709845,
+  "moat_rating": "wide",
+  "discount_rate": 0.10,
+  "codes": ["M_DILUTION", "M_SHARE_INFLATION", "NORM_MARGIN_SHAPE", "GATE1_PASS", "GATE2_PASS", "GATE_EFFECTIVE_HURDLE_GAP"],
+  "codes_provenance": {
+    "engine_derived": ["M_DILUTION", "M_SHARE_INFLATION", "NORM_MARGIN_SHAPE", "GATE2_PASS", "GATE_EFFECTIVE_HURDLE_GAP"],
+    "manually_recorded": ["GATE1_PASS"],
+    "note": "M 族三码为 compute_metrics.py alert_codes 直接输出（metrics_META_2022Q3.json）；GATE2_PASS 与 GATE_EFFECTIVE_HURDLE_GAP 为 reverse_dcf.py expected-return 的 gate2.codes 直接输出（expected_return.json）；GATE1_PASS 由 MoS 40.7% vs wide 25% 的判定映射到注册表语义码（机器可复算的算术 + 人工映射到码，同 B3-15 先例）"
+  },
+  "codes_note": "①Phase 0 零代码：排雷五项（FTC 反垄断/隐私监管/集体诉讼/欧盟数据传输/审计意见）均非一票否决或红旗形态——无 P0_V*/P0_R* 触发，net_conclusion'无致命项'（manifest adversarial_check）；②S8_VALUE_TRAP 未触发（安全边际 40.7% <50% 且收入连续负增长不成立：9M22 恒汇 +5%）；③NORM_MARGIN_SHAPE 为观察级（利润率周期波动判型），刻意不入 ANY_FRAUD_ALERT 组；④GATE_EFFECTIVE_HURDLE_GAP 登记有效门槛 39.1% vs 名义 25% 的差额（悲观离散的代价）——正是档位 3 而非 4 的定量理由之一",
+  "frozen_before_diff": true,
+  "frozen_at": "2026-09-10T21:30:00Z",
+  "falsification_conditions": {
+    "F1": "单价读数：2023 年起官方单价 yoy 连续两季 −15% 以上且量同步失守 → 基准情景失效滑向悲观（30%→上调），档位复核（3→2）",
+    "F2": "RL 经营亏损绝对额突破 20B/年或扎克伯格加倍押注 → 净现金消耗加速、估值锚下移，档位复核（3→2）",
+    "F3": "回购执行额：FCF 修复前停摆 → no_convergence_floor 跌破 6% → Gate2② 翻红，档位复核（3→2）",
+    "F4": "FTC 案 discovery 出现实质不利裁决或 DPC 最终决定强制停传 → 护城河 wide 复审（降级触发），档位复核",
+    "F5": "DAP 停止增长或 FoA OPM 跌破 25% → 护城河降 narrow（MoS 门槛 25%→40%，40.7% 仍过但余量归零），档位复核",
+    "F6": "正面触发：单价修复 + RL 亏损 2023 指引兑现（96-101B 费用内）+ 回购持续 → 三个关键变量每季证伪通过后逐步上调仓位（3→4 路径）"
+  },
+  "review_checkpoints": [
+    "2023-02-01 Q4 财报：Q4 实际 vs 指引 30-32.5B（consensus.json 已登记 32.2B 一致预期）、2023 费用指引兑现——管理层纠错可信度首考（F6 前提）",
+    "每季：单价 yoy / DAP 增速 / RL 亏损额 / 回购执行额——四个跟踪变量的证伪读数",
+    "FTC 案程序节点与 DPC 最终决定——尾部风险监测（非量化项）",
+    "持仓纪律：2-4% 仓位上限，RL/ATT 变量证伪前不加仓"
+  ],
+  "persona_verdicts": {
+    "buffett": "小仓位试探（置信度中高）——'我买的是网络还在的事实，不是网络永存的想象'：DAP +4% 显示注意力迁移尚未发生；钱是真的（OCF/NI 1.47x、净现金 31.9B）但谁决定它的去向是问题（B 股独裁+RL 无制衡）；'I got this wrong' 罕见加分；10.9x PE 对 ROIC 46% 现金机器是市场在为永久衰退定价；但'一个十年期的希望不是资产'",
+    "duan": "小仓位试探（置信度高）——'广告是全世界最好的商业模式之一'：DAP +4% 是最重要的单一数据，用户没走离开的是单价；本分不是不犯错是承认错了马上改；9.4B 亏损对年赚 39B 的公司烧得起，裁员信说明他知道主业在哪；RL 是把仓位从小变小的原因",
+    "lilu": "小仓位试探（置信度中）——'存在的确定性'与'盈利的确定性'分开定价：十年后人们仍在 FB/IG/WA 社交概率高，广告份额概率分布宽；RL 是十年 DCF 口径负资产（成功是免费期权、失败已计入悲观）；B 股 10:1 让公众股东对资本配置零话语权；每季证伪 RL 与单价",
+    "consensus": "三师一致小仓位试探(3)，无人支持核心买入（RL 不可知+资本配置记录压制上限）、无人支持观察等价格（40.7% 安全边际+质地共识）；分歧集中在 ATT 损伤永久性与管理层纠错可信度的权重——以概率分布（30/50/20）表达而非点估计"
+  },
+  "key_judgments": {
+    "false_negative_test_reading": "本案 test_point（市场认定元宇宙烧毁公司，系统会不会被情绪带走而误拒）的系统读数：未误拒——市场隐含 −5.7%/年的叙事没有吞噬 40.7% 安全边际与三项近失的 Gate2；亦未过度兴奋——三项近失（0.64pct/0pct/0.11pct 余量）本身就是纪律的定量证据。情绪极端处的档位由可验证事实链（量 +4%/OPM 38.5%/净现金 31.8B/恒汇 +5%）与独立悲观构造（PE 触底+净现金不加回）双锚定，不由叙事锚定",
+    "volume_price_decomposition": "2022 收入下滑 100% 由价格侧贡献（量 +4%/价 −18%）——这把'周期可逆部分'与'结构损伤部分'的辨析从叙事变为可跟踪变量：价格修复节奏是基准情景的命门（F1），量失守才是护城河降级触发器（F5）",
+    "normalization_discipline": "2021 净利率 33.4% vs 全期均值 27.3%（ratio 1.22）+ 穿越均值 3 次 → 判型周期波动：禁止 2021 直接外推；基准基期 NI 28,500 比 2021 实际低 27.6%——结构折扣与周期折扣同时内含，避免'周期高位基期'与'结构性衰退基期'两类对称错误",
+    "bear_independence": "悲观情景 73.73 由 pe_trough_multiple 独立推导（S2 拒绝 DCF 同源后改方法；S2b 机器重算一致；净现金不加回为机器更保守口径）——悲观 IRR 0.11% 的'错了会怎样'回答因此有效：不依赖基准情景的任何假设"
+  },
+  "verification": {
+    "validate_data": "pass（错误 0/警告 2：信息时效 + 2022 年报缺失 official_filing_missing 登记豁免——回放截断纪律的口径性警告）",
+    "crosscheck": "pass（companyfacts XBRL 三年互证 12/12）",
+    "check_business_drivers": "pass（0 警告；量价 7 行全 A 级 8-K EX-99.1 溯源）",
+    "check_scenarios": "pass（EXIT=0：S1-S9 通过；悲观 pe_trough_multiple S2 独立性+S2b 重算一致；S4 离散 0.37；S5 非经营折价分层；S7b iv_growth 证据链）",
+    "check_market_snapshot": "pass（三角校验 +0.00%）",
+    "verification_strength": "A 级（勾稽 100% full/原文登记 full/10 年窗口覆盖压力年）",
+    "verify_report": "pass（110/110：正文数字 91 项+图表数组 7 组+证据指针 12 个）",
+    "lint_verdict": "待本文件落盘后运行 run_backtest_assertions.py --lint-verdict"
+  }
+}
