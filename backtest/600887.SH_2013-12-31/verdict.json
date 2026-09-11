@@ -107,7 +107,7 @@
     "check_business_drivers": "pass（0 错 0 警告；量价金额贡献分解加法勾稽自洽表逐年精确，适配乳企无量价绝对值披露的口径现实）",
     "check_scenarios": "pass（EXIT=0：S1-S9 通过；悲观 pe_trough_multiple S2 独立性+S2b 重算一致；S4 离散 0.591；S5 非经营资产分层三情景统一不加回+敏感性 16.49；S2c pe_trough 方法合规）",
     "check_market_snapshot": "pass（三角校验 −0.00%；股本 A 级直读 2,042,914,022 与构成勾稽 15.99+2.72+1.72=20.43 亿精确）",
-    "verification_strength": "A 级（勾稽 100% full/原文七份公告 ID 登记 full/五年窗口覆盖毁灭年与高点年）",
+    "verification_strength": "B（verification_strength.py 机器读数 2026-09-11：V1 三表勾稽覆盖率 100%（5/5 年，full）/ V2 命门科目原文登记 full（官方原文年份 [2010,2011,2012]），未经原文机器逐字比对=True / V3 数据窗口 5 年 < 要求 10 年，覆盖压力年「全球金融危机」（partial）——缺口：2004-2007 四年未入底稿；结论稳健性不受影响的三重证据：①结论对基期不敏感（主轨 1,435/交叉轨 1,367/扣非口径 16.4/现金加回 16.49 四口径全部拒绝）②五年窗口已含毁灭年（2008）与高点年（2011）两类极端形态 ③排除档方向由现价与三情景的算术落差决定，非边际参数",
     "lint_verdict": "待本文件落盘后运行 run_backtest_assertions.py --lint-verdict"
   }
 }

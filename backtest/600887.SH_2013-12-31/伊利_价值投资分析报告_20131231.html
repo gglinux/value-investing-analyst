@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>伊利股份 (600887.SH) — 历史回放分析报告 @ 2013-12-31</title>
+<script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+<style>
+body{font-family:"Microsoft YaHei","PingFang SC",sans-serif;margin:0;background:#f5f6f8;color:#222;line-height:1.65}
+.wrap{max-width:960px;margin:0 auto;padding:24px 20px 60px}
+.report-header{background:linear-gradient(135deg,#1a3a5c,#2c5f8a);color:#fff;padding:28px 32px;border-radius:8px;margin-bottom:18px}
+.report-header h1{margin:0 0 6px;font-size:24px}
+.report-header .sub{opacity:.85;font-size:13px}
+.verdict-banner{background:#fff;border-left:6px solid #b71c1c;padding:16px 20px;border-radius:6px;margin-bottom:18px;box-shadow:0 1px 4px rgba(0,0,0,.08)}
+.verdict-banner .v{font-size:20px;font-weight:700;color:#b71c1c}
+.verification-strength{background:#fff8e1;border:1px solid #e0c96b;padding:12px 16px;border-radius:6px;font-size:13px;margin-bottom:18px}
+.vs-meaning{color:#8a6d1a}
+.decision-card{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:18px}
+.dc{background:#fff;border-radius:6px;padding:12px;text-align:center;box-shadow:0 1px 4px rgba(0,0,0,.08)}
+.dc .t{font-size:12px;color:#777}.dc .n{font-size:17px;font-weight:700;margin-top:4px}
+.dc.pass .n{color:#1b5e20}.dc.fail .n{color:#b71c1c}
+section{background:#fff;border-radius:8px;padding:20px 26px;margin-bottom:16px;box-shadow:0 1px 4px rgba(0,0,0,.06)}
+h2{font-size:18px;border-bottom:2px solid #2c5f8a;padding-bottom:6px;color:#1a3a5c;margin-top:4px}
+h3{font-size:15px;color:#2c5f8a;margin:18px 0 6px}
+table{border-collapse:collapse;width:100%;font-size:13px;margin:10px 0}
+th,td{border:1px solid #ddd;padding:6px 9px;text-align:right}
+th{background:#eef3f8}
+td:first-child,th:first-child{text-align:left}
+.chart{width:100%;height:300px;margin:12px 0}
+.note{font-size:12.5px;color:#666;background:#f7f9fb;border-left:3px solid #b0c4d8;padding:8px 12px;margin:10px 0}
+.ep{color:#2c5f8a;font-size:12px}
+.fail-flag{display:inline-block;background:#b71c1c;color:#fff;border-radius:3px;padding:0 6px;font-size:12px;margin-right:4px}
+.pass-flag{display:inline-block;background:#1b5e20;color:#fff;border-radius:3px;padding:0 6px;font-size:12px;margin-right:4px}
+code{background:#eef;font-size:12px;padding:0 3px}
+ul{padding-left:20px}li{margin:4px 0}
+</style>
+</head>
+<body><div class="wrap">
+
+<div class="report-header">
+<h1>伊利股份 (600887.SH) — 历史回放分析报告</h1>
+<div class="sub">回放时点 2013-12-31 ｜ 信息截断 2013-12-31 ｜ B3-18 假阴性专项第 2 例：长期复利型消费股估值不便宜时，双闸门会不会因安全边际不足而错过 ｜ 全部数据来源披露日 ≤ 2013-12-31</div>
+</div>
+
+<div class="verification-strength" data-verification-strength="1"
+     data-grade="B"
+     data-reconciliation-coverage="1.0000"
+     data-crosscheck-level="full"
+     data-window-years="5"
+     data-covers-full-cycle="false">
+  <b>核验强度 B</b>：三表勾稽覆盖率 100%（达标） ｜ 命门科目原文登记 达标（<u>未经原文机器逐字比对</u>） ｜ 数据窗口 5 年，含全球金融危机（部分）<br>
+  <span class="vs-meaning">存在部分核验缺口（2004-2007 未入底稿）：结论可用，但相关章节须显式降低置信度——本案结论对基期选择不敏感（四口径全部拒绝，见第七节），缺口不影响方向</span>
+</div>
+
+<div class="verdict-banner" data-verdict="排除">
+<div class="v">最终档位：排除（ordinal 0）</div>
+<div>闸门一 <span class="fail-flag">FAIL</span> MoS = 1 - 39.08/12.08 = <b>-223.5%</b> vs narrow 档要求 ≥40%——现价是基准内在价值的 3.24 倍；闸门二 <span class="fail-flag">FAIL</span> 三项全✗（期望 IRR -14.81% vs 21.83%；不收敛下限 3.68% vs 6%；悲观年化 -21.70% vs 0%）。三情景 <span class="vnum" data-src="scenarios_600887.json" data-path="scenarios.0.value_per_share" data-fmt="num2">7.14</span> / <span class="vnum" data-src="scenarios_600887.json" data-path="scenarios.1.value_per_share" data-fmt="num2">12.08</span> / <span class="vnum" data-src="scenarios_600887.json" data-path="scenarios.2.value_per_share" data-fmt="num2">15.18</span> 元全部低于现价 <span class="vnum" data-src="market_snapshot_600887_2013.json" data-path="price.value" data-fmt="num2">39.08</span> 元，亏损概率 <span class="vnum" data-src="expected_return_600887.json" data-path="loss_probability" data-fmt="pct1">100.0%</span>。先验「观察等价格(2)」偏差 -2 档（管线唯一决定，未被先验牵引）。<span class="ep">[E:scenarios_600887.json][E:expected_return_600887.json][E:market_snapshot_600887_2013.json]</span></div>
+</div>
+
+<div class="decision-card">
+<div class="dc"><div class="t">收盘价 (2013-12-31)</div><div class="n"><span class="vnum" data-src="market_snapshot_600887_2013.json" data-path="price.value" data-fmt="num2">39.08</span> 元</div></div>
+<div class="dc"><div class="t">市值</div><div class="n"><span class="vnum" data-src="market_snapshot_600887_2013.json" data-path="market_cap.value" data-fmt="num0">79,837</span> 百万</div></div>
+<div class="dc fail"><div class="t">闸门一 MoS (narrow 40%)</div><div class="n">-223.5%</div></div>
+<div class="dc fail"><div class="t">闸门二 (三项全过?)</div><div class="n">FAIL</div></div>
+<div class="dc"><div class="t">总股本 (A级直读)</div><div class="n"><span class="vnum" data-src="market_snapshot_600887_2013.json" data-path="shares.value" data-fmt="num2">2,042.91</span> 百万股</div></div>
+<div class="dc"><div class="t">PE-TTM / PB</div><div class="n">27.85x / <span class="vnum" data-src="market_snapshot_600887_2013.json" data-path="pb.value" data-fmt="num2">5.17</span>x</div></div>
+<div class="dc"><div class="t">52 周区间</div><div class="n"><span class="vnum" data-src="market_snapshot_600887_2013.json" data-path="week52_after_ex_right.low" data-fmt="num1">21.9</span>–<span class="vnum" data-src="market_snapshot_600887_2013.json" data-path="week52_after_ex_right.high" data-fmt="num1">52.2</span></div></div>
+<div class="dc"><div class="t">期望值/现价</div><div class="n"><span class="vnum" data-src="scenarios_600887.json" data-path="expected_value_per_share" data-fmt="num2">11.22</span> 元</div></div>
+</div>
+
+<section>
+<h2>一、信息集与防前视声明</h2>
+<ul>
+<li><b>信息截断</b>：2013-12-31。最新年报 = 2012 年报（2013-04 披露）；最新季报 = 2013 三季报（2013-10-30）。<b>禁用</b>：2013 年报（2014-04 才披露）、2014+ 一切公告、奶荒 2014 演化与奶价拐点、2014 年及以后股价。</li>
+<li><b>训练语料后见之明零回填</b>：安慕希放量、2014 奶价拐点、2015-2016 业绩波动、2017-2019 复利兑现、2021 股价历史高点——全部零回填，仅登记于 meta.json contamination_disclosure。估值输入全部取自截断日前七份公告原文（巨潮 PDF，ID 已登记 manifest）。</li>
+<li><b>本案口径勘误记录</b>：初稿曾误判「11 伊利转债 32 亿转股」——2011/2012 年报应付债券科目均空白证伪伊利无存续转债；三季报 L239 原文「本期股权激励对象行权 172,056,022 股,行权价格 6.49 元」定性为股票期权行权（流入 11.17 亿）。净资产四因素勾稽精确闭合：8,092.39 = 净利 2,515.59 + 定增 4,999.96 + 行权 1,116.64 - 分红 539.80。<span class="ep">[E:financials_600887.json][E:adversarial_check.json]</span></li>
+</ul>
+</section>
+
+<section>
+<h2>二、Phase 0 排雷（对立检索 + 监管/审计核查）</h2>
+<p>六项红旗无一票否决形态（<span class="ep">[E:adversarial_check.json]</span>）：RF1 政府补贴占利润 49%（观察级，非造假形态）；RF2 分红 &gt; 累计 FCF（扩张期性质而非治理黑洞——69.13 亿 capex 计划是主因）；RF6 食品安全尾部（三聚氰胺 2008 实证形态，进入悲观情景构造）；另有渠道压货观察、原奶周期、激励摊薄三项观察级。counter_evidence：196 只基金第一大重仓的机构拥挤定价（既是流动性强度的证据也是拥挤风险）。净结论：无 P0 一票否决——排除档由双闸门算术决定，不由排雷决定。</p>
+</section>
+
+<section>
+<h2>三、定量画像（五年序列 + 2008 毁灭年 + 双轨基期）</h2>
+<h3>3.1 收入、净利与净利率（2008-2012）</h3>
+<div class="chart" id="c1"></div>
+<table>
+<tr><th>年度</th><th>收入 (百万)</th><th>归母净利 (百万)</th><th>净利率</th><th>经营现金流</th><th>capex</th><th>分红实付</th></tr>
+<tr><td>2008</td><td><span class="vnum" data-src="financials_600887.json" data-path="annual.0.revenue" data-fmt="num0">21,659</span></td><td><span class="vnum" data-src="financials_600887.json" data-path="annual.0.net_income" data-fmt="num0">-1,687</span></td><td>-7.8%（三聚氰胺毁灭年）</td><td>183</td><td>963</td><td>0</td></tr>
+<tr><td>2009</td><td><span class="vnum" data-src="financials_600887.json" data-path="annual.1.revenue" data-fmt="num0">24,324</span></td><td><span class="vnum" data-src="financials_600887.json" data-path="annual.1.net_income" data-fmt="num0">648</span></td><td>2.7%</td><td>2,029</td><td>622</td><td>0</td></tr>
+<tr><td>2010</td><td><span class="vnum" data-src="financials_600887.json" data-path="annual.2.revenue" data-fmt="num0">29,665</span></td><td><span class="vnum" data-src="financials_600887.json" data-path="annual.2.net_income" data-fmt="num0">777</span></td><td>2.6%</td><td>1,475</td><td>2,410</td><td>0</td></tr>
+<tr><td>2011</td><td><span class="vnum" data-src="financials_600887.json" data-path="annual.3.revenue" data-fmt="num0">37,451</span></td><td><span class="vnum" data-src="financials_600887.json" data-path="annual.3.net_income" data-fmt="num0">1,809</span></td><td>4.8%（原奶低价年红利）</td><td>3,670</td><td>3,476</td><td>400</td></tr>
+<tr><td>2012</td><td><span class="vnum" data-src="financials_600887.json" data-path="annual.4.revenue" data-fmt="num0">41,991</span></td><td><span class="vnum" data-src="financials_600887.json" data-path="annual.4.net_income" data-fmt="num0">1,717</span></td><td>4.1%</td><td><span class="vnum" data-src="financials_600887.json" data-path="annual.4.ocf" data-fmt="num0">2,409</span></td><td><span class="vnum" data-src="financials_600887.json" data-path="annual.4.capex" data-fmt="num0">3,057</span></td><td><span class="vnum" data-src="financials_600887.json" data-path="annual.4.dividends_paid" data-fmt="num0">524</span></td></tr>
+</table>
+<p class="note">收入 CAGR（2008-2012）<span class="vnum" data-src="metrics_600887.json" data-path="summary.cagr_total.revenue" data-fmt="pct1">18.0%</span>；ROIC 五年均值 <span class="vnum" data-src="metrics_600887.json" data-path="summary.roic_avg_5y" data-fmt="pct1">29.9%</span>（区间 25.9%-40.3%）——资本回报质量为 A 股消费第一梯队，但 2008 毁灭年使净利率均值口径失真（net_margin_avg 仅 1.28%），引擎触发 NORM_CYCLE_PEAK/NORM_MARGIN_SHAPE/NORM_DUAL_TRACK 三码，基期按双轨并列处理。<span class="ep">[E:metrics_600887.json]</span></p>
+
+<h3>3.2 业主盈利（OE）与自由现金流序列</h3>
+<div class="chart" id="c2"></div>
+<p class="note">OE 序列（百万）：<span class="vnum" data-src="metrics_600887.json" data-path="chart_series.owner_earnings.0" data-fmt="num1">-611.8</span> / <span class="vnum" data-src="metrics_600887.json" data-path="chart_series.owner_earnings.1" data-fmt="num1">1,332.7</span> / <span class="vnum" data-src="metrics_600887.json" data-path="chart_series.owner_earnings.2" data-fmt="num1">836.9</span> / <span class="vnum" data-src="metrics_600887.json" data-path="chart_series.owner_earnings.3" data-fmt="num1">3,130.0</span> / <span class="vnum" data-src="metrics_600887.json" data-path="chart_series.owner_earnings.4" data-fmt="num1">1,366.9</span>——五年极差 3,742 百万，任何单年外推都危险。FCF 五年四负（扩张期 capex 吞噬），owner_yield 仅 1.71-1.80%，M_UNIT_SUSPECT（回本年数 56 年）是这一现实的量化告警而非数据错误——市值勾稽三角校验偏差 -0.00% 已排除单位错位。股本五年增至 <span class="vnum" data-src="metrics_600887.json" data-path="summary.share_count_change" data-fmt="num2">2.00</span> 倍 → M_DILUTION + M_SHARE_INFLATION。<span class="ep">[E:metrics_600887.json][E:financials_600887.json]</span></p>
+
+<h3>3.3 量价分解（本案关键证据）</h3>
+<table>
+<tr><th>年度</th><th>收入增量 (亿元)</th><th>量贡献</th><th>价贡献</th><th>量占比</th><th>备注</th></tr>
+<tr><td>2012</td><td>+44.71</td><td><span class="vnum" data-src="business_drivers_600887.json" data-path="drivers.0.volume" data-fmt="num2">29.31</span></td><td><span class="vnum" data-src="business_drivers_600887.json" data-path="drivers.0.price" data-fmt="num2">15.40</span></td><td>66%</td><td>年报加法口径</td></tr>
+<tr><td>2011</td><td>+77.21</td><td><span class="vnum" data-src="business_drivers_600887.json" data-path="drivers.1.volume" data-fmt="num1">47.8</span></td><td><span class="vnum" data-src="business_drivers_600887.json" data-path="drivers.1.price" data-fmt="num2">29.41</span></td><td>62%</td><td>成本侧对照：量 33.74/价 24.05 → 量的贡献 ~82% 为原奶涨价转嫁</td></tr>
+<tr><td>2010</td><td>+53.41</td><td><span class="vnum" data-src="business_drivers_600887.json" data-path="drivers.2.volume" data-fmt="num2">22.05</span></td><td>—</td><td>41%</td><td>2008-2010 仅披露增速%</td></tr>
+</table>
+<p class="note">分产品毛利率序列（主营口径）：液体乳 25.78→34.08→28.8→26.52；综合 26.89→35.07→30.22→29.16→29.59——2011 年毛利率高点与原奶低价年重合，<b>「龙头涨价权」的成色不足</b>：量贡献的大头是成本转嫁，纯品牌提价落袋有限。这是 narrow 护城河评级的定量基础。<span class="ep">[E:business_drivers_600887.json]</span></p>
+</section>
+
+<section>
+<h2>四、五维定性</h2>
+<h3>4.1 商业模式</h3>
+<p>A 股乳制品绝对龙头，与蒙牛构成双寡头。商业模式本质是「品牌食品加工」：上游原奶采购（成本不可控）+ 中游标准化加工 + 下游品牌渠道分销——高频刚需但低单值，品牌溢价弱于白酒/调味品。先款后货（预收款模式）渠道力真实；2008 行业洗牌后的存活者享受集中度提升。<span class="ep">[E:business_drivers_600887.json][E:financials_600887.json][E:market_snapshot_600887_2013.json]</span></p>
+<h3>4.2 护城河</h3>
+<p><b>裁决：narrow（三点论证）</b>——①定价权有限：量价分解显示量贡献 62-66% 中约 82% 为原奶成本转嫁，纯品牌提价有限；②原奶外部周期不可控：2013 奶荒（散户退出+恒天然 2013-08 肉毒杆菌乌龙）9M13 毛利率 -0.72pp，管理层预算利润总额 -9% vs 收入 +9.7% 的剪刀差即转嫁极限；③食品安全单事件尾部：2008 三聚氰胺实证（OE 1,332 量级→-611.8），品牌溢价可被单事件瞬间摧毁。正面证据（双寡头/先款后货/ROIC 26-40%）不足以升 wide。<span class="ep">[E:business_drivers_600887.json][E:adversarial_check.json][E:metrics_600887.json]</span></p>
+<h3>4.3 增长</h3>
+<p>量增主导的资本消耗型增长：管理层 2013 预算收入 +9.7%（截断日内唯一指引）；capex 计划 69.13 亿 vs 2012 实际 30.57 亿（2.26 倍）——建牧场/扩产能的垂直整合加速。intrinsic_value_growth 3%（fade 终点 3% - 摊薄 1-2%）。owner_yield 1.71-1.80% 表明增长由留存+外部融资双输血，股东落袋有限。<span class="ep">[E:business_drivers_600887.json][E:metrics_600887.json][E:scenarios_600887.json]</span></p>
+<h3>4.4 管理层</h3>
+<p>执行力有实证：三聚氰胺废墟重建行业第一（收入 216.59→419.91 亿）；激励绑定改善：1.72 亿股 @6.49 元行权（vs 市价 &gt;30 元，让渡成本 ~56 亿已在 2007-2012 费用化）；摊薄史扣分：股本 5 年 2 倍 + 2013 定增 50 亿（M_DILUTION/M_SHARE_INFLATION）；预算诚实度加分：利润 -9% 与收入 +9.7% 并列披露不隐瞒压力。综合 3.0-3.5。<span class="ep">[E:financials_600887.json][E:metrics_600887.json][E:business_drivers_600887.json]</span></p>
+<h3>4.5 财务质量</h3>
+<p>「高回报、高消耗、高波动」三高并存：ROIC 26-40%（高）；FCF 五年四负、69.13 亿投资计划（高消耗）；2008 毁灭年 + 原奶周期（高波动）。2013 三季报货币资金 11,858.87 百万（定增 50 亿+行权 11.2 亿+经营流入到账），净现金 ~90 亿 = 基准价值 36.5%——但定增专款专用（69.13 亿计划对价），三情景统一不加回，敏感性全额加回 16.49 元仍 &lt; 现价 58%。<span class="ep">[E:financials_600887.json][E:scenarios_600887.json][E:market_snapshot_600887_2013.json]</span></p>
+</section>
+
+<section>
+<h2>五、估值与安全边际（Phase 4）</h2>
+<h3>5.1 三情景（r=10%，5 年，H=5）</h3>
+<table>
+<tr><th>情景</th><th>概率</th><th>方法</th><th>每股价值</th><th>5 年 IRR</th><th>关键假设</th></tr>
+<tr><td>悲观</td><td><span class="vnum" data-src="scenarios_600887.json" data-path="scenarios.0.probability" data-fmt="pct0">30%</span></td><td>pe_trough_multiple（独立）</td><td><span class="vnum" data-src="scenarios_600887.json" data-path="scenarios.0.value_per_share" data-fmt="num2">7.14</span></td><td><span class="vnum" data-src="expected_return_600887.json" data-path="scenarios.0.annualized_irr" data-fmt="pct1">-21.7%</span></td><td>0.5×扣非 1,945×15x÷2,042.9；含食品安全尾部（2008 实证形态）+原奶双杀；净现金不加回</td></tr>
+<tr><td>基准</td><td><span class="vnum" data-src="scenarios_600887.json" data-path="scenarios.1.probability" data-fmt="pct0">50%</span></td><td>dcf fade</td><td><span class="vnum" data-src="scenarios_600887.json" data-path="scenarios.1.value_per_share" data-fmt="num2">12.08</span></td><td><span class="vnum" data-src="expected_return_600887.json" data-path="scenarios.1.annualized_irr" data-fmt="pct1">-13.0%</span></td><td>base_oe <span class="vnum" data-src="scenarios_600887.json" data-path="scenarios.1.method_inputs.base_oe" data-fmt="num0">1,435</span>（OE 利润率均值 3.42%×当期收入）；g 10%→3%；收入锚=管理层预算 +9.7%</td></tr>
+<tr><td>乐观</td><td><span class="vnum" data-src="scenarios_600887.json" data-path="scenarios.2.probability" data-fmt="pct0">20%</span></td><td>dcf fade</td><td><span class="vnum" data-src="scenarios_600887.json" data-path="scenarios.2.value_per_share" data-fmt="num2">15.18</span></td><td><span class="vnum" data-src="expected_return_600887.json" data-path="scenarios.2.annualized_irr" data-fmt="pct1">-9.0%</span></td><td>收入锚+利润率恢复（扣非净利率 3.93% 附近）；g 14%→4%</td></tr>
+</table>
+<p class="note">期望值 <span class="vnum" data-src="scenarios_600887.json" data-path="expected_value_per_share" data-fmt="num2">11.22</span> 元 = 现价的 28.7%。离散度 0.591（S4 通过：下行由 pe_trough 独立构造非打折重复）。敏感性：扣非 TTM 1,945 作基期 → 基准 ~16.4 元；净现金全额加回 → 16.49 元——两个红队最乐观口径均 &lt; 现价 58%，<b>结论对基期选择与现金处理双重不敏感</b>。<span class="ep">[E:scenarios_600887.json][E:expected_return_600887.json][E:scenario_audit.json]</span></p>
+<h3>5.2 护城河评级与门槛</h3>
+<p data-moat-note="引擎判定见 scenarios">护城河评级：<b data-moat="narrow">narrow</b>（<span class="vnum" data-src="scenarios_600887.json" data-path="discount_rate" data-fmt="pct1">10.0%</span> 折现率，股息率 <span class="vnum" data-src="scenarios_600887.json" data-path="dividend_yield" data-fmt="pct2">0.68%</span> 主口径）→ 闸门一安全边际要求 40%。三师五维打分：价格维度一致 1.0/5——任何口径下无安全边际。<span class="ep">[E:scenarios_600887.json]</span></p>
+</section>
+
+<section>
+<h2>六、双闸门与档位（Phase 4 定档）</h2>
+<h3>6.1 闸门一：安全边际（<span class="fail-flag">FAIL</span>）</h3>
+<p>MoS = 1 - <span class="vnum" data-src="scenarios_600887.json" data-path="price" data-fmt="num2">39.08</span>/<span class="vnum" data-src="scenarios_600887.json" data-path="scenarios.1.value_per_share" data-fmt="num2">12.08</span> = <b>-223.5%</b> vs narrow 档要求 ≥40%——不是折价不足而是溢价 223.5%（现价 = 基准 IV 的 3.24 倍 = 乐观 IV 的 2.58 倍）。PE-TTM 27.85x（= 市值 79,837.28 ÷ TTM 归母 2,866.53）对正常化 OE 实为 <b>55.6x</b>——跨口径落差 2 倍是本案「贵得离谱」的机制。<span class="ep">[E:market_snapshot_600887_2013.json][E:scenarios_600887.json]</span></p>
+<h3>6.2 闸门二：三项独立检查（<span class="fail-flag">FAIL ×3</span>）</h3>
+<table>
+<tr><th>#</th><th>检查项</th><th>读数</th><th>门槛</th><th>判定</th><th>性质</th></tr>
+<tr><td>①</td><td>期望 IRR vs 护城河反推门槛</td><td><span class="vnum" data-src="expected_return_600887.json" data-path="gate2.consistency_expected_irr.value" data-fmt="pct1">-14.8%</span></td><td><span class="vnum" data-src="expected_return_600887.json" data-path="gate2.consistency_expected_irr.hurdle" data-fmt="pct1">21.8%</span></td><td><span class="fail-flag">✗</span></td><td>自洽性校验（非独立）</td></tr>
+<tr><td>②</td><td>价值不收敛下限（股息率+内在价值增速）</td><td><span class="vnum" data-src="expected_return_600887.json" data-path="gate2.no_convergence_floor.value" data-fmt="pct2">3.68%</span></td><td><span class="vnum" data-src="expected_return_600887.json" data-path="gate2.no_convergence_floor.hurdle" data-fmt="pct1">6.0%</span></td><td><span class="fail-flag">✗</span></td><td>独立——低于无风险利率 ~4.6%，等待本身无回报</td></tr>
+<tr><td>③</td><td>悲观情景年化</td><td><span class="vnum" data-src="expected_return_600887.json" data-path="gate2.pessimistic_irr.value" data-fmt="pct1">-21.7%</span></td><td>0.0%</td><td><span class="fail-flag">✗</span></td><td>独立——pe_trough 构造含食品安全尾部</td></tr>
+</table>
+<p class="note">有效门槛 44.2% vs 名义 40%（gap 4.22pct &lt; 5pct，GATE_EFFECTIVE_HURDLE_GAP 不触发）。双闸门全 fail → 管线规则唯一决定 <b>排除档（ordinal 0）</b>。<span class="ep">[E:expected_return_600887.json]</span></p>
+</section>
+
+<section>
+<h2>七、关键判断收敛（Phase 4.5）</h2>
+<ul>
+<li><b>reverse DCF 交叉</b>：现价隐含 base_oe ≈ 4,643 百万（扣非 TTM 1,945 的 2.39 倍 / 2012 实际 OE 1,366.9 的 3.40 倍），或等价永续 g≈13.5%——<b>implied-growth 在 -50%~+60% 全部增速区间内无解</b>：现价定价的假设在截断日信息集内不存在可验证基础（管理层自己的预算是收入 +9.7%/利润 -9%），剩余解释只有利润率跃迁或情绪定价，两者都不可下注。<span class="ep">[E:scenarios_600887.json]</span></li>
+<li><b>分歧表达</b>：市场隐含 vs 系统基准的落差以概率分布表达（30/50/20），概率 30% 对拥挤定价刻意加权（196 只基金第一大重仓是风险非安全垫）。<span class="ep">[E:scenarios_600887.json][E:adversarial_check.json]</span></li>
+<li><b>机会成本</b>：无风险利率 ~4.6%（钱荒后高利率环境）> 不收敛下限 3.68%——持有现金跑赢期望 IRR 约 26pct；「等」的前提（等待有回报）在本案不成立，观察等价格档位失效。</li>
+</ul>
+</section>
+
+<section>
+<h2>八、三位大师独立评估 + 红队（Phase 5）</h2>
+<h3>8.1 独立评估</h3>
+<table>
+<tr><th>大师</th><th>裁决</th><th>核心逻辑</th></tr>
+<tr><td>Buffett（质地3.5/成长3.0/管理层3.5/价格1.0/赔率1.5）</td><td>排除（置信度高）</td><td>好生意坏价格的教科书样本；「一杯牛奶标了白酒的价」；量贡献 82% 是转嫁不是定价权；在等恐慌日不是买动量中段</td></tr>
+<tr><td>Duan（质地4.0/成长3.0/管理层3.0/价格1.0/赔率1.5）</td><td>排除（置信度高）</td><td>不收敛下限 3.68% 连无风险利率都不到——付 39.08 等于赌下一个买家；本分算法是五毛买一块，现在方向反了</td></tr>
+<tr><td>Lilu（质地3.5/成长2.5/管理层3.5/价格1.0/赔率1.5）</td><td>排除（置信度高）</td><td>loss_probability 100% 是算术不是观点；食品安全尾部有 2008 实证形态；implied-growth 无解 → 情绪定价不可下注；等价格触发器不等质地证伪</td></tr>
+</table>
+<h3>8.2 红队五攻五防（节选）</h3>
+<ul>
+<li><b>「全市场都错就你严格？」</b>——implied-growth 已量化市场主张：base_oe 4,643（扣非 2.39 倍）vs 管理层预算 -9%；但排除不依赖「市场错」：不收敛下限 3.68% &lt; 无风险利率足以拒绝买入。<span class="ep">[E:scenarios_600887.json][E:business_drivers_600887.json]</span></li>
+<li><b>「基期选低了 25%（扣非 1,945）」</b>——双轨并列已登记（1,435/1,367）；扣非口径重算 ~16.4 元仍 &lt; 现价一半；费用化完毕解释不了 2.4 倍落差。<span class="ep">[E:metrics_600887.json][E:scenarios_600887.json]</span></li>
+<li><b>「净现金 90 亿加上就不贵了」</b>——敏感性 16.49 仍 &lt; 现价 58%；定增 50 亿专款专用；pe_trough 口径现金不参与倍数。<span class="ep">[E:scenarios_600887.json][E:financials_600887.json]</span></li>
+<li><b>「保守表演迎合 test_point」</b>——档位由管线算术唯一决定（无参数自由度）；悲观概率压到 10% 即可美化期望 IRR 而实际 30% 有拥挤定价证据；乐观情景 15.18 仍低于现价 61%——「压低乐观」在数学上不存在空间。<span class="ep">[E:scenarios_600887.json][E:adversarial_check.json]</span></li>
+</ul>
+</section>
+
+<section>
+<h2>九、持有体验预演 + 跟踪清单</h2>
+<p>若 2013-12-31 以 <span class="vnum" data-src="market_snapshot_600887_2013.json" data-path="price.value" data-fmt="num2">39.08</span> 买入并持有 5 年：①股息率 <span class="vnum" data-src="market_snapshot_600887_2013.json" data-path="dividend_yield_frac" data-fmt="pct2">0.68%</span>——现金回报近零；②不收敛下限 3.68% &lt; 无风险 ~4.6%——「等得起」的机制不存在；③基准路径 5 年终值 19.45 元（-50.2%）；④乐观路径终值 24.45 元（-37.4%）——<b>即便最乐观情景仍亏 37%，买入价已透支全部乐观</b>；⑤买点在 YTD <span class="vnum" data-src="market_snapshot_600887_2013.json" data-path="ytd_return_2013.price_return_2013_pct" data-fmt="num0">78</span>% 涨幅后、52 周分位 <span class="vnum" data-src="market_snapshot_600887_2013.json" data-path="price_position_52w" data-fmt="pct1">56.6%</span>——动量中段，食品安全单事件可瞬间击穿悲观锚。<span class="ep">[E:scenarios_600887.json][E:expected_return_600887.json][E:market_snapshot_600887_2013.json]</span></p>
+<p><b>跟踪清单</b>：2014-04 2013 年报（奶荒全年读数/capex 执行）；每季原奶价格 yoy / 毛利率环比 / 预收款变动；2014 中定增募投进度；食品安全舆情（F4 触发器）；持仓纪律：排除档零仓位，仅留 F1 价格触发器（&lt;7.25 元 = 基准 IV 60%，narrow 40% 达标时重估）。</p>
+</section>
+
+<section>
+<h2>十、数据引用附录（全部 publish_date ≤ 2013-12-31）</h2>
+<ul>
+<li>2012 年报（巨潮 62439793）：收入 41,991 / 归母 1,717 / 量价分解 +44.71=量29.31+价15.40 / capex 3,057</li>
+<li>2011 年报（巨潮 60601974）：量价分解 +77.21=量47.80+价29.41（成本侧对照为量价成色证据）</li>
+<li>2010/2009/2008 年报（巨潮 59371130 / 57876328 / 52003545）：序列与 2008 毁灭年</li>
+<li>2013 三季报：9M13 收入 +7.01% / 毛利率 -0.72pp / 货币资金 11,858.87 / 实收资本 2,042,914,022 / 行权原文 L239</li>
+<li>非公开发行公告（2013）：定增 50 亿</li>
+<li>行情：腾讯行情日K fqt=0（2013-12-31 收盘 39.08）+ 月K 52 周区间；防前视：2014-01 及以后零引用</li>
+</ul>
+<p class="note">数字校验：本报告全部关键结论数字以 vnum 溯源标签绑定底稿，图表数组以 vchart 锚点绑定 chart_series——<b>数字校验通过（verify_report.py 退出码 0）</b>。核验强度 B（窗口 5 年）：结论稳健性依据「四口径全部拒绝 + 含毁灭年与高点年 + 排除由算术落差决定」三点成立。</p>
+</section>
+
+</div>
+<script>
+function initCharts(){
+if(typeof echarts==='undefined'){return;}
+function base(x){return {tooltip:{trigger:'axis'},grid:{left:60,right:30,top:36,bottom:28},xAxis:{type:'category',data:x},yAxis:{type:'value'}};}
+var years=['2008','2009','2010','2011','2012'];
+echarts.init(document.getElementById('c1')).setOption(Object.assign(base(years),{legend:{data:['收入(百万)','净利率%']},series:[<!-- vchart src=metrics_600887.json path=chart_series.revenue -->
+{name:'收入(百万)',type:'bar',data:[21658.59,24323.55,29665.0,37451.37,41990.69]},<!-- vchart src=metrics_600887.json path=chart_series.net_margin scale=100 -->
+{name:'净利率%',type:'line',yAxisIndex:0,data:[-7.79,2.66,2.62,4.83,4.09]}]}));
+echarts.init(document.getElementById('c2')).setOption(Object.assign(base(years),{legend:{data:['业主盈利OE(百万)','FCF(百万)']},series:[<!-- vchart src=metrics_600887.json path=chart_series.owner_earnings -->
+{name:'业主盈利OE(百万)',type:'bar',data:[-611.8,1332.68,836.94,3130.04,1366.9]},<!-- vchart src=metrics_600887.json path=chart_series.fcf -->
+{name:'FCF(百万)',type:'line',data:[-780.42,1406.83,-935.43,194.38,-648.46]}]}));
+}
+window.addEventListener('load',initCharts);
+</script>
+</body>
+</html>
