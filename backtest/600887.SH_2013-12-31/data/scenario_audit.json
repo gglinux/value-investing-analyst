@@ -1,0 +1,58 @@
+{
+  "file": "data/scenarios_600887.json",
+  "errors": [],
+  "warnings": [],
+  "codes": [],
+  "unmapped_messages": [],
+  "diagnostics": {
+    "scenario_values": {
+      "悲观": 7.14,
+      "基准": 12.08,
+      "乐观": 15.18
+    },
+    "bear_name": "悲观",
+    "base_name": "基准",
+    "margin_of_safety_vs_base": -2.2350993377483444,
+    "bear_method": "pe_trough_multiple",
+    "bear_recomputed_value": 7.14,
+    "bear_recompute_deviation": 0.0,
+    "discount_rate_floor": 0.1,
+    "discount_rate_floor_basis": "硬下限 10%",
+    "bear_stressed": [
+      "食品安全尾部事件再现（RF6 强制情景要件）：区域事件+12 个月信任修复期，盈利腰斩至 972.5 百万（2008 实证：单一事件吞噬全年利润）",
+      "原奶成本高位全年化+2013 投产产能爬坡失败：毛利率恢复中断，9M13 已 −0.72pp 的趋势恶化",
+      "高端消费反腐压制延续+进口奶冲击：Q3 单季 +7.01% 的增速放缓固化，收入增速降至个位数",
+      "市场对乳企品牌重新定价：PE 压至 15x（历史下沿 18x 之下），扩张期股本摊薄（2.0 倍/5 年）继续稀释每股价值"
+    ],
+    "bear_base_ratio": 0.5910596026490066,
+    "non_operating_addback_per_share": {
+      "悲观": 0.0,
+      "基准": 0.0,
+      "乐观": 0.0
+    },
+    "bear_vs_price": 0.1827021494370522,
+    "probability_deviations": {},
+    "intrinsic_value_growth": 0.03,
+    "iv_growth_evidence": "每股内在价值长期增速 3%（保守合成）：收入端 fade 终点取管理层 2013 预算增速 9.7%（458 亿经营计划，business_drivers mgmt_plan_2013）向乳业成熟期名义增速 4-6% 收敛的中值 5% 量级",
+    "revenue_decline_streak": 0,
+    "core_driver_decline_years": null,
+    "peak_stagnation": {
+      "peak_year": 2012,
+      "peak_revenue": 41990.69,
+      "latest_revenue": 41990.69,
+      "drawdown_from_peak": 0.0,
+      "years_since_peak": 0,
+      "stagnating": false,
+      "thresholds": {
+        "min_drawdown": 0.1,
+        "min_years_since_peak": 3
+      }
+    },
+    "decline_streak_used": 0,
+    "shrinking_reasons": [],
+    "value_trap_triggered": false,
+    "dividend_yield": 0.00676,
+    "dividend_yield_basis": "ttm_paid"
+  },
+  "passed": true
+}

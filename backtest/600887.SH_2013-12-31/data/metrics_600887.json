@@ -23,29 +23,29 @@
       "year": 2008,
       "revenue": 21658.59,
       "net_income": -1687.45,
-      "nopat": -1687.45,
-      "invested_capital": null,
+      "nopat": -1676.6125,
+      "invested_capital": 2866.03,
       "equity": 2789.26,
       "roic": null,
       "roe": null,
       "gross_margin": null,
       "net_margin": -0.0779113506465564,
-      "owner_earnings": null,
+      "owner_earnings": -611.7999999999997,
       "capex_total": 963.0,
-      "maintenance_capex_used": 1576.7854643493592,
-      "growth_capex_used": -613.7854643493592,
+      "maintenance_capex_used": 517.83,
+      "growth_capex_used": 445.16999999999996,
       "capex_split_basis": "启发式估算（capex/收入比中位数，封顶D&A）",
       "fcf": -780.42,
       "fcf_true_range": [
-        -1394.2054643493593,
-        -780.42
+        -780.42,
+        -335.25
       ],
       "fcf_to_ni": 0.46248481436487004,
       "ocf_to_ni": -0.10819876144478355,
       "shares_diluted": 799.32,
       "rev_ps": 27.096269328929587,
       "eps": -2.1111069408997647,
-      "oe_ps": null,
+      "oe_ps": -0.7654005905019262,
       "bvps": 3.489541109943452,
       "roiic_3y": null
     },
@@ -53,29 +53,29 @@
       "year": 2009,
       "revenue": 24323.55,
       "net_income": 647.66,
-      "nopat": 647.66,
-      "invested_capital": null,
+      "nopat": 664.4599999999999,
+      "invested_capital": 2194.95,
       "equity": 3442.96,
-      "roic": null,
+      "roic": 0.2625815553509399,
       "roe": 0.2078424702593939,
       "gross_margin": null,
       "net_margin": 0.026626869844245598,
-      "owner_earnings": null,
+      "owner_earnings": 1332.6799999999998,
       "capex_total": 622.0,
-      "maintenance_capex_used": 1770.7994879341109,
-      "growth_capex_used": -1148.7994879341109,
+      "maintenance_capex_used": 491.52,
+      "growth_capex_used": 130.48000000000002,
       "capex_split_basis": "启发式估算（capex/收入比中位数，封顶D&A）",
       "fcf": 1406.83,
       "fcf_true_range": [
-        258.03051206588907,
-        1406.83
+        1406.83,
+        1537.31
       ],
       "fcf_to_ni": 2.172173671370781,
       "ocf_to_ni": 3.132554117901368,
       "shares_diluted": 799.32,
       "rev_ps": 30.4303032577691,
       "eps": 0.8102637241655406,
-      "oe_ps": null,
+      "oe_ps": 1.6672671771005352,
       "bvps": 4.307361257068508,
       "roiic_3y": null
     },
@@ -83,29 +83,29 @@
       "year": 2010,
       "revenue": 29665.0,
       "net_income": 777.2,
-      "nopat": 777.2,
-      "invested_capital": null,
+      "nopat": 761.6675,
+      "invested_capital": 3682.6100000000006,
       "equity": 4218.52,
-      "roic": null,
+      "roic": 0.2591781283389706,
       "roe": 0.20288508225564772,
       "gross_margin": null,
       "net_margin": 0.026199224675543573,
-      "owner_earnings": null,
+      "owner_earnings": 836.94,
       "capex_total": 2410.0,
-      "maintenance_capex_used": 2159.6669404575155,
-      "growth_capex_used": 250.33305954248453,
+      "maintenance_capex_used": 610.0,
+      "growth_capex_used": 1800.0,
       "capex_split_basis": "启发式估算（capex/收入比中位数，封顶D&A）",
       "fcf": -935.4300000000001,
       "fcf_true_range": [
         -935.4300000000001,
-        -685.0969404575155
+        864.5699999999999
       ],
       "fcf_to_ni": -1.2035898095728255,
       "ocf_to_ni": 1.8972851260936694,
       "shares_diluted": 799.32,
       "rev_ps": 37.11279587649502,
       "eps": 0.97232647750588,
-      "oe_ps": null,
+      "oe_ps": 1.0470650052544663,
       "bvps": 5.277635990592003,
       "roiic_3y": null
     },
@@ -113,58 +113,61 @@
       "year": 2011,
       "revenue": 37451.37,
       "net_income": 1809.22,
-      "nopat": 1809.22,
-      "invested_capital": null,
+      "nopat": 1772.3500000000001,
+      "invested_capital": 5102.88,
       "equity": 6023.85,
-      "roic": null,
+      "roic": 0.40347208863705947,
       "roe": 0.35328151589915224,
       "gross_margin": null,
       "net_margin": 0.04830851314651506,
-      "owner_earnings": null,
+      "owner_earnings": 3130.04,
       "capex_total": 3476.0,
-      "maintenance_capex_used": 2726.5290970450833,
-      "growth_capex_used": 749.4709029549167,
+      "maintenance_capex_used": 731.05,
+      "growth_capex_used": 2744.95,
       "capex_split_basis": "启发式估算（capex/收入比中位数，封顶D&A）",
       "fcf": 194.3800000000001,
       "fcf_true_range": [
         194.3800000000001,
-        943.8509029549168
+        2939.33
       ],
       "fcf_to_ni": 0.10743856468533407,
       "ocf_to_ni": 2.028708504217287,
       "shares_diluted": 1598.65,
       "rev_ps": 23.426872673818536,
       "eps": 1.1317173865448973,
-      "oe_ps": null,
+      "oe_ps": 1.957927000907015,
       "bvps": 3.768085572201545,
-      "roiic_3y": null
+      "roiic_3y": 1.541883675704674
     },
     {
       "year": 2012,
       "revenue": 41990.69,
       "net_income": 1717.21,
-      "nopat": 1717.21,
-      "invested_capital": null,
+      "nopat": 1754.08,
+      "invested_capital": 7915.669999999999,
       "equity": 7334.9,
-      "roic": null,
+      "roic": 0.2694739429506358,
       "roe": 0.2570914194816132,
       "gross_margin": null,
       "net_margin": 0.04089501744315228,
-      "owner_earnings": null,
+      "owner_earnings": 1366.9,
       "capex_total": 3057.0,
-      "maintenance_capex_used": 3057.0,
-      "growth_capex_used": 0.0,
+      "maintenance_capex_used": 914.54,
+      "growth_capex_used": 2142.46,
       "capex_split_basis": "启发式估算（capex/收入比中位数，封顶D&A）",
       "fcf": -648.46,
-      "fcf_true_range": null,
+      "fcf_true_range": [
+        -648.46,
+        1494.0
+      ],
       "fcf_to_ni": -0.3776241694376343,
       "ocf_to_ni": 1.4025890834551393,
       "shares_diluted": 1598.65,
       "rev_ps": 26.26634347730898,
       "eps": 1.0741625746723797,
-      "oe_ps": null,
+      "oe_ps": 0.8550339348825572,
       "bvps": 4.588183780064429,
-      "roiic_3y": null
+      "roiic_3y": 0.19046903187011424
     }
   ],
   "summary": {
@@ -181,8 +184,11 @@
       "bvps": 0.07082406222928372
     },
     "share_count_change": 2.000012510634039,
-    "roic_avg_5y": null,
-    "roic_min_max_5y": null
+    "roic_avg_5y": 0.2986764288194015,
+    "roic_min_max_5y": [
+      0.2591781283389706,
+      0.40347208863705947
+    ]
   },
   "normalization": {
     "status": "ok",
@@ -196,10 +202,10 @@
     "net_income_current": 1717.21,
     "net_income_normalized": 538.474117261311,
     "net_income_mid_cycle": 1118.0806373000653,
-    "oe_margin_avg": null,
-    "oe_current": null,
-    "oe_normalized": null,
-    "oe_mid_cycle": null,
+    "oe_margin_avg": 0.0341767722482193,
+    "oe_current": 1366.9,
+    "oe_normalized": 1435.1062486755798,
+    "oe_mid_cycle": 1366.9000000000003,
     "shares_diluted": 1598.65,
     "margin_trend": {
       "spearman_rho": 0.7999999999999998,
@@ -234,13 +240,32 @@
       ],
       "note": "序列含亏损年/剧烈波动年，全期平均利润率被结构性拉偏——normalized 口径偏离周期中枢，启用双轨基期"
     },
-    "oe_normalized_vs_current": null,
-    "oe_to_ni_conversion_latest": null,
-    "oe_normalized_hybrid": null,
-    "oe_normalized_hybrid_vs_current": null,
-    "base_oe_recommended": null,
-    "base_oe_range": null,
-    "base_oe_recommended_basis": "正常化基期为非正值——历史长期不赚钱，当期高盈利缺乏历史支撑。禁止用当期基期做 DCF，应改用反向 DCF + 单位经济外推，并在报告显著标注该限制"
+    "oe_normalized_vs_current": 1.049898491971307,
+    "oe_to_ni_conversion_latest": 0.7960004891655651,
+    "oe_normalized_hybrid": 428.6256607429994,
+    "oe_normalized_hybrid_vs_current": 0.31357499505669717,
+    "base_oe_recommended": 1435.1062486755798,
+    "base_oe_range": [
+      428.6256607429994,
+      1435.1062486755798
+    ],
+    "base_oe_recommended_basis": "正常化混合口径（当期处周期高位，禁用当期基期；区间下界为历史OE利润率均值口径）",
+    "base_oe_dual_track": {
+      "trigger": "both",
+      "trigger_reasons": [
+        "趋势检验判为结构性改善（秩相关 +0.80、穿越均值 1 次、末端连续高于均值 4 年，置信度高）",
+        "序列含均值扭曲年（亏损/±50% 突变）"
+      ],
+      "main": {
+        "basis": "正常化（纪律主轨）",
+        "value": 1435.1062486755798
+      },
+      "cross": {
+        "basis": "当期（交叉轨）",
+        "value": 1366.9
+      },
+      "adjudication": "'周期高位'判定存疑，可能是结构性变化/商业模式换挡的误报。报告必须并列两轨估值并论证：当期利润率是周期顶（用主轨）还是结构性新常态（可向交叉轨靠拢）；证据看利润率来源（提价权/份额/收入结构升级 = 结构性，行业景气/补贴/一次性 = 周期性）"
+    }
   },
   "capital_allocation": {
     "cum_ocf": 9764.9,
@@ -256,12 +281,12 @@
   },
   "owner_yield": {
     "market_cap": 79837.28,
-    "owner_earnings_latest": null,
-    "owner_yield_current": null,
-    "owner_earnings_normalized": null,
-    "owner_yield_normalized": null,
-    "payback_years": null,
-    "basis": "current",
+    "owner_earnings_latest": 1366.9,
+    "owner_yield_current": 0.017121074265055124,
+    "owner_earnings_normalized": 1435.1062486755798,
+    "owner_yield_normalized": 0.01797539005181013,
+    "payback_years": 55.631616177324595,
+    "basis": "normalized",
     "cash_backed": false,
     "caveat": "所有者收益率不可落袋：累计自由现金流对股东回报覆盖仅 -0.83x（<1.0），Owner Earnings 未转化为可分配现金，该收益率与回本年数仅为账面推算，禁止据此判断低估",
     "pb": 10.884576476843584
@@ -311,24 +336,24 @@
     ],
     "roic": [
       null,
-      null,
-      null,
-      null,
-      null
+      0.2625815553509399,
+      0.2591781283389706,
+      0.40347208863705947,
+      0.2694739429506358
     ],
     "roiic_3y": [
       null,
       null,
       null,
-      null,
-      null
+      1.541883675704674,
+      0.19046903187011424
     ],
     "owner_earnings": [
-      null,
-      null,
-      null,
-      null,
-      null
+      -611.7999999999997,
+      1332.6799999999998,
+      836.94,
+      3130.04,
+      1366.9
     ],
     "fcf": [
       -780.42,
@@ -338,18 +363,18 @@
       -648.46
     ],
     "fcf_low": [
-      -1394.2054643493593,
-      258.03051206588907,
+      -780.42,
+      1406.83,
       -935.4300000000001,
       194.3800000000001,
       -648.46
     ],
     "fcf_high": [
-      -780.42,
-      1406.83,
-      -685.0969404575155,
-      943.8509029549168,
-      -648.46
+      -335.25,
+      1537.31,
+      864.5699999999999,
+      2939.33,
+      1494.0
     ],
     "eps": [
       -2.1111069408997647,
@@ -359,11 +384,11 @@
       1.0741625746723797
     ],
     "oe_ps": [
-      null,
-      null,
-      null,
-      null,
-      null
+      -0.7654005905019262,
+      1.6672671771005352,
+      1.0470650052544663,
+      1.957927000907015,
+      0.8550339348825572
     ],
     "bvps": [
       3.489541109943452,
@@ -383,14 +408,18 @@
   "alerts": [
     "稀释警报：收入总量CAGR 18.0% 显著高于每股CAGR -0.8%，增长被增发摊薄",
     "股本膨胀警报：期间股本增至 2.00 倍",
-    "周期高位警报：最新净利率 4.1% 是全期均值 1.3% 的 3.19 倍，当期 Owner Earnings 禁止直接作为 DCF 基期；正常化基期区间 不可用（正常化基期为非正值）",
-    "利润率形状检验：结构性改善（秩相关 +0.80、穿越均值 1 次、末端连续高于均值 4 年，置信度高）——利润率单向上行且未回归均值——全期均值不是周期中枢，而是公司几年前的盈利能力。强制正常化到均值会系统性低估内在价值"
+    "周期高位警报：最新净利率 4.1% 是全期均值 1.3% 的 3.19 倍，当期 Owner Earnings 禁止直接作为 DCF 基期；正常化基期区间 429~1,435（推荐值为当期的 105%）",
+    "双轨基期提示（趋势检验判为结构性改善（秩相关 +0.80、穿越均值 1 次、末端连续高于均值 4 年，置信度高）；序列含均值扭曲年（亏损/±50% 突变））：'周期高位'可能是结构性变化的误报——主轨正常化 1,435 / 交叉轨当期 1,367，报告须并列两轨估值并论证利润率来源（提价权/份额/结构升级 = 结构性，景气/补贴/一次性 = 周期性）",
+    "利润率形状检验：结构性改善（秩相关 +0.80、穿越均值 1 次、末端连续高于均值 4 年，置信度高）——利润率单向上行且未回归均值——全期均值不是周期中枢，而是公司几年前的盈利能力。强制正常化到均值会系统性低估内在价值",
+    "量纲哨兵：回本年数 56 年——这类派生值出现时，market_cap 的单位错位（亿/百万混淆）是最常见原因，请先核对 market_cap ≈ 股价 × 股本 是否自洽，再谈估值"
   ],
   "alert_codes": [
     "M_DILUTION",
     "M_SHARE_INFLATION",
     "NORM_CYCLE_PEAK",
-    "NORM_MARGIN_SHAPE"
+    "NORM_DUAL_TRACK",
+    "NORM_MARGIN_SHAPE",
+    "M_UNIT_SUSPECT"
   ],
   "alerts_structured": [
     {
@@ -406,12 +435,22 @@
     {
       "code": "NORM_CYCLE_PEAK",
       "level": "ALERT",
-      "msg": "周期高位警报：最新净利率 4.1% 是全期均值 1.3% 的 3.19 倍，当期 Owner Earnings 禁止直接作为 DCF 基期；正常化基期区间 不可用（正常化基期为非正值）"
+      "msg": "周期高位警报：最新净利率 4.1% 是全期均值 1.3% 的 3.19 倍，当期 Owner Earnings 禁止直接作为 DCF 基期；正常化基期区间 429~1,435（推荐值为当期的 105%）"
+    },
+    {
+      "code": "NORM_DUAL_TRACK",
+      "level": "ALERT",
+      "msg": "双轨基期提示（趋势检验判为结构性改善（秩相关 +0.80、穿越均值 1 次、末端连续高于均值 4 年，置信度高）；序列含均值扭曲年（亏损/±50% 突变））：'周期高位'可能是结构性变化的误报——主轨正常化 1,435 / 交叉轨当期 1,367，报告须并列两轨估值并论证利润率来源（提价权/份额/结构升级 = 结构性，景气/补贴/一次性 = 周期性）"
     },
     {
       "code": "NORM_MARGIN_SHAPE",
       "level": "ALERT",
       "msg": "利润率形状检验：结构性改善（秩相关 +0.80、穿越均值 1 次、末端连续高于均值 4 年，置信度高）——利润率单向上行且未回归均值——全期均值不是周期中枢，而是公司几年前的盈利能力。强制正常化到均值会系统性低估内在价值"
+    },
+    {
+      "code": "M_UNIT_SUSPECT",
+      "level": "ALERT",
+      "msg": "量纲哨兵：回本年数 56 年——这类派生值出现时，market_cap 的单位错位（亿/百万混淆）是最常见原因，请先核对 market_cap ≈ 股价 × 股本 是否自洽，再谈估值"
     }
   ],
   "exemptions": {
@@ -440,15 +479,15 @@
   },
   "warnings": [
     "2008: EBIT 缺失，NOPAT 用净利润+税后利息近似",
-    "2008: capex未披露拆分，按启发式估算（capex/收入比中位数，封顶D&A）估维持性 ≈1576.8",
+    "2008: capex未披露拆分，按启发式估算（capex/收入比中位数，封顶D&A）估维持性 ≈517.8",
     "2009: EBIT 缺失，NOPAT 用净利润+税后利息近似",
-    "2009: capex未披露拆分，按启发式估算（capex/收入比中位数，封顶D&A）估维持性 ≈1770.8",
+    "2009: capex未披露拆分，按启发式估算（capex/收入比中位数，封顶D&A）估维持性 ≈491.5",
     "2010: EBIT 缺失，NOPAT 用净利润+税后利息近似",
-    "2010: capex未披露拆分，按启发式估算（capex/收入比中位数，封顶D&A）估维持性 ≈2159.7",
+    "2010: capex未披露拆分，按启发式估算（capex/收入比中位数，封顶D&A）估维持性 ≈610.0",
     "2011: EBIT 缺失，NOPAT 用净利润+税后利息近似",
-    "2011: capex未披露拆分，按启发式估算（capex/收入比中位数，封顶D&A）估维持性 ≈2726.5",
+    "2011: capex未披露拆分，按启发式估算（capex/收入比中位数，封顶D&A）估维持性 ≈731.0",
     "2012: EBIT 缺失，NOPAT 用净利润+税后利息近似",
-    "2012: capex未披露拆分，按启发式估算（capex/收入比中位数，封顶D&A）估维持性 ≈3057.0",
+    "2012: capex未披露拆分，按启发式估算（capex/收入比中位数，封顶D&A）估维持性 ≈914.5",
     "再投入型公司豁免（EX_REINVEST_GROWTH）：经营现金流全期无负值、累计资本开支/累计经营现金流 108%（造血几乎全部主动再投入）、最新年收入同比正增长且 3 年 CAGR 20.0% ≥10%——增长中的再投入属主动扩张特征，烧钱告警族（分红幻觉/利润含金量/所有者收益率不可落袋）不作为告警触发，仅在此留痕供人工判读。本豁免不改变闸门数学与档位判别；所有者收益仍须按可落袋口径复核。已知代理误差：周期股扩张期年份可能被误豁免。"
   ],
   "provenance": {

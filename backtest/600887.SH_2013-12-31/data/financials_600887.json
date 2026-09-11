@@ -25,7 +25,12 @@
    "dividends_paid": 0.0,
    "source_level": "A",
    "source_note": "2008 年报（巨潮 static.cninfo.com.cn/finalpage/2009-04-30/52003545.PDF）近三年主要会计数据表；capex 为腾讯 F10 自由现金流反推（OCF−FCF），B 级衍生，spike_note 登记；total_liabilities 修正为 ta−te 口径（原纯负债 8,552.92，差额 438.3 为 NCI，equity_note 口径声明）",
-   "shares_diluted": 799.32
+   "shares_diluted": 799.32,
+   "d_and_a": 517.83,
+   "wc_change": -1075.65,
+   "cash": 2774.43,
+   "total_debt": 2851.2,
+   "interest_expense": 14.45
   },
   {
    "year": 2009,
@@ -43,7 +48,12 @@
    "dividends_paid": 0.0,
    "source_level": "A",
    "source_note": "2009 年报（腾讯 F10 财报表 20100427 发布，收入/归母/OCF/资产与 2010 年报摘要交叉一致）；capex B 级衍生；total_liabilities 为 ta−te 口径（差额 267 为 NCI）",
-   "shares_diluted": 799.32
+   "shares_diluted": 799.32,
+   "d_and_a": 491.52,
+   "wc_change": -685.02,
+   "cash": 4113.47,
+   "total_debt": 2865.46,
+   "interest_expense": 22.4
   },
   {
    "year": 2010,
@@ -61,7 +71,12 @@
    "dividends_paid": 0.0,
    "source_level": "A",
    "source_note": "2010 年报摘要（上交所/腾讯 F10 20110430，与 2012 年报 2010 列完全一致）；capex B 级衍生；total_liabilities 为 ta−te 口径（差额 293.5 为 NCI）",
-   "shares_diluted": 799.32
+   "shares_diluted": 799.32,
+   "d_and_a": 610.0,
+   "wc_change": -59.74,
+   "cash": 3341.74,
+   "total_debt": 2805.83,
+   "interest_expense": -20.71
   },
   {
    "year": 2011,
@@ -79,7 +94,12 @@
    "dividends_paid": 399.66,
    "source_level": "A",
    "source_note": "2012 年报 2011 列（上交所 600887_2012_n.pdf）+ 2011 年度红利 399,661,375.00 元（2012 年报利润分配段 A 级原文）；capex 为 2012 年报投资活动现金流量净额 −3,475,644,723.35 绝对值（A 级科目，含少量理财净额口径 note）",
-   "shares_diluted": 1598.65
+   "shares_diluted": 1598.65,
+   "d_and_a": 731.05,
+   "wc_change": -1320.82,
+   "cash": 3921.13,
+   "total_debt": 3000.16,
+   "interest_expense": -49.16
   },
   {
    "year": 2012,
@@ -97,7 +117,12 @@
    "dividends_paid": 523.84,
    "source_level": "A",
    "source_note": "2012 年报（上交所 600887_2012_n.pdf / 巨潮 62439793.PDF）主要会计数据表；capex 为投资活动现金流量净额 −3,057,220,454.14 绝对值（A 级科目）；dividends 为 2012 年度分配预案 523,840,240.00（2013 年内实施，A 级原文）；shares_basic 为非公开发行后总股本 1,870,858,000（A 级）；shares_basic 修正登记：2012 年末实际总股本 1,598,645,500（定增 2013-01-10 完成，1,870,858,000 为定增后分红基数——2012 年报利润分配预案原文口径）",
-   "shares_diluted": 1598.65
+   "shares_diluted": 1598.65,
+   "d_and_a": 914.54,
+   "wc_change": 350.31,
+   "cash": 2004.2,
+   "total_debt": 2584.97,
+   "interest_expense": 49.16
   }
  ],
  "interim_9M_2013": {
@@ -266,7 +291,8 @@
    "银河证券研报 2013-05-06（分部转录引公司公告）",
    "雪球年报笔记（capex/分部交叉，B 级）"
   ],
-  "price_source": "腾讯行情 web.ifzq.gtimg.cn 日K/月K fqt=0（东财 push2his 沙箱不可达，登记于 manifest）"
+  "price_source": "腾讯行情 web.ifzq.gtimg.cn 日K/月K fqt=0（东财 push2his 沙箱不可达，登记于 manifest）",
+  "balance_sheet_extracts": "d_and_a/cash/total_debt/interest_expense/wc_change 五字段：2008 年报(巨潮 52003545) 2010 年报(59371130 含 2009 对比列) 2012 年报(62439793 含 2011 对比列) 合并现金流量表补充资料+合并资产负债表逐项提取，A 级；wc_change = −(存货减少+经营性应收减少+经营性应付增加) 即营运资本占用变动(增加为正)；interest_expense 为利润表财务费用净额近似(2010/2011 净收入为负——利息收入>支出，对 NOPAT 影响 <0.5%)；total_debt = 短期借款+一年内到期非流动负债+长期借款+应付债券(各年应付债券均空白——伊利无存续转债，佐证 financing_events 勘误)"
  },
  "dilution_note": "annual 行 shares_diluted 以期末股本登记（无 A 级加权摊薄口径单列）；稀释 EPS 与基本 EPS 差异（2011: 1.06 vs 1.13、2012: 1.00 vs 1.07）主因股票期权激励的潜在股份（假定行权法），2013 年内行权 172,056,022 股落地（三季报 A 级，@6.49 元）；伊利无存续可转债（2011/2012 年报应付债券科目均空白）；每股估值统一使用 2013Q3 末股本 2,042.91 百万股（三季报合并资产负债表 A 级直读），口径归一登记于 spike_notes"
 }
