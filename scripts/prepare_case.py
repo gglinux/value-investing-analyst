@@ -322,6 +322,8 @@ def _seal_check(case_dir: Path, audit: bool = False) -> int:
 RULES_REGISTRY = [
     # 双闸门 / 估值
     ("mos_requirement", "reverse_dcf", "MOAT_MOS_REQUIREMENT"),
+    ("moat_score_wide_min", "reverse_dcf", "MOAT_SCORE_WIDE_MIN"),
+    ("moat_score_narrow_min", "reverse_dcf", "MOAT_SCORE_NARROW_MIN"),
     ("discount_rate_default", "reverse_dcf", "DEFAULT_DISCOUNT_RATE"),
     ("terminal_growth_default", "reverse_dcf", "DEFAULT_TERMINAL_GROWTH"),
     ("terminal_growth_cap", "reverse_dcf", "DEFAULT_TERMINAL_GROWTH_CAP"),

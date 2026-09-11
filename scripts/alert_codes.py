@@ -31,6 +31,7 @@
 | `GATE*` | 双闸门结果 | `reverse_dcf.py expected-return` 自动 |
 | `GROWTH_*` | 成长股通道门禁与诊断 | `reverse_dcf.py growth` 自动（UNANCHORED 为硬拒绝、人工登记） |
 | `SOTP_*` | 持仓型控股 SOTP 通道门禁与诊断 | `reverse_dcf.py sotp` 自动（TABLE_INVALID/UNANCHORED 为硬拒绝） |
+| `MOAT_*` | 护城河评级连续化门禁与披露 | `reverse_dcf.py expected-return --moat-score` 自动（BASIS_MISSING/WORD_MISMATCH 为硬拒绝） |
 
 `P0_*` 合计 6+20+4 = 30 项，与福耀案「0/6+0/20+0/4 = 0/30 误杀」口径一致。
 
@@ -208,6 +209,15 @@ ALERTS = {
     "GROWTH_ARRIVAL_PROB_ABOVE_BASERATE": (
         "growth", "到达概率高于收入基率锚：到达=增长兑现+利润率扩张+竞争存活的联合概率，"
         "不应超过同等规模公司达成所需 CAGR 的历史比例——超出须在 basis 中论证例外"),
+    # 2026-09-11 落码：直接给 --mature-oe（无 --mature-revenue）时锚不可用。
+    # 旧实现用 mature_oe/current_revenue 当所需 CAGR 代理是量纲错误（利润÷收入
+    # 不是增长倍数，典型输入下 ≤0 → 锚静默关闭，ABOVE_BASERATE/GAP 两码永不
+    # 触发——fail-open）。修法：删代理，此路径显式告警，到达概率须脱离锚独立论证。
+    "GROWTH_ANCHOR_UNAVAILABLE": (
+        "growth", "基率锚不可用：缺 --mature-revenue，无法反推与基率表同口径的所需收入"
+        "CAGR。GROWTH_ARRIVAL_PROB_ABOVE_BASERATE / GROWTH_IMPLIED_VS_BASERATE_GAP "
+        "在该路径下不会触发——到达概率须在 basis 中脱离基率锚独立论证"
+        "（--arrival-prob 纪律：无锚须论证）"),
     "GROWTH_PRICE_IMPLIES_CERTAIN_ARRIVAL": (
         "growth", "现价隐含到达概率 ≥100%：连『必然到达』都解释不了现价——透支信号，"
         "价格已定价通道外叙事"),
@@ -249,11 +259,38 @@ ALERTS = {
         "sotp", "现价隐含控股折价与采用折价分歧 ≥10pct：市场定价与框架假设的分歧"
         "显式化——若市场折价持续，可投资价值≈现价（无安全边际），是观察/拒绝"
         "档位带的分界输入"),
+    # 2026-09-11 落码：旧打印条件 implied_d >= 1.0 是死分支（implied=1−MC/NAV，
+    # MC>0 时恒 <1），极性沿袭 growth 通道 implied_p >= 1.0 未翻转。文案本意
+    # 描述的"市值不低于 NAV、市场未计折价甚至溢价"对应 implied_d <= 0——
+    # 伯克希尔式形态。修复同时补注册码，使回放断言可判定。
+    "SOTP_PRICE_IMPLIES_NO_DISCOUNT": (
+        "sotp", "现价隐含控股折价 ≤0：市值 ≥ equity NAV——市场未计任何控股折价"
+        "甚至给溢价（伯克希尔式形态）。SOTP 口径下无安全边际，『等折价收敛』"
+        "语义对该形态失效——这是通道不适用的信号，非便宜"),
     "SOTP_HOLDINGS_DOMINATED": (
         "sotp", "持仓净价值占 equity NAV ≥50%（非经营资产主导，OBS-2019-06-01 "
         "候选判据的通道内实现）：价值主体是资产变现而非经营复利，折价收敛不可控"
         "——通道档位上限小仓位试探（与成长通道终值纪律同源），OE 通道结论"
         "不进档位裁决"),
+
+    # ---- 护城河评级连续化（reverse_dcf.py expected-return --moat-score，
+    #      REQ-P1-03，2026-09-11）----
+    # 动因（神华 2015 案 diff.md 第 42 行实证）：评级词阶跃挂两道闸门门槛，
+    # "宽/窄"一字之差档位跳 2 档；persona 只能写"窄（偏宽）"这类自造中间词。
+    # 连续化后得分直接决定平滑门槛，前两码是入口硬拒绝（对齐 growth 通道的
+    # [E:] 纪律——得分与裸概率同为最易被叙事污染的参数）。
+    "MOAT_SCORE_BASIS_MISSING": (
+        "moat", "护城河得分无 [E:] 依据：--moat-score-basis 缺失或不含证据指针——"
+        "得分直接决定 MoS 门槛与闸门二①诊断门槛，裸分数禁止（与裸概率同罪），"
+        "引擎硬拒绝（exit 1）"),
+    "MOAT_SCORE_WORD_MISMATCH": (
+        "moat", "评级词与得分分带投影不一致：词必须等于投影（≥65 wide / "
+        "≥35 narrow / <35 none），禁止『词一套、分数一套』的双口径漂移，"
+        "引擎硬拒绝（exit 1）"),
+    "MOAT_BOUNDARY_BAND_DUAL": (
+        "moat", "得分落在边界带（分带边界 ±5 分）：闸门一门槛在窗口内随得分移动，"
+        "两个同样认真的分析师可能给出不同档位——双档报告强制输出并标注"
+        "『结论对护城河判断敏感』，并列披露优于强行定档（REQ-P1-03）"),
 }
 
 

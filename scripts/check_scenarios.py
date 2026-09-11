@@ -29,6 +29,8 @@ check_scenarios.py — 三情景底稿门禁（Phase 4 出口关卡，expected-r
 
 ═══ 十二项检查 ═══
 S1 schema：必填字段齐全、概率和为 1、现价为正、护城河档位合法。
+S1b 护城河定量得分（REQ-P1-03，可选）：给了 moat_score 即校验区间 / 词=分带投影 /
+   依据挂 [E:]——得分是平滑 MoS 门槛的直接输入，裸分数禁止。
 S2 悲观情景方法独立性：`method` 必须属独立方法白名单（不走 DCF 的另一条路），
    禁止 dcf_* 系列。基准/乐观可以用 DCF。
 S2b 悲观值算术重算：`method` 只是标签，标签与数字之间此前零算术关联——实测把
@@ -395,6 +397,40 @@ def check(path, metrics_path=None, snapshot_path=None):
         errors.append("S1 现价必须为正")
     if d["moat"] not in MOATS:
         errors.append(f"S1 护城河档位 `{d['moat']}` 非法，应为 {sorted(MOATS)}")
+    # ---- S1b 护城河定量得分（REQ-P1-03，可选字段；给了即校验）----
+    # 得分是 MoS 门槛的直接输入（平滑函数），纪律与裸概率同罪：
+    # 区间合法 / 词=分带投影 / 依据必须挂 [E:]。不给不报错（legacy 词路径合法）。
+    if d.get("moat_score") is not None:
+        try:
+            _ms = float(d["moat_score"])
+        except (TypeError, ValueError):
+            errors.append(f"S1b 护城河得分 `{d.get('moat_score')}` 非数值")
+            _ms = None
+        if _ms is not None:
+            if not (0 <= _ms <= 100):
+                errors.append(f"S1b 护城河得分 {_ms} 超出 0~100 区间")
+            else:
+                try:
+                    sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+                    from reverse_dcf import moat_word_from_score
+                    _proj = moat_word_from_score(_ms)
+                    if d["moat"] != _proj:
+                        errors.append(
+                            f"S1b 护城河评级 `{d['moat']}` 与得分 {_ms} 的分带投影 "
+                            f"`{_proj}` 不一致（MOAT_SCORE_WORD_MISMATCH）——评级词"
+                            "必须等于得分投影（≥65 wide / ≥35 narrow / <35 none），"
+                            "禁止两套口径并存")
+                except ImportError:
+                    warnings.append("S1b 无法导入 reverse_dcf 校验得分投影（分带校验跳过）")
+                _basis = d.get("moat_score_basis")
+                if not _basis or "[E:" not in str(_basis):
+                    errors.append(
+                        "S1b 护城河得分缺 `moat_score_basis` 或其不含 [E:] 证据指针"
+                        "（MOAT_SCORE_BASIS_MISSING）——得分直接决定 MoS 门槛，"
+                        "裸分数禁止，须登记三组件（超额回报证据/源硬度/定标与趋势）"
+                        "各自的证据来源")
+        if d.get("moat_sources") is not None and not isinstance(d.get("moat_sources"), list):
+            errors.append("S1b `moat_sources` 须为字符串数组（有硬证据的护城河源列表）")
     psum = sum(float(s.get("probability", 0)) for s in scen)
     if abs(psum - 1.0) > 1e-6:
         errors.append(f"S1 概率之和为 {psum:.4f}，必须等于 1")

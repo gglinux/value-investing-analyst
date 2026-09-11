@@ -217,16 +217,97 @@ DEFAULT_TERMINAL_GROWTH_CAP = 0.05  # 永续增速上限
 DEFAULT_MIN_SPREAD = 0.02           # r 与 g 最小间距
 
 
-def moat_irr_hurdle(moat, discount_rate, hold_years):
+def moat_irr_hurdle(moat, discount_rate, hold_years, score=None):
     """由闸门一的安全边际要求反推期望 IRR 门槛，保证两闸门自洽。
 
     返回 (mos_requirement, irr_hurdle)；moat='none' 时返回 (None, None)——
     无护城河不给买入结论，闸门讨论无意义。
+
+    REQ-P1-03：提供 score（0~100 定量得分）时门槛取平滑函数值而非阶跃常数；
+    仅给评级词时走 legacy 常数（12 案基线字节级兼容）。
     """
-    mos = MOAT_MOS_REQUIREMENT.get(moat)
+    mos = (mos_requirement_from_score(score) if score is not None
+           else MOAT_MOS_REQUIREMENT.get(moat))
     if mos is None:
         return None, None
     return mos, (1.0 + discount_rate) * (1.0 / (1.0 - mos)) ** (1.0 / hold_years) - 1.0
+
+
+# ── REQ-P1-03 护城河评级连续化（2026-09-11）──────────────────────────
+#
+# 动因（神华 2015 案 diff.md 第 42 行已实证）：评级为离散词且两道闸门门槛阶跃
+# 挂词——"窄"要 MoS 40%（实际 37.7%，差 2.3pct 被拦）、闸门二①要 21.83%，
+# 若评"宽"则 25%/16.5% 双双放行，一字之差档位跳 2 档；persona_buffett 只能写
+# "窄（偏宽）"这类自造中间词，正是阶跃传导逼出来的。边界处的不稳定让回测
+# 命中率对评级措辞极度敏感，掩盖真正的框架问题。
+#
+# 连续化设计（通道建设而非阈值放松——平滑函数在带内处处 ≥ legacy 常数，
+# 仅在锚点相等：宽带顶 s=100 → 25%，宽/窄边界 s=65 → 40% = 旧窄锚）：
+#   1. 护城河评级新增 0~100 定量得分（moat-framework 第二节半三组件评分：
+#      超额回报证据 / 源硬度 / 定标与趋势修正），评级词降级为得分的分带投影
+#      ——报告词表 {wide,narrow,none} 兼容不变，S1 校验不动；
+#   2. MoS 门槛 = 分段线性平滑函数（在分带边界连续）：
+#        s = 35（窄/无边界）→ 50%（可买带内最严）
+#        s = 65（宽/窄边界）→ 40%（旧窄锚）
+#        s = 100            → 25%（旧宽锚）
+#      s < 35 → None（不给买入结论——这是政策边界而非数值边界，由双档披露
+#      而非由连续性消除）；
+#   3. 得分落在边界带（边界 ±5 分窗口）→ 强制输出双档报告 +
+#      MOAT_BOUNDARY_BAND_DUAL，标注「结论对护城河判断敏感」——比强行给
+#      一个档位诚实，也让投资者知道该把精力花在哪个判断上；
+#   4. 得分与评级词同时给出时强制一致性校验（词必须等于分带投影），
+#      禁止两套口径并存；得分必须挂 [E:] 依据（裸分数禁止——它直接决定门槛）。
+MOAT_SCORE_WIDE_MIN = 65       # ≥65 → wide
+MOAT_SCORE_NARROW_MIN = 35     # ≥35 → narrow；<35 → none
+MOAT_SCORE_BOUNDARY_HALFWIDTH = 5.0   # 边界带半宽：边界 ±5 分内强制双档报告
+
+
+def mos_requirement_from_score(score):
+    """平滑 MoS 门槛（REQ-P1-03）：分段线性、分带边界处连续、带内 ≥ legacy。
+
+    s<35 → None（不给买入结论）；35→50%、65→40%、100→25%。
+    """
+    if score is None:
+        return None
+    if not (isinstance(score, (int, float)) and 0 <= score <= 100):
+        raise ValueError(f"护城河得分须为 0~100 的数值，收到 {score}")
+    if score < MOAT_SCORE_NARROW_MIN:
+        return None
+    if score < MOAT_SCORE_WIDE_MIN:
+        return (0.50 - (score - MOAT_SCORE_NARROW_MIN)
+                / (MOAT_SCORE_WIDE_MIN - MOAT_SCORE_NARROW_MIN) * 0.10)
+    return (0.40 - (score - MOAT_SCORE_WIDE_MIN)
+            / (100.0 - MOAT_SCORE_WIDE_MIN) * 0.15)
+
+
+def moat_word_from_score(score):
+    """得分的分带投影：≥65 wide / ≥35 narrow / <35 none（评级词的唯一合法来源）。"""
+    if score >= MOAT_SCORE_WIDE_MIN:
+        return "wide"
+    if score >= MOAT_SCORE_NARROW_MIN:
+        return "narrow"
+    return "none"
+
+
+def moat_boundary_band(score):
+    """边界带检测：得分落在任一分带边界 ±5 分窗口内 → 双档报告强制输出。
+
+    返回 dict：in_band / edge（分界分）/ edge_name / band（窗口）/ adjacent_words。
+    """
+    edges = (("narrow/wide", MOAT_SCORE_WIDE_MIN),
+             ("none/narrow", MOAT_SCORE_NARROW_MIN))
+    for edge_name, e in edges:
+        if abs(score - e) <= MOAT_SCORE_BOUNDARY_HALFWIDTH:
+            return {
+                "in_band": True, "edge": e, "edge_name": edge_name,
+                "band": [e - MOAT_SCORE_BOUNDARY_HALFWIDTH,
+                         e + MOAT_SCORE_BOUNDARY_HALFWIDTH],
+                "adjacent_words": tuple(edge_name.split("/")),
+                "halfwidth": MOAT_SCORE_BOUNDARY_HALFWIDTH,
+            }
+    return {"in_band": False, "edge": None, "edge_name": None,
+            "band": None, "adjacent_words": None,
+            "halfwidth": MOAT_SCORE_BOUNDARY_HALFWIDTH}
 
 
 # ── REQ-P1-01 成长股 / 再投入型估值通道（2026-09-11）────────────────────
@@ -367,7 +448,10 @@ def revenue_growth_base_rate(current_revenue, required_cagr, table=None):
     """
     table = table or REVENUE_CAGR_BASE_RATES
     meta = {"required_cagr": required_cagr, "interpolated": False}
-    if required_cagr is None or required_cagr <= 0:
+    if required_cagr is None:
+        meta["note"] = "缺成熟期收入口径（--mature-revenue），无法反推所需收入 CAGR"
+        return None, meta
+    if required_cagr <= 0:
         meta["note"] = "成熟态不高于当期规模，无增长基率约束"
         return None, meta
     b = current_revenue / 1000.0  # 百万 → 十亿（表格口径）
@@ -559,6 +643,7 @@ def sotp_channel_value(items, net_debt, holding_discount, operating_value=0.0):
 def expected_return(price, scenarios, hold_years, index_hurdle=0.09,
                     dividend_yield=0.0, discount_rate=0.10,
                     moat=None, iv_growth=None,
+                    moat_score=None, moat_score_basis=None, moat_sources=None,
                     floor_hurdle=DEFAULT_FLOOR_HURDLE, pessimistic_hurdle=0.0,
                     loss_prob_hurdle=DEFAULT_LOSS_PROB_HURDLE):
     """期望回报率引擎：把三情景估值转成"这笔钱年化几个点"。
@@ -683,7 +768,29 @@ def expected_return(price, scenarios, hold_years, index_hurdle=0.09,
     div_share = (dividend_yield / discount_rate) if discount_rate > 0 else None
 
     # ---- 闸门二三项（v2.15）----
-    mos_req, irr_hurdle = moat_irr_hurdle(moat, discount_rate, hold_years) if moat else (None, None)
+    # ── REQ-P1-03 护城河得分通道（连续化，2026-09-11）──
+    # 得分是门槛的直接输入：先校验（区间 / [E:] 依据 / 词一致性），再把闸门一
+    # 反推口径切到平滑函数。仅给词（无得分）时走 legacy 阶跃常数——12 案
+    # 基线字节级不变，得分是 opt-in 的新通道。
+    if moat_score is not None:
+        if not (isinstance(moat_score, (int, float)) and 0 <= moat_score <= 100):
+            raise SystemExit(f"错误：--moat-score 须为 0~100 的数值，收到 {moat_score}")
+        if not moat_score_basis or "[E:" not in moat_score_basis:
+            raise SystemExit(
+                "错误：--moat-score-basis 必填且须含 [E:] 证据指针——得分直接决定"
+                " MoS 门槛与闸门二①诊断门槛，裸分数与裸概率同罪，必须可审计"
+                "（注册码 MOAT_SCORE_BASIS_MISSING）")
+        _word_from_score = moat_word_from_score(moat_score)
+        if moat is not None and moat != _word_from_score:
+            raise SystemExit(
+                f"错误：--moat {moat} 与 --moat-score {moat_score} 的分带投影 "
+                f"'{_word_from_score}' 不一致（注册码 MOAT_SCORE_WORD_MISMATCH）——"
+                "评级词必须等于得分的分带投影（≥65 wide / ≥35 narrow / <35 none），"
+                "禁止两套口径并存")
+        moat = _word_from_score
+    mos_req, irr_hurdle = (moat_irr_hurdle(moat, discount_rate, hold_years,
+                                           score=moat_score)
+                           if moat else (None, None))
     floor = (dividend_yield + iv_growth) if iv_growth is not None else None
     gate2 = {
         "moat": moat,
@@ -828,12 +935,91 @@ def expected_return(price, scenarios, hold_years, index_hurdle=0.09,
         if eff_mos is not None and eff_mos - mos_req > 0.05:
             codes.append("GATE_EFFECTIVE_HURDLE_GAP")
 
+    # ── REQ-P1-03 护城河得分块 + 边界带双档报告 ──────────────────────
+    # 得分路径专属输出：平滑门槛、闸门一结论（MoS 按基准情景对现价）、
+    # 边界带检测；落在边界带（边界 ±5 分）时强制输出 ±5 分两侧的双档结论。
+    moat_score_block = None
+    if moat_score is not None:
+        band = moat_boundary_band(moat_score)
+        base_v = next((s["value_per_share"] for s in scenarios
+                       if s["name"] in ("基准", "base")), None)
+        mos_actual = (1.0 - price / base_v) if base_v else None
+        gate1_pass = ((mos_actual >= mos_req)
+                      if (mos_req is not None and mos_actual is not None) else None)
+        if moat == "none":
+            gate1_pass = False   # 不给买入结论覆盖闸门一
+        dual_rows, dual_report = [], None
+        if band["in_band"]:
+            for s_side in (moat_score - MOAT_SCORE_BOUNDARY_HALFWIDTH,
+                           moat_score + MOAT_SCORE_BOUNDARY_HALFWIDTH):
+                s_c = min(100.0, max(0.0, float(s_side)))
+                w_s = moat_word_from_score(s_c)
+                req_s = mos_requirement_from_score(s_c)
+                g1_s = ((mos_actual >= req_s)
+                        if (req_s is not None and mos_actual is not None) else None)
+                if w_s == "none":
+                    g1_s = False
+                # 闸门二参与判定四项不随得分变（①护城河反推门槛为诊断项），
+                # 唯一例外是 none 档的"不给买入结论"覆盖。
+                g2_s = False if w_s == "none" else gate2["pass"]
+                trig = (base_v * (1.0 - req_s)
+                        if (base_v and req_s is not None) else None)
+                if w_s == "none":
+                    tier_s = "不给买入结论（烟蒂式清算例外须独立论证）"
+                elif g1_s is not True:
+                    tier_s = (f"观察等价格（触发价 {trig:,.2f}）" if trig
+                              else "观察等价格")
+                elif g2_s is not True:
+                    tier_s = "观察等价格（闸门二不过，档位上限）"
+                else:
+                    tier_s = ("买入候选（小仓位试探起；核心买入须裁决层按"
+                              "核验强度/股东回报另行加码）")
+                dual_rows.append({
+                    "score_side": s_c, "word": w_s, "mos_requirement": req_s,
+                    "gate1_pass": g1_s, "gate2_pass": g2_s,
+                    "trigger_price": trig, "tier_suggestion": tier_s,
+                })
+            _reqs = [r["mos_requirement"] for r in dual_rows
+                     if r["mos_requirement"] is not None]
+            dual_report = {
+                "trigger": (f"得分 {moat_score} 落在 {band['edge_name']} 边界带 "
+                            f"{band['band']}（边界 {band['edge']} ±"
+                            f"{MOAT_SCORE_BOUNDARY_HALFWIDTH:.0f} 分）"),
+                "rows": dual_rows,
+                "sensitivity_note": (
+                    "结论对护城河判断敏感：±5 分的评分分歧即可把闸门一门槛在 "
+                    f"{min(_reqs):.1%}~{max(_reqs):.1%} 之间移动——两个同样认真的"
+                    "分析师可能给出不同档位。双档并列披露优于强行定档；本案"
+                    "最该花研究精力的判断就是护城河得分"),
+                "mandated_by": "REQ-P1-03（moat-framework 第二节半边界带纪律）",
+            }
+            codes.append("MOAT_BOUNDARY_BAND_DUAL")
+        moat_score_block = {
+            "score": moat_score,
+            "word": moat,
+            "sources": moat_sources,
+            "sources_count": (len(moat_sources) if moat_sources else None),
+            "score_basis": moat_score_basis,
+            "mos_requirement": mos_req,
+            "mos_requirement_function": (
+                "平滑分段线性（35→50%，65→40%，100→25%），带内 ≥ legacy 常数，"
+                "分带边界连续（REQ-P1-03）"),
+            "legacy_requirement": MOAT_MOS_REQUIREMENT.get(moat),
+            "gate2_diagnostic_hurdle": irr_hurdle,
+            "gate1_margin_of_safety": mos_actual,
+            "gate1_pass": gate1_pass,
+            "gate1_trigger_price": (base_v * (1.0 - mos_req)
+                                    if (base_v and mos_req is not None) else None),
+            "boundary_band": band,
+            "dual_report": dual_report,
+        }
+
     unknown = unknown_codes(codes)
     if unknown:
         raise KeyError(f"未注册的告警码 {unknown}，请先在 scripts/alert_codes.py 登记")
     gate2["codes"] = codes
 
-    return {
+    result = {
         "price": price, "hold_years": hold_years,
         "discount_rate": discount_rate,
         "dividend_yield": dividend_yield,
@@ -876,6 +1062,10 @@ def expected_return(price, scenarios, hold_years, index_hurdle=0.09,
                 "门槛须设在 r 之上才构成有效约束；下行指标（悲观 IRR/亏损概率/亏损跌幅）"
                 "不可由安全边际单调推出，是闸门二独立信息来源",
     }
+    # REQ-P1-03：得分路径才挂 moat_score 块——legacy 词路径输出字节级不变
+    if moat_score_block is not None:
+        result["moat_score"] = moat_score_block
+    return result
 
 
 def main():
@@ -945,6 +1135,19 @@ def main():
                     help="护城河档位。闸门二的期望 IRR 门槛由此从闸门一的安全边际要求"
                          "（宽 25% / 窄 40%）反推，保证两闸门自洽（r=10%/H=5 时为 "
                          "16.5% / 21.8%）。该项只是自洽性校验，独立信息在下面两项")
+    p3.add_argument("--moat-score", type=float,
+                    help="护城河定量得分 0~100（REQ-P1-03，moat-framework 第二节半"
+                         "三组件评分）。提供时 MoS 门槛走平滑函数（35→50%/65→40%/"
+                         "100→25%）而非阶跃常数，评级词必须等于得分的分带投影"
+                         "（≥65 wide / ≥35 narrow / <35 none）；落在边界带（边界 ±5 分）"
+                         "自动输出双档报告并标注敏感性")
+    p3.add_argument("--moat-score-basis",
+                    help="得分推导依据（给了 --moat-score 即必填，须含 [E:] 指针）——"
+                         "三组件（超额回报证据/源硬度/定标与趋势修正）各自的证据来源，"
+                         "裸分数禁止（得分直接决定门槛）")
+    p3.add_argument("--moat-sources",
+                    help="有硬证据的护城河源列表（逗号分隔，如 '成本优势,有效规模'）——"
+                         "五源支持数，信息项随得分一并落盘")
     p3.add_argument("--iv-growth", type=float,
                     help="基准情景下每股内在价值的长期增速（小数）。与股息率相加得"
                          "『价值不收敛下限』——折价永不收敛时的实际年化回报。"
@@ -974,7 +1177,9 @@ def main():
         "growth", help="成长股通道：成熟期稳态利润 × 到达概率折回，替代当期 OE 基期")
     p4.add_argument("--mature-oe", type=float,
                     help="成熟期稳态 Owner Earnings（与 market-cap 同币种同单位，建议百万）。"
-                         "与 --mature-revenue + --mature-oe-margin 二选一")
+                         "与 --mature-revenue + --mature-oe-margin 二选一。注意：走此直传路径"
+                         "而缺 --mature-revenue 时基率锚不可用（GROWTH_ANCHOR_UNAVAILABLE），"
+                         "到达概率须脱离锚独立论证；建议尽量给三段式收入口径以启用锚")
     p4.add_argument("--mature-revenue", type=float,
                     help="成熟期稳态收入（三段式第一二段：渗透率天花板 × 份额 × ARPU 的产出）")
     p4.add_argument("--mature-oe-margin", type=float,
@@ -990,8 +1195,10 @@ def main():
                     help="到达概率推导依据（必填，须含 [E:] 指针）——裸概率禁止，"
                          "它与情景概率同为最易被叙事污染的参数")
     p4.add_argument("--current-revenue", type=float, required=True,
-                    help="当期收入（与成熟态同币种；用于反推所需 CAGR 并查基率锚——"
-                         "到达概率与基率表挂钩的机器强制项）")
+                    help="当期收入（与成熟态同币种；与 --mature-revenue 联合反推所需 CAGR "
+                         "并查基率锚——到达概率与基率表挂钩的机器强制项。注意锚的完整"
+                         "前提是同时提供 --mature-revenue，否则触发 "
+                         "GROWTH_ANCHOR_UNAVAILABLE 而非静默无锚）")
     p4.add_argument("--base-rate-revenue-usd", type=float,
                     help="规模分档用的美元口径收入（百万）。基率表按美元标定，"
                          "报告币种非美元时须换算后传入，否则分档可能错带")
@@ -1078,6 +1285,11 @@ def main():
         price, hold_years = args.price, args.hold_years
         dividend_yield, discount_rate = args.dividend_yield, args.discount_rate
         moat, iv_growth = args.moat, args.iv_growth
+        moat_score = args.moat_score
+        moat_score_basis, moat_sources = args.moat_score_basis, None
+        if args.moat_sources:
+            moat_sources = [s.strip() for s in args.moat_sources.split(",")
+                            if s.strip()]
         if args.scenarios_file:
             # 单一事实源：口径全部取自已过门禁的 scenarios.json，禁止命令行手抄
             with open(args.scenarios_file, "r", encoding="utf-8") as f:
@@ -1091,6 +1303,12 @@ def main():
             moat = sd.get("moat", moat)
             if sd.get("intrinsic_value_growth") is not None:
                 iv_growth = float(sd["intrinsic_value_growth"])
+            # REQ-P1-03：得分三字段同样以 scenarios.json 为单一事实源
+            if sd.get("moat_score") is not None:
+                moat_score = float(sd["moat_score"])
+            moat_score_basis = sd.get("moat_score_basis", moat_score_basis)
+            if sd.get("moat_sources") is not None:
+                moat_sources = list(sd["moat_sources"])
             print(f"口径取自 {args.scenarios_file}（已过 check_scenarios 门禁）\n")
         else:
             if args.price is None:
@@ -1107,6 +1325,9 @@ def main():
         res = expected_return(price, scen, hold_years, args.index_hurdle,
                               dividend_yield, discount_rate,
                               moat=moat, iv_growth=iv_growth,
+                              moat_score=moat_score,
+                              moat_score_basis=moat_score_basis,
+                              moat_sources=moat_sources,
                               floor_hurdle=args.floor_hurdle,
                               pessimistic_hurdle=args.pessimistic_hurdle,
                               loss_prob_hurdle=args.loss_prob_hurdle)
@@ -1185,6 +1406,38 @@ def main():
                       f"回报也全押在『市场哪天承认我对』——这是价值陷阱的定量特征")
         else:
             print("  闸门二：不可评（缺必要输入，不得当作通过）")
+
+        # ---- REQ-P1-03 护城河得分与边界带双档报告 ----
+        ms = res.get("moat_score")
+        if ms:
+            print(f"\n=== 护城河定量得分（REQ-P1-03）===")
+            src_txt = (f"，五源支持 {ms['sources_count']} 源（{'+'.join(ms['sources'])}）"
+                       if ms.get("sources") else "")
+            print(f"  得分 {ms['score']:.0f}/100 → 评级 {ms['word']}{src_txt}")
+            req_txt = (f"{ms['mos_requirement']:.1%}" if ms["mos_requirement"] is not None
+                       else "不给买入结论（<35 分）")
+            leg_txt = (f"（legacy 阶跃值 {ms['legacy_requirement']:.0%}）"
+                       if ms["legacy_requirement"] is not None else "")
+            print(f"  平滑 MoS 门槛: {req_txt}{leg_txt}")
+            if ms["gate1_margin_of_safety"] is not None:
+                g1 = ms["gate1_pass"]
+                g1_mark = "✓" if g1 else "✗"
+                print(f"  闸门一: {g1_mark} MoS {ms['gate1_margin_of_safety']:.1%} vs 门槛 "
+                      f"{req_txt}"
+                      + (f"，触发价 {ms['gate1_trigger_price']:,.2f}"
+                         if ms.get("gate1_trigger_price") else ""))
+            dr = ms.get("dual_report")
+            if dr:
+                print(f"  ⚠ 边界带: {dr['trigger']}")
+                for r_ in dr["rows"]:
+                    w_cn = {"wide": "宽", "narrow": "窄", "none": "无"}.get(r_["word"], r_["word"])
+                    req_r = (f"{r_['mos_requirement']:.1%}" if r_["mos_requirement"] is not None
+                             else "不给买入结论")
+                    g1r = "✓" if r_["gate1_pass"] else "✗"
+                    g2r = "✓" if r_["gate2_pass"] else "✗"
+                    print(f"    - 得分 {r_['score_side']:.0f}（{w_cn}）: 闸门一 {g1r}"
+                          f"（门槛 {req_r}） 闸门二 {g2r} → {r_['tier_suggestion']}")
+                print(f"  敏感性: {dr['sensitivity_note']}")
         if args.output:
             with open(args.output, "w", encoding="utf-8") as f:
                 json.dump(res, f, ensure_ascii=False, indent=2)
@@ -1237,17 +1490,15 @@ def main():
         if args.base_rates_file:
             with open(args.base_rates_file, "r", encoding="utf-8") as _f:
                 table = json.load(_f)
-        # 所需 CAGR 优先用收入比值（与基率表口径一致）；直接给 --mature-oe 时
-        # 以 OE 增长作增长要求的代理并在输出标注（OE 含利润率扩张，会高估增速要求，
-        # 使锚偏紧——方向保守，可接受但须披露）。
-        if args.current_revenue > 0 and args.mature_revenue:
+        # 所需 CAGR 与基率表同口径（收入比值）。直接给 --mature-oe 而无
+        # --mature-revenue 时收入口径缺失、锚不可用——显式告警（GROWTH_ANCHOR_
+        # UNAVAILABLE）而非静默放行。旧实现用 mature_oe/current_revenue 当代理
+        # 是量纲错误：利润÷收入不是增长倍数，典型输入下 ≤0 → 锚静默关闭，
+        # 且其注释声称"偏紧——方向保守"与实际效果（偏松/关闭）恰好相反。
+        if args.mature_revenue and args.current_revenue > 0:
             required_cagr = (args.mature_revenue / args.current_revenue) ** (
                 1.0 / args.years_to_maturity) - 1.0
             cagr_basis = "revenue"
-        elif args.current_revenue > 0:
-            required_cagr = (mature_oe / args.current_revenue) ** (
-                1.0 / args.years_to_maturity) - 1.0
-            cagr_basis = "oe_proxy"
         else:
             required_cagr, cagr_basis = None, "unavailable"
         band_rev = args.base_rate_revenue_usd or args.current_revenue
@@ -1278,6 +1529,8 @@ def main():
             codes.append("GROWTH_IMPLIED_VS_BASERATE_GAP")
         if anchor is not None and args.arrival_prob > anchor:
             codes.append("GROWTH_ARRIVAL_PROB_ABOVE_BASERATE")
+        if cagr_basis == "unavailable":
+            codes.append("GROWTH_ANCHOR_UNAVAILABLE")
         unknown = unknown_codes(codes)
         if unknown:
             raise KeyError(f"未注册的告警码 {unknown}，请先在 scripts/alert_codes.py 登记")
@@ -1389,8 +1642,7 @@ def main():
         print(f"概率加权价值 : {res['probability_weighted_value']:,.0f}"
               + (f"（每股 {vps:,.2f}）" if vps else ""))
         if anchor is not None:
-            _cagr_label = {"revenue": "收入 CAGR", "oe_proxy": "OE CAGR（代理）"}.get(
-                cagr_basis, "CAGR")
+            _cagr_label = {"revenue": "收入 CAGR"}.get(cagr_basis, "CAGR")
             print(f"\n基率锚       : 所需{_cagr_label} {required_cagr:.1%}（规模分档 "
                   f"{anchor_meta.get('scale_band', '?')}）→ 历史达成比例上界 {anchor:.0%}")
             if args.arrival_prob > anchor:
@@ -1399,6 +1651,12 @@ def main():
                       f"竞争存活的联合概率，超过『仅增长兑现』的历史比例须在 basis 中论证")
         else:
             print(f"\n基率锚       : 无（{anchor_meta.get('note', '未提供')}）")
+            if cagr_basis == "unavailable":
+                print(f"⚠ 基率锚不可用（GROWTH_ANCHOR_UNAVAILABLE）：缺 --mature-revenue，"
+                      f"无法反推与基率表同口径的所需收入 CAGR。"
+                      f"GROWTH_ARRIVAL_PROB_ABOVE_BASERATE / GROWTH_IMPLIED_VS_BASERATE_GAP"
+                      f" 在此路径下不会触发——到达概率 {args.arrival_prob:.0%} 须在 basis 中"
+                      f"脱离基率锚独立论证（无锚须论证）")
         if implied_p is not None:
             print(f"现价隐含到达概率 : {implied_p:.0%}"
                   + (f"（Gordon 口径 {gordon_implied_p:.0%}）" if gordon_implied_p else ""))
@@ -1493,6 +1751,10 @@ def main():
             codes.append("SOTP_HOLDINGS_DOMINATED")
         if implied_d is not None and abs(implied_d - args.holding_discount) >= 0.10:
             codes.append("SOTP_IMPLIED_DISCOUNT_GAP")
+        # 极性与 growth 通道相反：价格越高隐含折价越低。市场零折价/溢价形态
+        # （implied_d <= 0，伯克希尔式）是"通道不适用"的信号，非透支也非便宜
+        if implied_d is not None and implied_d <= 0:
+            codes.append("SOTP_PRICE_IMPLIES_NO_DISCOUNT")
         unknown = unknown_codes(codes)
         if unknown:
             raise KeyError(f"未注册的告警码 {unknown}，请先在 scripts/alert_codes.py 登记")
@@ -1551,7 +1813,9 @@ def main():
                 "implied_holding_discount": implied_d,
                 "note": "反解 implied = 1 − 市值/equity NAV：市场按多大控股折价"
                         "交易。与采用折价分歧 ≥10pct 即 SOTP_IMPLIED_DISCOUNT_GAP"
-                        "——若市场折价持续，可投资价值≈现价（无安全边际）",
+                        "——若市场折价持续，可投资价值≈现价（无安全边际）；"
+                        "≤0 即市值不低于 NAV（市场零折价/溢价，伯克希尔式形态）"
+                        "→ SOTP_PRICE_IMPLIES_NO_DISCOUNT（通道不适用信号）",
             },
             "value_per_share": vps,
             "value_per_share_quote_ccy": (vps * args.fx) if vps is not None else None,
@@ -1617,9 +1881,11 @@ def main():
                      f"{abs(implied_d - args.holding_discount):.0%}pct ≥10pct——"
                      "SOTP_IMPLIED_DISCOUNT_GAP）"
                      if abs(implied_d - args.holding_discount) >= 0.10 else ""))
-            if implied_d >= 1.0:
-                print("🔴 隐含折价 ≥100%：市值不低于 equity NAV——市场未计任何"
-                      "控股折价甚至给溢价，SOTP 口径下无安全边际")
+            if implied_d <= 0:
+                print("🔴 隐含折价 ≤0：市值不低于 equity NAV——市场未计任何"
+                      "控股折价甚至给溢价（伯克希尔式形态）。SOTP 口径下无安全"
+                      "边际，『等折价收敛』语义对该形态失效——通道不适用信号，"
+                      "非便宜（SOTP_PRICE_IMPLIES_NO_DISCOUNT）")
         print(f"\n档位带（上限 {cap or '标准双闸门'}）: {band_suggestion}")
         print(f"  {band_reason}")
         print(f"告警码: {' '.join(codes) if codes else '（无）'}")

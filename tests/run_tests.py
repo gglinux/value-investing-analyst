@@ -2748,6 +2748,37 @@ with tempfile.TemporaryDirectory() as _td:
     check("p=50% > 锚 25% → GROWTH_ARRIVAL_PROB_ABOVE_BASERATE",
           _p_hi.returncode == 0 and "GROWTH_ARRIVAL_PROB_ABOVE_BASERATE" in _p_hi.stdout)
 
+# --- G2. 直传 --mature-oe 而缺 --mature-revenue → 锚不可用显式告警（量纲修复回归）---
+# 旧实现用 mature_oe/current_revenue 当所需 CAGR 代理：7200/8832 → −2.02% ≤ 0
+# → 锚静默关闭，还打印事实错误的"成熟态不高于当期规模"。修复后必须显式告警。
+with tempfile.TemporaryDirectory() as _td:
+    _fp3 = os.path.join(_td, "g3.json")
+    _p_dn = run(["growth", "--market-cap", "20000", "--current-revenue", "8832",
+                 "--mature-oe", "7200", "--terminal-multiple", "20",
+                 "--arrival-prob", "0.25", "--years-to-maturity", "10",
+                 "--contribution-margin", "0.44",
+                 "--mature-state-basis", "x [E:a]", "--arrival-prob-basis", "y [E:b]",
+                 "-o", _fp3])
+    check("直传 --mature-oe → 运行成功且输出 GROWTH_ANCHOR_UNAVAILABLE",
+          _p_dn.returncode == 0 and "GROWTH_ANCHOR_UNAVAILABLE" in _p_dn.stdout,
+          f"rc={_p_dn.returncode}")
+    check("锚不可用时禁止再打印量纲错误的『成熟态不高于当期规模』",
+          "成熟态不高于当期规模" not in (_p_dn.stdout or ""))
+    if _p_dn.returncode == 0:
+        _g3 = json.load(open(_fp3))
+        check("锚不可用：required_cagr=None、basis=unavailable、anchor=None",
+              _g3["arrival"]["required_cagr"] is None
+              and _g3["arrival"]["required_cagr_basis"] == "unavailable"
+              and _g3["arrival"]["base_rate_anchor"] is None)
+        check("GROWTH_ANCHOR_UNAVAILABLE 落盘进 codes（回放断言可判定）",
+              "GROWTH_ANCHOR_UNAVAILABLE" in _g3["codes"])
+    _a6, _m6 = _RD.revenue_growth_base_rate(8832, None)
+    check("required_cagr=None → note 指明缺收入口径（非『不高于当期规模』）",
+          _a6 is None and "mature-revenue" in _m6.get("note", ""), str(_m6))
+    # 正向回归：给了 --mature-revenue 时锚正常、不触发 UNAVAILABLE
+    check("给了 --mature-revenue → 不触发 GROWTH_ANCHOR_UNAVAILABLE（F 节锚 25% 回归）",
+          "GROWTH_ANCHOR_UNAVAILABLE" not in _g["codes"])
+
 # --- H. check_scenarios 接线：growth_terminal_backcast 可作基准方法 ---
 import copy as _copy  # noqa: E402
 _scen_growth = _copy.deepcopy(GOOD)
@@ -2948,6 +2979,28 @@ with tempfile.TemporaryDirectory() as _td:
         check("极端值反推：MC=NAV/2 ⇒ 隐含折价 50%（数学自洽）",
               "50%" in _p_m2.stdout)
 
+    # --- E2. 伯克希尔式溢价形态 → SOTP_PRICE_IMPLIES_NO_DISCOUNT（极性修复回归）---
+    # 旧打印条件 implied_d >= 1.0 是死分支（MC>0 时 implied=1−MC/NAV 恒<1），
+    # 从 growth 的 implied_p>=1.0 复制未翻转极性——溢价形态曾无任何提示。
+    _nav = 11020000 - 6200000  # 4,800,000 = equity NAV（haircut=1.0、无经营业务）
+    _fp3 = os.path.join(_td, "prem.json")
+    _p_prem = _sotp_cli(_hf, ["--market-cap", str(_nav * 1.25), "-o", _fp3])
+    check("溢价形态（MC=1.25×NAV）→ 输出 SOTP_PRICE_IMPLIES_NO_DISCOUNT",
+          _p_prem.returncode == 0 and "SOTP_PRICE_IMPLIES_NO_DISCOUNT"
+          in _p_prem.stdout, f"rc={_p_prem.returncode}")
+    check("溢价形态文案指出通道不适用（非『≥100%』旧死条件文案）",
+          "伯克希尔式" in _p_prem.stdout and "≥100%" not in _p_prem.stdout)
+    if _p_prem.returncode == 0:
+        _pm = json.load(open(_fp3))
+        check("溢价形态隐含折价 = −25%（数学自洽）且新码落盘 codes",
+              abs(_pm["implied"]["implied_holding_discount"] + 0.25) < 1e-9
+              and "SOTP_PRICE_IMPLIES_NO_DISCOUNT" in _pm["codes"])
+        check("溢价形态档位带仍为拒绝（透支）——investable<MC 判定方向不受影响",
+              _pm["verdict_band"]["suggestion"] == "拒绝（透支）")
+    # 正向回归：折价形态（MC=NAV/2，隐含 +50%）不触发新码
+    check("折价形态（隐含 +50%）→ 不触发 NO_DISCOUNT（E 段数学用例回归）",
+          "SOTP_PRICE_IMPLIES_NO_DISCOUNT" not in (_p_m2.stdout or ""))
+
 # --- F. sotp_screen：经营性 OE / look-through 分列与双向失真识别 ---
 def _rows_with_inv(inv_seq, div_seq=None):
     _rows = mk_rows([0.10, 0.10, 0.10, 0.10])
@@ -3005,6 +3058,7 @@ if os.path.exists(_SBT_FIN):
 _sotp_codes = ["SOTP_HOLDINGS_TABLE_INVALID", "SOTP_NET_DEBT_CONSOLIDATION_BASIS",
                "SOTP_HOLDING_DISCOUNT_UNANCHORED", "SOTP_DISCOUNT_BELOW_BASE_RATE",
                "SOTP_IMPLIED_DISCOUNT_GAP", "SOTP_HOLDINGS_DOMINATED",
+               "SOTP_PRICE_IMPLIES_NO_DISCOUNT",
                "M_OWNER_YIELD_CONSOLIDATION_DISTORTION"]
 check("七个 SOTP 通道码全部在 ALERTS 注册表",
       not AC.unknown_codes(_sotp_codes), str(AC.unknown_codes(_sotp_codes)))
@@ -3023,6 +3077,272 @@ import check_scenarios as _CS  # noqa: E402
 check("check_scenarios：sotp 在 DCF_METHODS（基准/乐观）且 sotp_asset_floor 在独立方法白名单",
       "sotp" in _CS.DCF_METHODS and "sotp_asset_floor" in _CS.INDEPENDENT_METHODS and
       "REQ-P1-02" in _CS.DCF_METHODS["sotp"])
+
+# ═══════════════════════════════════════════════════════════════════
+print("== 14.9 护城河评级连续化（REQ-P1-03，平滑 MoS 门槛 + 边界带双档）==")
+# 动因：神华 2015 案（diff.md 第 42 行）——"窄"要 40%（实际 37.7% 差 2.3pct）、
+# 闸门二①要 21.83%，评"宽"则 25%/16.5% 双放行，一字之差档位跳 2 档。
+# 测试锁定：平滑函数数学（锚点/连续/带内 ≥ legacy）、词=投影一致性、
+# 裸分数禁止、神华边界带双档报告、legacy 词路径字节兼容、
+# 12 案"评级 1 级变动 → 档位跳 2 级 = 0"验收。
+
+# --- A. 平滑函数数学 ---
+_f = _RD.mos_requirement_from_score
+check("平滑锚点：35→50% / 65→40% / 100→25%",
+      abs(_f(35) - 0.50) < 1e-12 and abs(_f(65) - 0.40) < 1e-12
+      and abs(_f(100) - 0.25) < 1e-12)
+check("分带边界连续：65 分左右极限 = 40%（阶跃归零处）",
+      abs(_f(65 - 1e-6) - 0.40) < 1e-8 and abs(_f(65 + 1e-6) - 0.40) < 1e-8)
+check("单调递减（35→100 全程）",
+      all(_f(s) <= _f(s - 1) + 1e-12 for s in range(36, 101)))
+check("s<35 → None（不给买入结论，政策边界）",
+      _f(34.9) is None and _f(0) is None)
+try:
+    _f(101); _inv_ok = False
+except ValueError:
+    _inv_ok = True
+check("得分越界（>100）→ ValueError", _inv_ok)
+check("带内处处 ≥ legacy 常数（通道建设非阈值放松，仅锚点相等）",
+      all(_f(s) >= 0.40 - 1e-12 for s in range(35, 65))
+      and all(_f(s) >= 0.25 - 1e-12 for s in range(65, 101))
+      and _f(65) == 0.40 and _f(100) == 0.25)
+
+# --- B. 词投影与边界带 ---
+check("分带投影：≥65 wide / ≥35 narrow / <35 none",
+      _RD.moat_word_from_score(65) == "wide"
+      and _RD.moat_word_from_score(64.9) == "narrow"
+      and _RD.moat_word_from_score(35) == "narrow"
+      and _RD.moat_word_from_score(34.9) == "none")
+_b60 = _RD.moat_boundary_band(60)
+check("边界带检测：60/70 ∈ 宽窄带 [60,70]，59.9/70.1 ∉",
+      _b60["in_band"] and _RD.moat_boundary_band(70)["in_band"]
+      and not _RD.moat_boundary_band(59.9)["in_band"]
+      and not _RD.moat_boundary_band(70.1)["in_band"])
+check("边界带检测：30/40 ∈ 窄无带 [30,40]，相邻词正确",
+      _RD.moat_boundary_band(30)["in_band"]
+      and _RD.moat_boundary_band(40)["in_band"]
+      and _RD.moat_boundary_band(36)["adjacent_words"] == ("none", "narrow"))
+check("边界带外（如 50 分）不触发", not _RD.moat_boundary_band(50)["in_band"])
+
+# --- C. 反推门槛：得分路径与 legacy 在锚点衔接 ---
+_r65, _h65 = _RD.moat_irr_hurdle("narrow", 0.10, 5, score=65)
+_r100, _h100 = _RD.moat_irr_hurdle("wide", 0.10, 5, score=100)
+_rL, _hL = _RD.moat_irr_hurdle("narrow", 0.10, 5)
+check("score=65 反推门槛 = legacy 窄锚（连续性衔接实证）",
+      abs(_r65 - _rL) < 1e-12 and abs(_h65 - _hL) < 1e-12)
+check("score=100 反推门槛 = legacy 宽锚 16.5%",
+      abs(_r100 - 0.25) < 1e-12 and abs(_h100 - 0.16515) < 1e-3)
+check("score<35 → (None, None)（不给买入结论）",
+      _RD.moat_irr_hurdle("narrow", 0.10, 5, score=30) == (None, None))
+
+# --- D. 强制纪律：裸分数禁止 / 词-得分不一致（子进程端到端）---
+_SH = os.path.join(ROOT, "backtest", "601088.SH_2015-12-31", "data", "scenarios.json")
+_p_nobasis = run(["expected-return", "--scenarios-file", _SH, "--moat-score", "60"])
+check("得分无 basis → 硬拒绝（exit 1）+ MOAT_SCORE_BASIS_MISSING",
+      _p_nobasis.returncode == 1 and "MOAT_SCORE_BASIS_MISSING" in
+      (_p_nobasis.stderr or "") + (_p_nobasis.stdout or ""),
+      f"rc={_p_nobasis.returncode}")
+with tempfile.TemporaryDirectory() as _td13:
+    _sd = json.load(open(_SH, encoding="utf-8"))
+    _sd["moat"] = "wide"    # 与得分 60 的投影 narrow 故意不一致
+    _p_mismatch = os.path.join(_td13, "mismatch.json")
+    json.dump(_sd, open(_p_mismatch, "w", encoding="utf-8"), ensure_ascii=False)
+    _p_mm = run(["expected-return", "--scenarios-file", _p_mismatch,
+                 "--moat-score", "60",
+                 "--moat-score-basis", "x [E:a]"])
+    check("词与得分投影不一致 → 硬拒绝 + MOAT_SCORE_WORD_MISMATCH",
+          _p_mm.returncode == 1 and "MOAT_SCORE_WORD_MISMATCH" in
+          (_p_mm.stderr or "") + (_p_mm.stdout or ""),
+          f"rc={_p_mm.returncode}")
+
+# --- E. 神华边界带双档报告（验收演示端到端）---
+_ms_demo = os.path.join(ROOT, "backtest", "601088.SH_2015-12-31", "data",
+                        "expected_return_moat_score_REQ-P1-03.json")
+check("神华得分演示文件存在", os.path.exists(_ms_demo))
+if os.path.exists(_ms_demo):
+    _d = json.load(open(_ms_demo, encoding="utf-8"))
+    _ms = _d["moat_score"]
+    check("得分 60 → narrow + 平滑门槛 41.67%（> legacy 40%）",
+          _ms["word"] == "narrow" and abs(_ms["mos_requirement"] - 0.416667) < 1e-4
+          and _ms["legacy_requirement"] == 0.40)
+    check("闸门一：MoS 37.7% < 41.7% → 不过，触发价 14.02",
+          _ms["gate1_pass"] is False
+          and abs(_ms["gate1_margin_of_safety"] - 0.3773) < 1e-3
+          and abs(_ms["gate1_trigger_price"] - 14.0233) < 1e-3)
+    check("闸门二①诊断门槛随平滑 MoS（22.5% ≠ legacy 21.83%）",
+          abs(_ms["gate2_diagnostic_hurdle"] - 0.2252) < 1e-3)
+    _dr = _ms["dual_report"]
+    check("边界带触发：60 ∈ [60,70] + MOAT_BOUNDARY_BAND_DUAL",
+          _ms["boundary_band"]["in_band"]
+          and "MOAT_BOUNDARY_BAND_DUAL" in _d["gate2"]["codes"])
+    check("双档报告：±5 分两侧（55/65）门槛 43.3%/40.0%",
+          len(_dr["rows"]) == 2
+          and abs(_dr["rows"][0]["mos_requirement"] - 0.43333) < 1e-4
+          and abs(_dr["rows"][1]["mos_requirement"] - 0.40) < 1e-4)
+    check("65 分侧触发价 14.42 = 归档 legacy 触发价（连续性锚实证）",
+          abs(_dr["rows"][1]["trigger_price"] - 14.424) < 1e-2)
+    check("敏感性标注「结论对护城河判断敏感」",
+          "结论对护城河判断敏感" in _dr["sensitivity_note"])
+
+# --- F. legacy 词路径字节兼容（基线不动）---
+_p_word = run(["expected-return", "--scenarios-file", _SH,
+               "-o", os.path.join(tempfile.gettempdir(), "_ms_legacy.json")])
+_wj = os.path.join(tempfile.gettempdir(), "_ms_legacy.json")
+_word_res = json.load(open(_wj, encoding="utf-8")) if os.path.exists(_wj) else {}
+check("仅评级词（无得分）→ 输出无 moat_score 键（legacy 兼容）",
+      _p_word.returncode == 0 and "moat_score" not in _word_res)
+check("legacy ①门槛 = 21.83%（神华窄锚不动）",
+      _word_res and abs(_word_res["gate2"]["consistency_expected_irr"]["hurdle"]
+                        - 0.2183) < 1e-3)
+
+# --- G. 12 案验收：评级 1 级变动 → 档位跳 2 级 = 0 ---
+# 档位代理（裁决层语义的机器化下界）：none→1；闸门一/二任一不过→2（观察等价格）；
+# 双过→3（小仓位试探——核心买入须裁决层按核验强度/股东回报加码，不是评级
+# 传导变量）。"评级 1 级变动"操作化为分带边界的 ε 穿越（knife-edge 情形，
+# 即需求所述"两个同样认真的分析师在边界上分歧"），对 35/65 两边界各测一次。
+def _tier_313(word, g1, g2):
+    if word == "none":
+        return 1
+    if g1 is not True:
+        return 2
+    if g2 is not True:
+        return 2
+    return 3
+
+_max_delta, _cases_tested = 0, 0
+for _d13 in sorted(glob.glob(os.path.join(ROOT, "backtest", "*") + os.sep)):
+    _sfs = [f for f in glob.glob(os.path.join(_d13, "data", "scenarios*.json"))
+            if "audit" not in os.path.basename(f) and "REQ-" not in os.path.basename(f)]
+    if not _sfs:
+        continue    # 康美案（Phase 0 排除）：无评级无情景，档位由排雷定，评级免疫
+    _sd = json.load(open(_sfs[0], encoding="utf-8"))
+    _scen = [{"name": s["name"], "value_per_share": float(s["value_per_share"]),
+              "probability": float(s["probability"])} for s in _sd["scenarios"]]
+    try:
+        _res = _RD.expected_return(
+            float(_sd["price"]), _scen, int(_sd.get("hold_years", 5)), 0.09,
+            float(_sd.get("dividend_yield", 0.0)),
+            float(_sd.get("discount_rate", 0.10)),
+            moat=_sd.get("moat"), iv_growth=_sd.get("intrinsic_value_growth"))
+    except SystemExit:
+        continue
+    _base = next((s["value_per_share"] for s in _scen
+                  if s["name"] in ("基准", "base")), None)
+    if not _base:
+        continue
+    _mos = 1.0 - float(_sd["price"]) / _base
+    _g2p = _res["gate2"]["pass"]
+    for _edge in (35.0, 65.0):
+        _w_lo = _RD.moat_word_from_score(_edge - 0.5)
+        _w_hi = _RD.moat_word_from_score(_edge + 0.5)
+        _r_lo = _RD.mos_requirement_from_score(_edge - 0.5)
+        _r_hi = _RD.mos_requirement_from_score(_edge + 0.5)
+        _g1_lo = _mos >= _r_lo if _r_lo is not None else False
+        _g1_hi = _mos >= _r_hi if _r_hi is not None else False
+        _g2_lo = False if _w_lo == "none" else _g2p
+        _g2_hi = False if _w_hi == "none" else _g2p
+        _delta = abs(_tier_313(_w_hi, _g1_hi, _g2_hi)
+                     - _tier_313(_w_lo, _g1_lo, _g2_lo))
+        _max_delta = max(_max_delta, _delta)
+    _cases_tested += 1
+check(f"12 案验收：评级 1 级变动（边界 ε 穿越）档位跳 2 级 = 0"
+      f"（实测 {_cases_tested} 案 maxΔ={_max_delta}）",
+      _max_delta <= 1 and _cases_tested >= 11)
+
+# --- H. 对照：legacy 阶跃 + 旧闸门二（①参与）下神华确实跳 2 档 ---
+# 用神华档数据复现 diff.md 第 42 行实证——证明旧机制的问题真实存在、
+# 且新机制（上项测试）已把它归零。
+_sh_sd = json.load(open(_SH, encoding="utf-8"))
+_sh_scen = [{"name": s["name"], "value_per_share": float(s["value_per_share"]),
+             "probability": float(s["probability"])} for s in _sh_sd["scenarios"]]
+_sh_res = _RD.expected_return(
+    float(_sh_sd["price"]), _sh_scen, 5, 0.09,
+    float(_sh_sd.get("dividend_yield", 0.0)), 0.10,
+    moat="narrow", iv_growth=_sh_sd.get("intrinsic_value_growth"))
+_sh_g = _sh_res["gate2"]
+_sh_mos = 1.0 - float(_sh_sd["price"]) / 24.04
+# 旧口径闸门二 = ①②③ 全过（REQ-P0-04 之前）；旧档位口径 = 双闸全过即
+# 核心买入候选（4）——diff.md 第 42 行"档位直接跳到 3~4"的量化复现。
+def _old_gate2(word):
+    _h = _RD.moat_irr_hurdle(word, 0.10, 5)[1]
+    _c1 = _sh_res["expected_annualized_irr"] >= _h if _h is not None else None
+    _checks = [_c1, _sh_g["no_convergence_floor"]["pass"],
+               _sh_g["pessimistic_irr"]["pass"]]
+    if word == "none":
+        return False
+    if any(c is None for c in _checks):
+        return None
+    return all(_checks)
+
+def _old_tier(word, g1, g2):
+    if word == "none":
+        return 1
+    if g1 is not True:
+        return 2
+    if g2 is not True:
+        return 2
+    return 4   # 旧口径：双闸全过 = 核心买入候选
+
+_tier_narrow = _old_tier("narrow", _sh_mos >= 0.40, _old_gate2("narrow"))
+_tier_wide = _old_tier("wide", _sh_mos >= 0.25, _old_gate2("wide"))
+check("对照实证：legacy 阶跃 + 旧闸门二/旧档位口径下，神华 窄→宽 档位跳 2 档"
+      f"（{_tier_narrow}→{_tier_wide}，diff.md 第 42 行问题复现）",
+      _tier_narrow == 2 and _tier_wide == 4)
+
+# --- I. check_scenarios S1b（scenarios.json 得分字段校验）---
+def _run_cs(path):
+    return subprocess.run(
+        [sys.executable, os.path.join(SCRIPTS, "check_scenarios.py"), path],
+        capture_output=True, text=True)
+
+with tempfile.TemporaryDirectory() as _td14:
+    _tpl = {"price": 10, "moat": "wide", "discount_rate": 0.1, "hold_years": 5,
+            "scenarios": [
+                {"name": "悲观", "value_per_share": 5, "probability": 0.25,
+                 "method": "liquidation", "method_inputs": {}},
+                {"name": "基准", "value_per_share": 20, "probability": 0.5,
+                 "method": "dcf_owner_earnings"},
+                {"name": "乐观", "value_per_share": 30, "probability": 0.25,
+                 "method": "dcf_owner_earnings"}]}
+    _bad = dict(_tpl, moat_score=50)   # 词 wide 与投影 narrow 不一致 + 无 basis
+    _p1 = os.path.join(_td14, "bad.json")
+    json.dump(_bad, open(_p1, "w", encoding="utf-8"), ensure_ascii=False)
+    _cs_r = _run_cs(_p1)
+    _cs_out = _cs_r.stdout + _cs_r.stderr
+    check("S1b：词与得分投影不一致 → FAIL + MOAT_SCORE_WORD_MISMATCH",
+          "MOAT_SCORE_WORD_MISMATCH" in _cs_out and "[FAIL]" in _cs_out)
+    check("S1b：得分缺 [E:] basis → FAIL + MOAT_SCORE_BASIS_MISSING",
+          "MOAT_SCORE_BASIS_MISSING" in _cs_out)
+    _good = dict(_tpl, moat="narrow", moat_score=50,
+                 moat_score_basis="A 30 [E:x]；B 10 [E:y]；C +10 [E:z]",
+                 moat_sources=["成本优势"])
+    _p2 = os.path.join(_td14, "good.json")
+    json.dump(_good, open(_p2, "w", encoding="utf-8"), ensure_ascii=False)
+    _cs_r2 = _run_cs(_p2)
+    check("S1b：合法得分三字段（词=投影 + [E:]）不触发 S1b 错误",
+          "MOAT_SCORE_WORD_MISMATCH" not in _cs_r2.stdout
+          and "MOAT_SCORE_BASIS_MISSING" not in _cs_r2.stdout)
+
+# --- J. 码注册与文档接线 ---
+_moat_codes = ["MOAT_SCORE_BASIS_MISSING", "MOAT_SCORE_WORD_MISMATCH",
+               "MOAT_BOUNDARY_BAND_DUAL"]
+check("三个 MOAT_* 码全部在 ALERTS 注册表",
+      not AC.unknown_codes(_moat_codes), str(AC.unknown_codes(_moat_codes)))
+check("分层命名表含 MOAT_* 行",
+      "`MOAT_*`" in open(os.path.join(SCRIPTS, "alert_codes.py"),
+                         encoding="utf-8").read())
+_docs_313 = open(os.path.join(ROOT, "SKILL.md"), encoding="utf-8").read() + "".join(
+    open(os.path.join(ROOT, "references", _r), encoding="utf-8").read()
+    for _r in os.listdir(os.path.join(ROOT, "references")) if _r.endswith(".md"))
+check("文档已接入连续化（moat-framework 第二节半/valuation-guide/SKILL）",
+      all(_kw in _docs_313 for _kw in
+          ("REQ-P1-03", "第二节半", "mos_requirement_from_score",
+           "MOAT_BOUNDARY_BAND_DUAL", "data-moat-score")))
+_prompt_313 = open(os.path.join(ROOT, "backtest", "PROMPT.md"),
+                   encoding="utf-8").read()
+check("PROMPT 已写入护城河定量得分纪律段（第四批起强制）",
+      "REQ-P1-03" in _prompt_313 and "moat_score" in _prompt_313
+      and "MOAT_BOUNDARY_BAND_DUAL" in _prompt_313)
 
 # ═══════════════════════════════════════════════════════════════════
 print("== 15 脚本接入完整性（元测试） ==")

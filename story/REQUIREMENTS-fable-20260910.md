@@ -316,7 +316,14 @@
 - 验收：神华案例边界带双档报告可生成；12 个案例中评级变动 1 级导致档位跳 2 级的情况为 0。
 - 涉及文件：`references/moat-framework.md`、`scripts/reverse_dcf.py`、`references/report-spec.md`
 - 依赖：与 REQ-P0-04 联合设计
-- 状态：todo
+- 状态：**doing**（2026-09-11 三项交付物与两项验收全部达成；第四批首个带得分案例实测后转 done）
+- 进展：
+  - ✅ 设计（与 REQ-P0-04 联合）：护城河得分 0~100（三组件：A 超额回报证据 0~50 / B 源硬度 0~30 / C 定标与趋势修正 −10~+20，各挂 [E:]），评级词降级为得分的分带投影（≥65 wide / ≥35 narrow / <35 none），词表与 S1 校验兼容不变。平滑 MoS 门槛 = 分段线性（35 分→50%、65 分→40%、100 分→25%），**分带边界连续**（65 分两侧都是 40%）+ **带内处处 ≥ legacy 阶跃常数**（仅锚点相等）——通道建设而非阈值放松，与 REQ-P0-08 纪律同源。闸门二①诊断门槛随平滑 MoS 派生；none（<35 分）为政策边界（不给买入结论），由双档披露而非连续性消除。
+  - ✅ 落码：`reverse_dcf.py` 新增 `mos_requirement_from_score`/`moat_word_from_score`/`moat_boundary_band` 纯函数 + `expected-return --moat-score/--moat-score-basis/--moat-sources`（scenarios.json 三字段同源读取）；裸分数硬拒绝 `MOAT_SCORE_BASIS_MISSING`、词≠投影硬拒绝 `MOAT_SCORE_WORD_MISMATCH`、边界带（边界 ±5 分）自动双档报告并列 ±5 分两侧门槛/闸门一/触发价/档位建议 + `MOAT_BOUNDARY_BAND_DUAL`。**legacy 词路径字节级不变**（无得分时不新增输出键、门槛走旧常数）——12 案基线不动（`--rerun --baseline` 实证一致）。
+  - ✅ 接线：`check_scenarios.py` S1b（得分可选字段校验：区间/投影/[E:]）；`prepare_case.py` 快照注册表补 `MOAT_SCORE_WIDE_MIN/NARROW_MIN`；moat-framework 第二节半（量表+纪律）、report-spec ②c（决策卡得分卡 + `data-moat-score`/`data-moat-boundary` 标记）、valuation-guide 闸门一默认标准节、SKILL.md Phase 3/Phase 4.5、PROMPT Step 2（第四批起强制带得分）。
+  - ✅ 验收①（神华双档报告）：三组件透明打分 A=40（十年正利差但当期收窄）+ B=10（成本优势一源硬证据）+ C=+10（三定标 +15、稳定偏变窄 −5）= **60 分**（窄带，落宽/窄边界带 [60,70]）→ `expected_return_moat_score_REQ-P1-03.json` 双档报告自动生成：55 分侧门槛 43.3%/65 分侧门槛 40.0%（触发价 14.42 恰为归档 legacy 触发价——连续性锚实证）；两侧闸门一均未过（MoS 37.7% vs 41.7%），档位维持观察等价格。
+  - ✅ 验收②（12 案跳 2 档归零）：操作化为分带边界 ε 穿越（knife-edge 情形，即需求所述"两个同样认真的分析师在边界上分歧"），档位代理 none→1 / 任一闸门不过→2 / 双过→3（核心买入须裁决层按核验强度加码，非评级传导变量）。实测 11 个有情景案例（康美案 Phase 0 排除、无评级天然免疫）× 35/65 两边界 **maxΔ=1**（全部来自 35 分政策边界 none→narrow 的 1↔2，非连续性可消除的档位跳变）；legacy 对照复现神华 窄→宽 2→4 跳 2 档（diff.md 第 42 行问题实证，新机制下归零）。tests 14.9 段 45 项，全套件 649 全绿。
+  - ⚠ 遗留：第四批起新案例强制带得分（PROMPT 已写），首个实测案例落地后转 done；references/ 体积红线余量仅 23 字节（153,577/153,600），下次新增文档须先压缩等量。
 
 ### REQ-P1-04 折现率与情景概率的证据传导
 - 来源：A2、D
@@ -598,3 +605,4 @@
 | 2026-09-11 | v1.3 | REQ-P0-04 三版审查修订：交付物/验收按 as-built 改写（换源候选维度未建、实际为"去同源化 + 下行约束落码"，外部锚移交 REQ-P1-05/P2-06）；新增存量 12 案 rerun + 基线重建 + 神华档位重判待办；茅台"被 ③ 拦"修正为 ①' ③ 双拦（valuation-guide 同步） |
 | 2026-09-11 | v1.4 | REQ-P1-01 成长股通道落码：growth-framework 三段式 + reverse_dcf `growth` 模式（成熟期稳态利润×到达概率折回 + 现价隐含到达概率反解 + 基率锚挂钩）+ 六个 GROWTH_* 告警码 + 五处接线；Netflix 验收演示档位 1→2、缺口 2→1 档；tests 14.7 段 29 项、套件 558 全绿、基线一致；状态 todo → doing（2 个新案例锚待批次执行） |
 | 2026-09-11 | v1.5 | REQ-P1-02 持仓型控股 SOTP 通道落码：reverse_dcf `sotp` 模式（持仓表六要素+经营业务−母公司净债 ×(1−控股折价) + 现价隐含控股折价反解 + 折价基率带四档）+ compute_metrics `sotp_screen`（经营性 OE / look-through 分列 + 双向失真识别 M_OWNER_YIELD_CONSOLIDATION_DISTORTION，OBS-2019-06-01 候选方向落码）；软银验收锚每股 6,630≈原案 6,633、隐含折价 53% 一致、经营性 OE 990,011 与 look-through 2,051,422 分列；腾讯经营+投资双轮分列（持仓 16% 不越权）；六+1 告警码 + 五处接线；tests 14.8 段 46 项、套件 604 全绿、基线一致；状态 todo → doing（新案例锚待批次执行） |
+| 2026-09-11 | v1.6 | REQ-P1-03 护城河评级连续化落码：moat-framework 第二节半三组件评分（A 超额回报/B 源硬度/C 定标与趋势，0~100）+ reverse_dcf 平滑 MoS 门槛（35→50%/65→40%/100→25%，分带边界连续、带内 ≥ legacy 常数）+ 边界带（±5 分）自动双档报告（MOAT_BOUNDARY_BAND_DUAL）+ 裸分数/词≠投影硬拒绝 + S1b 校验 + legacy 词路径字节兼容；神华验收锚 60 分双档报告（65 分侧触发价 14.42=归档 legacy 值，连续性锚实证）、12 案边界 ε 穿越 maxΔ=1（legacy 对照复现神华 2→4 跳 2 档）；tests 14.9 段 45 项、套件 649 全绿、基线一致；状态 todo → doing（第四批首个带得分案例实测后 done） |
