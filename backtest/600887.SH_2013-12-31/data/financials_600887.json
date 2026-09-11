@@ -1,0 +1,270 @@
+{
+ "company": "内蒙古伊利实业集团股份有限公司",
+ "ticker": "600887.SH",
+ "currency": "CNY",
+ "unit": "million_CNY",
+ "accounting_standard": "中国会计准则（2007 新准则及追溯可比口径；2006 及以前为旧准则，2006 年数据采用 2008 年报追溯可比列示）",
+ "fiscal_year_end": "12-31",
+ "company_type": "consumer",
+ "replay_date": "2013-12-31",
+ "information_cutoff": "2013-12-31",
+ "annual": [
+  {
+   "year": 2008,
+   "publish_date": "2009-04-30",
+   "revenue": 21658.59,
+   "net_income": -1687.45,
+   "net_income_deducted": -1796.98,
+   "ocf": 182.58,
+   "capex": 963.0,
+   "total_equity": 2789.26,
+   "total_assets": 11780.49,
+   "total_liabilities": 8991.23,
+   "shares_basic": 799.32,
+   "eps_basic": -2.3,
+   "dividends_paid": 0.0,
+   "source_level": "A",
+   "source_note": "2008 年报（巨潮 static.cninfo.com.cn/finalpage/2009-04-30/52003545.PDF）近三年主要会计数据表；capex 为腾讯 F10 自由现金流反推（OCF−FCF），B 级衍生，spike_note 登记；total_liabilities 修正为 ta−te 口径（原纯负债 8,552.92，差额 438.3 为 NCI，equity_note 口径声明）",
+   "shares_diluted": 799.32
+  },
+  {
+   "year": 2009,
+   "publish_date": "2010-04-27",
+   "revenue": 24323.55,
+   "net_income": 647.66,
+   "net_income_deducted": 533.81,
+   "ocf": 2028.83,
+   "capex": 622.0,
+   "total_equity": 3442.96,
+   "total_assets": 13152.14,
+   "total_liabilities": 9709.18,
+   "shares_basic": 799.32,
+   "eps_basic": 0.81,
+   "dividends_paid": 0.0,
+   "source_level": "A",
+   "source_note": "2009 年报（腾讯 F10 财报表 20100427 发布，收入/归母/OCF/资产与 2010 年报摘要交叉一致）；capex B 级衍生；total_liabilities 为 ta−te 口径（差额 267 为 NCI）",
+   "shares_diluted": 799.32
+  },
+  {
+   "year": 2010,
+   "publish_date": "2011-04-30",
+   "revenue": 29665.0,
+   "net_income": 777.2,
+   "net_income_deducted": 579.0,
+   "ocf": 1474.57,
+   "capex": 2410.0,
+   "total_equity": 4218.52,
+   "total_assets": 15362.32,
+   "total_liabilities": 11143.8,
+   "shares_basic": 799.32,
+   "eps_basic": 0.97,
+   "dividends_paid": 0.0,
+   "source_level": "A",
+   "source_note": "2010 年报摘要（上交所/腾讯 F10 20110430，与 2012 年报 2010 列完全一致）；capex B 级衍生；total_liabilities 为 ta−te 口径（差额 293.5 为 NCI）",
+   "shares_diluted": 799.32
+  },
+  {
+   "year": 2011,
+   "publish_date": "2012-04-26",
+   "revenue": 37451.37,
+   "net_income": 1809.22,
+   "net_income_deducted": 1310.05,
+   "ocf": 3670.38,
+   "capex": 3476.0,
+   "total_equity": 6023.85,
+   "total_assets": 19929.5,
+   "total_liabilities": 13905.65,
+   "shares_basic": 1598.65,
+   "eps_basic": 1.13,
+   "dividends_paid": 399.66,
+   "source_level": "A",
+   "source_note": "2012 年报 2011 列（上交所 600887_2012_n.pdf）+ 2011 年度红利 399,661,375.00 元（2012 年报利润分配段 A 级原文）；capex 为 2012 年报投资活动现金流量净额 −3,475,644,723.35 绝对值（A 级科目，含少量理财净额口径 note）",
+   "shares_diluted": 1598.65
+  },
+  {
+   "year": 2012,
+   "publish_date": "2013-04-26",
+   "revenue": 41990.69,
+   "net_income": 1717.21,
+   "net_income_deducted": 1328.74,
+   "ocf": 2408.54,
+   "capex": 3057.0,
+   "total_equity": 7334.9,
+   "total_assets": 19815.4,
+   "total_liabilities": 12480.5,
+   "shares_basic": 1598.65,
+   "eps_basic": 1.07,
+   "dividends_paid": 523.84,
+   "source_level": "A",
+   "source_note": "2012 年报（上交所 600887_2012_n.pdf / 巨潮 62439793.PDF）主要会计数据表；capex 为投资活动现金流量净额 −3,057,220,454.14 绝对值（A 级科目）；dividends 为 2012 年度分配预案 523,840,240.00（2013 年内实施，A 级原文）；shares_basic 为非公开发行后总股本 1,870,858,000（A 级）；shares_basic 修正登记：2012 年末实际总股本 1,598,645,500（定增 2013-01-10 完成，1,870,858,000 为定增后分红基数——2012 年报利润分配预案原文口径）",
+   "shares_diluted": 1598.65
+  }
+ ],
+ "interim_9M_2013": {
+  "period": "2013-01-01 至 2013-09-30",
+  "publish_date": "2013-10-30",
+  "revenue": 36571.22,
+  "net_income": 2515.59,
+  "net_income_deducted": 1718.31,
+  "non_recurring_items": 153.72,
+  "ocf": 5255.25,
+  "total_equity": 15427.29,
+  "total_assets": 31544.09,
+  "shares_basic_period_end": 2043.16,
+  "eps_basic_period": 1.33,
+  "weighted_shares_calc": 1891.421052631579,
+  "yoy": {
+   "revenue": 11.13,
+   "net_income": 84.12,
+   "net_income_deducted": 55.86,
+   "ocf": 98.34
+  },
+  "prior_9M_2012": {
+   "revenue": 32909.19,
+   "net_income": 1366.27,
+   "net_income_deducted": 1102.47,
+   "non_recurring_items": 797.28,
+   "ocf": 2649.65
+  },
+  "source_level": "A",
+  "source_note": "2013 年第三季度报告（上交所 static.sse.com.cn/disclosure/listedinfo/announcement/c/2013-10-30/600887_2013_3.pdf）2.1 主要财务数据表逐项转录；shares_basic_period_end 为前十大股东持股比例反推（呼和浩特投资 190,013,958 股占 9.30% → 总股本 2,043,160,000 股），B+ 级（反推），与 2013-01 定增后 1,870,858,000 + 可转债年内转股增量自洽"
+ },
+ "equity_note": "total_equity 各行均为归属于上市公司股东的净资产（A 级口径）；NCI（少数股东权益）未单列于 annual 行（无 A 级来源，量级 <0.5% 总资产），total_liabilities = total_assets − 归母净资产（含 NCI 差额于 liabilities 口径），勾稽 ta=tl+te 在本口径下成立；validate_data 勾稽口径声明",
+ "balance_2013Q3_detail": {
+  "as_of": "2013-09-30",
+  "total_assets": 31544.09,
+  "equity_owners": 15427.29,
+  "equity_yoy_growth_note": "归母净资产 2012 末 7,334.90 → 2013Q3 末 15,427.29（+110.33%）：增量 8,092 ≈ 9M 净利 2,515.6 + 定增净额 5,000 + 可转债转股权益增加 ~576（11 伊利转债 32 亿年初至 9 月大部分转股）——三因素自洽勾稽",
+  "financing_events_2013": [
+   {
+    "event": "非公开发行 A 股",
+    "date": "2013-01-10",
+    "shares": 272.2125,
+    "price": 18.51,
+    "gross": 5038.65,
+    "net": 4999.96,
+    "source": "发行结果暨股本变动公告（中国证券报 2013-01-12），A级，截断日前公开"
+   },
+   {
+    "event": "11 伊利转债（32 亿）转股",
+    "period": "2013 年内（强赎触发）",
+    "shares_delta": 172.3,
+    "note": "总股本 1,870,858,000 → 2013Q3 末 2,043,160,000 差额 ~172.3 百万股，与 32 亿转债按 ~18.6 元转股价转股自洽；B+ 级（结构反推）"
+   }
+  ]
+ },
+ "segments_2012": {
+  "liquid_milk": {
+   "revenue": 32270.73,
+   "gm_pct": 28.14,
+   "yoy": 19.82
+  },
+  "cold_drinks": {
+   "revenue": 4294.35,
+   "gm_pct": 32.27,
+   "yoy": 1.72
+  },
+  "milk_powder": {
+   "revenue": 4484.4,
+   "gm_pct": 39.49,
+   "yoy": -20.52
+  },
+  "feed": {
+   "revenue": 686.64,
+   "gm_pct": 16.01,
+   "yoy": 46.42
+  },
+  "gross_margin_total": 29.73,
+  "net_margin_total": 4.09,
+  "source": "2012 年报分产品表（银河证券研报 2013-05-06 逐项转录引公司公告，A级引述）"
+ },
+ "dividends_note": "2012 年度分红 523,840,240 元（10 派 2.8 元，以定增后总股本 1,870,858,000 股为基数）于 2013 年内实施——TTM 实派股息口径；2011 年度 399,661,375 元（10 派 2.5）；2008/2009/2010 年度红利 0/低额（2008 亏损年不分红；2010 年度起恢复），B 级登记；2007 年度亏损不分红",
+ "spike_notes": {
+  "2008.net_income": "三聚氰胺事件计提（召回+渠道退货+减值）致归母 −1,687 百万（营业利润 −2,050 + 非经常 +109.5）；行业系统性事件非经营常态——NORM_MARGIN_SHAPE 判型极端样本点",
+  "2009.net_income": "三聚氰胺后修复年（+647.7 从巨亏转正），2009Q1 归母已 +103.59%（证券时报引年报/一季报）",
+  "2011.ocf": "OCF 1,474.57 → 3,670.38（+149%）：①2010 低基数（原奶成本大涨付现+扩张备货压至 14.75 亿）；②2011 收入 +26% 且结构升级（奶粉毛利率 42.6%）；③应付票据/预收蓄水——均为业务性解释，双源一致（2012 年报对比列）",
+  "2011.shares_diluted": "股本 7.99 → 15.99 亿股（2011 年中期 10 转 5 公积金转增 + 期权行权）——每股口径断口；每股序列统一按 2013Q3 末 2,043.16 百万股归一",
+  "2011.capex": "产能扩张高峰起点：投资净额 2010 24.10 → 2011 34.76 → 2012 30.57 亿，FCF 被扩张吞噬（2011 FCF +1.94 / 2012 FCF −6.48 亿）",
+  "2012.net_income": "归母 −5.09% 系低基数效应反转（2011 含处置长期股权投资收益 2.42 亿非经常）；扣非 +1.43% 持平；管理费用 +42.57%（质量体系与治理投入）",
+  "2012.shares_diluted": "期末总股本 1,598,645,500；1,870,858,000 为 2013-01-10 定增完成后的分红基数（2012 年报利润分配预案原文口径）——登记以避免口径混淆",
+  "2013.net_income": "9M13 归母 2,515.59（+84.12%）超 2012 全年 1,717 的 85% → A3 哨兵：增量 ~62% 来自低基数（9M12 非经常 7.97 亿 vs 9M13 1.54 亿）+扣非真实增长 +55.86%（17.18 vs 11.02）；补贴常态 4-5 亿/年（2010 2.77/2011 3.70/2012 4.33）为可持续项需正常化考虑",
+  "interim.net_income": "9M13 归母 2,515.59 已超 2012 全年——主因 9M12 非经常 7.97 亿压低基数（其中政府补贴 2.73 亿+处置收益），扣非口径 9M13 +55.86% 为经营趋势；OCF 5,255（+98.34%）含定增 50 亿到账后票据结算结构变化",
+  "2006.net_income": "2006 年归母 325.15 为 2008 年报追溯可比口径（新准则）；旧准则口径 145.47（腾讯 F10）——准则追溯差异，取可比口径双源登记",
+  "2010.capex": "capex 6.22 → 24.10 亿（+287%）：2010 年产能扩张周期启动（年报'绿色产业链'奶源+液态奶项目投资），定增预案（2011 提出）募投 50 亿项目的先行投入；B 级衍生值（腾讯 FCF 反推）登记",
+  "2011.net_income": "归母 7.77 → 18.09 亿（+133%）：①2010 低基数（原奶成本高企+三聚氰胺后修复期费用重）；②产品结构升级放量（奶粉毛利率 42.59%、液体乳 26.53%）；③含处置长期股权投资收益 2.42 亿非经常（扣非 13.10 vs 2010 扣非 5.79 = +126% 仍高，结构性改善真实）",
+  "2009.ocf": "OCF 1.83 → 20.29 亿（+1011%）：三聚氰胺危机年（2008）回款崩坏+召回付现的超低基数修复；2009Q1 起渠道恢复回款正常化——业务性解释（2008 年报/2009 年报）"
+ },
+ "crosscheck": [
+  {
+   "year": 2012,
+   "source": "伊利股份2012年年报（上交所/巨潮 62439793）",
+   "revenue": 41990.69,
+   "net_income": 1717.21,
+   "ocf": 2408.54,
+   "shares_diluted": 1598.65
+  },
+  {
+   "year": 2011,
+   "source": "伊利股份2012年年报（上交所/巨潮 62439793）2011 对比列",
+   "revenue": 37451.37,
+   "net_income": 1809.22,
+   "ocf": 3670.38,
+   "shares_diluted": 1598.65
+  },
+  {
+   "year": 2010,
+   "source": "伊利股份2010年年报摘要（上交所）",
+   "revenue": 29665.0,
+   "net_income": 777.2,
+   "ocf": 1474.57,
+   "shares_diluted": 799.32
+  },
+  {
+   "year": 2008,
+   "source": "伊利股份2008年年报（巨潮 52003545）",
+   "revenue": 21658.59,
+   "net_income": -1687.45,
+   "ocf": 182.58,
+   "shares_diluted": 799.32
+  }
+ ],
+ "crosscheck_method": "各年报 PDF 原文/摘要'主要会计数据'表逐项转录；2010-2012 经 2012 年报对比列双源互证；2008-2010 经 2010 年报摘要与 2008 年报双源；9M13 三季报原文；发布日以巨潮/上交所披露时间为准",
+ "crosscheck_exempt": {},
+ "historical_pre_2006": {
+  "caliber_note": "旧准则口径（未追溯），B 级，仅作长期复利背景不入估值输入",
+  "rows": [
+   {
+    "year": 2003,
+    "revenue": 6299,
+    "net_income": 199
+   },
+   {
+    "year": 2004,
+    "revenue": 8735,
+    "net_income": 239
+   },
+   {
+    "year": 2005,
+    "revenue": 12175,
+    "net_income": 293
+   }
+  ],
+  "source": "历史年报（腾讯 F10 财报表聚合，B 级）"
+ },
+ "provenance": {
+  "primary_sources": [
+   "2013 年第三季度报告（上交所 PDF，2013-10-30）",
+   "2012 年年度报告（上交所/巨潮 PDF，2013-04-26/27）",
+   "2008 年年度报告及摘要（巨潮 PDF，2009-04-30）",
+   "2010 年年度报告摘要（上交所）",
+   "非公开发行发行结果暨股本变动公告（中国证券报 2013-01-12）"
+  ],
+  "secondary_sources": [
+   "腾讯 F10 财务指标页（双源交叉）",
+   "银河证券研报 2013-05-06（分部转录引公司公告）",
+   "雪球年报笔记（capex/分部交叉，B 级）"
+  ],
+  "price_source": "腾讯行情 web.ifzq.gtimg.cn 日K/月K fqt=0（东财 push2his 沙箱不可达，登记于 manifest）"
+ },
+ "dilution_note": "annual 行 shares_diluted 以期末股本登记（无 A 级加权摊薄口径单列）；稀释 EPS 与基本 EPS 差异（2011: 1.06 vs 1.13、2012: 1.00 vs 1.07，主因 11 伊利转债 32 亿的稀释，2013 年内全部转股）已登记 spike_notes；每股估值统一使用 2013Q3 末股本 2,043.16 百万股（转股后无存量稀释工具），口径归一登记于 spike_notes"
+}
