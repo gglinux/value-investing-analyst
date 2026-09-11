@@ -30,6 +30,7 @@
 | `S*` | 三情景门禁十一项 | `check_scenarios.py` 自动 |
 | `GATE*` | 双闸门结果 | `reverse_dcf.py expected-return` 自动 |
 | `GROWTH_*` | 成长股通道门禁与诊断 | `reverse_dcf.py growth` 自动（UNANCHORED 为硬拒绝、人工登记） |
+| `SOTP_*` | 持仓型控股 SOTP 通道门禁与诊断 | `reverse_dcf.py sotp` 自动（TABLE_INVALID/UNANCHORED 为硬拒绝） |
 
 `P0_*` 合计 6+20+4 = 30 项，与福耀案「0/6+0/20+0/4 = 0/30 误杀」口径一致。
 
@@ -217,6 +218,42 @@ ALERTS = {
         "growth", "成长通道估值 100% 来自成熟期终值折回（结构性终值主导，按构造恒触发）："
         "估值主体是尚未发生的成熟态，禁止以安全边际单独支撑核心买入，"
         "通道档位上限恒为小仓位试探"),
+
+    # ---- 持仓型控股 SOTP 通道（reverse_dcf.py sotp 自动，REQ-P1-02）----
+    # 动因（OBS-2019-06-01 软银案，失效方向与 Netflix 相反——过乐观）：持仓型
+    # 控股公司的 OE 被并表错位 + 非现金重估 + 口径重分类三重污染，owner yield
+    # 21.1% 对股息率 0.43% 的公司是数学不可能；官方 must_trigger 两项
+    # （治理折价/非经营资产主导）此前在注册表无等价物——以下代号补全该缺口。
+    "M_OWNER_YIELD_CONSOLIDATION_DISTORTION": (
+        "metrics", "并表/重估污染：投资收益与公允价值变动占净利润比重主导"
+        "（最新年 ≥50% 或近 3 年 ≥2 年 ≥30%，双向——重估推高与减值压低同病）："
+        "OE 与 owner yield 被投资组合波动淹没，OE 通道结论不进档位裁决，"
+        "估值改走 SOTP 通道（company-types 卡四 / reverse_dcf.py sotp）"),
+    "SOTP_HOLDINGS_TABLE_INVALID": (
+        "sotp", "持仓表结构化字段不全（标的/归属毛值/估值方法/流动性/变现折价率/"
+        "[E:] 证据六要素）或估值方法/流动性不在白名单——通道拒绝服务（exit 2）。"
+        "--add-back 一个总数是不留结构化记录的补丁形态，通道入口即拦"),
+    "SOTP_NET_DEBT_CONSOLIDATION_BASIS": (
+        "sotp", "净债采用合并口径而持仓按持股比例计价——口径错配会双重计入少数"
+        "股东应担债务（软银 2019 案 alternative_treatment 教训：合并净债 11.83 万亿"
+        "全额扣减属错误做法），须改用母公司本体净债"),
+    "SOTP_HOLDING_DISCOUNT_UNANCHORED": (
+        "sotp", "控股折价未挂证据：--holding-discount-basis 缺失或无 [E:] 指针——"
+        "折价率是 SOTP 结论的最大摆动因子（valuation-guide 多元集团纪律：须给依据"
+        "并做 ±10pct 敏感性），裸折价禁止"),
+    "SOTP_DISCOUNT_BELOW_BASE_RATE": (
+        "sotp", "控股折价低于行业基率带下界：比历史实证（软银长期 NAV 折价 30-50%）"
+        "更乐观——超出须在 basis 中论证收敛机制证据（回购至NAV/分拆），"
+        "否则按带上界重估"),
+    "SOTP_IMPLIED_DISCOUNT_GAP": (
+        "sotp", "现价隐含控股折价与采用折价分歧 ≥10pct：市场定价与框架假设的分歧"
+        "显式化——若市场折价持续，可投资价值≈现价（无安全边际），是观察/拒绝"
+        "档位带的分界输入"),
+    "SOTP_HOLDINGS_DOMINATED": (
+        "sotp", "持仓净价值占 equity NAV ≥50%（非经营资产主导，OBS-2019-06-01 "
+        "候选判据的通道内实现）：价值主体是资产变现而非经营复利，折价收敛不可控"
+        "——通道档位上限小仓位试探（与成长通道终值纪律同源），OE 通道结论"
+        "不进档位裁决"),
 }
 
 

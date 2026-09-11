@@ -1,0 +1,30 @@
+{
+  "_note": "REQ-P1-02 交付物①实例（经营+投资双轮形态）：腾讯投资组合结构化持仓表。由 cases/tencent/data/valuation.json 的 investment_portfolio（上市 9 折/非上市 6 折的中性可回收口径）转换为通道 schema。与软银的纯控股形态对照：本组合占市值仅 ~16%（经营业务主导），控股折价取小带（operating_with_portfolio 分档）。",
+  "case": "tencent",
+  "as_of": "2026-08-28",
+  "currency": "CNY",
+  "unit": "million",
+  "items": [
+    {
+      "name": "上市投资组合（公允价值）",
+      "stake_pct": null,
+      "valuation_method": "fair_value_disclosed",
+      "gross_value": 487200,
+      "liquidity": "listed_stake",
+      "liquidity_haircut": 0.9,
+      "evidence": "2025 年报披露的上市投资公允价值合计，变现折价 9 折（大额减持市场冲击）[E:cases/tencent/data/valuation.json investment_portfolio]",
+      "note": "原案保守口径 0.9 / 红队 0.7 双轨"
+    },
+    {
+      "name": "非上市投资组合（账面价值）",
+      "stake_pct": null,
+      "valuation_method": "book_value",
+      "gross_value": 387900,
+      "liquidity": "private_co",
+      "liquidity_haircut": 0.6,
+      "evidence": "2025 年报非上市投资账面价值，变现折价 6 折（私募估值水分+流动性）[E:cases/tencent/data/valuation.json investment_portfolio]",
+      "note": "账面已低于公允的保守兜底；红队 4 折对照"
+    }
+  ],
+  "net_debt_note": "净现金 58,200 百万 CNY（净债为负），--net-debt 传 -58200 [E:cases/tencent/data/valuation.json net_cash]"
+}

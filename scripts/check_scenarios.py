@@ -162,7 +162,11 @@ DCF_METHODS = {
     "rab": "受监管资产基数",
     "rnpv": "管线风险调整净现值",
     "reverse_dcf": "反向 DCF",
-    "sotp": "分部加总（盈利能力口径）",
+    # REQ-P1-02 持仓型控股通道：reverse_dcf.py sotp 的结构化产出（持仓表+控股
+    # 折价+反解隐含折价）。悲观情景的 SOTP 对应形态是 sotp_asset_floor（分部按
+    # 可变现价值，在独立方法白名单）——基准/乐观的 "sotp" 与之构成上下行不同源，
+    # 软银 2019 案即此形态。
+    "sotp": "分部加总（盈利能力口径；REQ-P1-02 起由 reverse_dcf.py sotp 结构化产出）",
     "pb_roe": "PB-ROE 回归",
     # REQ-P1-01 成长股通道：成熟期稳态利润×到达概率折回（reverse_dcf.py growth）。
     # 只允许出现在基准/乐观——悲观情景仍须走独立方法白名单（到达失败分支的

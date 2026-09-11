@@ -290,9 +290,22 @@
 - 价值：让持仓型公司可分析。这类公司在港股和美股大市值标的中占比很高（腾讯、软银、伯克希尔、Prosus、复星）。做完后经营性 OE 与 look-through 价值分列，投资者能看清"我买的是什么"。
 - 交付物：底稿新增结构化持仓表（标的、持股比例、估值方法、折价率、流动性）；`compute_metrics.py` 区分经营性 OE 与 look-through 收益；`reverse_dcf.py` 新增 `--mode sotp`，控股折价作为显式参数。
 - 验收：软银、腾讯案例重跑后经营性 OE 与投资组合价值分列；控股折价参数有行业基率引用。
-- 涉及文件：`references/company-types.md` 卡三、`scripts/compute_metrics.py`、`scripts/reverse_dcf.py`
+- 涉及文件：`references/company-types.md` 卡三、`scripts/compute_metrics.py`、`scripts/reverse_dcf.py`（注：需求原文「卡三」系旧编号——隐蔽资产/控股子型现行为卡四，卡三现为周期；已按现行编号落码，与 REQ-P1-01 的卡四/卡二编号漂移同源）
 - 依赖：REQ-P0-03
-- 状态：todo
+- 状态：**doing**（2026-09-11 通道落码 + 软银/腾讯双验收锚完成；案例库内持仓型新案例锚待批次执行）
+- 进展：
+  - ✅ `reverse_dcf.py` 新增 `sotp` 子命令（subparsers 的 dest 即 mode，与需求 `--mode sotp` 一致）：三段式 `可投资价值 = [Σ(持仓归属毛值×变现折价) + 经营业务价值 − 母公司净债] × (1−控股折价)`；**反解"现价隐含控股折价"** `implied = 1 − 市值/equity NAV`（SOTP 形态的反向 DCF）；两层折价显式分工（持仓级变现折价管"这笔资产卖得回几成"，整体控股折价管"钱在别人手里再打几折"）——替代 `--add-back/--deduct` 手工补丁。
+  - ✅ 结构化持仓表 schema（交付物①）：六要素（标的/持股比例/估值方法/变现折价率/流动性/[E:] 证据）不全即**通道拒绝服务（exit 2）**；估值方法白名单五档（market_price/fair_value_disclosed/private_estimate/book_value/dcf_segment）+ 流动性分级五档（listed_major/listed_stake/private_fund/private_co/illiquid）；`gross_value` 语义=按持股比例折算后的归属毛值（stake_pct 仅披露不参与计算，防双重折算）。
+  - ✅ 净债口径门（并表错位防线）：`--net-debt-basis ∈ {parent_standalone, consolidated}` 显式声明；合并口径触发 `SOTP_NET_DEBT_CONSOLIDATION_BASIS`（软银案 alternative_treatment 教训：持仓按持股计价而净债用合并口径=双重计入少数股东应担债务）。
+  - ✅ 控股折价挂行业基率带（交付物③）：`HOLDING_DISCOUNT_BANDS` 四档（亚洲多元化控股无收敛机制 30-50%【软银 2016-2019 实证】/ 上市持仓主导无收敛 20-40% / 有收敛机制 5-20% / 经营主导+投资副轮 0-15%），`--holding-profile` 机器对照，低于下界触发 `SOTP_DISCOUNT_BELOW_BASE_RATE`（比历史实证更乐观须论证）；`--discount-bands-file` 为 REQ-P1-05 预留接管接口。
+  - ✅ `compute_metrics.py` 区分经营性 OE 与 look-through 收益（交付物②）：annual 行可选字段 `investment_income`（投资收益+公允价值变动，重估推高与减值压低同字段）/ `dividend_income`（从被投企业收到的分红）；自动产出 `sotp_screen` 块（经营性 OE / look-through / 占比序列 / channel_hint）；**双向失真识别**：最新年占比 ≥50% 或近 3 年 ≥2 年 ≥30% → `M_OWNER_YIELD_CONSOLIDATION_DISTORTION`（OBS-2019-06-01 候选名落码——owner yield 21.1% vs 股息率 0.43% 的数学不可能首次被机器识别；腾讯 2023 减值年为反向同病）。缺字段=not applicable（经营主导型正确阴性，存在性前置）。
+  - ✅ 六+1 告警码注册（SOTP_* 层 + M_OWNER_YIELD_CONSOLIDATION_DISTORTION），官方 must_trigger 两项「治理折价」「非经营资产主导」的注册表等价物补全（软银案 answer.json 登记的能力缺口）。
+  - ✅ 通道结构纪律：持仓占 equity NAV ≥50% 即非经营资产主导（`SOTP_HOLDINGS_DOMINATED`）——OE 通道结论不进档位裁决 + 档位上限小仓位试探（与成长通道终值纪律同源）；无收敛机制的折价不是便宜（价值陷阱 SOTP 形态：兑现押在普通股东无法触发的治理行动上）；经营主导形态（<50%）通道只做分列、档位由标准双闸门定。
+  - ✅ 接线五处：company-types 卡四正常化/估值通道 cell（含底稿字段登记指引）、valuation-guide 方法树行 + SOTP 通道纪律段（五条纪律 + 双验收锚）、SKILL.md Phase 4 一行指针（体积红线内）、backtest/PROMPT.md Step 2 机器化纪律段（第三批起强制，含持仓表模板指引）、check_scenarios `DCF_METHODS["sotp"]` 描述更新（与 sotp_asset_floor 上下行不同源说明）。
+  - ✅ **验收「软银重跑分列」达成**：`backtest/9984.T_2019-06-30/data/` 新增三文件（冻结底稿未动，命名避开 runner 的 `financials_*`/`metrics_*`/`scenarios*` glob）——①`sotp_holdings_REQ-P1-02.json`（结构化持仓表交付物实例，由 business_drivers sotp_holdings 六要素化）②`sotp_value_REQ-P1-02.json`（通道输出：毛 NAV 29,490,000 − 净债 6,200,000 = equity NAV 23,290,000 ×(1−40%) → **每股 6,630 ≈ 原案 ADJ3 的 6,633**（±0.5%，原案 23.3 万亿四舍五入）；隐含折价 53.2% 与底稿 nav_discount 53% 一致；档位带「观察等价格」= 官方 {1,2} 且管线实际档位 2；codes：HOLDINGS_DOMINATED（持仓 100%+ 主导）+ IMPLIED_DISCOUNT_GAP（隐含 53% vs 采用 40%，分歧 13pct——正是原案 gate1 多锚稳健性的机器化：边际 ≥40% 需折价 ≤14%，历史带之外））③`sotp_demo_financials_REQ-P1-02.json` + `sotp_screen_REQ-P1-02.json`（compute_metrics 分列演示：投资收益占比 92.3% → distortion 首次真实触发；**经营性 OE 990,011**（剔除 VF/Delta 重估 1,302,838 后，与 ADJ1 证据 A 的量级对应）/ **look-through 收益 2,051,422**（分红收入）分列；并表 D&A 错位维度的处理边界在 note 披露——两个污染维度分开治理）。
+  - ✅ **验收「腾讯重跑分列」达成**：`cases/tencent/data/` 新增 `sotp_holdings_REQ-P1-02.json` + `sotp_value_REQ-P1-02.json`——经营+投资双轮形态：持仓 671,220（上市 9 折 438,480 + 非上市 6 折 232,740）+ 经营 DCF 3,590,630（forward-value 正常化 OE 219,013×g5%）+ 净现金 58,200 = equity NAV 4,320,050；持仓占比 16% <50% → 经营主导不越权（无 DOMINATED 码、档位带=标准双闸门裁定）；控股折价 10% 落 operating_with_portfolio 带 [0-15%] 内（回购注销+分拆提供部分收敛机制）；每股 464.27 HKD（fx 1.087）。
+  - ✅ `tests/run_tests.py` 新增 14.8 段 46 项行为测试（三段式数学、六要素四形态硬拒绝、折价未挂 [E:] 拒绝、净债合并口径告警、折价越带、隐含折价极端值反推 MC=NAV⇒0 / MC=NAV/2⇒50%、软银端到端含 6,633 复现与隐含 53%、腾讯分列与不越权、sotp_screen 双向失真（重估推高/减值压低）+ 经营主导阴性对照 + 软银真实数据、七码注册、分层命名表、五处文档接入、check_scenarios 接线）；全套件 558 → **604 项全绿**；`--rerun --baseline` 12 案代号集合与基线一致、假阳性轨 0 新增。
+  - ⏳ 待办：案例库内持仓型**新**案例锚（伯克希尔/Prosus/复星类，正向与假阳性各一）待批次执行——建议入第五批与 P1-01 成长通道案例锚同批（彼时 sotp 通道判别力可复验）；存量底稿（软银 financials、腾讯 financials）补 `investment_income`/`dividend_income` 字段使 sotp_screen 在真实管道常驻（当前为演示副本，按「历史 case 数据不动」纪律未改冻结底稿）。
 
 ### REQ-P1-03 护城河评级连续化
 - 来源：A2、D
@@ -584,3 +597,4 @@
 | 2026-09-11 | v1.3 | REQ-P0-02 审查修订三版：V4A 复合判据（双高形态 ∧ 币种×年份存款基准 ∧ 融资成本一半）+ `phase0_arithmetic` 取数兜底 + `--deposit-rate` 覆盖；康美真实数据首次命中，负样本零误杀 |
 | 2026-09-11 | v1.3 | REQ-P0-04 三版审查修订：交付物/验收按 as-built 改写（换源候选维度未建、实际为"去同源化 + 下行约束落码"，外部锚移交 REQ-P1-05/P2-06）；新增存量 12 案 rerun + 基线重建 + 神华档位重判待办；茅台"被 ③ 拦"修正为 ①' ③ 双拦（valuation-guide 同步） |
 | 2026-09-11 | v1.4 | REQ-P1-01 成长股通道落码：growth-framework 三段式 + reverse_dcf `growth` 模式（成熟期稳态利润×到达概率折回 + 现价隐含到达概率反解 + 基率锚挂钩）+ 六个 GROWTH_* 告警码 + 五处接线；Netflix 验收演示档位 1→2、缺口 2→1 档；tests 14.7 段 29 项、套件 558 全绿、基线一致；状态 todo → doing（2 个新案例锚待批次执行） |
+| 2026-09-11 | v1.5 | REQ-P1-02 持仓型控股 SOTP 通道落码：reverse_dcf `sotp` 模式（持仓表六要素+经营业务−母公司净债 ×(1−控股折价) + 现价隐含控股折价反解 + 折价基率带四档）+ compute_metrics `sotp_screen`（经营性 OE / look-through 分列 + 双向失真识别 M_OWNER_YIELD_CONSOLIDATION_DISTORTION，OBS-2019-06-01 候选方向落码）；软银验收锚每股 6,630≈原案 6,633、隐含折价 53% 一致、经营性 OE 990,011 与 look-through 2,051,422 分列；腾讯经营+投资双轮分列（持仓 16% 不越权）；六+1 告警码 + 五处接线；tests 14.8 段 46 项、套件 604 全绿、基线一致；状态 todo → doing（新案例锚待批次执行） |

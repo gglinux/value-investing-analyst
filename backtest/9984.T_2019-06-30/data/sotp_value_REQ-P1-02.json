@@ -1,0 +1,129 @@
+{
+  "mode": "sotp",
+  "holdings_table": {
+    "source": "backtest/9984.T_2019-06-30/data/sotp_holdings_REQ-P1-02.json",
+    "as_of": "2019-06-28",
+    "currency": "JPY",
+    "unit": "million",
+    "items_count": 6
+  },
+  "net_debt": 6200000.0,
+  "holdings_detail": [
+    {
+      "name": "SoftBank Corp（9434.T 国内电信）",
+      "stake_pct": 66.49,
+      "valuation_method": "market_price",
+      "liquidity": "listed_stake",
+      "gross_value": 11020000.0,
+      "liquidity_haircut": 1.0,
+      "adjusted_value": 11020000.0,
+      "evidence": "回放日收盘 ¥1,399.5（东财 secid=176.9434）× 11,845,652,700 股 × 66.49%（IPO 后集团间接持股，q4fy2018 官方）[E:business_drivers_9984_2019.json sotp_holdings]",
+      "note": "IPO 发行价 ¥1,500，2019-06 市价仍低 7%——指数效应可能高估清算价值"
+    },
+    {
+      "name": "阿里巴巴（BABA.N）",
+      "stake_pct": 25.9,
+      "valuation_method": "market_price",
+      "liquidity": "listed_stake",
+      "gross_value": 12480000.0,
+      "liquidity_haircut": 1.0,
+      "adjusted_value": 12480000.0,
+      "evidence": "2019-06-28 收盘 $173.11 × 总股本约 25.8 亿股 × 25.9% × 107.8 JPY/USD [E:business_drivers_9984_2019.json sotp_holdings]",
+      "note": "部分在 mandatory exchangeable trust 结构内（预付远期交割实证可行但有市场冲击）；离岸变现税务 10-20% 争议区间"
+    },
+    {
+      "name": "Sprint（S.N）",
+      "stake_pct": 84.4,
+      "valuation_method": "market_price",
+      "liquidity": "listed_stake",
+      "gross_value": 2380000.0,
+      "liquidity_haircut": 1.0,
+      "adjusted_value": 2380000.0,
+      "evidence": "2019-06-28 收盘约 $6.4 × 约 40.9 亿股 × 84.4%（q4fy2018 减值测试口径）× 107.8 [E:business_drivers_9984_2019.json sotp_holdings]",
+      "note": "价格受合并套利扭曲：获批≈T-Mobile 映射 2.4 万亿；失败独立价值 1.0-1.5 万亿（净债 $400 亿+亏损）——公允区间极宽"
+    },
+    {
+      "name": "雅虎日本（4689.T）",
+      "stake_pct": 43.4,
+      "valuation_method": "market_price",
+      "liquidity": "listed_stake",
+      "gross_value": 710000.0,
+      "liquidity_haircut": 1.0,
+      "adjusted_value": 710000.0,
+      "evidence": "2019-06-28 收盘 ¥316 × 5,151,629,615 股 × 43.4%（交易前直接+SBGJ 口径）[E:business_drivers_9984_2019.json sotp_holdings]",
+      "note": "2019-05-08 交易：9434 举债认购雅日新股+雅日回购集团持股——集团换现金但 9434 少数股东分担比例下降，关联交易特征"
+    },
+    {
+      "name": "Vision Fund / Delta Fund 组合（含 ARM）",
+      "stake_pct": null,
+      "valuation_method": "fair_value_disclosed",
+      "liquidity": "private_fund",
+      "gross_value": 2400000.0,
+      "liquidity_haircut": 1.0,
+      "adjusted_value": 2400000.0,
+      "evidence": "持仓公允价值合计 $72.3bn（2019-03-31，q4fy2018 Portfolio 表）× 软银出资比例线性近似 28/91 × 107.8 [E:business_drivers_9984_2019.json sotp_holdings]",
+      "note": "线性近似偏乐观：第三方优先回报 7% hurdle 与 GP 分成使软银经济利益低于线性比例，真实价值区间 1.5-2.4 万亿——基准用线性上界，保守方向由悲观情景 VF −25% 承担"
+    },
+    {
+      "name": "其他（鹰队/Brightstar/直接投资/Arm China 权益法等）",
+      "stake_pct": null,
+      "valuation_method": "private_estimate",
+      "liquidity": "illiquid",
+      "gross_value": 500000.0,
+      "liquidity_haircut": 1.0,
+      "adjusted_value": 500000.0,
+      "evidence": "保守量级估计 0.5 万亿日元（无可直接引用市价）[E:business_drivers_9984_2019.json sotp_holdings]",
+      "note": "精度低；source_level D"
+    }
+  ],
+  "portfolio_gross_value": 29490000.0,
+  "portfolio_net_value": 29490000.0,
+  "operating_value": 0.0,
+  "equity_nav": 23290000.0,
+  "holding_discount": 0.4,
+  "investable_value": 13974000.0,
+  "holdings_share_of_equity_nav": 1.266208673250322,
+  "holdings_share_note": "持仓净价值占 equity NAV 比重：≥50% 即『非经营资产主导』形态（OBS-2019-06-01 候选判据的通道内实现）——OE 通道结论不进档位裁决，档位上限锁小仓位试探",
+  "operating_value_basis": null,
+  "holding_discount_basis": "软银历史 NAV 折价长期 30-50% 区间中枢略保守（ADJ3：变现摩擦+治理折价+透明度折价三重构成，无收敛机制——回购仅市值 5.5%、孙正义明确扩张投资战略）[E:backtest/9984.T_2019-06-30 data/normalization_9984_2019.json ADJ3]",
+  "base_rate_band": {
+    "profile": "asian_conglomerate_no_convergence",
+    "label": "亚洲多元化控股：关键人集权/关联交易/无回购至NAV承诺",
+    "range": [
+      0.3,
+      0.5
+    ],
+    "evidence": "软银集团 2016-2019 长期 NAV 折价 30-50% [E:backtest/9984.T_2019-06-30 data/business_drivers sotp_holdings.nav_discount]",
+    "discount_in_band": true,
+    "hook": "REQ-P1-05：references/base-rates.md 建成后由 --discount-bands-file 接管（当前为引擎内置带）"
+  },
+  "implied": {
+    "market_cap": 10890000.0,
+    "implied_holding_discount": 0.5324173465006441,
+    "note": "反解 implied = 1 − 市值/equity NAV：市场按多大控股折价交易。与采用折价分歧 ≥10pct 即 SOTP_IMPLIED_DISCOUNT_GAP——若市场折价持续，可投资价值≈现价（无安全边际）"
+  },
+  "value_per_share": 6630.079609350054,
+  "value_per_share_quote_ccy": 6630.079609350054,
+  "fx": 1.0,
+  "sensitivity": {
+    "holding_discount_pm10pct": [
+      5525.066341125045,
+      7735.092877575063
+    ],
+    "note": "折价率是 SOTP 结论的最大摆动因子——±10pct 敏感性是valuation-guide 多元集团纪律的强制项"
+  },
+  "verdict_band": {
+    "cap": "小仓位试探",
+    "suggestion": "观察等价格",
+    "reasons": "价格 ≤ 折后 NAV，但无收敛机制的折价不是便宜——折价可以永不收敛（价值陷阱的 SOTP 形态），『便宜』的兑现押在治理行动上而普通股东无法触发。等价格=等更深的折价或收敛催化剂出现（回购至NAV/分拆/清算），须披露触发价与不收敛下限（股息率+NAV增速）",
+    "codes": [
+      "SOTP_HOLDINGS_DOMINATED",
+      "SOTP_IMPLIED_DISCOUNT_GAP"
+    ],
+    "note": "引擎建议档位带，最终档位由双闸门与裁决层确定；持仓主导（≥50% equity NAV）形态通道档位上限恒为小仓位试探——价值主体是资产变现而非经营复利，与终值纪律同源"
+  },
+  "codes": [
+    "SOTP_HOLDINGS_DOMINATED",
+    "SOTP_IMPLIED_DISCOUNT_GAP"
+  ]
+}

@@ -2776,6 +2776,255 @@ check("文档已接入成长通道（growth-framework/company-types/valuation-gu
           ("growth_terminal_backcast", "GROWTH_UNIT_ECONOMICS_UNPROVEN", "成熟期稳态利润")))
 
 # ═══════════════════════════════════════════════════════════════════
+print("== 14.8 持仓型控股 SOTP 通道（REQ-P1-02，reverse_dcf sotp + compute_metrics sotp_screen）==")
+# 动因：OBS-2019-06-01 软银案（方向与 Netflix 相反——过乐观）——持仓型控股的
+# OE 被并表错位+非现金重估+口径重分类三重污染，owner yield 21.1% 对股息率
+# 0.43% 是数学不可能。通道 = 持仓表+经营业务−母公司净债，×(1−控股折价)；
+# 测试锁定：三段式数学、持仓表六要素硬拒绝、净债口径门、折价基率带、
+# 隐含折价反解、sotp_screen 双向失真识别、软银/腾讯两验收锚。
+
+# --- A. 三段式数学（核心函数）---
+_sv = _RD.sotp_channel_value([
+    {"name": "上市持仓A", "stake_pct": 66.49, "valuation_method": "market_price",
+     "gross_value": 1000.0, "liquidity": "listed_stake", "liquidity_haircut": 0.9,
+     "evidence": "x [E:a]"},
+    {"name": "私募持仓B", "stake_pct": None, "valuation_method": "fair_value_disclosed",
+     "gross_value": 500.0, "liquidity": "private_fund", "liquidity_haircut": 0.6,
+     "evidence": "y [E:b]"},
+], net_debt=200.0, holding_discount=0.40, operating_value=300.0)
+check("持仓毛值 = Σ gross_value", abs(_sv["portfolio_gross_value"] - 1500.0) < 1e-9)
+check("持仓净值 = Σ(毛值×变现折价)",
+      abs(_sv["portfolio_net_value"] - (1000 * 0.9 + 500 * 0.6)) < 1e-9)
+check("equity NAV = 持仓净值+经营−净债", abs(_sv["equity_nav"] - 1300.0) < 1e-9)
+check("可投资价值 = NAV×(1−控股折价)", abs(_sv["investable_value"] - 780.0) < 1e-9)
+check("持仓占 equity NAV = 1200/1300", abs(_sv["holdings_share_of_equity_nav"] - 1200 / 1300) < 1e-9)
+check("逐项明细保留六要素（可审计）",
+      len(_sv["holdings_detail"]) == 2 and
+      all(k in _sv["holdings_detail"][0] for k in
+          ("name", "stake_pct", "valuation_method", "liquidity",
+           "gross_value", "liquidity_haircut", "evidence")))
+
+# --- B. 持仓表六要素硬拒绝（区分『结构化记录』与 add-back 补丁的第一道门）---
+_H1 = {"name": "上市持仓A", "stake_pct": 66.49, "valuation_method": "market_price",
+       "gross_value": 11020000, "liquidity": "listed_stake", "liquidity_haircut": 1.0,
+       "evidence": "回放日市价×持股 [E:a]"}
+
+
+def _wht(items, path):
+    with open(path, "w", encoding="utf-8") as _f:
+        json.dump({"as_of": "2019-06-28", "currency": "JPY", "unit": "million",
+                   "items": items}, _f, ensure_ascii=False)
+    return path
+
+
+def _sotp_cli(hf, extra=None):
+    return run(["sotp", "--holdings-file", hf,
+                "--net-debt", "6200000", "--net-debt-basis", "parent_standalone",
+                "--holding-discount", "0.40",
+                "--holding-profile", "asian_conglomerate_no_convergence",
+                "--holding-discount-basis", "历史NAV折价30-50%中枢 [E:x]",
+                "--market-cap", "10890000", "--shares", "2107.667"]
+               + (extra or []))
+
+
+with tempfile.TemporaryDirectory() as _td:
+    _no_liq = dict(_H1); del _no_liq["liquidity"]
+    _p1 = _sotp_cli(_wht([_no_liq], os.path.join(_td, "h1.json")))
+    check("缺 liquidity 字段 → 通道拒绝服务（exit 2）",
+          _p1.returncode == 2 and "SOTP_HOLDINGS_TABLE_INVALID" in _p1.stdout,
+          f"rc={_p1.returncode}")
+    _bad_vm = dict(_H1); _bad_vm["valuation_method"] = "拍脑袋"
+    _p2 = _sotp_cli(_wht([_bad_vm], os.path.join(_td, "h2.json")))
+    check("估值方法白名单外 → exit 2",
+          _p2.returncode == 2 and "白名单" in _p2.stdout, f"rc={_p2.returncode}")
+    _no_e = dict(_H1); _no_e["evidence"] = "无证据裸数字"
+    _p3 = _sotp_cli(_wht([_no_e], os.path.join(_td, "h3.json")))
+    check("持仓缺 [E:] 证据 → exit 2（裸数字禁止）",
+          _p3.returncode == 2 and "[E:]" in _p3.stdout, f"rc={_p3.returncode}")
+    _bad_hc = dict(_H1); _bad_hc["liquidity_haircut"] = 1.5
+    _p4 = _sotp_cli(_wht([_bad_hc], os.path.join(_td, "h4.json")))
+    check("变现折价率 >1 → exit 2（SOTP 保守口径不接受溢价）",
+          _p4.returncode == 2 and "越界" in _p4.stdout, f"rc={_p4.returncode}")
+    _p5 = _sotp_cli(os.path.join(_td, "not_exist.json"))
+    check("持仓表文件不存在 → 非零退出（不静默降级）", _p5.returncode != 0)
+    # 折价未挂 [E:] → exit 1 + 注册码提示（与 growth UNANCHORED 同语义）
+    _p6 = _sotp_cli(_wht([_H1], os.path.join(_td, "h6.json")),
+                    ["--holding-discount-basis", "无依据的裸折价"])
+    check("控股折价未挂 [E:] → 拒绝（exit 1）且提示注册码",
+          _p6.returncode == 1 and "SOTP_HOLDING_DISCOUNT_UNANCHORED" in
+          (_p6.stderr or "") + (_p6.stdout or ""),
+          f"rc={_p6.returncode}")
+
+# --- C. 软银 2019-06 端到端（验收锚①：纯控股形态）---
+_SBT_H = os.path.join(ROOT, "backtest", "9984.T_2019-06-30", "data",
+                      "sotp_holdings_REQ-P1-02.json")
+with tempfile.TemporaryDirectory() as _td:
+    _fp = os.path.join(_td, "sb.json")
+    _p_sb = _sotp_cli(_SBT_H, ["-o", _fp])
+    check("sotp 模式运行成功（软银 2019-06 验收形态）", _p_sb.returncode == 0,
+          (_p_sb.stderr or "")[:200])
+    if _p_sb.returncode == 0:
+        _sb = json.load(open(_fp))
+        # 原案 ADJ3：equity NAV 23.3万亿×0.6÷21.0767亿股 = 6,633（23.3 为四舍五入）
+        check("每股 6,630 ≈ 原案 6,633（±0.5%，ADJ3 口径复现）",
+              abs(_sb["value_per_share"] - 6633) / 6633 < 0.005,
+              str(_sb["value_per_share"]))
+        check("equity NAV ≈ 23.29 万亿（毛 NAV 29.49 − 净债 6.2）",
+              abs(_sb["equity_nav"] - 23290000) < 1000, str(_sb["equity_nav"]))
+        check("现价隐含控股折价 ≈ 53%（与底稿 nav_discount 一致）",
+              abs(_sb["implied"]["implied_holding_discount"] - 0.5324) < 0.005,
+              str(_sb["implied"]["implied_holding_discount"]))
+        check("SOTP_HOLDINGS_DOMINATED（持仓 100%+ of NAV，非经营资产主导）",
+              "SOTP_HOLDINGS_DOMINATED" in _sb["codes"])
+        check("隐含 53% vs 采用 40% 分歧 13pct → SOTP_IMPLIED_DISCOUNT_GAP",
+              "SOTP_IMPLIED_DISCOUNT_GAP" in _sb["codes"])
+        check("折价 40% 落在 30-50% 基率带内（不触发 BELOW_BASE_RATE）",
+              _sb["base_rate_band"]["discount_in_band"] and
+              "SOTP_DISCOUNT_BELOW_BASE_RATE" not in _sb["codes"])
+        check("档位带=观察等价格（= 官方 {1,2} 且管线实际档位 2）",
+              _sb["verdict_band"]["suggestion"] == "观察等价格")
+        check("档位上限=小仓位试探（持仓主导结构纪律）",
+              _sb["verdict_band"]["cap"] == "小仓位试探")
+        check("折价 ±10pct 敏感性输出（valuation-guide 强制项）",
+              _sb["sensitivity"]["holding_discount_pm10pct"][0] is not None)
+
+# --- D. 腾讯形态端到端（验收锚②：经营+投资双轮，分列而不越权）---
+_TC_H = os.path.join(ROOT, "cases", "tencent", "data", "sotp_holdings_REQ-P1-02.json")
+with tempfile.TemporaryDirectory() as _td:
+    _fp = os.path.join(_td, "tc.json")
+    _p_tc = run(["sotp", "--holdings-file", _TC_H,
+                 "--net-debt", "-58200", "--net-debt-basis", "parent_standalone",
+                 "--operating-value", "3590630",
+                 "--operating-value-basis",
+                 "正常化 OE 219,013×g5%×10y DCF [E:valuation.json]",
+                 "--holding-discount", "0.10",
+                 "--holding-profile", "operating_with_portfolio",
+                 "--holding-discount-basis", "经营主导小带 0-15% 取 10 [E:vg]",
+                 "--market-cap", "3811730", "--shares", "9103.147", "--fx", "1.087",
+                 "-o", _fp])
+    check("sotp 模式运行成功（腾讯经营+投资双轮形态）", _p_tc.returncode == 0,
+          (_p_tc.stderr or "")[:200])
+    if _p_tc.returncode == 0:
+        _tc = json.load(open(_fp))
+        check("三段分列齐备（持仓 671,220 / 经营 3,590,630 / 净现金 58,200）",
+              abs(_tc["portfolio_net_value"] - 671220) < 1 and
+              abs(_tc["operating_value"] - 3590630) < 1 and
+              _tc["net_debt"] == -58200)
+        check("equity NAV = 4,320,050（三段加总）",
+              abs(_tc["equity_nav"] - 4320050) < 1, str(_tc["equity_nav"]))
+        check("持仓占比 16% <50% → 无 SOTP_HOLDINGS_DOMINATED（经营主导不越权）",
+              "SOTP_HOLDINGS_DOMINATED" not in _tc["codes"] and
+              _tc["holdings_share_of_equity_nav"] < 0.5)
+        check("档位带=标准双闸门裁定（通道只做分列，不加额外上限）",
+              _tc["verdict_band"]["suggestion"] == "标准双闸门裁定"
+              and _tc["verdict_band"]["cap"] is None)
+        check("fx 换算：每股 427.11 CNY = 464.27 HKD",
+              abs(_tc["value_per_share"] - 427.11) < 0.5 and
+              abs(_tc["value_per_share_quote_ccy"] - 464.27) < 0.5)
+        check("隐含折价 12% vs 采用 10% 分歧 <10pct → 无 GAP 码",
+              "SOTP_IMPLIED_DISCOUNT_GAP" not in _tc["codes"])
+
+# --- E. 净债口径门 + 折价越带（并表错位与乐观折价的机器防线）---
+with tempfile.TemporaryDirectory() as _td:
+    _hf = _wht([_H1], os.path.join(_td, "h.json"))
+    _p_con = _sotp_cli(_hf, ["--net-debt-basis", "consolidated"])
+    check("净债合并口径 → SOTP_NET_DEBT_CONSOLIDATION_BASIS（软银案教训）",
+          _p_con.returncode == 0 and
+          "SOTP_NET_DEBT_CONSOLIDATION_BASIS" in _p_con.stdout)
+    _p_low = _sotp_cli(_hf, ["--holding-discount", "0.15",
+                             "--holding-discount-basis", "带外 [E:x]"])
+    check("折价 15% < 基率带下界 30% → SOTP_DISCOUNT_BELOW_BASE_RATE",
+          _p_low.returncode == 0 and "SOTP_DISCOUNT_BELOW_BASE_RATE" in _p_low.stdout,
+          _p_low.stdout[-200:])
+    # 隐含折价数学自洽（体检纪律）：MC=NAV ⇒ implied=0；MC=NAV/2 ⇒ implied=0.5
+    _fp2 = os.path.join(_td, "math.json")
+    _p_m = _sotp_cli(_hf, ["--market-cap", str(11020000 - 6200000), "-o", _fp2])
+    if _p_m.returncode == 0:
+        _m = json.load(open(_fp2))
+        check("极端值反推：MC=equity NAV ⇒ 隐含折价 0（市场未计折价）",
+              abs(_m["implied"]["implied_holding_discount"]) < 1e-9)
+    _p_m2 = _sotp_cli(_hf, ["--market-cap", str((11020000 - 6200000) / 2)])
+    if _p_m2.returncode == 0 and "implied_holding_discount" in _p_m2.stdout:
+        check("极端值反推：MC=NAV/2 ⇒ 隐含折价 50%（数学自洽）",
+              "50%" in _p_m2.stdout)
+
+# --- F. sotp_screen：经营性 OE / look-through 分列与双向失真识别 ---
+def _rows_with_inv(inv_seq, div_seq=None):
+    _rows = mk_rows([0.10, 0.10, 0.10, 0.10])
+    for _r, _v in zip(_rows, inv_seq):
+        if _v is not None:
+            _r["investment_income"] = _v
+    if div_seq:
+        for _r, _v in zip(_rows, div_seq):
+            if _v is not None:
+                _r["dividend_income"] = _v
+    return _rows
+
+
+_r_hi = cm.compute({"company": "T", "ticker": "T", "currency": "CNY", "unit": "million",
+                    "annual": _rows_with_inv([10, 10, 10, 100], [0, 0, 0, 80])},
+                   market_cap=None)
+check("重估推高型：最新年占比 86% ≥50% → distortion",
+      _r_hi["sotp_screen"]["applicable"] and _r_hi["sotp_screen"]["distortion"])
+check("重估推高型 → M_OWNER_YIELD_CONSOLIDATION_DISTORTION 触发",
+      "M_OWNER_YIELD_CONSOLIDATION_DISTORTION" in _r_hi["alert_codes"])
+check("look-through 收益分列（dividend_income 单列）",
+      _r_hi["sotp_screen"]["look_through_income_latest"] == 80)
+check("operating_oe = OE − 投资收益（经营性口径单列）",
+      abs(_r_hi["series"][-1]["operating_oe"] -
+          (_r_hi["series"][-1]["owner_earnings"] - 100)) < 1e-9)
+
+_r_dn = cm.compute({"company": "T2", "ticker": "T2", "currency": "CNY", "unit": "million",
+                    "annual": _rows_with_inv([5, 5, 5, -60])}, market_cap=None)
+check("减值压低型（腾讯 2023 形态）：负投资收益同判 distortion（abs 口径）",
+      _r_dn["sotp_screen"]["distortion"] and
+      "M_OWNER_YIELD_CONSOLIDATION_DISTORTION" in _r_dn["alert_codes"])
+
+_r_pure = cm.compute({"company": "T3", "ticker": "T3", "currency": "CNY", "unit": "million",
+                      "annual": mk_rows([0.10, 0.10, 0.10, 0.10])}, market_cap=None)
+check("阴性对照：经营主导型（无投资收益字段）→ not applicable 零误伤",
+      not _r_pure["sotp_screen"]["applicable"] and
+      "M_OWNER_YIELD_CONSOLIDATION_DISTORTION" not in _r_pure["alert_codes"])
+
+_SBT_FIN = os.path.join(ROOT, "backtest", "9984.T_2019-06-30", "data",
+                        "sotp_demo_financials_REQ-P1-02.json")
+if os.path.exists(_SBT_FIN):
+    with open(_SBT_FIN, encoding="utf-8") as _f:
+        _sb_fin = json.load(_f)
+    _r_sb = cm.compute(_sb_fin, market_cap=10889000)
+    check("软银真实数据：FY2018 占比 92% → distortion（OBS-2019-06-01 首次机器识别）",
+          _r_sb["sotp_screen"]["distortion"] and
+          "M_OWNER_YIELD_CONSOLIDATION_DISTORTION" in _r_sb["alert_codes"])
+    check("软银经营性 OE ≈ 990,011（剔除重估 1,302,838 后的量级）",
+          abs(_r_sb["sotp_screen"]["operating_oe_latest"] - 990011) < 2000,
+          str(_r_sb["sotp_screen"]["operating_oe_latest"]))
+    check("软银 look-through 收益 = 2,051,422（从被投企业收到的分红）",
+          _r_sb["sotp_screen"]["look_through_income_latest"] == 2051422)
+
+# --- G. 告警码注册 + 分层命名 + 文档接入 ---
+_sotp_codes = ["SOTP_HOLDINGS_TABLE_INVALID", "SOTP_NET_DEBT_CONSOLIDATION_BASIS",
+               "SOTP_HOLDING_DISCOUNT_UNANCHORED", "SOTP_DISCOUNT_BELOW_BASE_RATE",
+               "SOTP_IMPLIED_DISCOUNT_GAP", "SOTP_HOLDINGS_DOMINATED",
+               "M_OWNER_YIELD_CONSOLIDATION_DISTORTION"]
+check("七个 SOTP 通道码全部在 ALERTS 注册表",
+      not AC.unknown_codes(_sotp_codes), str(AC.unknown_codes(_sotp_codes)))
+check("分层命名表含 SOTP_* 行",
+      "`SOTP_*`" in open(os.path.join(SCRIPTS, "alert_codes.py"), encoding="utf-8").read())
+check("文档已接入 SOTP 通道（company-types 卡四/valuation-guide/SKILL）",
+      all(_kw in _docs_local for _kw in
+          ("reverse_dcf.py sotp", "SOTP_HOLDINGS_DOMINATED",
+           "M_OWNER_YIELD_CONSOLIDATION_DISTORTION")))
+_PROMPT_SOTP = open(os.path.join(ROOT, "backtest", "PROMPT.md"),
+                    encoding="utf-8").read()
+check("PROMPT 已写入持仓型控股通道纪律段", "REQ-P1-02" in _PROMPT_SOTP and
+      "sotp_holdings_REQ-P1-02" in _PROMPT_SOTP and
+      "SOTP_HOLDINGS_TABLE_INVALID" in _PROMPT_SOTP)
+import check_scenarios as _CS  # noqa: E402
+check("check_scenarios：sotp 在 DCF_METHODS（基准/乐观）且 sotp_asset_floor 在独立方法白名单",
+      "sotp" in _CS.DCF_METHODS and "sotp_asset_floor" in _CS.INDEPENDENT_METHODS and
+      "REQ-P1-02" in _CS.DCF_METHODS["sotp"])
+
+# ═══════════════════════════════════════════════════════════════════
 print("== 15 脚本接入完整性（元测试） ==")
 # 教训：阶段二写了 check_market_snapshot.py、跑通了、验证它能逮住海控存量错误，
 # 但**忘了在 SKILL.md 里引用它**——脚本存在 ≠ agent 会执行。SKILL.md 是 agent

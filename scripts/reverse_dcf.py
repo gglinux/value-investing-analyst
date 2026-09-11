@@ -10,6 +10,10 @@ reverse_dcf.py — 反向 DCF 求解器（Phase 4 强制使用）
   3. expected-return：三情景每股价值 + 概率 → 期望年化回报率/亏损概率（Phase 4.5 强制）
   4. growth：成熟期稳态利润 × 到达概率折回（REQ-P1-01 成长股/再投入型通道，
      当期 OE 被增长性资本开支压低时替代 OE 基期；反解"现价隐含到达概率"）
+  5. sotp：持仓型控股 SOTP（REQ-P1-02）——Σ(持仓毛值×变现折价) + 经营业务
+     − 母公司净债 = equity NAV，×(1−控股折价)；控股折价挂行业基率带；
+     反解"现价隐含控股折价"。软银/伯克希尔/Prosus 类并表错位与重估污染的
+     公司（OE 通道结构性失真，OBS-2019-06-01）走本通道
 
 用法：
   python3 reverse_dcf.py implied-growth --market-cap 50000 --base-oe 2000 \
@@ -26,6 +30,11 @@ reverse_dcf.py — 反向 DCF 求解器（Phase 4 强制使用）
       --contribution-margin 0.44 --failure-equity-value 646 \
       --mature-state-basis "渗透率×ARPU×利润率反推 [E:...]" \
       --arrival-prob-basis "基率锚+单元经济证据 [E:...]"   # REQ-P1-01 成长股通道
+  python3 reverse_dcf.py sotp --holdings-file data/sotp_holdings.json \
+      --net-debt 6200000 --net-debt-basis parent_standalone \
+      --holding-discount 0.40 --holding-profile asian_conglomerate_no_convergence \
+      --holding-discount-basis "历史 NAV 折价带 30-50% 中枢略保守 [E:...]" \
+      --market-cap 10890000 --shares 2107.667 -o data/sotp_value.json
 
 单位：market-cap / base-oe / mature-oe 用同一货币单位（建议百万）；shares 百万股。
 base-oe = 基期 Owner Earnings（来自 compute_metrics.py 输出，保持口径一致）。
@@ -261,6 +270,91 @@ REVENUE_CAGR_BASE_RATES = [
 GROWTH_VERDICT_CAP = "小仓位试探"   # 终值结构性主导 ⇒ 通道档位上限
 
 
+# ── REQ-P1-02 持仓型控股 SOTP 通道（2026-09-11）────────────────────────
+#
+# 动因（OBS-2019-06-01 软银案，方向与 Netflix 相反的框架失效）：持仓型控股
+# 公司（软银/伯克希尔/Prosus/复星类）的 OE 被三类口径污染——①并表错位
+# （OCF 含 100% Sprint/9434，股东按 84.4%/66.49% 享有）；②非现金重估
+# （IFRS 9 FVTPL 持仓公允价值变动直接入损益）；③口径重分类（分红收入在
+# 营业外/营业之间改列）。owner yield 21.1% 对股息率 0.43% 的公司是数学
+# 不可能——差额全部是污染。旧工具 --add-back/--deduct 是补丁：它依赖执行者
+# 知道该剔什么、剔多少，且不留结构化记录。
+#
+# 通道数学（三段式，替代单一 OE 框架）：
+#   可投资价值 = [ Σ(持仓归属毛值 × 变现折价) + 经营业务价值 − 母公司净债 ]
+#                × (1 − 控股折价)
+#   即 equity NAV × (1−holding_discount)。两层折价分工：
+#     · 变现折价（持仓级 liquidity_haircut）：这笔资产今天卖能拿回几成——
+#       大宗冲击/私募估值水分/税务，逐项登记；
+#     · 控股折价（整体 holding_discount）：市场对"钱在别人手里"的定价——
+#       治理摩擦/资本配置不可验证/无收敛机制，一个参数、须挂基率带。
+#
+# 与旧通道的正交性：
+#   1. 结构化持仓表（硬拒绝）：标的/持股比例/估值方法/流动性/变现折价率/
+#      [E:] 证据六要素不全即通道拒绝服务（exit 2）——"不留结构化记录"是
+#      本需求要消灭的补丁形态，通道入口即拦。
+#   2. 净债口径门（并表错位防线）：持仓按持股比例计价而净债用合并口径，
+#      会双重计入少数股东应担债务（软银案 alternative_treatment 教训：
+#      合并净债 11.83 万亿全额扣减属错误做法，已弃用）——净债口径显式
+#      声明，合并口径触发告警。
+#   3. 控股折价挂行业基率带：折价率是 SOTP 结论的最大摆动因子（valuation-guide
+#      多元集团纪律），低于基率带下界 = 比历史实证更乐观，须论证收敛机制。
+#   4. 反向求解：implied-growth 反解隐含增速、growth 反解隐含到达概率，
+#      本通道反解"现价隐含控股折价" implied = 1 − 市值/equity NAV——
+#      市场按多大折价交易，是观察/拒绝档位带的分界输入。
+#   5. 持仓主导 ⇒ 档位上限"小仓位试探"（与成长通道终值纪律同源）：
+#      价值主体是资产变现而非经营复利，折价收敛不可控——无收敛机制的
+#      折价不是便宜（价值陷阱闸门 S8 的 SOTP 形态）。
+#
+# 基率带事实源：软银档为仓库内实证（9984.T 底稿 sotp_holdings.nav_discount，
+# 市场长期按 equity NAV 折价 30-50% 交易）；其余分档为带注估计，REQ-P1-05
+# 基率表建成统一校准后由 --discount-bands-file 接管（与 growth 的
+# --base-rates-file 同一模式）。
+HOLDING_DISCOUNT_BANDS = {
+    "asian_conglomerate_no_convergence": {
+        "label": "亚洲多元化控股：关键人集权/关联交易/无回购至NAV承诺",
+        "range": [0.30, 0.50],
+        "evidence": "软银集团 2016-2019 长期 NAV 折价 30-50% "
+                    "[E:backtest/9984.T_2019-06-30 data/business_drivers sotp_holdings.nav_discount]",
+    },
+    "listed_stake_no_convergence": {
+        "label": "上市持仓主导控股：持仓流动性好但无收敛机制（无回购/分拆承诺）",
+        "range": [0.20, 0.40],
+        "evidence": "带内估计——上市持仓折价浅于私募主导，但无收敛机制则折价常驻；"
+                    "标定待 REQ-P1-05 基率表",
+    },
+    "convergence_mechanism": {
+        "label": "有收敛机制：持续回购注销/分拆兑现中（NAV 折价有压缩路径）",
+        "range": [0.05, 0.20],
+        "evidence": "带内估计——收敛机制存在但兑现有不确定性；标定待 REQ-P1-05 基率表",
+    },
+    "operating_with_portfolio": {
+        "label": "经营主导+投资副轮：投资组合占市值 <25%，估值主体是经营业务",
+        "range": [0.00, 0.15],
+        "evidence": "经营主导型通常仅对组合施加变现折价（腾讯案口径：上市9折/"
+                    "非上市6折），控股折价小带",
+    },
+}
+# 持仓估值方法白名单（方法树纪律：估值方法必须显式登记且可审计）
+SOTP_VALUATION_METHODS = {
+    "market_price": "上市市价 × 持股比例（回放日收盘）",
+    "fair_value_disclosed": "官方披露公允价值（私募持仓按财报 FV）",
+    "private_estimate": "自估/第三方估值（无市价无披露 FV）",
+    "book_value": "账面价值（保守兜底）",
+    "dcf_segment": "分部 DCF（经营性子公司按盈利能力估）",
+}
+# 流动性分级（变现折价的语义锚：haircut 数值须与流动性分级一致，如
+# listed_major 配 0.90-1.0 而 private_co 配 0.3-0.6——不一致时人工复核）
+SOTP_LIQUIDITY_CLASSES = {
+    "listed_major": "大市值上市持仓（大宗可吸收）",
+    "listed_stake": "上市但大额减持有冲击（折价前的持股比例已高）",
+    "private_fund": "基金份额/私募组合（估值依赖第三方）",
+    "private_co": "非上市股权",
+    "illiquid": "其他低流动资产",
+}
+SOTP_VERDICT_CAP = "小仓位试探"     # 持仓主导形态 ⇒ 通道档位上限（结构纪律）
+
+
 def revenue_growth_base_rate(current_revenue, required_cagr, table=None):
     """收入基率锚：历史上同等规模公司 10 年 CAGR 达到 required 的比例**上界**。
 
@@ -359,6 +453,106 @@ def growth_channel_value(mature_oe, arrival_prob, years_to_maturity, discount_ra
         "terminal_value_ratio_note": "结构性终值主导（按构造为 1.0）：估值主体是"
                                      "『到达后的成熟态』这个尚未发生的状态，"
                                      "禁止以安全边际单独支撑核心买入",
+    }
+
+
+def sotp_channel_value(items, net_debt, holding_discount, operating_value=0.0):
+    """持仓型控股 SOTP（REQ-P1-02）。
+
+    items: [{"name","gross_value","liquidity_haircut","stake_pct",
+             "valuation_method","liquidity","evidence","note"}]
+      gross_value 语义：**按持股比例折算后的归属毛值**（上市持仓=市价×持股；
+      非上市=披露 FV 或账面）。stake_pct 仅作披露、不参与计算——防双重折算。
+
+    三段式：Σ(毛值×变现折价) + 经营业务价值 − 母公司净债 = equity NAV，
+    再 × (1−控股折价) = 可投资价值。两层折价分工见模块注释。
+    返回 dict（含逐项明细、equity NAV、可投资价值与持仓占比披露）。
+    护栏与 growth 通道同源：结构化字段不全即 SystemExit（通道拒绝服务）。
+    """
+    if not items:
+        raise SystemExit(
+            "错误：持仓表为空——持仓型控股的估值主体就是持仓组合，"
+            "空表意味着『我买的是什么』无答案。先按 references/company-types.md "
+            "卡四建结构化持仓表（标的/持股比例/估值方法/折价率/流动性/证据），"
+            "再进本通道（SOTP_HOLDINGS_TABLE_INVALID）。")
+    gross_total, net_total, detail = 0.0, 0.0, []
+    for it in items:
+        name = it.get("name", "?")
+        missing = [k for k in ("name", "gross_value", "valuation_method",
+                               "liquidity", "liquidity_haircut", "evidence")
+                   if it.get(k) in (None, "")]
+        if missing:
+            raise SystemExit(
+                f"错误：持仓条目『{name}』缺结构化字段：{'、'.join(missing)}。"
+                "持仓表六要素（标的/归属毛值/估值方法/流动性/变现折价率/[E:] 证据）"
+                "不全即通道拒绝服务——这是把『--add-back 一个总数』的补丁形态"
+                "挡在入口（SOTP_HOLDINGS_TABLE_INVALID，exit 2）。")
+        gv, hc = float(it["gross_value"]), float(it["liquidity_haircut"])
+        vm, lq = it["valuation_method"], it["liquidity"]
+        if gv < 0:
+            raise SystemExit(f"错误：持仓『{name}』归属毛值 {gv} 为负——负债请登到净债，"
+                             "持仓表只放资产。")
+        if not (0.0 < hc <= 1.0):
+            raise SystemExit(
+                f"错误：持仓『{name}』变现折价率 {hc} 越界（应在 (0,1]，小数）。"
+                "0 意味着资产一文不值（那就别列）；>1 是溢价，SOTP 保守口径不接受。")
+        if vm not in SOTP_VALUATION_METHODS:
+            raise SystemExit(
+                f"错误：持仓『{name}』估值方法 {vm!r} 不在白名单 "
+                f"{sorted(SOTP_VALUATION_METHODS)}——估值方法必须显式登记且可审计"
+                "（方法树纪律），自由文本会让『这个数怎么来的』无法复核。")
+        if lq not in SOTP_LIQUIDITY_CLASSES:
+            raise SystemExit(
+                f"错误：持仓『{name}』流动性分级 {lq!r} 不在白名单 "
+                f"{sorted(SOTP_LIQUIDITY_CLASSES)}——变现折价率的语义锚，"
+                "listed_major 配 0.5 这类不一致会在分级缺失时无法复核。")
+        if "[E:" not in (it.get("evidence") or ""):
+            raise SystemExit(
+                f"错误：持仓『{name}』缺 [E:] 证据指针——持仓毛值是 SOTP 的"
+                f"第一输入，裸数字禁止（与 S7 概率纪律同源）。"
+                "违反项告警码：SOTP_HOLDINGS_TABLE_INVALID。")
+        adj = gv * hc
+        gross_total += gv
+        net_total += adj
+        detail.append({
+            "name": name, "stake_pct": it.get("stake_pct"),
+            "valuation_method": vm, "liquidity": lq,
+            "gross_value": gv, "liquidity_haircut": hc,
+            "adjusted_value": adj,
+            "evidence": it["evidence"],
+            "note": it.get("note"),
+        })
+    if net_debt is None:
+        raise SystemExit("错误：--net-debt 必填——持仓型公司的净值口径里净债是"
+                         "显式第三段，缺它等于『只数资产不数债』。净现金传负数。")
+    if not (0.0 <= holding_discount < 1.0):
+        raise SystemExit(
+            f"错误：控股折价 {holding_discount} 应在 [0,1)（小数）。"
+            "≥1 是『NAV 全部归零』无意义；负数是控股溢价——溢价形态的市场定价"
+            "（如伯克希尔）不走本通道，走标准 OE 管道并在报告披露。")
+    equity_nav = net_total + operating_value - net_debt
+    if equity_nav <= 0:
+        raise SystemExit(
+            f"错误：equity NAV = {equity_nav:,.0f} ≤ 0（持仓折后 {net_total:,.0f} + "
+            f"经营 {operating_value:,.0f} − 净债 {net_debt:,.0f}）。"
+            "资不抵债口径下『控股折价』失去定义——请核查净债是否误用合并口径"
+            "（SOTP_NET_DEBT_CONSOLIDATION_BASIS），或持仓毛值/折价率是否量纲错位。")
+    investable = equity_nav * (1.0 - holding_discount)
+    holdings_share = (net_total / equity_nav) if equity_nav > 0 else None
+    return {
+        "holdings_detail": detail,
+        "portfolio_gross_value": gross_total,
+        "portfolio_net_value": net_total,
+        "operating_value": operating_value,
+        "net_debt": net_debt,
+        "equity_nav": equity_nav,
+        "holding_discount": holding_discount,
+        "investable_value": investable,
+        "holdings_share_of_equity_nav": holdings_share,
+        "holdings_share_note": (
+            "持仓净价值占 equity NAV 比重：≥50% 即『非经营资产主导』形态"
+            "（OBS-2019-06-01 候选判据的通道内实现）——OE 通道结论不进档位裁决，"
+            "档位上限锁小仓位试探"),
     }
 
 
@@ -831,6 +1025,53 @@ def main():
     p4.add_argument("--min-spread", type=float, default=DEFAULT_MIN_SPREAD)
     p4.add_argument("-o", "--output", help="输出 JSON 路径")
 
+    # ── REQ-P1-02：持仓型控股 SOTP 通道 ──
+    p5 = sub.add_parser(
+        "sotp", help="持仓型控股 SOTP：持仓组合 + 经营业务 − 母公司净债，控股折价显式参数")
+    p5.add_argument("--holdings-file", required=True,
+                    help="结构化持仓表 JSON（交付物 schema）：{items:[{name, stake_pct, "
+                         "valuation_method, gross_value, liquidity, liquidity_haircut, "
+                         "evidence}]}. gross_value=按持股比例折算后的归属毛值；"
+                         "六要素不全即通道拒绝服务（exit 2）")
+    p5.add_argument("--net-debt", type=float, required=True,
+                    help="母公司净债（与持仓毛值同币种同单位；净现金传负数）。"
+                         "必须是本体口径——见 --net-debt-basis")
+    p5.add_argument("--net-debt-basis", required=True,
+                    choices=["parent_standalone", "consolidated"],
+                    help="净债口径声明。持仓按持股比例计价而净债用合并口径会双重"
+                         "计入少数股东应担债务（软银 2019 案 alternative_treatment "
+                         "教训）；consolidated 触发 SOTP_NET_DEBT_CONSOLIDATION_BASIS 告警")
+    p5.add_argument("--holding-discount", type=float, required=True,
+                    help="控股折价（[0,1) 小数）：市场对『钱在别人手里』的定价——"
+                         "治理摩擦/资本配置不可验证/无收敛机制。与持仓级变现折价"
+                         "分工：变现折价管『这笔资产卖得回几成』，控股折价管"
+                         "『整体该再打几折』")
+    p5.add_argument("--holding-discount-basis", required=True,
+                    help="控股折价依据（必填，须含 [E:] 指针并引用基率带）：折价率是"
+                         "SOTP 结论的最大摆动因子，裸折价禁止（valuation-guide "
+                         "多元集团纪律）。低于基率带下界 = 比历史实证更乐观")
+    p5.add_argument("--holding-profile", required=True,
+                    choices=sorted(HOLDING_DISCOUNT_BANDS),
+                    help="控股形态分档（基率带索引）：折价与带对照，低于下界触发"
+                         "SOTP_DISCOUNT_BELOW_BASE_RATE")
+    p5.add_argument("--discount-bands-file",
+                    help="基率带文件（REQ-P1-05 的 references/base-rates.md 建成后接管，"
+                         "JSON dict 格式同 HOLDING_DISCOUNT_BANDS）。缺省用引擎内置带")
+    p5.add_argument("--operating-value", type=float, default=0.0,
+                    help="经营业务价值（经营主导+投资副轮形态如腾讯：forward-value 的"
+                         "经营 DCF 总额；纯控股省略=0——价值主体就是持仓）")
+    p5.add_argument("--operating-value-basis",
+                    help="经营业务价值依据（--operating-value >0 时必填且须含 [E:]）——"
+                         "该值的推导须可审计（正常化基期/增速/终值口径）")
+    p5.add_argument("--market-cap", type=float, required=True,
+                    help="当前市值（股权口径，与持仓毛值同币种同单位）——用于反解"
+                         "『现价隐含控股折价』，即本通道的反向 DCF")
+    p5.add_argument("--shares", type=float,
+                    help="摊薄股本（百万股），提供则输出每股口径")
+    p5.add_argument("--fx", type=float, default=1.0,
+                    help="每股价值的币种换算系数（报告币→行情币），如 CNY→HKD 用 1.087")
+    p5.add_argument("-o", "--output", help="输出 JSON 路径")
+
     args = ap.parse_args()
 
     if args.mode == "expected-return":
@@ -1169,6 +1410,219 @@ def main():
         print(f"\n档位带（上限 {GROWTH_VERDICT_CAP}）: {band}")
         print(f"  {band_reason}")
         print(f"告警码: {' '.join(codes)}")
+        if args.output:
+            with open(args.output, "w", encoding="utf-8") as f:
+                json.dump(out, f, ensure_ascii=False, indent=2)
+            print(f"\n已写入 {args.output}")
+        return
+
+    if args.mode == "sotp":
+        # ---- 持仓表读取与结构化校验（sotp_channel_value 内做六要素硬拒绝）----
+        with open(args.holdings_file, "r", encoding="utf-8") as _f:
+            htab = json.load(_f)
+        items = htab.get("items")
+        if items is None:
+            # 兼容软银案 business_drivers.sotp_holdings 的旧半结构化形态
+            # （holdings 数组无 liquidity/valuation_method 字段）——不猜测、
+            # 显式要求转成结构化表（交付物 schema），通道不做静默降级。
+            print("错误：持仓表缺 items 数组（结构化持仓表 schema）。旧半结构化持仓数据"
+                  "（如 business_drivers.sotp_holdings）须先转成六要素表"
+                  "（标的/持股比例/估值方法/流动性/变现折价率/[E:] 证据）"
+                  "——转换本身就是 REQ-P1-02 交付物的一部分，通道不代填。")
+            print("通道拒绝服务（SOTP_HOLDINGS_TABLE_INVALID，exit 2）。")
+            sys.exit(2)
+        if args.operating_value > 0 and "[E:" not in (args.operating_value_basis or ""):
+            raise SystemExit(
+                "错误：--operating-value > 0 时 --operating-value-basis 必填且须含 [E:] "
+                "——经营业务价值是三段式的第二大输入，其推导（正常化基期/增速/终值）"
+                "必须可审计，与持仓毛值同纪律。")
+        if "[E:" not in (args.holding_discount_basis or ""):
+            raise SystemExit(
+                "错误：--holding-discount-basis 必须含 [E:] 证据指针——控股折价是 SOTP "
+                "结论的最大摆动因子（valuation-guide 多元集团纪律：折价率必须给依据并做"
+                "±10pct 敏感性），裸折价禁止。违反项告警码："
+                "SOTP_HOLDING_DISCOUNT_UNANCHORED（人工登记进 verdict.codes）。")
+
+        # ---- 基率带（控股折价与行业基率挂钩的机器强制项）----
+        bands = HOLDING_DISCOUNT_BANDS
+        if args.discount_bands_file:
+            with open(args.discount_bands_file, "r", encoding="utf-8") as _f:
+                bands = json.load(_f)
+        if args.holding_profile not in bands:
+            raise SystemExit(
+                f"错误：--holding-profile {args.holding_profile!r} 不在基率带表内"
+                f"（可用：{sorted(bands)}）。REQ-P1-05 基率表接管后由 "
+                "--discount-bands-file 提供，避免两处事实源漂移。")
+        band = bands[args.holding_profile]
+        band_lo, band_hi = band["range"]
+        band_check = {
+            "profile": args.holding_profile,
+            "label": band["label"],
+            "range": band["range"],
+            "evidence": band["evidence"],
+            "discount_in_band": band_lo <= args.holding_discount <= band_hi,
+            "hook": "REQ-P1-05：references/base-rates.md 建成后由 "
+                    "--discount-bands-file 接管（当前为引擎内置带）",
+        }
+
+        # ---- 持仓表校验（六要素/白名单/[E:]，失败=通道拒绝服务 exit 2）----
+        try:
+            res = sotp_channel_value(items, args.net_debt, args.holding_discount,
+                                     operating_value=args.operating_value)
+        except SystemExit as _e:
+            # 拒绝服务统一 exit 2（与 growth 通道单元经济门同一语义：
+            # 通道不为此类输入服务，而非算出一个错数）
+            print(str(_e))
+            print("通道拒绝服务（SOTP_HOLDINGS_TABLE_INVALID，exit 2）"
+                  "——按 valuation-guide 方法树：分部数据不足以支撑分部估值时"
+                  "按 Phase 0 规则终止，不降级估算。")
+            sys.exit(2)
+
+        # ---- 反向求解：现价隐含控股折价（本通道的反向 DCF）----
+        implied_d = 1.0 - args.market_cap / res["equity_nav"] \
+            if res["equity_nav"] > 0 else None
+
+        # ---- 告警码组装（全部须先在 alert_codes.py 注册）----
+        codes = []
+        if args.net_debt_basis == "consolidated":
+            codes.append("SOTP_NET_DEBT_CONSOLIDATION_BASIS")
+        if not band_check["discount_in_band"] and args.holding_discount < band_lo:
+            codes.append("SOTP_DISCOUNT_BELOW_BASE_RATE")
+        holdings_dominant = (res["holdings_share_of_equity_nav"] or 0) >= 0.5
+        if holdings_dominant:
+            codes.append("SOTP_HOLDINGS_DOMINATED")
+        if implied_d is not None and abs(implied_d - args.holding_discount) >= 0.10:
+            codes.append("SOTP_IMPLIED_DISCOUNT_GAP")
+        unknown = unknown_codes(codes)
+        if unknown:
+            raise KeyError(f"未注册的告警码 {unknown}，请先在 scripts/alert_codes.py 登记")
+
+        # ---- 档位带（引擎建议、裁决层定档——与双闸门哲学一致）----
+        vps = res["investable_value"] / args.shares if args.shares else None
+        if not holdings_dominant:
+            band_suggestion = "标准双闸门裁定"
+            band_reason = ("经营业务占 equity NAV 主导：本通道只做『经营性价值与投资"
+                           "组合分列』（防 add-back 补丁化），档位由标准双闸门与"
+                           "裁决层确定，通道不加额外上限")
+            cap = None
+        elif res["investable_value"] < args.market_cap:
+            band_suggestion = "拒绝（透支）"
+            band_reason = (f"可投资价值 {res['investable_value']:,.0f} < 市值 "
+                           f"{args.market_cap:,.0f}：现价高于折后 NAV——价格已计满"
+                           "持仓价值且未计控股折价")
+            cap = SOTP_VERDICT_CAP
+        elif args.holding_profile == "convergence_mechanism":
+            band_suggestion = "小仓位试探候选"
+            band_reason = ("价格 ≤ 折后 NAV 且存在收敛机制（回购注销/分拆兑现中）——"
+                           "折价有压缩路径，但仍受通道档位上限约束，且必须过 "
+                           "expected-return 闸门二（不收敛下限是这类公司的核心闸）")
+            cap = SOTP_VERDICT_CAP
+        else:
+            band_suggestion = "观察等价格"
+            band_reason = ("价格 ≤ 折后 NAV，但无收敛机制的折价不是便宜——折价可以"
+                           "永不收敛（价值陷阱的 SOTP 形态），『便宜』的兑现押在"
+                           "治理行动上而普通股东无法触发。等价格=等更深的折价或"
+                           "收敛催化剂出现（回购至NAV/分拆/清算），须披露触发价与"
+                           "不收敛下限（股息率+NAV增速）")
+            cap = SOTP_VERDICT_CAP
+
+        out = {
+            "mode": "sotp",
+            "holdings_table": {
+                "source": args.holdings_file,
+                "as_of": htab.get("as_of"),
+                "currency": htab.get("currency"),
+                "unit": htab.get("unit"),
+                "items_count": len(items),
+            },
+            "net_debt": {
+                "amount": args.net_debt,
+                "basis": args.net_debt_basis,
+                "note": "母公司本体口径（净现金为负）。合并口径会与持仓按持股计价"
+                        "错配——少数股东应担债务被双重计入" if args.net_debt_basis
+                        == "consolidated" else None,
+            },
+            **res,
+            "operating_value_basis": args.operating_value_basis,
+            "holding_discount_basis": args.holding_discount_basis,
+            "base_rate_band": band_check,
+            "implied": {
+                "market_cap": args.market_cap,
+                "implied_holding_discount": implied_d,
+                "note": "反解 implied = 1 − 市值/equity NAV：市场按多大控股折价"
+                        "交易。与采用折价分歧 ≥10pct 即 SOTP_IMPLIED_DISCOUNT_GAP"
+                        "——若市场折价持续，可投资价值≈现价（无安全边际）",
+            },
+            "value_per_share": vps,
+            "value_per_share_quote_ccy": (vps * args.fx) if vps is not None else None,
+            "fx": args.fx,
+            "sensitivity": {
+                "holding_discount_pm10pct": [
+                    (res["equity_nav"] * (1.0 - min(0.99, args.holding_discount + 0.10))
+                     / args.shares if args.shares else None),
+                    (res["equity_nav"] * (1.0 - max(0.0, args.holding_discount - 0.10))
+                     / args.shares if args.shares else None),
+                ],
+                "note": "折价率是 SOTP 结论的最大摆动因子——±10pct 敏感性是"
+                        "valuation-guide 多元集团纪律的强制项",
+            },
+            "verdict_band": {
+                "cap": cap,
+                "suggestion": band_suggestion,
+                "reasons": band_reason,
+                "codes": codes,
+                "note": "引擎建议档位带，最终档位由双闸门与裁决层确定；持仓主导"
+                        "（≥50% equity NAV）形态通道档位上限恒为小仓位试探——"
+                        "价值主体是资产变现而非经营复利，与终值纪律同源",
+            },
+            "codes": codes,
+        }
+        # ---- 打印 ----
+        print(f"持仓表 {args.holdings_file}（{len(items)} 项，as_of "
+              f"{htab.get('as_of', '?')}）")
+        print(f"\n{'持仓':<26}{'毛值':>14}{'变现折价':>9}{'折后':>14}")
+        for d_ in res["holdings_detail"]:
+            print(f"{d_['name'][:24]:<26}{d_['gross_value']:>14,.0f}"
+                  f"{d_['liquidity_haircut']:>9.2f}{d_['adjusted_value']:>14,.0f}")
+        print(f"{'持仓合计':<26}{res['portfolio_gross_value']:>14,.0f}"
+              f"{'':>9}{res['portfolio_net_value']:>14,.0f}")
+        if args.operating_value:
+            print(f"{'经营业务价值':<26}{'':>14}{'':>9}"
+                  f"{args.operating_value:>14,.0f}")
+        print(f"{'母公司净债':<26}{'':>14}{'':>9}{-args.net_debt:>14,.0f}")
+        print(f"{'equity NAV':<26}{'':>14}{'':>9}{res['equity_nav']:>14,.0f}")
+        print(f"\n控股折价 {args.holding_discount:.0%} → 可投资价值 "
+              f"{res['investable_value']:,.0f}", end="")
+        if vps is not None:
+            txt = f"（每股 {vps:,.2f}"
+            if args.fx != 1.0:
+                txt += f" = {vps * args.fx:,.2f} 行情币"
+            txt += "）"
+            print(txt, end="")
+        print()
+        print(f"\n基率带 [{band['label']}]: {band_lo:.0%}~{band_hi:.0%}，"
+              f"采用 {args.holding_discount:.0%} "
+              + ("✓ 带内" if band_check["discount_in_band"] else
+                 "⚠ 低于下界——比历史实证更乐观（SOTP_DISCOUNT_BELOW_BASE_RATE）"
+                 if args.holding_discount < band_lo else
+                 "（高于上界：保守方向，允许但须披露）"))
+        hs = res["holdings_share_of_equity_nav"]
+        if hs is not None:
+            print(f"持仓占 equity NAV : {hs:.0%}"
+                  + ("——非经营资产主导（SOTP_HOLDINGS_DOMINATED），"
+                     "OE 通道结论不进档位裁决" if holdings_dominant else ""))
+        if implied_d is not None:
+            print(f"现价隐含控股折价 : {implied_d:.0%}"
+                  + (f"（vs 采用 {args.holding_discount:.0%}，分歧 "
+                     f"{abs(implied_d - args.holding_discount):.0%}pct ≥10pct——"
+                     "SOTP_IMPLIED_DISCOUNT_GAP）"
+                     if abs(implied_d - args.holding_discount) >= 0.10 else ""))
+            if implied_d >= 1.0:
+                print("🔴 隐含折价 ≥100%：市值不低于 equity NAV——市场未计任何"
+                      "控股折价甚至给溢价，SOTP 口径下无安全边际")
+        print(f"\n档位带（上限 {cap or '标准双闸门'}）: {band_suggestion}")
+        print(f"  {band_reason}")
+        print(f"告警码: {' '.join(codes) if codes else '（无）'}")
         if args.output:
             with open(args.output, "w", encoding="utf-8") as f:
                 json.dump(out, f, ensure_ascii=False, indent=2)
