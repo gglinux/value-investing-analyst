@@ -1667,9 +1667,9 @@ sys.path.insert(0, SCRIPTS)
 import alert_codes as AC
 
 check("注册表非空", len(AC.ALERTS) > 40, str(len(AC.ALERTS)))
-check("Phase 0 代号数 = 6 否决 + 20 红旗 + 4 A股 = 30",
+check("Phase 0 代号数 = 6 否决 + 21 红旗 + 4 A股 = 31",
       sum(1 for c, (layer, _) in AC.ALERTS.items()
-          if layer.startswith("phase0")) == 31,  # 含 V4A 利率倒挂加强验证器
+          if layer.startswith("phase0")) == 32,  # 含 V4A 利率倒挂 + R21 持续经营
       str(sum(1 for c, (l, _) in AC.ALERTS.items() if l.startswith("phase0"))))
 check("每个断言组的代号都已注册",
       all(not AC.unknown_codes(codes) for codes in AC.ASSERTIONS.values()),
@@ -1689,6 +1689,8 @@ check("准则切换不计入造假类告警（福耀负样本零误杀）",
       not AC.assertion_satisfied("ANY_FRAUD_ALERT", ["M_ACCOUNTING_STANDARD_SWITCH"]))
 check("分红幻觉不计入造假类告警",
       not AC.assertion_satisfied("ANY_FRAUD_ALERT", ["M_DIVIDEND_ILLUSION"]))
+check("持续经营存疑不计入造假类告警（柯达不是造假是烧光了，REQ-P0-02）",
+      not AC.assertion_satisfied("ANY_FRAUD_ALERT", ["P0_R21_GOING_CONCERN"]))
 check("存贷双高计入造假类告警",
       AC.assertion_satisfied("ANY_FRAUD_ALERT", ["P0_V4_DEPOSIT_LOAN_DOUBLE_HIGH"]))
 
@@ -2174,6 +2176,9 @@ _EXEMPT = {
     "run_backtest_assertions.py": "回放测试资产，属 backtest/ 协议而非分析主流程",
     "install-hooks.sh": "仓库开发工具（git hooks 安装），非分析流程",
     "prepare_case.py": "回放隔离协议资产（答案密封/揭示闸门），由回测会话在 Step 4 调用，非分析主流程",
+    "schema_meta.py": "底稿元数据 schema 校验模块（REQ-P0-03），被 validate_data.py import",
+    "migrate_schema.py": "存量底稿 meta 块迁移工具（REQ-P0-03 配套），一次性迁移脚本，非分析主流程",
+    "forensic_screen.py": "Phase 0 排雷算术化（REQ-P0-02），在 forensic-checklist.md 中引用",
 }
 _scripts = sorted(f for f in os.listdir(SCRIPTS)
                   if f.endswith((".py", ".sh")) and not f.startswith("_"))

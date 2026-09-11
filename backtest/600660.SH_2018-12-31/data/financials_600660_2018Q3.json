@@ -1,4 +1,20 @@
 {
+  "meta": {
+    "schema_version": 2,
+    "unit": "百万",
+    "currency": "CNY",
+    "basis": "consolidated",
+    "standard": "IFRS",
+    "period_type": "annual",
+    "data_vintage": "2018-03-17",
+    "source_ref": "2009 年报（巨潮 finalpage/2010-03-10/57671593.PDF）前三年主要会计数据表",
+    "field_overrides": {},
+    "notes": [
+      "原 unit 字段附注：除每股/每股本数据",
+      "原 accounting_standard 字段附注：CAS 为主（2008-2015）；2016-2017 年部分字段用  口径（取自 2017 年报港版，已注明"
+    ],
+    "migrated_by": "scripts/migrate_schema.py"
+  },
   "company": "福耀玻璃",
   "ticker": "600660.SH / 3606.HK",
   "currency": "CNY",

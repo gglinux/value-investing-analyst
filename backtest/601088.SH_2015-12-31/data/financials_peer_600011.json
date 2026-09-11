@@ -1,4 +1,15 @@
 {
+  "meta": {
+    "schema_version": 0,
+    "unit": "百万",
+    "currency": "CNY",
+    "basis": "consolidated",
+    "standard": "CAS",
+    "period_type": "annual",
+    "data_vintage": "2015-12-31",
+    "field_overrides": {},
+    "migrated_by": "scripts/migrate_schema.py"
+  },
   "company": "华能国际",
   "ticker": "600011.SH",
   "is_peer": true,

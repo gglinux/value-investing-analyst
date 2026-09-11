@@ -1,4 +1,15 @@
 {
+  "meta": {
+    "schema_version": 0,
+    "unit": "百万",
+    "currency": "CNY",
+    "basis": "consolidated",
+    "standard": "CAS",
+    "period_type": "annual",
+    "data_vintage": "2015-12-31",
+    "field_overrides": {},
+    "migrated_by": "scripts/migrate_schema.py"
+  },
   "company": "中煤能源",
   "ticker": "601898.SH",
   "is_peer": true,
@@ -6,12 +17,44 @@
   "unit": "million",
   "accounting_standard": "CAS",
   "fiscal_year_end": "12-31",
-  "data_notes": ["同业对照底稿（跳过双源核对）：新浪财经利润表年度列，单位万元/100。用于利润率周期位置对照，不做估值输入。"],
+  "data_notes": [
+    "同业对照底稿（跳过双源核对）：新浪财经利润表年度列，单位万元/100。用于利润率周期位置对照，不做估值输入。"
+  ],
   "annual": [
-    {"year": 2010, "revenue": 71268, "net_income": 6910, "publish_date": null, "note": "归母净利率9.70%"},
-    {"year": 2011, "revenue": 88872, "net_income": 9504, "publish_date": null, "note": "归母净利率10.70%"},
-    {"year": 2012, "revenue": 87292, "net_income": 9281, "publish_date": null, "note": "归母净利率10.63%"},
-    {"year": 2013, "revenue": 82316, "net_income": 3576, "publish_date": null, "note": "归母净利率4.34%"},
-    {"year": 2014, "revenue": 70664, "net_income": 767, "publish_date": null, "note": "归母净利率1.09%；EPS 0.06元"}
+    {
+      "year": 2010,
+      "revenue": 71268,
+      "net_income": 6910,
+      "publish_date": null,
+      "note": "归母净利率9.70%"
+    },
+    {
+      "year": 2011,
+      "revenue": 88872,
+      "net_income": 9504,
+      "publish_date": null,
+      "note": "归母净利率10.70%"
+    },
+    {
+      "year": 2012,
+      "revenue": 87292,
+      "net_income": 9281,
+      "publish_date": null,
+      "note": "归母净利率10.63%"
+    },
+    {
+      "year": 2013,
+      "revenue": 82316,
+      "net_income": 3576,
+      "publish_date": null,
+      "note": "归母净利率4.34%"
+    },
+    {
+      "year": 2014,
+      "revenue": 70664,
+      "net_income": 767,
+      "publish_date": null,
+      "note": "归母净利率1.09%；EPS 0.06元"
+    }
   ]
 }

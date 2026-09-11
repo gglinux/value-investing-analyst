@@ -1,4 +1,16 @@
 {
+  "meta": {
+    "schema_version": 2,
+    "unit": "百万",
+    "currency": "CNY",
+    "basis": "consolidated",
+    "standard": "CAS",
+    "period_type": "annual",
+    "data_vintage": "2015-03-31",
+    "source_ref": "2014年年度业绩公告（披露易ltn20150331035/036，2015-03-31）2012对照列（调整前后均2,568）+ 2011年报摘要2010列交叉验证；新浪vFD转引值1,453经查与官方不符，弃用并记录差异",
+    "field_overrides": {},
+    "migrated_by": "scripts/migrate_schema.py"
+  },
   "company": "鞍钢股份",
   "ticker": "000898.SZ / 00347.HK",
   "currency": "CNY",

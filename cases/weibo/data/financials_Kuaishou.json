@@ -1,4 +1,15 @@
 {
+  "meta": {
+    "schema_version": 0,
+    "unit": "百万",
+    "currency": "CNY",
+    "basis": "consolidated",
+    "standard": "IFRS",
+    "period_type": "annual",
+    "data_vintage": "2026-03-25",
+    "field_overrides": {},
+    "migrated_by": "scripts/migrate_schema.py"
+  },
   "company": "快手 Kuaishou",
   "ticker": "1024 (HKEX)",
   "company_type": "互联网平台",

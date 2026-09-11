@@ -82,6 +82,13 @@ ALERTS = {
     "P0_R7_OTHER_RECEIVABLES": ("phase0_redflag", "其他应收款异常大额（资金体外循环通道）"),
     "P0_R8_CIP_STAGNANT": ("phase0_redflag", "在建工程长期挂账不转固"),
     "P0_R9_SHORT_DEBT_LONG_ASSET": ("phase0_redflag", "短债长投，流动性错配"),
+    # 持续经营存疑（2026-09-11，REQ-P0-02 落码时补注册）：净资产为负 或
+    # 经营现金流连续为负且现金覆盖不足。刻意归为 redflag 而非 veto——
+    # 它不是造假形态，而是「这家公司可能撑不到你的持有期结束」的算术事实；
+    # 柯达 2011 原型（2009 起权益转负至 -1077，OCF 连续两年为负），
+    # 该形态在 Phase 0 层此前完全无覆盖，只能等到估值层的不收敛下限才拦下。
+    "P0_R21_GOING_CONCERN": ("phase0_redflag",
+                             "持续经营存疑：净资产为负，或经营现金流连续 ≥2 年为负且现金不足覆盖"),
     # ---- Phase 0 红旗：行为信号 ----
     "P0_R10_INSIDER_SELLING": ("phase0_redflag", "大股东/高管持续大额减持"),
     "P0_R11_FINANCING_VS_RETURN": ("phase0_redflag", "累计融资额 > 累计分红+回购的 3 倍"),
@@ -234,6 +241,10 @@ ASSERTIONS = {
     # 断言「商誉/并购驱动增长、add-back 不可持续」的等价物。刻意不入
     # ANY_FRAUD_ALERT 复用（该组语义是造假误杀防护，商誉重不等于造假）。
     "GOODWILL_ACQUISITION_DRIVEN": {"P0_R6_GOODWILL_HEAVY"},
+    # 持续经营存疑（REQ-P0-02）：净资产为负 / 经营性失血。刻意**不并入**
+    # ANY_FRAUD_ALERT——柯达不是造假，是烧光了；把两者混为一谈会让福耀那类
+    # 「负样本零误杀」断言失去意义。
+    "GOING_CONCERN_DOUBT": {"P0_R21_GOING_CONCERN"},
 
     # ---- 周期与基期纪律 ----
     # 海控案的等价关系在此显式化：引擎输出 NORM_BASE_UNUSABLE（均值路径失效、

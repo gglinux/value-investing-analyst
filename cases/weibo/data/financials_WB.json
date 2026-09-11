@@ -1,4 +1,16 @@
 {
+  "meta": {
+    "schema_version": 2,
+    "unit": "百万",
+    "currency": "USD",
+    "basis": "consolidated",
+    "standard": "US-GAAP",
+    "period_type": "annual",
+    "data_vintage": "2026-04-23",
+    "source_ref": "FY2025 Form 20-F（2026-04-23 申报，PwC 审计）合并现金流量表/利润表 + FY2023 业绩公告（2024-03-14，ir.weibo.com）：收入 US$1.76B、归母净利 US$342.6M",
+    "field_overrides": {},
+    "migrated_by": "scripts/migrate_schema.py"
+  },
   "company": "微博 Weibo Corporation",
   "ticker": "WB (NASDAQ) / 9898 (HKEX)",
   "company_type": "互联网平台",

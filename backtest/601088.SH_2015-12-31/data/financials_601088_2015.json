@@ -1,4 +1,16 @@
 {
+  "meta": {
+    "schema_version": 2,
+    "unit": "百万",
+    "currency": "CNY",
+    "basis": "consolidated",
+    "standard": "CAS",
+    "period_type": "annual",
+    "data_vintage": "2015-03-21",
+    "source_ref": "中国神华《2012年度报告》原文（上交所2013-03-23披露）及公司官网董事长致辞引用：营业收入2,502.60亿、归母净利476.61亿、经营现金流净额718.47亿",
+    "field_overrides": {},
+    "migrated_by": "scripts/migrate_schema.py"
+  },
   "company": "中国神华",
   "ticker": "601088.SH",
   "currency": "CNY",

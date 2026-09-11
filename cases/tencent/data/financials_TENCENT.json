@@ -1,4 +1,16 @@
 {
+  "meta": {
+    "schema_version": 2,
+    "unit": "百万",
+    "currency": "CNY",
+    "basis": "consolidated",
+    "standard": "IFRS",
+    "period_type": "annual",
+    "data_vintage": "2026-03-18",
+    "source_ref": "2023年报：营收6090亿/归母1152亿/OCF2102亿",
+    "field_overrides": {},
+    "migrated_by": "scripts/migrate_schema.py"
+  },
   "company": "腾讯控股",
   "ticker": "hk00700",
   "currency": "CNY",

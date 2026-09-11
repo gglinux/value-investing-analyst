@@ -1,4 +1,15 @@
 {
+  "meta": {
+    "schema_version": 0,
+    "unit": "百万",
+    "currency": "CNY",
+    "basis": "consolidated",
+    "standard": "US-GAAP",
+    "period_type": "annual",
+    "data_vintage": "2026-03-17",
+    "field_overrides": {},
+    "migrated_by": "scripts/migrate_schema.py"
+  },
   "company": "百度 Baidu",
   "ticker": "BIDU (NASDAQ)",
   "company_type": "互联网平台",

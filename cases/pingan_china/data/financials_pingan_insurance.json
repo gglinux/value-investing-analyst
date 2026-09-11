@@ -1,4 +1,16 @@
 {
+  "meta": {
+    "schema_version": 2,
+    "unit": "百万",
+    "currency": "CNY",
+    "basis": "consolidated",
+    "standard": "CAS",
+    "period_type": "annual",
+    "data_vintage": "2026-03-27",
+    "source_ref": "FY2025 年报内含价值分析（p.74-82）[E:filings/pingan-2025-annual.pdf]，安永精算师独立审阅",
+    "field_overrides": {},
+    "migrated_by": "scripts/migrate_schema.py"
+  },
   "company": "中国平安",
   "ticker": "601318",
   "currency": "CNY",

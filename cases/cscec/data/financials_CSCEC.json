@@ -1,4 +1,16 @@
 {
+  "meta": {
+    "schema_version": 2,
+    "unit": "百万",
+    "currency": "CNY",
+    "basis": "consolidated",
+    "standard": "CAS",
+    "period_type": "annual",
+    "data_vintage": "2026-04-18",
+    "source_ref": "2025年年度报告摘要追溯列（巨潮cninfo 1225123343.PDF）",
+    "field_overrides": {},
+    "migrated_by": "scripts/migrate_schema.py"
+  },
   "company": "中国建筑",
   "ticker": "sh601668",
   "currency": "CNY",

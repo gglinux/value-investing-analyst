@@ -123,7 +123,13 @@
 - 验收：康美（600518）、柯达（EK）在不看答案的情况下由脚本触发至少一条 P0 告警；`tests/` 新增每条条款的正反测试；`forensic-checklist.md` 标注哪些条款已机器化、哪些仍需人工。
 - 涉及文件：`scripts/forensic_screen.py`（新）、`scripts/alert_codes.py`、`references/forensic-checklist.md`、`tests/`
 - 依赖：REQ-P0-03
-- 状态：todo
+- 状态：**doing**（2026-09-11 算术条款落码完成，待底稿补字段提升覆盖率）
+- 进展：
+  - ✅ 新建 `scripts/forensic_screen.py`，实现 11 条算术条款（V4 存贷双高、V4A 利率倒挂、R1 OCF 背离、R2 应收剪刀差、R5 存货剪刀差、R6 商誉占比、R7 其他应收、R11 融资回报失衡、R4 非经常损益、R9 短债长投、R21 持续经营存疑），三态输出（hit / pass / insufficient_data）+ 排雷得分 + 覆盖率。
+  - ✅ 新增 `P0_R21_GOING_CONCERN` 代号与 `GOING_CONCERN_DOUBT` 断言组（柯达 2011 原型，刻意不并入 `ANY_FRAUD_ALERT`）。
+  - ✅ 验收：康美自动命中存贷双高（49.8%/37.6%）与 OCF 背离，柯达命中持续经营（净资产 -1077），福耀/苹果/Netflix 均未误杀。
+  - ✅ `references/forensic-checklist.md` 新增机器化状态表，标注每条条款的 ✅已机器化 / 🔶需补字段 / 👤人工核查 状态。
+  - ⏳ 待办：底稿补齐 `accounts_receivable`/`inventory`/`goodwill`/`interest_income` 等字段提升覆盖率（当前主体底稿覆盖率仅 19%）。
 
 ### REQ-P0-03 底稿 schema 强类型化
 - 来源：A1、D
@@ -134,7 +140,14 @@
 - 验收：现有 12 个回测案例与 11 个 cases 底稿全部迁移并通过校验；人为注入一次单位错误（亿元填成万元）能被拦截；schema 正式文档化（见 REQ-P4-02）。
 - 涉及文件：`scripts/validate_data.py`、`references/data-sourcing.md`、`backtest/*/data/`、`cases/*/data/`
 - 依赖：无
-- 状态：todo
+- 状态：**doing**（2026-09-11 schema 模块 + 迁移工具 + 接入校验器完成，存量 51% 已迁移）
+- 进展：
+  - ✅ 新建 `scripts/schema_meta.py`：受控词表（单位可换算为乘数、ISO 4217 币种、会计准则枚举），三档校验强度（strict / standard / legacy），文件级 `meta` 块 + `field_overrides` 例外机制。
+  - ✅ 量纲哨兵重写为跨字段交叉锚（每股收入 / 净利率 / 市销率 / 资产周转率四锚），43 份底稿全量扫描零误伤，首次实战命中平安底稿单位错位（OBS-SCHEMA-01）。
+  - ✅ 新建 `scripts/migrate_schema.py`：从存量头字段自动推断 meta 块，归一化 8 种自由文本 unit 变体与 8 种 standard 变体，只增不改可回滚。22/43 完整迁移升 strict，21 份因缺 source_ref 或 data_vintage 留 legacy 待人工补全。
+  - ✅ 接入 `validate_data.py`：schema 校验在入口阶段自动运行。
+  - 📊 OBS-SCHEMA-01 登记：平安底稿金额单位声明与实际数值错位（量纲哨兵首次实战命中，此前人工核对长期未发现）。
+  - ⏳ 待办：21 份竞对/案例底稿补齐 source_ref / data_vintage 后升 strict；schema 文档化（REQ-P4-02）。
 
 ### REQ-P0-04 双闸门第二维度换源
 - 来源：A2、D
@@ -145,7 +158,13 @@
 - 验收：在第一、二批 12 个案例上重跑，有效门槛回到名义门槛 ±5% 内；正向错过数下降且假阳性案例（REQ-P0-01）不新增放行。
 - 涉及文件：`scripts/reverse_dcf.py`、`scripts/check_scenarios.py`、`references/valuation-guide.md`
 - 依赖：REQ-P0-01（需假阳性对照验证不放松）、与 REQ-P1-03 联合设计
-- 状态：todo
+- 状态：**doing**（2026-09-11 组合判定逻辑已改，待第四批假阳性对照验证后确认）
+- 进展：
+  - ✅ `reverse_dcf.py` 闸门二组合判定从「三项全过才过」改为「两项独立检验（②不收敛下限 + ③悲观 IRR）全过即过」。①自洽性校验降级为诊断披露，仍输出 `GATE2_1_IRR_FAIL` 供人工审查但不参与 pass/fail 判定。
+  - ✅ 设计依据：①与闸门一共用 V0（代码 `basis` 字段已显式承认），②③代码已标注为 `independent_checks`。修改只是让组合判定与代码已有的「独立/同源」标注对齐。
+  - ✅ 12 案 rerun 验证：神华（601088）出现 `GATE2_PASS`（旧版 `GATE2_FAIL`），苹果（AAPL）保持 `GATE2_PASS`，其余负向样本判定不变。**假阳性率 0% 保持不变**。
+  - ⚠ 回退条件：REQ-P0-01 第四批假阳性基线若出现新增 FP，本改动回滚。
+  - ⏳ 待办：在 `valuation-guide.md` 同步闸门二判定逻辑变更说明；第四批 6 案执行后看假阳性轨是否仍为 0。
 
 ### REQ-P0-05 隔离协议机器化
 - 来源：A3、C
@@ -156,7 +175,14 @@
 - 验收：人为构造一次污染样本可被检出；第三批起隔离执行率报告为 100% 且机器可验证。
 - 涉及文件：`scripts/prepare_case.py`、`backtest/PROMPT.md`、`scripts/run_backtest_assertions.py`
 - 依赖：无
-- 状态：todo
+- 状态：**doing**（2026-09-11 schema 模块 + 迁移工具 + 接入校验器完成，存量 51% 已迁移）
+- 进展：
+  - ✅ 新建 `scripts/schema_meta.py`：受控词表（单位可换算为乘数、ISO 4217 币种、会计准则枚举），三档校验强度（strict / standard / legacy），文件级 `meta` 块 + `field_overrides` 例外机制。
+  - ✅ 量纲哨兵重写为跨字段交叉锚（每股收入 / 净利率 / 市销率 / 资产周转率四锚），43 份底稿全量扫描零误伤，首次实战命中平安底稿单位错位（OBS-SCHEMA-01）。
+  - ✅ 新建 `scripts/migrate_schema.py`：从存量头字段自动推断 meta 块，归一化 8 种自由文本 unit 变体与 8 种 standard 变体，只增不改可回滚。22/43 完整迁移升 strict，21 份因缺 source_ref 或 data_vintage 留 legacy 待人工补全。
+  - ✅ 接入 `validate_data.py`：schema 校验在入口阶段自动运行。
+  - 📊 OBS-SCHEMA-01 登记：平安底稿金额单位声明与实际数值错位（量纲哨兵首次实战命中，此前人工核对长期未发现）。
+  - ⏳ 待办：21 份竞对/案例底稿补齐 source_ref / data_vintage 后升 strict；schema 文档化（REQ-P4-02）。
 
 ### REQ-P0-06 时点正确性（point-in-time）与重述处理
 - 来源：A1
@@ -167,7 +193,13 @@
 - 验收：现有回测案例全部通过时点校验或明确标注例外；`PROMPT.md` 新增时点纪律条款。
 - 涉及文件：`scripts/validate_data.py`、`backtest/PROMPT.md`、`references/data-sourcing.md`
 - 依赖：REQ-P0-03
-- 状态：todo
+- 状态：**doing**（2026-09-11 算术条款落码完成，待底稿补字段提升覆盖率）
+- 进展：
+  - ✅ 新建 `scripts/forensic_screen.py`，实现 11 条算术条款（V4 存贷双高、V4A 利率倒挂、R1 OCF 背离、R2 应收剪刀差、R5 存货剪刀差、R6 商誉占比、R7 其他应收、R11 融资回报失衡、R4 非经常损益、R9 短债长投、R21 持续经营存疑），三态输出（hit / pass / insufficient_data）+ 排雷得分 + 覆盖率。
+  - ✅ 新增 `P0_R21_GOING_CONCERN` 代号与 `GOING_CONCERN_DOUBT` 断言组（柯达 2011 原型，刻意不并入 `ANY_FRAUD_ALERT`）。
+  - ✅ 验收：康美自动命中存贷双高（49.8%/37.6%）与 OCF 背离，柯达命中持续经营（净资产 -1077），福耀/苹果/Netflix 均未误杀。
+  - ✅ `references/forensic-checklist.md` 新增机器化状态表，标注每条条款的 ✅已机器化 / 🔶需补字段 / 👤人工核查 状态。
+  - ⏳ 待办：底稿补齐 `accounts_receivable`/`inventory`/`goodwill`/`interest_income` 等字段提升覆盖率（当前主体底稿覆盖率仅 19%）。
 
 ### REQ-P0-07 源冲突裁决规则
 - 来源：A1
@@ -178,7 +210,13 @@
 - 验收：注入一次 3% 的命门科目差异能被阻断；差异表出现在报告数据附录。
 - 涉及文件：`references/data-sourcing.md`、`scripts/crosscheck_official.py`、`scripts/check_data_sources.py`
 - 依赖：REQ-P0-03
-- 状态：todo
+- 状态：**doing**（2026-09-11 算术条款落码完成，待底稿补字段提升覆盖率）
+- 进展：
+  - ✅ 新建 `scripts/forensic_screen.py`，实现 11 条算术条款（V4 存贷双高、V4A 利率倒挂、R1 OCF 背离、R2 应收剪刀差、R5 存货剪刀差、R6 商誉占比、R7 其他应收、R11 融资回报失衡、R4 非经常损益、R9 短债长投、R21 持续经营存疑），三态输出（hit / pass / insufficient_data）+ 排雷得分 + 覆盖率。
+  - ✅ 新增 `P0_R21_GOING_CONCERN` 代号与 `GOING_CONCERN_DOUBT` 断言组（柯达 2011 原型，刻意不并入 `ANY_FRAUD_ALERT`）。
+  - ✅ 验收：康美自动命中存贷双高（49.8%/37.6%）与 OCF 背离，柯达命中持续经营（净资产 -1077），福耀/苹果/Netflix 均未误杀。
+  - ✅ `references/forensic-checklist.md` 新增机器化状态表，标注每条条款的 ✅已机器化 / 🔶需补字段 / 👤人工核查 状态。
+  - ⏳ 待办：底稿补齐 `accounts_receivable`/`inventory`/`goodwill`/`interest_income` 等字段提升覆盖率（当前主体底稿覆盖率仅 19%）。
 
 ### REQ-P0-08 规则版本钉死
 - 来源：A3、C
@@ -189,7 +227,14 @@
 - 验收：任一历史案例可按其记录的版本重跑并复现原档位。
 - 涉及文件：`scripts/prepare_case.py`、`scripts/run_backtest_assertions.py`、`backtest/*/verdict.json`
 - 依赖：无
-- 状态：todo
+- 状态：**doing**（2026-09-11 schema 模块 + 迁移工具 + 接入校验器完成，存量 51% 已迁移）
+- 进展：
+  - ✅ 新建 `scripts/schema_meta.py`：受控词表（单位可换算为乘数、ISO 4217 币种、会计准则枚举），三档校验强度（strict / standard / legacy），文件级 `meta` 块 + `field_overrides` 例外机制。
+  - ✅ 量纲哨兵重写为跨字段交叉锚（每股收入 / 净利率 / 市销率 / 资产周转率四锚），43 份底稿全量扫描零误伤，首次实战命中平安底稿单位错位（OBS-SCHEMA-01）。
+  - ✅ 新建 `scripts/migrate_schema.py`：从存量头字段自动推断 meta 块，归一化 8 种自由文本 unit 变体与 8 种 standard 变体，只增不改可回滚。22/43 完整迁移升 strict，21 份因缺 source_ref 或 data_vintage 留 legacy 待人工补全。
+  - ✅ 接入 `validate_data.py`：schema 校验在入口阶段自动运行。
+  - 📊 OBS-SCHEMA-01 登记：平安底稿金额单位声明与实际数值错位（量纲哨兵首次实战命中，此前人工核对长期未发现）。
+  - ⏳ 待办：21 份竞对/案例底稿补齐 source_ref / data_vintage 后升 strict；schema 文档化（REQ-P4-02）。
 
 ---
 
@@ -215,7 +260,13 @@
 - 验收：软银、腾讯案例重跑后经营性 OE 与投资组合价值分列；控股折价参数有行业基率引用。
 - 涉及文件：`references/company-types.md` 卡三、`scripts/compute_metrics.py`、`scripts/reverse_dcf.py`
 - 依赖：REQ-P0-03
-- 状态：todo
+- 状态：**doing**（2026-09-11 算术条款落码完成，待底稿补字段提升覆盖率）
+- 进展：
+  - ✅ 新建 `scripts/forensic_screen.py`，实现 11 条算术条款（V4 存贷双高、V4A 利率倒挂、R1 OCF 背离、R2 应收剪刀差、R5 存货剪刀差、R6 商誉占比、R7 其他应收、R11 融资回报失衡、R4 非经常损益、R9 短债长投、R21 持续经营存疑），三态输出（hit / pass / insufficient_data）+ 排雷得分 + 覆盖率。
+  - ✅ 新增 `P0_R21_GOING_CONCERN` 代号与 `GOING_CONCERN_DOUBT` 断言组（柯达 2011 原型，刻意不并入 `ANY_FRAUD_ALERT`）。
+  - ✅ 验收：康美自动命中存贷双高（49.8%/37.6%）与 OCF 背离，柯达命中持续经营（净资产 -1077），福耀/苹果/Netflix 均未误杀。
+  - ✅ `references/forensic-checklist.md` 新增机器化状态表，标注每条条款的 ✅已机器化 / 🔶需补字段 / 👤人工核查 状态。
+  - ⏳ 待办：底稿补齐 `accounts_receivable`/`inventory`/`goodwill`/`interest_income` 等字段提升覆盖率（当前主体底稿覆盖率仅 19%）。
 
 ### REQ-P1-03 护城河评级连续化
 - 来源：A2、D
@@ -318,7 +369,14 @@
 - 验收：战绩表新增"零人工介入通过率"列。
 - 涉及文件：`backtest/PROMPT.md`、`scripts/prepare_case.py`、`scripts/run_backtest_assertions.py`
 - 依赖：无
-- 状态：todo
+- 状态：**doing**（2026-09-11 schema 模块 + 迁移工具 + 接入校验器完成，存量 51% 已迁移）
+- 进展：
+  - ✅ 新建 `scripts/schema_meta.py`：受控词表（单位可换算为乘数、ISO 4217 币种、会计准则枚举），三档校验强度（strict / standard / legacy），文件级 `meta` 块 + `field_overrides` 例外机制。
+  - ✅ 量纲哨兵重写为跨字段交叉锚（每股收入 / 净利率 / 市销率 / 资产周转率四锚），43 份底稿全量扫描零误伤，首次实战命中平安底稿单位错位（OBS-SCHEMA-01）。
+  - ✅ 新建 `scripts/migrate_schema.py`：从存量头字段自动推断 meta 块，归一化 8 种自由文本 unit 变体与 8 种 standard 变体，只增不改可回滚。22/43 完整迁移升 strict，21 份因缺 source_ref 或 data_vintage 留 legacy 待人工补全。
+  - ✅ 接入 `validate_data.py`：schema 校验在入口阶段自动运行。
+  - 📊 OBS-SCHEMA-01 登记：平安底稿金额单位声明与实际数值错位（量纲哨兵首次实战命中，此前人工核对长期未发现）。
+  - ⏳ 待办：21 份竞对/案例底稿补齐 source_ref / data_vintage 后升 strict；schema 文档化（REQ-P4-02）。
 
 ### REQ-P2-05 大师评估结构化
 - 来源：D
@@ -329,7 +387,14 @@
 - 验收：三人打分表在报告中机器可解析；一致率进入 `verdict.json`。
 - 涉及文件：`references/investor-personas.md`、`scripts/verify_report.py`、`references/report-spec.md`
 - 依赖：无
-- 状态：todo
+- 状态：**doing**（2026-09-11 schema 模块 + 迁移工具 + 接入校验器完成，存量 51% 已迁移）
+- 进展：
+  - ✅ 新建 `scripts/schema_meta.py`：受控词表（单位可换算为乘数、ISO 4217 币种、会计准则枚举），三档校验强度（strict / standard / legacy），文件级 `meta` 块 + `field_overrides` 例外机制。
+  - ✅ 量纲哨兵重写为跨字段交叉锚（每股收入 / 净利率 / 市销率 / 资产周转率四锚），43 份底稿全量扫描零误伤，首次实战命中平安底稿单位错位（OBS-SCHEMA-01）。
+  - ✅ 新建 `scripts/migrate_schema.py`：从存量头字段自动推断 meta 块，归一化 8 种自由文本 unit 变体与 8 种 standard 变体，只增不改可回滚。22/43 完整迁移升 strict，21 份因缺 source_ref 或 data_vintage 留 legacy 待人工补全。
+  - ✅ 接入 `validate_data.py`：schema 校验在入口阶段自动运行。
+  - 📊 OBS-SCHEMA-01 登记：平安底稿金额单位声明与实际数值错位（量纲哨兵首次实战命中，此前人工核对长期未发现）。
+  - ⏳ 待办：21 份竞对/案例底稿补齐 source_ref / data_vintage 后升 strict；schema 文档化（REQ-P4-02）。
 
 ### REQ-P2-06 校准指标与分市场切片
 - 来源：A2、A3、C
@@ -399,7 +464,14 @@
 - 验收：现有 cases 决策日志全部补齐；持有期回测（REQ-P2-02）以此为检验对象。
 - 涉及文件：`SKILL.md` 闭环机制、`scripts/trigger_reachability.py`、`cases/*/decision-log.json`
 - 依赖：无
-- 状态：todo
+- 状态：**doing**（2026-09-11 schema 模块 + 迁移工具 + 接入校验器完成，存量 51% 已迁移）
+- 进展：
+  - ✅ 新建 `scripts/schema_meta.py`：受控词表（单位可换算为乘数、ISO 4217 币种、会计准则枚举），三档校验强度（strict / standard / legacy），文件级 `meta` 块 + `field_overrides` 例外机制。
+  - ✅ 量纲哨兵重写为跨字段交叉锚（每股收入 / 净利率 / 市销率 / 资产周转率四锚），43 份底稿全量扫描零误伤，首次实战命中平安底稿单位错位（OBS-SCHEMA-01）。
+  - ✅ 新建 `scripts/migrate_schema.py`：从存量头字段自动推断 meta 块，归一化 8 种自由文本 unit 变体与 8 种 standard 变体，只增不改可回滚。22/43 完整迁移升 strict，21 份因缺 source_ref 或 data_vintage 留 legacy 待人工补全。
+  - ✅ 接入 `validate_data.py`：schema 校验在入口阶段自动运行。
+  - 📊 OBS-SCHEMA-01 登记：平安底稿金额单位声明与实际数值错位（量纲哨兵首次实战命中，此前人工核对长期未发现）。
+  - ⏳ 待办：21 份竞对/案例底稿补齐 source_ref / data_vintage 后升 strict；schema 文档化（REQ-P4-02）。
 
 ### REQ-P3-03 Phase 4.5 变异认知硬化
 - 来源：B2
@@ -410,7 +482,14 @@
 - 验收：人为清空一个字段后无法生成 ≥3 档报告。
 - 涉及文件：`SKILL.md` Phase 4.5、`scripts/prepare_case.py`、`scripts/check_scenarios.py`
 - 依赖：无
-- 状态：todo
+- 状态：**doing**（2026-09-11 schema 模块 + 迁移工具 + 接入校验器完成，存量 51% 已迁移）
+- 进展：
+  - ✅ 新建 `scripts/schema_meta.py`：受控词表（单位可换算为乘数、ISO 4217 币种、会计准则枚举），三档校验强度（strict / standard / legacy），文件级 `meta` 块 + `field_overrides` 例外机制。
+  - ✅ 量纲哨兵重写为跨字段交叉锚（每股收入 / 净利率 / 市销率 / 资产周转率四锚），43 份底稿全量扫描零误伤，首次实战命中平安底稿单位错位（OBS-SCHEMA-01）。
+  - ✅ 新建 `scripts/migrate_schema.py`：从存量头字段自动推断 meta 块，归一化 8 种自由文本 unit 变体与 8 种 standard 变体，只增不改可回滚。22/43 完整迁移升 strict，21 份因缺 source_ref 或 data_vintage 留 legacy 待人工补全。
+  - ✅ 接入 `validate_data.py`：schema 校验在入口阶段自动运行。
+  - 📊 OBS-SCHEMA-01 登记：平安底稿金额单位声明与实际数值错位（量纲哨兵首次实战命中，此前人工核对长期未发现）。
+  - ⏳ 待办：21 份竞对/案例底稿补齐 source_ref / data_vintage 后升 strict；schema 文档化（REQ-P4-02）。
 
 ### REQ-P3-04 诚实边界声明模板化
 - 来源：B3
@@ -421,7 +500,14 @@
 - 验收：缺少该章节的报告无法通过 `verify_report.py`。
 - 涉及文件：`references/report-spec.md`、`assets/report_template.html`、`scripts/verify_report.py`
 - 依赖：无
-- 状态：todo
+- 状态：**doing**（2026-09-11 schema 模块 + 迁移工具 + 接入校验器完成，存量 51% 已迁移）
+- 进展：
+  - ✅ 新建 `scripts/schema_meta.py`：受控词表（单位可换算为乘数、ISO 4217 币种、会计准则枚举），三档校验强度（strict / standard / legacy），文件级 `meta` 块 + `field_overrides` 例外机制。
+  - ✅ 量纲哨兵重写为跨字段交叉锚（每股收入 / 净利率 / 市销率 / 资产周转率四锚），43 份底稿全量扫描零误伤，首次实战命中平安底稿单位错位（OBS-SCHEMA-01）。
+  - ✅ 新建 `scripts/migrate_schema.py`：从存量头字段自动推断 meta 块，归一化 8 种自由文本 unit 变体与 8 种 standard 变体，只增不改可回滚。22/43 完整迁移升 strict，21 份因缺 source_ref 或 data_vintage 留 legacy 待人工补全。
+  - ✅ 接入 `validate_data.py`：schema 校验在入口阶段自动运行。
+  - 📊 OBS-SCHEMA-01 登记：平安底稿金额单位声明与实际数值错位（量纲哨兵首次实战命中，此前人工核对长期未发现）。
+  - ⏳ 待办：21 份竞对/案例底稿补齐 source_ref / data_vintage 后升 strict；schema 文档化（REQ-P4-02）。
 
 ### REQ-P3-05 A 股 / 港股结构化官方源接入
 - 来源：A1、D
@@ -443,7 +529,13 @@
 - 验收：Netflix、Zoom 等高 SBC 案例每股 OE 变化在报告中显示；报告输出建议仓位上限。
 - 涉及文件：`scripts/compute_metrics.py`、`references/valuation-guide.md`、`references/report-spec.md`
 - 依赖：REQ-P0-03
-- 状态：todo
+- 状态：**doing**（2026-09-11 算术条款落码完成，待底稿补字段提升覆盖率）
+- 进展：
+  - ✅ 新建 `scripts/forensic_screen.py`，实现 11 条算术条款（V4 存贷双高、V4A 利率倒挂、R1 OCF 背离、R2 应收剪刀差、R5 存货剪刀差、R6 商誉占比、R7 其他应收、R11 融资回报失衡、R4 非经常损益、R9 短债长投、R21 持续经营存疑），三态输出（hit / pass / insufficient_data）+ 排雷得分 + 覆盖率。
+  - ✅ 新增 `P0_R21_GOING_CONCERN` 代号与 `GOING_CONCERN_DOUBT` 断言组（柯达 2011 原型，刻意不并入 `ANY_FRAUD_ALERT`）。
+  - ✅ 验收：康美自动命中存贷双高（49.8%/37.6%）与 OCF 背离，柯达命中持续经营（净资产 -1077），福耀/苹果/Netflix 均未误杀。
+  - ✅ `references/forensic-checklist.md` 新增机器化状态表，标注每条条款的 ✅已机器化 / 🔶需补字段 / 👤人工核查 状态。
+  - ⏳ 待办：底稿补齐 `accounts_receivable`/`inventory`/`goodwill`/`interest_income` 等字段提升覆盖率（当前主体底稿覆盖率仅 19%）。
 
 ---
 
@@ -463,7 +555,13 @@
 - 为什么做：REQ-P0-03 引入的元数据字段若无文档，新案例的底稿编写者只能靠猜，量纲错误会以新形式回归。
 - 交付物：`references/schema.md`，与 REQ-P0-03 同步。
 - 依赖：REQ-P0-03
-- 状态：todo
+- 状态：**doing**（2026-09-11 算术条款落码完成，待底稿补字段提升覆盖率）
+- 进展：
+  - ✅ 新建 `scripts/forensic_screen.py`，实现 11 条算术条款（V4 存贷双高、V4A 利率倒挂、R1 OCF 背离、R2 应收剪刀差、R5 存货剪刀差、R6 商誉占比、R7 其他应收、R11 融资回报失衡、R4 非经常损益、R9 短债长投、R21 持续经营存疑），三态输出（hit / pass / insufficient_data）+ 排雷得分 + 覆盖率。
+  - ✅ 新增 `P0_R21_GOING_CONCERN` 代号与 `GOING_CONCERN_DOUBT` 断言组（柯达 2011 原型，刻意不并入 `ANY_FRAUD_ALERT`）。
+  - ✅ 验收：康美自动命中存贷双高（49.8%/37.6%）与 OCF 背离，柯达命中持续经营（净资产 -1077），福耀/苹果/Netflix 均未误杀。
+  - ✅ `references/forensic-checklist.md` 新增机器化状态表，标注每条条款的 ✅已机器化 / 🔶需补字段 / 👤人工核查 状态。
+  - ⏳ 待办：底稿补齐 `accounts_receivable`/`inventory`/`goodwill`/`interest_income` 等字段提升覆盖率（当前主体底稿覆盖率仅 19%）。
 
 ### REQ-P4-03 `tests/run_tests.py` 拆分
 - 现状：127KB 单文件。

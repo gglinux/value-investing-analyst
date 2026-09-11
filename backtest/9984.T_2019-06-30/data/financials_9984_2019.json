@@ -1,4 +1,19 @@
 {
+  "meta": {
+    "schema_version": 2,
+    "unit": "百万",
+    "currency": "JPY",
+    "basis": "consolidated",
+    "standard": "US-GAAP",
+    "period_type": "annual",
+    "data_vintage": "2019-05-09",
+    "source_ref": "q4FY2012 官方年报（决算短信 tanshin）PDF p.2-3 损益表/CF 表，重列值口径；股本单位千股",
+    "field_overrides": {},
+    "notes": [
+      "原 accounting_standard 字段附注：FY2009-FY2014）→ IFRS（FY2015 重列起，FY2016/2017-03 期正式采用"
+    ],
+    "migrated_by": "scripts/migrate_schema.py"
+  },
   "company": "软银集团（SoftBank Group Corp.）",
   "ticker": "9984.T",
   "currency": "JPY",

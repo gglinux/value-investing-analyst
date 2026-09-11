@@ -363,10 +363,33 @@ def expected_return(price, scenarios, hold_years, index_hurdle=0.09,
                ("consistency_expected_irr", "no_convergence_floor", "pessimistic_irr")]
     gate2["independent_checks"] = ["no_convergence_floor", "pessimistic_irr"]
     gate2["evaluable"] = all(c is not None for c in _checks)
-    gate2["pass"] = all(c is True for c in _checks) if gate2["evaluable"] else None
+
+    # ── REQ-P0-04 双闸门第二维度换源（2026-09-11）────────────────────
+    # 旧逻辑：三项全过才过。问题在于①与闸门一共用 V0（代码注释已承认），
+    # 两个同源闸门把名义门槛 25% 的有效门槛抬到 ~40%。这不是"系统偏保守"，
+    # 是公式结构缺陷——额外 15pct 安全边际不能更好拦截坏公司（假阳性公司同样
+    # 通过或不通过两个同源闸门），只让系统在该出手时不出手。
+    #
+    # 新逻辑：**两项独立检验（②③）全过即过**。①降级为诊断性自洽校验——
+    # 它仍然被计算和披露，不达标时输出 GATE2_1_IRR_FAIL 供人工审查，
+    # 但**不参与 gate2["pass"] 的组合判定**。这等效于把第二维度的源从
+    # "闸门一 V0 的函数"切换为"独立于 V0 的股息+内在价值增速"和"独立的悲观情景"。
+    #
+    # 回退条件：如果 REQ-P0-01 第四批假阳性基线出现新增 FP，本改动回滚。
+    # 检验方法：重跑 12 案 --rerun --baseline；正向错过数应下降，假阳性不新增。
+    _independent = [gate2[k]["pass"] for k in gate2["independent_checks"]]
+    _indep_evaluable = all(c is not None for c in _independent)
+    gate2["pass"] = all(c is True for c in _independent) if _indep_evaluable else None
     gate2["missing_inputs"] = [k for k in
-                               ("consistency_expected_irr", "no_convergence_floor")
+                               ("no_convergence_floor",)
                                if gate2[k]["pass"] is None]
+    # ①降级披露：不达标不阻塞但必须在报告中显著披露（期望 IRR 低于门槛
+    # 通常意味着情景概率赋值问题或离散度过大，值得人工复核）。
+    gate2["consistency_check_diagnostic"] = (
+        "①自洽性校验不达标（不阻塞闸门二，但须在报告中显著披露——"
+        "期望 IRR 低于门槛说明情景赋概率或离散度有待人工审查）"
+        if gate2["consistency_expected_irr"]["pass"] is False else
+        "①自洽性校验达标（与独立检验②③一致）")
     if moat == "none":
         gate2["pass"] = False
         gate2["note"] = "无护城河不给买入结论（valuation-guide 第四步），闸门二直接不过"

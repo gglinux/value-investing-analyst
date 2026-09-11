@@ -1,4 +1,16 @@
 {
+  "meta": {
+    "schema_version": 2,
+    "unit": "百万",
+    "currency": "USD",
+    "basis": "consolidated",
+    "standard": "US-GAAP",
+    "period_type": "annual",
+    "data_vintage": "2026-02-05",
+    "source_ref": "[E:filings/goog_companyfacts.json] EDGAR",
+    "field_overrides": {},
+    "migrated_by": "scripts/migrate_schema.py"
+  },
   "company": "谷歌 (Alphabet)",
   "ticker": "GOOG",
   "currency": "USD",

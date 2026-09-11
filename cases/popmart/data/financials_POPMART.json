@@ -1,4 +1,16 @@
 {
+  "meta": {
+    "schema_version": 2,
+    "unit": "百万",
+    "currency": "CNY",
+    "basis": "consolidated",
+    "standard": "IFRS",
+    "period_type": "annual",
+    "data_vintage": "2026-03-25",
+    "source_ref": "2023年报（披露易，历史披露值）",
+    "field_overrides": {},
+    "migrated_by": "scripts/migrate_schema.py"
+  },
   "company": "泡泡玛特",
   "ticker": "hk09992",
   "currency": "CNY",

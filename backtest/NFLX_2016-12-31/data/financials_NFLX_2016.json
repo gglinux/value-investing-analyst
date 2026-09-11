@@ -1,4 +1,16 @@
 {
+  "meta": {
+    "schema_version": 2,
+    "unit": "百万",
+    "currency": "USD",
+    "basis": "consolidated",
+    "standard": "US-GAAP",
+    "period_type": "annual",
+    "data_vintage": "2017-01-27",
+    "source_ref": "FY2015 10-K 原文（accession 0001065280-16-000047，filed 2016-01-28）：R2 利润表/R5 现金流量表/R6 资产负债表——与 companyfacts（同 accession 值）双源一致；d_and_a/capex 为方案 B 派生值不直接核对（组成项已逐项核对）",
+    "field_overrides": {},
+    "migrated_by": "scripts/migrate_schema.py"
+  },
   "company": "Netflix, Inc.",
   "ticker": "NFLX",
   "currency": "USD",

@@ -1,4 +1,19 @@
 {
+  "meta": {
+    "schema_version": 2,
+    "unit": "百万",
+    "currency": "USD",
+    "basis": "consolidated",
+    "standard": "US-GAAP",
+    "period_type": "annual",
+    "data_vintage": "2021-03-18",
+    "source_ref": "FY2021 10-K 年报（accession 0001585521-21-000048，filed 2021-03-18）——与 companyfacts（同 accession 帧）双源一致",
+    "field_overrides": {},
+    "notes": [
+      "原 unit 字段附注：USD（股本为 million shares"
+    ],
+    "migrated_by": "scripts/migrate_schema.py"
+  },
   "company": "Zoom Video Communications, Inc.",
   "ticker": "ZM",
   "currency": "USD",

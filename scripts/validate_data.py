@@ -61,6 +61,9 @@ import os
 import sys
 from datetime import date, datetime, timedelta
 
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from schema_meta import check_unit_sanity, validate_meta  # noqa: E402
+
 SPIKE_KEYS = ["revenue", "net_income", "ocf", "capex", "total_equity", "shares_diluted"]
 SPIKE_THRESHOLD = 0.5
 CROSSCHECK_KEYS = ["revenue", "net_income", "ocf", "shares_diluted"]
@@ -176,6 +179,14 @@ def main():
     for k in ("accounting_standard", "fiscal_year_end"):
         if not data.get(k):
             warns.append(f"口径注册表：`{k}` 缺失——跨市场竞对对比时必填，图表脚注需注明")
+
+    # 1.2 元数据 schema 强类型化（REQ-P0-03）——命名约定拦不住量纲错误，
+    # 三条已登记观察（OBS-600660-01 / S9b / OBS-000895-02）全部是量纲/口径错位。
+    # 强度由 meta.schema_version 决定：缺失=legacy（全警告），>=2=strict（全错误），
+    # 使存量 43 份底稿可逐案例迁移而非一次性阻断。
+    _se, _sw = validate_meta(data, args.input)
+    errors += _se
+    warns += _sw + check_unit_sanity(data, args.input)
 
     # 1.5 前视偏差防线：年报数据必须记录发布日（publish_date），复盘校准时
     # 按发布日截断"当时市场知道什么"——2025 年报 3 月底才发布，1 月的分析不该用它。
