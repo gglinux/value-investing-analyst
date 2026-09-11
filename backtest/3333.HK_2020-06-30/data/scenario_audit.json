@@ -1,0 +1,68 @@
+{
+  "file": "backtest/3333.HK_2020-06-30/data/scenarios.json",
+  "errors": [],
+  "warnings": [
+    "S9 两口径股息率分裂 287%（>50%）：主口径 3.57% vs 对照口径 13.80%——差异过半来自单次分红成分，主口径不得作为闸门二不收敛下限的加数，须改用 sustainable_forward 口径重登，或登记 [E:] 证据证明单次成分不可外推"
+  ],
+  "codes": [
+    "S9_DIVIDEND_YIELD_DIMENSION"
+  ],
+  "unmapped_messages": [],
+  "diagnostics": {
+    "scenario_values": {
+      "悲观": 3.9,
+      "基准": 19.3,
+      "乐观": 28.1
+    },
+    "bear_name": "悲观",
+    "base_name": "基准",
+    "margin_of_safety_vs_base": -0.03626943005181338,
+    "bear_method": "pe_trough_multiple",
+    "bear_recomputed_value": 3.9,
+    "bear_recompute_deviation": 0.0,
+    "discount_rate_floor": 0.1,
+    "discount_rate_floor_basis": "硬下限 10%",
+    "bear_stressed": [
+      "margin（毛利率 27.8%→22%，2020H1 降价传导）",
+      "refinancing_rate（对赌触发+再融资 13%+）",
+      "strategic_investor_call（回购 130,000 触发现金挤兑）",
+      "earnings_quality（少数股东侵蚀持续）"
+    ],
+    "bear_base_ratio": 0.20207253886010362,
+    "non_operating_addback_per_share": {
+      "悲观": 0,
+      "基准": 0,
+      "乐观": 0
+    },
+    "bear_vs_price": 0.195,
+    "probability_deviations": {},
+    "intrinsic_value_growth": 0.0,
+    "revenue_decline_streak": 0,
+    "core_driver_decline_years": null,
+    "peak_stagnation": {
+      "peak_year": 2019,
+      "peak_revenue": 477561.0,
+      "latest_revenue": 477561.0,
+      "drawdown_from_peak": 0.0,
+      "years_since_peak": 0,
+      "stagnating": false,
+      "thresholds": {
+        "min_drawdown": 0.1,
+        "min_years_since_peak": 3
+      }
+    },
+    "decline_streak_used": 0,
+    "shrinking_reasons": [],
+    "value_trap_triggered": false,
+    "dividend_yield": 0.0357,
+    "dividend_yield_basis": "sustainable_forward",
+    "dividend_yield_basis_gap": 2.8655,
+    "snapshot_dividend_yield": {
+      "value": 0.0357,
+      "field": "dividend_yield_frac",
+      "basis": "键名后缀 _frac",
+      "unit_ambiguous": false
+    }
+  },
+  "passed": true
+}

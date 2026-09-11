@@ -1,0 +1,22 @@
+{
+  "company": "中国恒大集团（3333.HK）",
+  "ticker": "3333.HK",
+  "currency": "CNY",
+  "unit": "million_cny",
+  "tax_rate": 0.25,
+  "company_type": "房地产开发（高杠杆高周转，预售制）——metric-playbook 类型的注意点：收入为会计结转（滞后销售 1.5-2 年），经营现金流含预售回款，『利润 vs 现金流』的背离需按行业口径解读；非金融类走通用管道",
+  "view_note": "本文件是 financials_3333HK.json 的确定性字段映射视图（唯一事实源仍是 financials，本视图不含任何新事实），专供 compute_metrics.py 的归母口径输入。映射表：net_income←annual.net_income（归母）；total_equity←annual.equity_owners（归母权益，2015/2016 含永续余额→分母偏高警示）；total_debt←annual.borrowings；cash←annual.cash_total（含受限，保守）；ebit←annual.operating_profit（近似：含投资物业公平值收益 1,516 与其他收益，五年概要原文）；interest_expense←融资成本净额（费用化，五年概要 L10134：2015 2,994/2016 11,301/2017 7,917/2018 14,623/2019 22,763；注意资本化利息 8.63% 利率不在此列——真实利息负担=已付利息现金 66,791）；capex=0（显式声明：房企买地+建安支出已在 OCF 经营流出内，capex 记 0 使 FCF≡OCF，为最保守的房企自由现金流口径）；d_and_a=null（物业折旧量小且未单独披露，OwnerEarnings 兜底≈净利）；wc_change=null（预售制下预收与应付的营运资本变动口径复杂，不拆）；dividends_paid 2019=14,802（2018-10-19 宣派 2016/2017 度股息，2019-07 支付，A 级）",
+  "annual": [
+    {"year": 2015, "revenue": 133130, "ebit": 32316, "net_income": 10460, "interest_expense": 2994, "d_and_a": null, "capex": 0, "wc_change": null, "ocf": null, "total_equity": 126743, "total_debt": 296906, "cash": 164020, "shares_diluted": null, "dividends_paid": null},
+    {"year": 2016, "revenue": 211444, "ebit": 48225, "net_income": 5091, "interest_expense": 11301, "d_and_a": null, "capex": 0, "wc_change": null, "ocf": null, "total_equity": 157184, "total_debt": 535070, "cash": 304330, "shares_diluted": null, "dividends_paid": null},
+    {"year": 2017, "revenue": 311022, "ebit": 85245, "net_income": 24372, "interest_expense": 7917, "d_and_a": null, "capex": 0, "wc_change": null, "ocf": -150973, "total_equity": 114772, "total_debt": 732625, "cash": 287722, "shares_diluted": 13580, "dividends_paid": null},
+    {"year": 2018, "revenue": 466196, "ebit": 141414, "net_income": 37390, "interest_expense": 14623, "d_and_a": null, "capex": 0, "wc_change": null, "ocf": 54749, "total_equity": 132995, "total_debt": 673142, "cash": 204209, "shares_diluted": 13631, "dividends_paid": null},
+    {"year": 2019, "revenue": 477561, "ebit": 94850, "net_income": 17280, "interest_expense": 22763, "d_and_a": null, "capex": 0, "wc_change": null, "ocf": -67357, "total_equity": 145700, "total_debt": 799895, "cash": 228767, "shares_diluted": 13252, "dividends_paid": 14802}
+  ],
+  "n_ici_warning": "NCI 212,837（含战投 130,000）不计入 InvestedCapital 简化口径（=归母权益+有息负债−现金）——对恒大该简化使 ROIC 分母偏小（战投 130,000 实质债性已在 PwC KAM/嵌入式衍生负债 4,666 登记）；判读时以『归母 ROE 11.9% vs 表观合并 ROE』与 GATE_EFFECTIVE_HURDLE_GAP 敏感性为准，勿把简化口径 ROIC 当精确资本回报",
+  "provenance": {
+    "source_file": "financials_3333HK.json（validate_data.py 通过，0 错误）",
+    "mapping": "确定性映射，无新事实；逐字段来源见 view_note",
+    "capex_zero_semantics": "FCF≡OCF 为房企保守语义（经营现金流已扣除买地/建安/税费的经营性再投资）——累计 FCF 五年为负且 2019 派息 14,802 →『分红靠融资维持』红旗为真实结构而非口径假象（借款 2019 净增 ~108,163/融资净额 +21,625 印证）"
+  }
+}

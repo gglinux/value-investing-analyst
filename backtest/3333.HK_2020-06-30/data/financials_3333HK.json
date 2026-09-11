@@ -1,0 +1,104 @@
+{
+  "company": "中国恒大集团（3333.HK）",
+  "ticker": "3333.HK",
+  "currency": "CNY",
+  "unit": "million_cny",
+  "accounting_standard": "HKFRS",
+  "fiscal_year_end": "12-31",
+  "company_type": "房地产开发（高杠杆高周转，预售制）——metric-playbook 类型的注意点：收入为会计结转（滞后销售 1.5-2 年），经营现金流含预售回款，『利润 vs 现金流』的背离需按行业口径解读；非金融类走通用管道",
+  "replay_date": "2020-06-30",
+  "information_cutoff": "2020-06-30",
+  "attribution_basis_note": "net_income 主线 = 归母（本公司股东应占）年度利润，理由：NCI 212,837 占总权益 59.4%（含战投 130,000）+永续/战投对利润的侵蚀是本案核心红旗，合并口径会掩盖侵蚀。年度利润三分法逐年精确勾稽（全部 A 级损益表/附注原文）：2015 17,340=归母 10,460+永续 5,088+NCI 1,792；2016 17,617=5,091+10,646+1,880；2017 37,049=24,372+0(永续年中赎回)+12,677；2018 66,547=37,390+29,157；2019 33,542=17,280+16,262。合并净利序列另存 net_income_consolidated_5y。全面收益总额口径（含 OCI）分配见 equity_income_split_comprehensive_5y——勿与年度利润口径混用（此前底稿曾混用 2015-2017 全面收益值，已修正）",
+  "annual": [
+    {"year": 2015, "publish_date": null, "revenue": 133130, "gross_profit": 37413, "operating_profit": 32316, "net_income": 10460, "non_controlling": 1792, "perpetual": 5088, "ocf": null, "total_equity": 142142, "equity_owners": 126743, "total_assets": 757035, "total_liabilities": 614893, "borrowings": 296906, "cash_total": 164020, "shares_basic": null, "shares_diluted": null},
+    {"year": 2016, "publish_date": null, "revenue": 211444, "gross_profit": 59422, "operating_profit": 48225, "net_income": 5091, "non_controlling": 1880, "perpetual": 10646, "ocf": null, "total_equity": 192532, "equity_owners": 157184, "total_assets": 1350868, "total_liabilities": 1158336, "borrowings": 535070, "cash_total": 304330, "shares_basic": null, "shares_diluted": null},
+    {"year": 2017, "publish_date": null, "revenue": 311022, "gross_profit": 112262, "operating_profit": 85245, "net_income": 24372, "non_controlling": 12677, "perpetual": 0, "ocf": -150973, "total_equity": 242208, "equity_owners": 114772, "total_assets": 1761752, "total_liabilities": 1519544, "borrowings": 732625, "cash_total": 287722, "shares_basic": 13296, "shares_diluted": 13580},
+    {"year": 2018, "publish_date": "2019-03-26", "revenue": 466196, "gross_profit": 168947, "operating_profit": 141414, "net_income": 37390, "non_controlling": 29157, "perpetual": 0, "ocf": 54749, "total_equity": 308626, "equity_owners": 132995, "total_assets": 1880028, "total_liabilities": 1571402, "borrowings": 673142, "cash_total": 204209, "shares_basic": 13125, "shares_diluted": 13631},
+    {"year": 2019, "publish_date": "2020-04-28", "revenue": 477561, "gross_profit": 132937, "operating_profit": 94850, "net_income": 17280, "non_controlling": 16262, "perpetual": 0, "ocf": -67357, "total_equity": 358537, "equity_owners": 145700, "total_assets": 2206577, "total_liabilities": 1848040, "borrowings": 799895, "cash_total": 228767, "shares_basic": 13138, "shares_diluted": 13252}
+  ],
+  "net_income_consolidated_5y": {
+    "note": "合并年度利润（含归母+永续持有人+NCI）——『利润 vs 经营现金流背离』红旗叙事的合并口径基础（OCF 为合并口径）",
+    "source": "[E:filings/FY2019_年报_20200428.pdf] 五年財務概要 p.217（L10173）",
+    "values": {"2015": 17340, "2016": 17617, "2017": 37049, "2018": 66547, "2019": 33542}
+  },
+  "equity_owners_note": "equity_owners=本公司股东应占资本及储备（归母权益）。口径警示：2015/2016 含永久资本工具余额（永续 2017 年中赎回后 2017-2019 口径纯）——2016 归母权益 157,184 高估普通股东权益，2016→2017 骤降 42,412 主因永续赎回；2018/2019 值干净。归母权益 vs NCI：2019 145,700 vs 212,837（NCI 占 59.4%，其中战投 130,000）",
+  "equity_income_split_comprehensive_5y": {
+    "note": "全面收益总额（年度利润+OCI）的官方分配序列（对照用，勿与 annual 年度利润口径混用）：2017 全面收益 40,910=27,432+13,478（=37,049+OCI 3,861 自洽）；2016 归母全面收益仅 199（OCI −4,892 全额归母分摊所致）——归母侵蚀的另一个视角",
+    "source": "[E:filings/FY2019_年报_20200428.pdf] 五年財務概要 p.218；[E:filings/FY2016_业绩公布_20170328.pdf] 損益表對照列",
+    "years": [
+      {"year": 2015, "total_comprehensive": 17370, "owners": 10490, "perpetual_holders": 5088, "nci": 1792},
+      {"year": 2016, "total_comprehensive": 12725, "owners": 199, "perpetual_holders": 10646, "nci": 1880},
+      {"year": 2017, "total_comprehensive": 40910, "owners": 27432, "perpetual_holders": 0, "nci": 13478},
+      {"year": 2018, "total_comprehensive": 66702, "owners": 37502, "perpetual_holders": 0, "nci": 29200},
+      {"year": 2019, "total_comprehensive": 33303, "owners": 17109, "perpetual_holders": 0, "nci": 16194}
+    ]
+  },
+  "annual_detail_2019": {
+    "sales_cost": 344624, "selling_marketing": 23287, "admin": 19811,
+    "fair_value_gain_investment_property": 1516, "finance_cost_net": 22763, "tax_expense": 40630,
+    "eps_basic_rmb": 1.315, "eps_diluted_rmb": 1.304,
+    "eps_note": "EPS 分子=归母 17,280，加权平均股数基本 13,138/摊薄 13,252 [E:filings/FY2019_年报_20200428.pdf] 附註34 p.173；EPS 五年序列：2015 0.713/2016 0.372/2017 1.833/2018 2.849/2019 1.315（基本，RMB）",
+    "core_profit": 40820, "core_profit_note": "核心业务利润=净利扣除投资物业公平值收益/汇兑/金融工具公平值/捐赠及部分非房亏损 [E:filings/FY2019_业绩公布_20200331.pdf] 财务摘要 4；盈利预警（2020-03-22）预披露 408 亿/-48% 与 335 亿/-50%，与实际一致"
+  },
+  "balance_2019_detail": {
+    "cash_eq_only": 150056, "restricted_cash": 78711, "cash_total": 228767,
+    "restricted_note": "受限现金作兴建项目担保 [E:filings/FY2019_年报_20200428.pdf]（L8144）",
+    "inventory_dev_and_completed": 1327461, "completed_unsold": 129073,
+    "equity_owners": 145700, "non_controlling": 212837, "total_equity": 358537,
+    "borrowings_non_current": 427726, "borrowings_current": 372169, "borrowings_total": 799895,
+    "trade_payables": 717618, "contract_liabilities": 129705, "current_tax_payable": 130543,
+    "derivative_liabilities": 4666,
+    "debt_structure": {
+      "bank_other": {"amount": 604672, "rate": 0.0885, "prior_amount": 536860, "prior_rate": 0.0799},
+      "priority_notes": {"amount": 136601, "rate": 0.1006, "prior_amount": 79912, "prior_rate": 0.0899, "fair_value": 120426, "fair_value_note": "贴水 5%——市场定价收益率高于票面"},
+      "china_bonds": {"amount": 45195, "rate": 0.0708},
+      "convertible": {"amount": 13427, "rate": 0.1071},
+      "weighted_avg_rate": 0.0899, "capitalized_rate": 0.0863,
+      "due_within_2y": 578655, "due_within_2y_pct": 0.723,
+      "new_issue_2020": "2020-01 美元债 11.5-12%（B 级市场报道）；2019-04 三档 9.5%/10.0%/10.5%（A 级公告标题）"
+    },
+    "strategic_investors": {
+      "total": 130000,
+      "trigger": "2021-01-31 前未完成深深房重组 → 原始成本回购（凯隆或许家印个人连带）或补偿 50% 股份",
+      "accounting": "嵌入式衍生负债确认（FY2019 末 4,666，公平值收益 357 入损益）；PwC 关键审计事项",
+      "status": "重组 2016-10 起停牌 3.7 年未完成，排他期五度延展至 2019-12-31；2020-01-13 首轮+二轮补充协议",
+      "wager_math": "若回购：可动用现金覆盖 1.15x（(228,767−78,711)/130,000）——几乎耗尽自由现金"
+    },
+    "perpetual_history": "永续债 2017 年中全数赎回（永续持有人分得 2015=5,088/2016=10,646/2017+=0；余额 2017 末起为零）——资金来源=战投 130,000+借款 +126,753（2016 535,070→2017 732,625）：债务形态转换而非去杠杆 [E:filings/FY2019_年报_20200428.pdf]（L10183 五年概要）"
+  },
+  "cash_flow_3y": {
+    "years": [2017, 2018, 2019],
+    "ocf_before_tax_interest": [-79902, 135347, 18493],
+    "tax_paid": [-16999, -25510, -19059],
+    "interest_paid": [-54072, -55088, -66791],
+    "ocf": [-150973, 54749, -67357],
+    "financing_net": [152913, -17651, 21625],
+    "note": "FY2017/2018 [E:filings/FY2018_业绩公布_20190326.pdf]（现金流量资料）；FY2019 [E:filings/FY2019_年报_20200428.pdf]（L3265-3330）。FY2019 向合联营/非控股现金垫款 −32,098（体外输血）；借款净增 ~108,163"
+  },
+  "dividends": {
+    "fy2019_final": {"per_share_rmb": 0.653, "total": 8658, "ex_date": "2020-07-08", "payment": "2020-07-21"},
+    "fy2018_final": {"per_share_rmb": 1.419, "total": 18770, "ex_date": "2020-01-17", "payment": "2020-02-26"},
+    "note": "FY2016/2017 当年零分红；2018-10-19 宣派 2016/2017 度末期股息 1.13 元/股 共 14,802（2019-07 到账）[E:filings/FY2018_业绩公布_20190326.pdf] 附註11；FY2019 中期未派；除净日东财分红 API 机器裁决（OBS-0001HK-03 纪律）"
+  },
+  "audit": {"auditor": "罗兵咸永道（PwC）", "opinion": "无保留意见（2020-03-31）", "kam": ["开发中物业及持作出售竣工物业可变现净值（1,327,461）", "投资物业公平值", "战投衍生金融负债公平值"]},
+  "spike_notes": {
+    "2016.revenue": "收入 +59%（133,130→211,444）：并购+高周转放量（2016 大量收并购项目集中结转）；为业务变化而非数据修正（五年概要收入序列一致 [E:filings/FY2019_年报_20200428.pdf] p.217）",
+    "2016.net_income": "归母 −51.3%（10,460→5,091）：永续持有人分得翻倍（5,088→10,646）吞噬利润+并表扩张 NCI 上升——永续/战投结构对普通股东侵蚀的顶点年 [E:filings/FY2016_业绩公布_20170328.pdf] 損益表分配原文",
+    "2017.net_income": "归母 +378.8%（5,091→24,372）：①永续 2017 年中全数赎回（分得 10,646→0）；②毛利率 36.1% 峰值年（五年 28.1%→36.2%→27.8% 中枢回归带上限）+结转放量；③置换结构=战投 130,000+借款 +197,555（债务形态转换）。全面收益口径归母 27,432 勿混用",
+    "2018.net_income": "归母 +53.4%（24,372→37,390）：结转量价齐升（收入 +49.9%）+毛利率维持 36.2%+永续拖累归零后首个完整年度；2018 为行业景气顶（先行指标合约销售 2018 +10.1% 已放缓）",
+    "2019.net_income": "归母 −53.8%（37,390→17,280）：毛利率 36.2%→27.8% 回落 8.4pct（2017-18 高价地结转开始）+营销/融资成本上升；盈利预警（2020-03-22）预披露归因『清尾低价楼』——五年序列显示这是中枢回归而非一次性",
+    "2018.ocf": "经营现金流 −150,973→+54,749（+136%）：2017 买地现金支出峰值年后的方向反转+销售回款创新高；为业务节奏而非口径变化 [E:filings/FY2018_业绩公布_20190326.pdf] 现金流量资料",
+    "2019.ocf": "经营现金流 +54,749→−67,357（−223%）：买地+建安支出回升、回款增速放缓（合约销售 2019 +9.0% vs 2018 +10.1%，且 2019 销售面积 +11.5% 而均价 −2.2%）；预售制下利润与现金流同向恶化先行于结转 [E:filings/FY2019_年报_20200428.pdf] L3265-3330"
+  },
+  "crosscheck_method": "业绩公告财务摘要 vs 年报报表逐项比对（两年期数字一致，FY2016 公告补 2015/2016 双源）；东财分红 API vs 年报附注35 一致；行情三角校验见 market_snapshot；三年 shares_diluted 取年报附註34/FY2018 公告附註10 摊薄加权平均数原文；net_income 交叉核对口径=归母（附註34 EPS 分子）",
+  "crosscheck": [
+    {"year": 2017, "source": "FY2018 业绩公布（HKEX 披露易 2019-03-26）附註10 每股盈利（EPS 分子=归母）/現金流量資料；FY2019 年报五年財務概要重列印证",
+     "revenue": 311022, "net_income": 24372, "ocf": -150973, "shares_diluted": 13580},
+    {"year": 2018, "source": "FY2018 业绩公布（HKEX 披露易）損益表分配+附註10；FY2019 年报附註34 對照列（HKEX 披露易 2020-04-28）",
+     "revenue": 466196, "net_income": 37390, "ocf": 54749, "shares_diluted": 13631},
+    {"year": 2019, "source": "FY2019 年报（HKEX 披露易 2020-04-28）綜合損益表 L3108-3112+附註34 p.173+現金流量表 L3265-3330",
+     "revenue": 477561, "net_income": 17280, "ocf": -67357, "shares_diluted": 13252}
+  ],
+  "crosscheck_exempt": {},
+  "provenance": {"financials": "A（年报 PDF 原文+三份业绩公告损益表/资产负债表对比列）", "monthly_sales": "A（HKEX 公告原文）", "dividends": "A（东财分红 API+年报附注）", "cumulative_financing": "B（部分未逐笔核实）", "new_issue_rates_2020": "B（市场报道口径）", "shares_diluted": "A（年报附註34/FY2018 公告附註10 原文）", "borrowings_5y": "A（FY2016/FY2018 公告资产负债表+FY2019 年报）", "cash_total_5y": "A（FY2016 公告 Financial Highlights+FY2018 公告资产负债表+FY2019 年报 MD&A）", "equity_owners_5y": "A（FY2016/FY2018 公告 NCI 行+FY2019 年报资产负债表，归母=总权益−NCI 逐值）"}
+}
