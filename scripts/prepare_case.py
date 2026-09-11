@@ -12,6 +12,8 @@ B 档协议 = 双会话 + 文件闸门：答案在 Step 3 verdict commit 之前*
       # 机器校验该案例 verdict.json 已被 git 提交后，解码落地 answer_source.md
   python3 scripts/prepare_case.py --status
       # 查看密封库状态（哪些案例已密封/已揭示）
+  python3 scripts/prepare_case.py --seal-check backtest/<ticker>_<date>/
+      # 进入 verdict 阶段前扫描该案例隔离是否完好（REQ-P0-05）
 
 密封格式：base64(json)。这不是加密——目的是：
   1. grep/glob 扫工作区时不会把答案明文带进执行上下文；
@@ -185,16 +187,157 @@ def _status() -> int:
     return 0
 
 
+# ── REQ-P0-05 隔离协议机器检查 ─────────────────────────────────────
+# 第二批 6 个案例中真正执行隔离的只有 1 例。靠自觉不行，靠机器。
+# 本函数在进入 verdict 阶段**前**运行，扫描三类污染：
+#   1. 工作区存在答案明文（answer.json / answer_source.md / ANSWERS.md 对应段）
+#   2. sealed_answers/*.enc 有解密痕迹（对应的 answer_source.md 已存在）
+#   3. git 历史中 answer 相关文件的首次 commit 早于 verdict.json 的首次 commit
+# 任一命中输出 contaminated=True 并返回非零退出码。
+
+_ANSWER_FILES = ("answer.json", "answer_source.md", "diff.md")
+_ANSWER_PATTERNS_IN_ANSWERS_MD = None  # 惰性：需要时才读
+
+
+def _seal_check(case_dir: Path) -> int:
+    """在 verdict 落盘前检查隔离完好性。"""
+    if not case_dir.is_dir():
+        print(f"❌ 案例目录不存在：{case_dir}")
+        return 1
+    name = case_dir.name
+    issues = []
+
+    # ── 检查 1：工作区答案明文 ──
+    for f in _ANSWER_FILES:
+        if (case_dir / f).exists():
+            issues.append(f"工作区存在答案文件 {f}——verdict 落盘前不应出现")
+
+    # ── 检查 2：密封库对应答案已被揭示 ──
+    enc = SEALED_DIR / f"{name}.enc"
+    if enc.exists() and (case_dir / "answer_source.md").exists():
+        issues.append("密封答案已被揭示（answer_source.md 存在）——verdict 前不应揭示")
+
+    # ── 检查 3：git 历史中答案 commit 早于 verdict commit ──
+    verdict_path = str((case_dir / "verdict.json").relative_to(REPO_ROOT))
+    v_log = _git(["log", "--format=%H %ct", "--diff-filter=A", "--", verdict_path])
+    v_first_ts = None
+    if v_log.stdout.strip():
+        parts = v_log.stdout.strip().splitlines()[-1].split()
+        if len(parts) >= 2:
+            v_first_ts = int(parts[1])
+
+    for af in _ANSWER_FILES:
+        af_path = str((case_dir / af).relative_to(REPO_ROOT))
+        a_log = _git(["log", "--format=%H %ct", "--diff-filter=A", "--", af_path])
+        if a_log.stdout.strip():
+            a_parts = a_log.stdout.strip().splitlines()[-1].split()
+            if len(a_parts) >= 2:
+                a_first_ts = int(a_parts[1])
+                if v_first_ts is None or a_first_ts <= v_first_ts:
+                    issues.append(
+                        f"git 历史显示 {af} 首次提交（epoch {a_first_ts}）"
+                        f"不晚于 verdict.json 首次提交"
+                        f"（{'epoch ' + str(v_first_ts) if v_first_ts else '未提交'}）"
+                        f"——时序证据不支持隔离")
+
+    # ── 检查 4：ANSWERS.md 是否仍含该案例明文答案 ──
+    answers_md = REPO_ROOT / "backtest" / "ANSWERS.md"
+    if answers_md.exists():
+        # 案例目录名含 ticker，在 ANSWERS.md 里搜索 ticker
+        ticker = name.split("_")[0]
+        content = answers_md.read_text(encoding="utf-8")
+        # 只在第三/四/五批段落中搜索（一二批已执行，明文是历史遗留）
+        for batch in SEALED_BATCHES:
+            m = re.search(rf"^\*\*第{_BATCH_CN[batch]}批.*?\*\*\s*$", content, re.M)
+            if not m:
+                continue
+            seg = content[m.end():]
+            nxt = re.search(r"^(\*\*第.{1,3}批|---|# )", seg, re.M)
+            if nxt:
+                seg = seg[:nxt.start()]
+            if ticker in seg:
+                issues.append(
+                    f"ANSWERS.md 第{batch}批段落仍含 {ticker} 明文答案——"
+                    f"应先 --seal 密封并从明文段落删除")
+                break
+
+    if issues:
+        print(f"⛔ 隔离检查失败（{name}）：")
+        for iss in issues:
+            print(f"   ❌ {iss}")
+        print(f"\n  verdict.json 须标注 `\"contaminated\": true`")
+        print("  contaminated 案例从战绩表排除（run_backtest_assertions 跳过判定）。")
+        return 1
+    print(f"✅ 隔离检查通过（{name}）：工作区无答案明文、密封未揭示、git 时序正常")
+    return 0
+
+
+# ── REQ-P0-08 规则版本钉死 ──────────────────────────────────────────
+# verdict.json 不记录当时的规则版本 → 历史战绩失去参照。
+# 本函数生成 rules_snapshot 字典，供 Step 3 写入 verdict.json。
+
+def snapshot_rules() -> dict:
+    """返回当前 skill 的关键阈值快照与 git commit hash。
+
+    用途：写入 verdict.json 的 `rules_snapshot`，让任何一次"系统改善了"
+    的声明都可按旧版本重跑验证。
+    """
+    commit = _git(["rev-parse", "HEAD"])
+    short = _git(["rev-parse", "--short", "HEAD"])
+    dirty = bool(_git(["status", "--porcelain"]).stdout.strip())
+
+    # 从引擎模块动态取阈值（不硬编码数字，避免漂移）
+    thresholds = {}
+    try:
+        sys.path.insert(0, str(REPO_ROOT / "scripts"))
+        import reverse_dcf as _rd
+        thresholds["discount_rate_default"] = getattr(_rd, "DEFAULT_DISCOUNT_RATE", None)
+        thresholds["floor_hurdle_default"] = getattr(_rd, "DEFAULT_FLOOR_HURDLE", None)
+        thresholds["pessimistic_hurdle_default"] = getattr(_rd, "DEFAULT_PESSIMISTIC_HURDLE", None)
+        thresholds["loss_prob_hurdle_default"] = getattr(_rd, "DEFAULT_LOSS_PROB_HURDLE", None)
+        # 安全边际门槛
+        mos_w = _rd.moat_irr_hurdle("wide", 0.10, 5)
+        mos_n = _rd.moat_irr_hurdle("narrow", 0.10, 5)
+        thresholds["mos_wide"] = mos_w[0] if mos_w else None
+        thresholds["mos_narrow"] = mos_n[0] if mos_n else None
+    except Exception:
+        pass
+    try:
+        import forensic_screen as _fs
+        thresholds["forensic_veto_weight"] = _fs.VETO_WEIGHT
+        thresholds["forensic_redflag_weight"] = _fs.REDFLAG_WEIGHT
+        thresholds["th_cash_ratio"] = _fs.TH_CASH_RATIO
+        thresholds["th_debt_ratio"] = _fs.TH_DEBT_RATIO
+    except Exception:
+        pass
+
+    return {
+        "skill_commit": commit.stdout.strip(),
+        "skill_commit_short": short.stdout.strip(),
+        "dirty": dirty,
+        "thresholds": thresholds,
+    }
+
+
 def main():
     ap = argparse.ArgumentParser(description="回测答案密封/揭示（B 档文件闸门）")
     ap.add_argument("--seal", metavar="ANSWERS_MD", help="从 ANSWERS.md 抽出第三/四批答案密封")
     ap.add_argument("--reveal", metavar="CASE_DIR", help="verdict 提交后揭示该案例答案")
+    ap.add_argument("--seal-check", metavar="CASE_DIR", dest="seal_check",
+                    help="verdict 落盘前扫描隔离完好性（REQ-P0-05）")
+    ap.add_argument("--snapshot-rules", action="store_true", dest="snapshot_rules",
+                    help="输出当前规则版本快照 JSON（REQ-P0-08，写入 verdict.json）")
     ap.add_argument("--status", action="store_true", help="查看密封库状态")
     args = ap.parse_args()
     if args.seal:
         sys.exit(_seal(Path(args.seal)))
     if args.reveal:
         sys.exit(_reveal(Path(args.reveal).resolve()))
+    if args.seal_check:
+        sys.exit(_seal_check(Path(args.seal_check).resolve()))
+    if args.snapshot_rules:
+        print(json.dumps(snapshot_rules(), ensure_ascii=False, indent=2))
+        sys.exit(0)
     if args.status:
         sys.exit(_status())
     ap.print_help()

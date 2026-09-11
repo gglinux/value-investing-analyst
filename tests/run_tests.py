@@ -2215,6 +2215,42 @@ check("披露代号不参与任何断言判定（纯披露）",
       not [k for k, v in AC.ASSERTIONS.items() if "GATE_EFFECTIVE_HURDLE_GAP" in v])
 
 # ═══════════════════════════════════════════════════════════════════
+print("== 14.3 REQ-P0-05 隔离协议 + P0-06 时点 + P0-07 源裁决 + P0-08 规则版本 ==")
+# --- P0-05 隔离 ---
+_sc_check = subprocess.run([sys.executable, os.path.join(SCRIPTS, "prepare_case.py"),
+    "--seal-check", os.path.join(ROOT, "backtest", "600519.SH_2015-08-31")],
+    capture_output=True, text=True)
+check("P0-05 --seal-check 检出一二批旧流程污染（答案与 verdict 同 commit）",
+      _sc_check.returncode == 1 and "隔离检查失败" in _sc_check.stdout, _sc_check.stdout[:200])
+# --- P0-08 规则版本快照 ---
+_snap = subprocess.run([sys.executable, os.path.join(SCRIPTS, "prepare_case.py"),
+    "--snapshot-rules"], capture_output=True, text=True)
+_snap_d = json.loads(_snap.stdout)
+check("P0-08 --snapshot-rules 输出 skill_commit 与 thresholds",
+      "skill_commit" in _snap_d and "thresholds" in _snap_d
+      and _snap_d["thresholds"].get("mos_wide") == 0.25, str(_snap_d)[:200])
+# --- P0-06 时点校验（注入未来 vintage → 回测阻断）---
+_tmpd6 = tempfile.mkdtemp()
+_fin_fake = {"company": "Test", "currency": "CNY", "unit": "million",
+    "meta": {"schema_version": 0, "unit": "百万", "currency": "CNY",
+             "data_vintage": "2025-03-30"},
+    "annual": [{"year": 2020, "revenue": 100, "net_income": 10, "ocf": 15,
+                "total_assets": 200, "total_equity": 80, "shares_diluted": 10}]}
+_fin6_path = os.path.join(_tmpd6, "backtest", "TEST_2024-12-31", "data", "financials_test.json")
+os.makedirs(os.path.dirname(_fin6_path))
+json.dump(_fin_fake, open(_fin6_path, "w", encoding="utf-8"), ensure_ascii=False)
+_vd6 = subprocess.run([sys.executable, os.path.join(SCRIPTS, "validate_data.py"), _fin6_path],
+    capture_output=True, text=True)
+check("P0-06 data_vintage > replay_date → 回测案例报 ERROR",
+      _vd6.returncode != 0 and "REQ-P0-06" in _vd6.stdout, _vd6.stdout[:300])
+# --- P0-07 源优先级常量存在 ---
+import crosscheck_official as CCO  # noqa: E402
+check("P0-07 源优先级表 SOURCE_PRIORITY 已注册",
+      hasattr(CCO, "SOURCE_PRIORITY") and CCO.SOURCE_PRIORITY.get("edgar_xbrl") == 1)
+check("P0-07 差异阈值：命门 1%, 资产负债表 3%, 其他 5%",
+      CCO.TOL == 0.01 and CCO.TOL_BALANCE_SHEET == 0.03 and CCO.TOL_OTHER == 0.05)
+
+# ═══════════════════════════════════════════════════════════════════
 print("== 14.5 底稿 schema 强类型化行为测试（REQ-P0-03） ==")
 # 教训：一版 schema 校验只查「字段是否存在」，平安底稿 unit=百万 却填了 shares 单位
 # 「亿股」的数量级，strict 标签照发。这里只测行为（拦不拦得住），不测字段清单。

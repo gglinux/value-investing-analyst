@@ -197,6 +197,52 @@ def main():
                      "A股接口有 InfoPublDate 现成可用；EDGAR 用 filing date）——"
                      "复盘校准协议依赖该字段按发布日截断信息集")
 
+    # 1.5b REQ-P0-06 时点正确性：data_vintage ≤ 截断日（回测强制，实盘告警）
+    # 重述后的数字通常更干净（康美 2018 重述版把 300 亿货币资金调掉），用它做回测等于开卷。
+    meta = data.get("meta") or {}
+    vintage_raw = str(meta.get("data_vintage") or "").strip()
+    # 自动检测是否属于回测案例（路径含 backtest/）
+    is_backtest = "backtest" in str(args.input)
+    if vintage_raw:
+        import re as _re06
+        _vm = _re06.match(r"(\d{4}-\d{2}-\d{2})", vintage_raw)
+        if _vm:
+            vintage_date = _vm.group(1)
+            # 如果底稿路径含 replay_date（形如 <ticker>_YYYY-MM-DD），校验 vintage ≤ replay
+            _rp = _re06.search(r"_(\d{4}-\d{2}-\d{2})", os.path.basename(args.input))
+            replay_date = None
+            if _rp:
+                replay_date = _rp.group(1)
+            elif is_backtest:
+                # 从目录名取
+                _dp = _re06.search(r"_(\d{4}-\d{2}-\d{2})", str(args.input))
+                if _dp:
+                    replay_date = _dp.group(1)
+            if replay_date and vintage_date > replay_date:
+                msg = (f"时点正确性（REQ-P0-06）：data_vintage {vintage_date} > "
+                       f"回放时点 {replay_date}——底稿数据可得日期晚于截断日，"
+                       "构成前视偏差（康美重述版/追溯调整/准则切换可比数据都会踩此线）")
+                if is_backtest:
+                    errors.append(msg)
+                else:
+                    warns.append(msg + "（非回测案例降级为警告）")
+    elif is_backtest:
+        warns.append("时点正确性（REQ-P0-06）：回测案例缺 meta.data_vintage——"
+                     "无法校验数据是否为截断日当时可得")
+
+    # 1.5c REQ-P0-06 重述处理：含 restated_from 字段的行必须登记原值与理由
+    for r in rows:
+        rf = r.get("restated_from")
+        if rf is not None:
+            if not isinstance(rf, dict):
+                warns.append(f"重述处理（{r.get('year')}）：`restated_from` 应为 dict "
+                             "（键=字段名, 值={{original: 原值, reason: 理由}}）")
+            else:
+                for fld, detail in rf.items():
+                    if not isinstance(detail, dict) or "original" not in detail:
+                        warns.append(f"重述处理（{r.get('year')}.{fld}）：缺 original 原值——"
+                                     "重述值如需使用，须登记原值供比对")
+
     # 1.6 信息时效检查：分析日距最新登记的财报发布日超过 100 天时，
     # 极可能存在未消化的新季报/盈利预告（腾讯 AI capex +176% 是季中爆出的教训）。
     # 提示分析师核对最新季报，核对结果写入 manifest 的 latest_quarter_checked。

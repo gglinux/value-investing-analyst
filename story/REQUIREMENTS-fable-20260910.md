@@ -182,7 +182,13 @@
 - 验收：人为构造一次污染样本可被检出；第三批起隔离执行率报告为 100% 且机器可验证。
 - 涉及文件：`scripts/prepare_case.py`、`backtest/PROMPT.md`、`scripts/run_backtest_assertions.py`
 - 依赖：无
-- 状态：todo
+- 状态：**doing**（2026-09-11 --seal-check 四项检查落码完成，待第三批起执行验证）
+- 进展：
+  - ✅ `prepare_case.py --seal-check <case_dir>`：扫描四项隔离完好性——① 工作区无答案明文（answer.json/answer_source.md/diff.md）；② 密封库答案未被揭示；③ git 时序（answer commit 不早于 verdict commit）；④ ANSWERS.md 第三/四/五批段落无该案例明文。任一命中返回非零退出码。
+  - ✅ 验证：对一二批旧流程案例（茅台、苹果）正确检出污染（答案与 verdict 同 commit），符合预期。
+  - ✅ `backtest/PROMPT.md` Step 2.5 强制在 verdict 落盘前运行。污染案例须在 verdict.json 标 `contaminated: true`，战绩表排除。
+  - ✅ `tests/run_tests.py` 14.3 段行为测试。
+  - ⏳ 待办：`run_backtest_assertions.py` 在 `contaminated: true` 时跳过判定（第三批起落地）。
 
 ### REQ-P0-06 时点正确性（point-in-time）与重述处理
 - 来源：A1
@@ -193,7 +199,13 @@
 - 验收：现有回测案例全部通过时点校验或明确标注例外；`PROMPT.md` 新增时点纪律条款。
 - 涉及文件：`scripts/validate_data.py`、`backtest/PROMPT.md`、`references/data-sourcing.md`
 - 依赖：REQ-P0-03
-- 状态：todo
+- 状态：**doing**（2026-09-11 validate_data.py data_vintage 校验 + 重述处理落码完成）
+- 进展：
+  - ✅ `validate_data.py` 1.5b 段：回测案例（路径含 backtest）`data_vintage > replay_date` → ERROR 阻断；非回测降为 WARN；回测案例缺 vintage 告警。
+  - ✅ `validate_data.py` 1.5c 段：annual 行含 `restated_from` 字段时校验结构（dict，键=字段名，值含 original 原值与 reason）。
+  - ✅ `forensic_screen.py --as-of`：回测时只用截断日已发布的年报行（REQ-P0-02 联动）。
+  - ✅ `tests/run_tests.py` 14.3 段行为测试：注入未来 vintage 的回测底稿被阻断。
+  - ⏳ 待办：现有 12 案逐案核实 data_vintage ≤ replay_date（补字段或标注例外）。
 
 ### REQ-P0-07 源冲突裁决规则
 - 来源：A1
@@ -204,7 +216,12 @@
 - 验收：注入一次 3% 的命门科目差异能被阻断；差异表出现在报告数据附录。
 - 涉及文件：`references/data-sourcing.md`、`scripts/crosscheck_official.py`、`scripts/check_data_sources.py`
 - 依赖：REQ-P0-03
-- 状态：todo
+- 状态：**doing**（2026-09-11 源优先级表 + 差异阈值 + crosscheck conflict_table 落码完成）
+- 进展：
+  - ✅ `data-sourcing.md` 第九节：源优先级表（监管原文 > 公司官网 > A 级接口 > B 级 > C 级）与差异阈值（命门 >1% 阻断、资产负债表 >3% 告警、其他 >5% 登记）。裁决动作：以高优先级源为准更新底稿，差异登记入 crosscheck 区块并进报告附录。
+  - ✅ `crosscheck_official.py`：新增 `SOURCE_PRIORITY`、`TOL_BALANCE_SHEET`、`TOL_OTHER` 常量；EDGAR 比对发现偏差时输出 `conflicts` 差异表（年/字段/底稿值/官方值/偏差/严重度）。
+  - ✅ `tests/run_tests.py` 14.3 段行为测试：源优先级表与三级阈值常量校验。
+  - ⏳ 待办：`crosscheck_official.py --audit` 模式对非命门科目也按分级阈值输出差异表（当前只审命门科目完整性）；注入 3% 命门差异验收阻断。
 
 ### REQ-P0-08 规则版本钉死
 - 来源：A3、C
@@ -215,7 +232,12 @@
 - 验收：任一历史案例可按其记录的版本重跑并复现原档位。
 - 涉及文件：`scripts/prepare_case.py`、`scripts/run_backtest_assertions.py`、`backtest/*/verdict.json`
 - 依赖：无
-- 状态：todo
+- 状态：**doing**（2026-09-11 snapshot_rules 函数 + CLI + PROMPT 落码完成）
+- 进展：
+  - ✅ `prepare_case.py --snapshot-rules`：输出 `{skill_commit, skill_commit_short, dirty, thresholds}`，thresholds 从 reverse_dcf/forensic_screen 动态取（MoS 门槛、折现率、排雷阈值等），不硬编码。
+  - ✅ `backtest/PROMPT.md` Step 3 强制：verdict.json 须含 `rules_snapshot`（无此字段的历史案例视为"规则未知版本"）。
+  - ✅ `tests/run_tests.py` 14.3 段行为测试：快照输出含 skill_commit + mos_wide=0.25。
+  - ⏳ 待办：`run_backtest_assertions.py --as-of <hash>` 按旧规则重算（需 git stash/checkout 机制，复杂度较高，放 P2 优先级）。
 
 ---
 

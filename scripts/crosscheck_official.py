@@ -49,6 +49,21 @@ CORE_FIELDS = ["revenue", "net_income", "ocf", "shares_diluted"]
 BANK_FIELDS = ["operating_income", "net_income"]
 TOL = 0.01  # 与 validate_data.TOL 保持一致：1%
 
+# REQ-P0-07 源冲突裁决——差异阈值（详细规则见 data-sourcing.md 第九节）
+TOL_BALANCE_SHEET = 0.03   # 资产负债表科目 >3% 告警
+TOL_OTHER = 0.05           # 其他科目 >5% 登记
+BALANCE_SHEET_FIELDS = {"total_assets", "total_equity", "total_debt",
+                        "total_liabilities", "non_current_assets"}
+
+# 源优先级（1=最高）
+SOURCE_PRIORITY = {
+    "edgar_xbrl": 1, "cninfo_pdf": 1, "hkex_pdf": 1,   # 监管官方原文
+    "company_ir": 2,                                      # 公司官网原文
+    "westock": 3, "ifind": 3,                             # A 级接口
+    "research_report": 4, "wind_screenshot": 4,           # B 级二手
+    "web_search": 5, "media": 5,                          # C 级兜底
+}
+
 # EDGAR XBRL 概念候选，与 extract_edgar_annual.py 同源（逐年独立回退）
 CONCEPTS = {
     "revenue": ["RevenueFromContractWithCustomerExcludingAssessedTax", "Revenues",
@@ -156,6 +171,7 @@ def main() -> int:
     print("=" * 70)
 
     errors, warns, auto = 0, 0, 0
+    conflicts = []  # REQ-P0-07 差异表（含已裁决与未裁决）
 
     # ---- 模式一：EDGAR 自动取数比对（机器取数，不经人手转录）----
     if args.companyfacts and not args.audit:
@@ -189,6 +205,10 @@ def main() -> int:
                 elif d > TOL:
                     print(f"  ❌ {y} {f:16} 底稿 {dv:,.1f} vs 官方 {val:,.1f} "
                           f"偏差 {d:.1%}  [{concept}]")
+                    conflicts.append({"year": y, "field": f, "annual_value": dv,
+                                      "official_value": round(val, 2),
+                                      "source": concept, "diff_pct": round(d, 4),
+                                      "severity": "block" if f in CORE_FIELDS else "warn"})
                     errors += 1
                 else:
                     print(f"  ✅ {y} {f:16} {dv:,.1f} ≈ {val:,.1f} ({d:.2%})")
@@ -253,6 +273,14 @@ def main() -> int:
     print("\n" + "=" * 70)
     print(f"结果：{errors} 错误 / {warns} 警告"
           + (f" / {auto} 项机器自动核对通过" if auto else ""))
+    if conflicts:
+        print(f"\n差异表（REQ-P0-07，{len(conflicts)} 条冲突须裁决/豁免）：")
+        for c in conflicts:
+            sev = "⛔阻断" if c["severity"] == "block" else "⚠告警"
+            print(f"  [{sev}] {c['year']} {c['field']}: "
+                  f"底稿 {c['annual_value']} vs 官方 {c['official_value']} "
+                  f"({c['diff_pct']:.1%}) [{c.get('source','')}]")
+        print("  → 命门阻断项须以官方值为准更新底稿，或在 crosscheck_exempt 写理由。")
     if errors:
         print("命门科目核对未通过——禁止进入 Phase 2。"
               "确无法取得官方值时在底稿写 crosscheck_exempt 显式豁免并在报告披露。")
