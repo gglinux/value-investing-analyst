@@ -331,6 +331,11 @@ RULES_REGISTRY = [
     ("hold_years_default", "reverse_dcf", "DEFAULT_HOLD_YEARS"),
     ("index_hurdle_default", "reverse_dcf", "DEFAULT_INDEX_HURDLE"),
     ("floor_hurdle_default", "reverse_dcf", "DEFAULT_FLOOR_HURDLE"),
+    ("industry_risk_premium", "reverse_dcf", "INDUSTRY_RISK_PREMIUM"),
+    ("market_floor_hurdles", "reverse_dcf", "MARKET_FLOOR_HURDLES"),
+    ("prob_anchors", "reverse_dcf", "PROB_ANCHORS"),
+    ("prob_deviation_free", "reverse_dcf", "PROB_DEVIATION_FREE"),
+    ("prob_deviation_max", "reverse_dcf", "PROB_DEVIATION_MAX"),
     ("pessimistic_hurdle_default", "reverse_dcf", "DEFAULT_PESSIMISTIC_HURDLE"),
     ("loss_prob_hurdle_default", "reverse_dcf", "DEFAULT_LOSS_PROB_HURDLE"),
     # 情景门禁

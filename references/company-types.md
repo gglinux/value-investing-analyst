@@ -61,7 +61,7 @@
 |---|---|
 | 判据 | 增速显著高于市场中枢 + 增长带质量（量价分解健康、无靠单一客户/补贴）；**再投入子型**：另加 `oe_to_ni_conversion` 低 或 capex/收入、获客投入占比高——价值在单位经济与规模效应，不在当期 OE |
 | 正常化 | 禁止向历史均值回归（高增长期均值无意义）；基期取最近稳定年度，增速假设必须过基率检验（SKILL 30 秒纪律卡第 5 条） |
-| 估值通道 | 标准 OE 三情景前提是 OE 序列有意义；**再投入子型当期 OE 极小时走成长通道**（REQ-P1-01 已接线）：`reverse_dcf.py growth` 以成熟期稳态利润 × 到达概率折回，第一道门是单元经济（规模化边际贡献率 ≤0 或 LTV/CAC <1 → `GROWTH_UNIT_ECONOMICS_UNPROVEN`，通道拒绝服务、改走标准管道）。三段式推导与档位语义（上限小仓位试探）见 [growth-framework.md](growth-framework.md) 第三半节；基准/乐观情景 method 登记 `growth_terminal_backcast` |
+| 估值通道 | 标准 OE 三情景前提是 OE 序列有意义；**再投入子型当期 OE 极小时走成长通道**（REQ-P1-01）：`reverse_dcf.py growth` 以成熟期稳态利润 × 到达概率折回，单元经济是第一道门（贡献率 ≤0/LTV-CAC <1 → `GROWTH_UNIT_ECONOMICS_UNPROVEN` 拒绝服务）。三段式与档位语义见 [growth-framework.md](growth-framework.md) 第三半节；method 登记 `growth_terminal_backcast` |
 | 悲观情景 | 单位经济破坏（获客成本/复购/定价权恶化），不是"增速降 20%"的旋钮式下调 |
 | 高发陷阱 | ① 把再投入当低质量（当期 OE 低 ≠ 不赚钱）；② 增长外推当默认（基率检验不过的增速假设一律降档）；③ 零分红公司吃股息类告警（语境豁免按标签生效） |
 
@@ -81,7 +81,7 @@
 |---|---|
 | 判据 | 长期股权投资 + 投资性资产 / 总资产比重大，或投资收益 / 利润总额比重大且并表经营收入占比低。**控股子型**：价值主体在被持股企业而非自身经营（财团、交叉持股、多元集团） |
 | 正常化 | 母公司经营性科目与持股收益**分开处理**——并表利润对母公司股东意义有限，看"从被投企业实际收到的分红 + 可处置头寸"。底稿 annual 行登记 `investment_income`（投资收益+公允价值变动，重估推高与减值压低同字段）与 `dividend_income`（从被投企业收到的分红），`compute_metrics.py` 自动产出 `sotp_screen` 块（经营性 OE / look-through 收益分列）并触发 `M_OWNER_YIELD_CONSOLIDATION_DISTORTION`（占净利润比重主导：最新年 ≥50% 或近 3 年 ≥2 年 ≥30%，双向判） |
-| 估值通道 | SOTP（分部估值加总，valuation-guide 方法树）。**已落码（REQ-P1-02）**：`python3 scripts/reverse_dcf.py sotp`——结构化持仓表（标的/持股比例/估值方法/变现折价率/流动性/[E:] 六要素，`--holdings-file`）+ 母公司净债（口径显式声明，合并口径触发 `SOTP_NET_DEBT_CONSOLIDATION_BASIS`）+ 经营业务价值（经营+投资双轮形态填，纯控股=0）= equity NAV，× (1−控股折价)；控股折价挂行业基率带（`--holding-profile`，低于下界触发 `SOTP_DISCOUNT_BELOW_BASE_RATE`）；反解现价隐含控股折价（分歧 ≥10pct 触发 `SOTP_IMPLIED_DISCOUNT_GAP`）。持仓占 equity NAV ≥50% 即非经营资产主导（`SOTP_HOLDINGS_DOMINATED`）——OE 通道结论一律不进档位裁决，通道档位上限小仓位试探 |
+| 估值通道 | SOTP（分部估值加总，方法树）。**已落码（REQ-P1-02）**：`reverse_dcf.py sotp`——结构化持仓表六要素（`--holdings-file`）+ 母公司净债（口径显式，合并口径触发 `SOTP_NET_DEBT_CONSOLIDATION_BASIS`）+ 经营业务价值 = equity NAV × (1−控股折价)；控股折价挂行业基率带（`--holding-profile`）；反解现价隐含控股折价。持仓占 NAV ≥50%（`SOTP_HOLDINGS_DOMINATED`）→ OE 结论不进档位裁决、上限小仓位试探 |
 | 悲观情景 | 分部各自悲观情景 + 折价扩大；不用 DCF 下调 |
 | 高发陷阱 | ① 并表污染下的 OE/PE 读数（对控股型输出假低估或假高估——凡是控股子型，OE 通道结论一律不进档位裁决）；② 把折价当安全边际（折价可以永不收敛，没有催化剂的折价不是便宜）；③ 分部数据不可得时按 Phase 0 规则终止，不降级估算 |
 

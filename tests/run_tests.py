@@ -25,6 +25,7 @@ import glob
 import json
 import os
 import re
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -3343,6 +3344,332 @@ _prompt_313 = open(os.path.join(ROOT, "backtest", "PROMPT.md"),
 check("PROMPT 已写入护城河定量得分纪律段（第四批起强制）",
       "REQ-P1-03" in _prompt_313 and "moat_score" in _prompt_313
       and "MOAT_BOUNDARY_BAND_DUAL" in _prompt_313)
+
+# ═══════════════════════════════════════════════════════════════════
+print("== 14.10 REQ-P1-04 折现率与情景概率的证据传导 ==")
+import copy as _copy104
+import reverse_dcf as _rd104  # noqa: E402
+import check_scenarios as _cs104  # noqa: E402
+from alert_codes import unknown_codes as _uc104  # noqa: E402
+
+# A. 分层表数学
+_rate_a, _comp_a = _rd104.stratified_discount_rate("cyclical", 0.0282)
+check("A 分层：cyclical@2.82% Rf → 11%（下限 10% + 溢价 1pct）",
+      abs(_rate_a - 0.11) < 1e-12 and _comp_a["industry_premium"] == 0.01)
+_rate_b, _ = _rd104.stratified_discount_rate("stable", 0.035)
+check("A 分层：stable@3.5% Rf → 10%（下限绑定，premium 0）",
+      abs(_rate_b - 0.10) < 1e-12)
+_rate_c, _ = _rd104.stratified_discount_rate("speculative_growth", None)
+check("A 分层：speculative_growth 无 Rf → 12%", abs(_rate_c - 0.12) < 1e-12)
+_rate_d, _ = _rd104.stratified_discount_rate("financials", 0.045)
+check("A 分层：financials@4.5% Rf → 11%（Rf+4pct=8.5%<10% 下限绑定 +1pct）",
+      abs(_rate_d - 0.11) < 1e-12)
+try:
+    _rd104.stratified_discount_rate("nope")
+    check("A 分层：未知行业档硬拒绝", False)
+except SystemExit:
+    check("A 分层：未知行业档硬拒绝", True)
+
+# B. 概率映射锚点与调整
+for _s, _pe, _po in ((35, .35, .15), (65, .30, .20), (100, .25, .25)):
+    _m = _rd104.map_scenario_probabilities(_s)
+    check(f"B 映射锚点：得分 {_s} → 悲观 {_pe:.0%}/乐观 {_po:.0%}",
+          abs(_m["probabilities"]["悲观"] - _pe) < 1e-9
+          and abs(_m["probabilities"]["乐观"] - _po) < 1e-9)
+    check(f"B 映射锚点：得分 {_s} → 基准恒 50%",
+          abs(_m["probabilities"]["基准"] - 0.50) < 1e-9)
+_m60 = _rd104.map_scenario_probabilities(60)
+check("B 映射：得分 60 → 悲观 30.83%/乐观 19.17%（两翼线性、基准 50%）",
+      abs(_m60["probabilities"]["悲观"] - 0.308333) < 1e-4
+      and abs(_m60["probabilities"]["乐观"] - 0.191667) < 1e-4)
+_prev = 1.0
+for _s in range(35, 101):
+    _pp = _rd104.map_scenario_probabilities(_s)["probabilities"]["悲观"]
+    if _pp > _prev + 1e-12:
+        check("B 映射：悲观权重随得分单调递减", False)
+        break
+    _prev = _pp
+else:
+    check("B 映射：悲观权重随得分单调递减", True)
+check("B 映射：得分 <35 → None（无买入结论，传导无意义）",
+      _rd104.map_scenario_probabilities(30) is None)
+_m_vp = _rd104.map_scenario_probabilities(75, "strong", 0.30)
+check("B 传导链：strong −5pp 后被红队下界 30% 吸收（茅台式演示）",
+      abs(_m_vp["probabilities"]["悲观"] - 0.30) < 1e-9
+      and any("红队" in s[0] for s in _m_vp["chain"]))
+_m_wk = _rd104.map_scenario_probabilities(65, "weak", None)
+check("B 传导链：weak 悲观 +5pp（三问答不出 → 更悲观）",
+      abs(_m_wk["probabilities"]["悲观"] - 0.35) < 1e-9)
+_m_cl = _rd104.map_scenario_probabilities(35, "weak", 0.55)
+check("B 传导链：红队 55% 服从映射，clamp 上界 60% 内",
+      abs(_m_cl["probabilities"]["悲观"] - 0.55) < 1e-9)
+try:
+    _rd104.map_scenario_probabilities(65, "omg")
+    check("B 传导链：非法 variant 硬拒绝", False)
+except SystemExit:
+    check("B 传导链：非法 variant 硬拒绝", True)
+
+# C. 引擎 derivation 块（合成三情景）
+_scen104 = [{"name": "悲观", "value_per_share": 8, "probability": .30},
+            {"name": "基准", "value_per_share": 20, "probability": .50},
+            {"name": "乐观", "value_per_share": 28, "probability": .20}]
+def _er104(**kw):
+    _d = dict(price=10.0, scenarios=_copy104.deepcopy(_scen104), hold_years=5,
+              discount_rate=0.10, moat="narrow", iv_growth=0.03,
+              dividend_yield=0.02, moat_score=60,
+              moat_score_basis="x [E:t]", prob_derivation={
+                  "moat_score": 60, "variant_perception": "strong",
+                  "red_team_pessimistic": 0.30,
+                  "rationale_ref": "传导链 [E:demo]"})
+    _d.update(kw)
+    return _rd104.expected_return(**_d)
+
+_r_ok = _er104()
+check("C 引擎：derivation 块过 → probability_derivation 输出含 rationale_ref/映射/采用/传导链",
+      _r_ok["probability_derivation"]["rationale_ref"].startswith("传导链")
+      and abs(_r_ok["probability_derivation"]["mapped_probabilities"]["悲观"] - .30) < 1e-9
+      and len(_r_ok["probability_derivation"]["transmission_chain"]) >= 3)
+check("C 引擎：derivation 块过 → 敏感性表三行（−10/0/+10pp）+ 档位建议",
+      len(_r_ok["probability_derivation"]["sensitivity_pm10pp"]["rows"]) == 3
+      and all(r.get("tier_suggestion") for r in
+              _r_ok["probability_derivation"]["sensitivity_pm10pp"]["rows"]
+              if r.get("valid")))
+_sc_low = _copy104.deepcopy(_scen104)
+_sc_low[0]["probability"], _sc_low[2]["probability"] = .26, .24
+try:
+    _rd104.expected_return(price=10.0, scenarios=_sc_low, hold_years=5,
+                           discount_rate=.10, moat="narrow", iv_growth=.03,
+                           moat_score=60, moat_score_basis="x [E:t]",
+                           prob_derivation={"moat_score": 60,
+                                            "rationale_ref": "r [E:x]"})
+    check("C 引擎：偏离映射 >2pp 无论证 → PROB_DERIVATION_MISMATCH 硬拒", False)
+except SystemExit as _e:
+    check("C 引擎：偏离映射 >2pp 无论证 → PROB_DERIVATION_MISMATCH 硬拒",
+          "PROB_DERIVATION_MISMATCH" in str(_e))
+_sc_low2 = _copy104.deepcopy(_sc_low)
+try:
+    _rd104.expected_return(price=10.0, scenarios=_sc_low2, hold_years=5,
+                           discount_rate=.10, moat="narrow", iv_growth=.03,
+                           moat_score=60, moat_score_basis="x [E:t]",
+                           prob_derivation={"moat_score": 60,
+                                            "rationale_ref": "r [E:x]",
+                                            "deviation_rationale": "无证据理由"})
+    check("C 引擎：deviation_rationale 缺 [E:] → 仍硬拒", False)
+except SystemExit as _e:
+    check("C 引擎：deviation_rationale 缺 [E:] → 仍硬拒",
+          "PROB_DERIVATION_MISMATCH" in str(_e))
+_sc_far = _copy104.deepcopy(_scen104)
+_sc_far[0]["probability"], _sc_far[2]["probability"] = .15, .35   # 偏离 −15.8pp
+try:
+    _rd104.expected_return(price=10.0, scenarios=_sc_far, hold_years=5,
+                           discount_rate=.10, moat="narrow", iv_growth=.03,
+                           moat_score=60, moat_score_basis="x [E:t]",
+                           prob_derivation={"moat_score": 60,
+                                            "rationale_ref": "r [E:x]",
+                                            "deviation_rationale": "论证 [E:x]"})
+    check("C 引擎：偏离映射 >10pp → PROB_DERIVATION_OUT_OF_RANGE 硬拒（论证也不救）", False)
+except SystemExit as _e:
+    check("C 引擎：偏离映射 >10pp → PROB_DERIVATION_OUT_OF_RANGE 硬拒（论证也不救）",
+          "PROB_DERIVATION_OUT_OF_RANGE" in str(_e))
+_sc_rt = _copy104.deepcopy(_scen104)
+_sc_rt[0]["probability"], _sc_rt[1]["probability"] = .25, .55   # 低于红队下界 30%
+try:
+    _rd104.expected_return(price=10.0, scenarios=_sc_rt, hold_years=5,
+                           discount_rate=.10, moat="narrow", iv_growth=.03,
+                           moat_score=60, moat_score_basis="x [E:t]",
+                           prob_derivation={"moat_score": 60,
+                                            "red_team_pessimistic": 0.30,
+                                            "rationale_ref": "r [E:x]",
+                                            "deviation_rationale": "论证 [E:x]"})
+    check("C 引擎：采用悲观 < 红队下界 → 硬拒（红队下界不可被论证突破）", False)
+except SystemExit as _e:
+    check("C 引擎：采用悲观 < 红队下界 → 硬拒（红队下界不可被论证突破）",
+          "PROB_DERIVATION_MISMATCH" in str(_e))
+for _bad_pd, _label, _moat_arg in (
+        ({"rationale_ref": "裸的"}, "rationale 缺 [E:]", "narrow"),
+        ({"moat_score": None, "rationale_ref": "r [E:x]"}, "缺得分", "narrow"),
+        ({"moat_score": 30, "rationale_ref": "r [E:x]"}, "得分 <35 无买入结论", None)):
+    try:
+        _rd104.expected_return(price=10.0, scenarios=_copy104.deepcopy(_scen104),
+                               hold_years=5, discount_rate=.10, moat=_moat_arg,
+                               iv_growth=.03, moat_score_basis="x [E:t]",
+                               prob_derivation=_bad_pd)
+        check(f"C 引擎：{_label} → PROB_DERIVATION_INVALID 硬拒", False)
+    except SystemExit as _e:
+        check(f"C 引擎：{_label} → PROB_DERIVATION_INVALID 硬拒",
+              "PROB_DERIVATION_INVALID" in str(_e))
+
+# D. ±10pp 敏感性与翻档码（合成翻档形态：悲观 IRR=0、基准/乐观 IRR≈16.8%，
+# 采用悲观 33% 时期望 IRR 11.3% ≥ r；+10pp 到 43% 时 9.6% < r → 闸门二翻档）
+# 数学约束（证明见测试外注释）：闸门一过 ⇒ 基准 IRR > r，翻档只能由
+# expected_irr_floor 跨越 r 触发——悲观 IRR 必须压到恰为 0（不违反③）。
+_B = 20.0
+_P = 0.74 * _B                      # MoS 26% > score100 门槛 25% → 闸门一过
+_VP = _P / (1.10 ** 5)              # 悲观 V_H = P → IRR 恰 0（③ 过、无亏损情景）
+_sc_flip = [{"name": "悲观", "value_per_share": _VP, "probability": .33},
+            {"name": "基准", "value_per_share": _B, "probability": .47},
+            {"name": "乐观", "value_per_share": _B, "probability": .20}]
+_r_flip = _rd104.expected_return(
+    price=_P, scenarios=_sc_flip, hold_years=5, discount_rate=.10,
+    moat="wide", iv_growth=.06, moat_score=100,
+    moat_score_basis="x [E:t]",
+    prob_derivation={"moat_score": 100, "variant_perception": "neutral",
+                     "rationale_ref": "r [E:x]",
+                     "deviation_rationale": "论证 [E:x]"})   # 悲观 +8pp 在可调范围内
+_sens = _r_flip["probability_derivation"]["sensitivity_pm10pp"]
+check("D 敏感性：翻档形态被识别（PROB_SENSITIVITY_TIER_FLIP）",
+      _sens["tier_flip"] and "PROB_SENSITIVITY_TIER_FLIP" in _r_flip["gate2"]["codes"])
+_tiers_d = [r["tier_suggestion"] for r in _sens["rows"] if r.get("valid")]
+check("D 敏感性：档位建议确实随 ±10pp 变化", len(set(_tiers_d)) > 1)
+
+# E. DR 块（分层一致性 + 市场校准 floor）
+_r_dr = _rd104.expected_return(
+    price=10.0, scenarios=_copy104.deepcopy(_scen104), hold_years=5,
+    discount_rate=.10, moat="narrow", iv_growth=.03,
+    dr_derivation={"industry_tier": "standard", "market": "US",
+                   "rationale_ref": "r [E:x]"})
+check("E DR：standard 档 10% 一致 → discount_rate_derivation 输出含 rationale_ref",
+      _r_dr["discount_rate_derivation"]["rate"] == 0.10
+      and "[E:" in _r_dr["discount_rate_derivation"]["rationale_ref"])
+check("E DR：market=US → 不收敛下限门槛切 5%（P0-04③ 口径修复）",
+      _r_dr["gate2"]["no_convergence_floor"]["hurdle"] == 0.05)
+_r_jp = _rd104.expected_return(
+    price=10.0, scenarios=_copy104.deepcopy(_scen104), hold_years=5,
+    discount_rate=.10, moat="narrow", iv_growth=.03,
+    floor_hurdle=None,
+    dr_derivation={"industry_tier": "standard", "market": "JP",
+                   "rationale_ref": "r [E:x]"})
+check("E DR：market=JP → floor 门槛 3%（JGB+3pct）",
+      _r_jp["gate2"]["no_convergence_floor"]["hurdle"] == 0.03)
+_r_explicit = _rd104.expected_return(
+    price=10.0, scenarios=_copy104.deepcopy(_scen104), hold_years=5,
+    discount_rate=.10, moat="narrow", iv_growth=.03, floor_hurdle=0.07,
+    dr_derivation={"industry_tier": "standard", "market": "US",
+                   "rationale_ref": "r [E:x]"})
+check("E DR：显式 --floor-hurdle 优先于市场校准", 
+      _r_explicit["gate2"]["no_convergence_floor"]["hurdle"] == 0.07)
+try:
+    _rd104.expected_return(
+        price=10.0, scenarios=_copy104.deepcopy(_scen104), hold_years=5,
+        discount_rate=.10, moat="narrow", iv_growth=.03,
+        dr_derivation={"industry_tier": "cyclical", "market": "CN",
+                       "rationale_ref": "r [E:x]"})
+    check("E DR：cyclical 11% ≠ 声明 10% → DR_STRATIFIED_RATE_MISMATCH 硬拒", False)
+except SystemExit as _e:
+    check("E DR：cyclical 11% ≠ 声明 10% → DR_STRATIFIED_RATE_MISMATCH 硬拒",
+          "DR_STRATIFIED_RATE_MISMATCH" in str(_e))
+try:
+    _rd104.expected_return(
+        price=10.0, scenarios=_copy104.deepcopy(_scen104), hold_years=5,
+        discount_rate=.10, moat="narrow", iv_growth=.03,
+        dr_derivation={"industry_tier": "standard", "rationale_ref": "裸"})
+    check("E DR：rationale 缺 [E:] → DR_DERIVATION_UNANCHORED 硬拒", False)
+except SystemExit as _e:
+    check("E DR：rationale 缺 [E:] → DR_DERIVATION_UNANCHORED 硬拒",
+          "DR_DERIVATION_UNANCHORED" in str(_e))
+
+# F. legacy 兼容：无 derivation 块输出无新键（12 案基线不动）
+_r_legacy = _rd104.expected_return(
+    price=10.0, scenarios=_copy104.deepcopy(_scen104), hold_years=5,
+    discount_rate=.10, moat="narrow", iv_growth=.03)
+check("F legacy：无块 → 无 probability_derivation/discount_rate_derivation 键",
+      "probability_derivation" not in _r_legacy
+      and "discount_rate_derivation" not in _r_legacy)
+check("F legacy：无块 → floor 门槛仍 6%（默认不变）",
+      _r_legacy["gate2"]["no_convergence_floor"]["hurdle"] == 0.06)
+
+# G. 神华演示端到端（验收锚）
+_sh_demo = json.load(open(os.path.join(
+    ROOT, "backtest/601088.SH_2015-12-31", "data",
+    "prob_expected_return_REQ-P1-04.json"), encoding="utf-8"))
+check("G 神华演示：红队下界把悲观从原案 25% 上调到 30%（传导进入数字）",
+      _sh_demo["probability_derivation"]["adopted_probabilities"]["悲观"] == 0.30
+      and abs(_sh_demo["probability_derivation"]["mapped_probabilities"]["悲观"] - .30) < 1e-9)
+check("G 神华演示：期望 IRR 16.60%（原案 25/50/25 为 18.46%，悲观上调的代价显式化）",
+      abs(_sh_demo["expected_annualized_irr"] - 0.166) < 5e-3)
+check("G 神华演示：敏感性表三行 + 稳健结论（±10pp 档位不动）",
+      _sh_demo["probability_derivation"]["sensitivity_pm10pp"]["tier_flip"] is False)
+_aapl_demo = json.load(open(os.path.join(
+    ROOT, "backtest/AAPL_2016-04-30", "data",
+    "dr_expected_return_REQ-P1-04.json"), encoding="utf-8"))
+check("G AAPL 演示：US floor 门槛 5% 且 rationale_ref 落盘",
+      _aapl_demo["gate2"]["no_convergence_floor"]["hurdle"] == 0.05
+      and "[E:" in _aapl_demo["discount_rate_derivation"]["rationale_ref"])
+
+# H. S7c 门禁正反
+def _s7c_case(pd=None, dr=None, probs=None):
+    _d = {"price": 10, "moat": "narrow", "discount_rate": 0.1,
+          "hold_years": 5,
+          "scenarios": [
+              {"name": "悲观", "value_per_share": 5, "probability": .3,
+               "method": "liquidation", "method_inputs": {}},
+              {"name": "基准", "value_per_share": 20, "probability": .5,
+               "method": "dcf_owner_earnings"},
+              {"name": "乐观", "value_per_share": 30, "probability": .2,
+               "method": "dcf_owner_earnings"}]}
+    if probs:
+        for _s, _p in zip(_d["scenarios"], probs):
+            _s["probability"] = _p
+    if pd:
+        _d["probability_derivation"] = pd
+    if dr:
+        _d["discount_rate_derivation"] = dr
+    _fd = tempfile.mkdtemp(prefix="s7c104_")
+    _p = os.path.join(_fd, "s7c_case.json")
+    json.dump(_d, open(_p, "w", encoding="utf-8"), ensure_ascii=False)
+    _e, _w = [], []
+    try:
+        _ignored, _e, _w, _i = _cs104.check(_p)
+    except SystemExit as _ex:
+        return ["EXIT:" + str(_ex)[:40]], []
+    finally:
+        shutil.rmtree(_fd, ignore_errors=True)
+    return _e, _w
+_e_ok, _w_ok = _s7c_case(pd={"moat_score": 60, "variant_perception": "neutral",
+                             "rationale_ref": "r [E:x]"})
+check("H S7c：合法 probability_derivation → 无 S7c 错误（合成底稿的其余 S 检查不计）",
+      not any(m.startswith("S7c") for m in _e_ok))
+_e_bad, _ = _s7c_case(pd={"moat_score": 60, "rationale_ref": "裸"})
+check("H S7c：rationale 缺 [E:] → PROB_DERIVATION_INVALID",
+      any("S7c-VAR" in _m for _m in _e_bad))
+_e_dev, _ = _s7c_case(pd={"moat_score": 60, "rationale_ref": "r [E:x]"},
+                      probs=[.22, .58, .20])   # 悲观偏离映射 30.83% 达 −8.8pp 无论证
+check("H S7c：偏离 >2pp 无论证 → S7c-DEV",
+      any("S7c-DEV" in _m for _m in _e_dev))
+_e_rng, _ = _s7c_case(pd={"moat_score": 60, "rationale_ref": "r [E:x]",
+                          "deviation_rationale": "论证 [E:x]"},
+                      probs=[.15, .65, .20])
+check("H S7c：偏离 >10pp 即使有论证 → S7c-RANGE",
+      any("S7c-RANGE" in _m for _m in _e_rng))
+_e_dr, _ = _s7c_case(dr={"industry_tier": "cyclical", "rationale_ref": "r [E:x]"})
+check("H S7c：DR 不一致 → DR_STRATIFIED_RATE_MISMATCH（S7c-DR）",
+      any("S7c-DR" in _m and "分层折现率" in _m for _m in _e_dr))
+_e_none, _ = _s7c_case()
+check("H S7c：无块 → 无 S7c 消息（legacy 零新增，基线不动）",
+      not any(m.startswith("S7c") for m in _e_none))
+
+# I. 告警码注册与文档接线
+check("I 七码全部注册",
+      not _uc104(["DR_INDUSTRY_TIER_UNKNOWN", "DR_STRATIFIED_RATE_MISMATCH",
+                  "DR_DERIVATION_UNANCHORED", "PROB_DERIVATION_INVALID",
+                  "PROB_DERIVATION_MISMATCH", "PROB_DERIVATION_OUT_OF_RANGE",
+                  "PROB_SENSITIVITY_TIER_FLIP"]))
+_docs104 = (open(os.path.join(ROOT, "SKILL.md"), encoding="utf-8").read()
+            + open(os.path.join(ROOT, "references", "valuation-guide.md"),
+                   encoding="utf-8").read()
+            + open(os.path.join(ROOT, "references", "report-spec.md"),
+                   encoding="utf-8").read())
+check("I 文档已接线（valuation-guide 两段 + report-spec ②e + SKILL 指针）",
+      all(_kw in _docs104 for _kw in
+          ("REQ-P1-04", "discount_rate_derivation", "probability_derivation",
+           "map_scenario_probabilities", "②e 参数依据卡",
+           "discount_rate_rationale_ref")))
+_prompt104 = open(os.path.join(ROOT, "backtest", "PROMPT.md"),
+                  encoding="utf-8").read()
+check("I PROMPT 已写入证据传导纪律段（第四批起强制）",
+      "REQ-P1-04" in _prompt104 and "probability_derivation" in _prompt104
+      and "DR_STRATIFIED_RATE_MISMATCH" in _prompt104
+      and "PROB_SENSITIVITY_TIER_FLIP" in _prompt104)
 
 # ═══════════════════════════════════════════════════════════════════
 print("== 15 脚本接入完整性（元测试） ==")

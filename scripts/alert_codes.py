@@ -32,6 +32,8 @@
 | `GROWTH_*` | 成长股通道门禁与诊断 | `reverse_dcf.py growth` 自动（UNANCHORED 为硬拒绝、人工登记） |
 | `SOTP_*` | 持仓型控股 SOTP 通道门禁与诊断 | `reverse_dcf.py sotp` 自动（TABLE_INVALID/UNANCHORED 为硬拒绝） |
 | `MOAT_*` | 护城河评级连续化门禁与披露 | `reverse_dcf.py expected-return --moat-score` 自动（BASIS_MISSING/WORD_MISMATCH 为硬拒绝） |
+| `DR_*` | 折现率分层证据传导门禁 | `reverse_dcf.py expected-return`（discount_rate_derivation 块）自动，全为硬拒绝 |
+| `PROB_*` | 情景概率证据传导门禁与敏感性 | `reverse_dcf.py expected-return`（probability_derivation 块）自动（INVALID/MISMATCH/OUT_OF_RANGE 硬拒绝；TIER_FLIP 为敏感性警示） |
 
 `P0_*` 合计 6+20+4 = 30 项，与福耀案「0/6+0/20+0/4 = 0/30 误杀」口径一致。
 
@@ -291,6 +293,33 @@ ALERTS = {
         "moat", "得分落在边界带（分带边界 ±5 分）：闸门一门槛在窗口内随得分移动，"
         "两个同样认真的分析师可能给出不同档位——双档报告强制输出并标注"
         "『结论对护城河判断敏感』，并列披露优于强行定档（REQ-P1-03）"),
+    # ── REQ-P1-04 折现率与情景概率的证据传导（2026-09-11）──
+    # dr 层：分层表是事实源，声明分层却沿用旧折现率 = V0 与 r 不同源
+    "DR_INDUSTRY_TIER_UNKNOWN": (
+        "dr", "discount_rate_derivation.industry_tier 不在白名单（stable/standard/"
+        "cyclical/financials/speculative_growth/holding_complex）——行业档白名单"
+        "防自造档位，与护城河词表同源纪律"),
+    "DR_STRATIFIED_RATE_MISMATCH": (
+        "dr", "分层折现率 ≠ scenarios.json 声明的 discount_rate：声明了行业分层"
+        "却沿用旧折现率，V0（按旧 r 的 DCF）与新 r 不同源——premium 档须按分层值"
+        "重算三情景估值并同步 discount_rate"),
+    "DR_DERIVATION_UNANCHORED": (
+        "dr", "discount_rate_derivation 缺 industry_tier/market 或 rationale_ref "
+        "未挂 [E:]：折现率直接决定 IRR 下限与终值，裸参数与裸概率同罪"),
+    # prob 层：概率是闸门二唯一不受闸门一污染的输入，传导链必须可审计
+    "PROB_DERIVATION_INVALID": (
+        "prob", "probability_derivation 结构非法（缺 rationale_ref [E:] / 缺护城河"
+        "得分 / variant_perception 非法 / red_team_pessimistic 越界 / 情景名非标准"
+        "三情景）——概率传导链断裂，定性分析没有进入数字"),
+    "PROB_DERIVATION_MISMATCH": (
+        "prob", "采用概率偏离映射值 >2pp 但 deviation_rationale 未挂 [E:]：偏离"
+        "映射须逐项论证，与 S7 偏离默认须证据同构（可调范围 ±10pp）"),
+    "PROB_DERIVATION_OUT_OF_RANGE": (
+        "prob", "采用概率偏离映射值 >10pp（超出可调范围上限）：如此大的偏离意味"
+        "着映射输入与最终概率已不是一个世界观，应修输入而不是绕映射"),
+    "PROB_SENSITIVITY_TIER_FLIP": (
+        "prob", "悲观权重 ±10pp 即可在敏感性表中移动档位——结论对概率假设敏感，"
+        "本案最该花研究精力的判断就是三情景概率（REQ-P1-04 验收条款）"),
 }
 
 

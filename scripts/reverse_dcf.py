@@ -24,6 +24,10 @@ reverse_dcf.py — 反向 DCF 求解器（Phase 4 强制使用）
   python3 reverse_dcf.py expected-return --price 209.75 --hold-years 5 \
       --scenarios "悲观:105:0.3,基准:212:0.5,乐观:397:0.2" --index-hurdle 0.09 \
       [--dividend-yield 0.05]   # 高股息标的必填，与门槛比较用含息 IRR
+      # REQ-P1-04：scenarios.json 可选登记 discount_rate_derivation（行业档
+      # ×Rf 分层表一致性 + market 校准 floor 门槛）与 probability_derivation
+      # （护城河得分+变异认知+红队悲观 → 概率映射 + ±10pp 敏感性表），
+      # 两块均须挂 [E:] rationale_ref——让定性分析真正进入数字
   python3 reverse_dcf.py growth --market-cap 53128 --current-revenue 8832 \
       --mature-revenue 36000 --mature-oe-margin 0.20 --terminal-multiple 20 \
       --arrival-prob 0.25 --years-to-maturity 10 --shares 436.456 \
@@ -308,6 +312,172 @@ def moat_boundary_band(score):
     return {"in_band": False, "edge": None, "edge_name": None,
             "band": None, "adjacent_words": None,
             "halfwidth": MOAT_SCORE_BOUNDARY_HALFWIDTH}
+
+
+# ── REQ-P1-04 折现率与情景概率的证据传导（2026-09-11）──────────────────
+#
+# 动因：折现率统一 10%、三情景概率固定（30/50/20），是全流程对 IRR 与期望值
+# 敏感度最高、证据最弱的两个参数——Phase 3 护城河、Phase 4.5 变异认知、红队
+# 悲观概率对最终数字毫无影响，只影响文字。"定性分析进入数字"要求两者都建立
+# 证据传导链。
+#
+# 设计原则（与 P1-01/02/03 同源）：通道建设而非阈值放松——
+#   1. 折现率分层**只向上**：10% 纪律下限不动，行业风险溢价只能把高波动行业
+#      的 r 往上抬（周期/金融 +1pct、高波动成长 +2pct、控股复杂治理 +1pct，
+#      必需消费/宽基 0），下限由 max(10%, 10Y国债+4pct) 决定；
+#   2. 概率映射的锚点 = 规范默认（check_scenarios 的 default_probabilities
+#      兜底值 30/50/20）：得分 65 → 恰为默认值，带内悲观权重 ≥ 默认（得分越低
+#      越悲观，方向与 MoS 平滑门槛一致）；
+#   3. 红队悲观概率是**下界**（max）：红队质询只能让结论更悲观，不能更乐观
+#      ——保守不对称；
+#   4. 一切 opt-in：两个 derivation 块不出现时引擎走 legacy 路径，
+#      12 案基线字节级不变；块出现但字段缺证据 → 硬拒绝。
+#
+# 行业溢价档位校准参考 Damodaran（NYU Stern）行业股权资本成本数据集的相对
+# 排序（科技/互联网 > 金融/材料 > 必需消费/公用事业），取整并偏保守，
+# 非逐行业抄录；Rf 锚取案例时点 10Y 国债收益率（[E:] 证据）。
+INDUSTRY_RISK_PREMIUM = {
+    "stable": 0.00,             # 必需消费/公用事业/成熟医药：低周期敏感性
+    "standard": 0.00,           # 宽基默认（一般工业/消费/服务）
+    "cyclical": 0.01,           # 周期/资源/航运/化工/地产：盈利波动放大
+    "financials": 0.01,         # 银行/保险：杠杆放大资产端错误
+    "speculative_growth": 0.02, # 高波动成长/未盈利科技/流媒体
+    "holding_complex": 0.01,    # 控股集团/多层治理（SOTP 类）
+}
+# 不收敛下限门槛的市场校准（P0-04③ 移交项落地）：= 各市场 10Y 国债 + 2~3pct。
+# 旧全局常量 6% 隐含 CNY 语境（"长期国债+2~3pct"），跨市场案例（9984.T 的
+# floor 5.4% vs 6% CNY 门槛）存在口径噪声。opt-in：仅当 derivation 块声明
+# market 且未显式传 --floor-hurdle 时生效；默认（无块）仍 6%，基线不动。
+MARKET_FLOOR_HURDLES = {
+    "CN": 0.06,   # 10Y 国债 ~3% + 3pct（现行值，不变）
+    "HK": 0.05,   # 联系汇率随美债 ~2% + 3pct
+    "US": 0.05,   # 10Y UST 1.5~4.5% + 2~3pct 取中枢
+    "JP": 0.03,   # JGB ~0% + 3pct
+}
+# 概率映射锚点（分段线性，作用于悲观/乐观两翼，基准 = 1 − 两翼）：
+#   得分 35 → 悲观 35% / 乐观 15%    （窄带下沿，最悲观）
+#   得分 65 → 悲观 30% / 乐观 20%    （= 规范默认 30/50/20）
+#   得分 100 → 悲观 25% / 乐观 25%   （宽带顶）
+# 两翼斜率相反 ⇒ 基准在锚点间恒为 50%。得分 <35 无买入结论，映射无意义。
+PROB_ANCHORS = {35: (0.35, 0.15), 65: (0.30, 0.20), 100: (0.25, 0.25)}
+VARIANT_PERCEPTION_ADJ = {"weak": 0.05, "neutral": 0.0, "strong": -0.05}
+PROB_PESS_CLAMP = (0.20, 0.60)        # 映射后悲观权重硬边界
+PROB_DEVIATION_FREE = 0.02            # 采用值偏离映射 ≤2pp 免论证
+PROB_DEVIATION_MAX = 0.10             # 偏离 >10pp 即使有论证也硬拒
+PROB_SENSITIVITY_SHIFT = 0.10         # 验收要求的 ±10pp 敏感性摆幅
+
+
+def stratified_discount_rate(industry_tier, rf_10y=None):
+    """折现率分层（REQ-P1-04）：r = max(10%, Rf+4pct) + 行业溢价。
+
+    industry_tier 须在 INDUSTRY_RISK_PREMIUM 白名单内（否则 SystemExit，
+    注册码 DR_INDUSTRY_TIER_UNKNOWN）。rf_10y 为案例时点 10Y 国债收益率
+    （小数）；缺省时下限取 10% 纪律值。返回 (rate, composition_dict)。
+    """
+    premium = INDUSTRY_RISK_PREMIUM.get(industry_tier)
+    if premium is None:
+        raise SystemExit(
+            f"错误：industry_tier `{industry_tier}` 未注册，应为 "
+            f"{sorted(INDUSTRY_RISK_PREMIUM)}（注册码 DR_INDUSTRY_TIER_UNKNOWN）"
+            "——行业档白名单防自造档位，与护城河词表同源纪律")
+    floor = max(DEFAULT_DISCOUNT_RATE,
+                (rf_10y + 0.04) if rf_10y is not None else 0.0)
+    rate = floor + premium
+    return rate, {
+        "floor": floor, "rf_10y": rf_10y, "industry_tier": industry_tier,
+        "industry_premium": premium, "rate": rate,
+        "formula": "max(10% 纪律下限, 10Y国债+4pct) + 行业溢价",
+        "source": "行业档校准参考 Damodaran(NYU Stern) 行业股权资本成本相对"
+                  "排序，取整偏保守；分层只向上、10% 下限不动",
+    }
+
+
+def _prob_lerp(score):
+    """概率映射的分段线性两翼插值：返回 (悲观, 乐观)。"""
+    if score < MOAT_SCORE_NARROW_MIN:
+        return None
+    if score < MOAT_SCORE_WIDE_MIN:
+        lo, hi = PROB_ANCHORS[35], PROB_ANCHORS[65]
+        t = (score - 35) / (MOAT_SCORE_WIDE_MIN - 35)
+    else:
+        lo, hi = PROB_ANCHORS[65], PROB_ANCHORS[100]
+        t = (score - MOAT_SCORE_WIDE_MIN) / (100.0 - MOAT_SCORE_WIDE_MIN)
+    pess = lo[0] + (hi[0] - lo[0]) * t
+    opt = lo[1] + (hi[1] - lo[1]) * t
+    return pess, opt
+
+
+def map_scenario_probabilities(moat_score, variant_perception="neutral",
+                               red_team_pessimistic=None):
+    """情景概率映射（REQ-P1-04）：护城河得分 + 变异认知 + 红队 → 三情景概率。
+
+    传导链（每步可审计，让定性分析真正进入数字）：
+      ① 基线 = 得分的分段线性映射（锚 65 → 30/50/20 规范默认）；
+      ② 变异认知调整（Phase 4.5 三问结论）：weak 三问答不出 → 悲观 +5pp；
+        strong 分歧明确且量化 → 悲观 −5pp；可调范围 ±5pp；
+      ③ 红队悲观概率 = max() 下界：红队最强空头逻辑的成立概率只允许把悲观
+        权重往上推（保守不对称），不允许往下拉；
+      ④ clamp 到 PROB_PESS_CLAMP；乐观 = 映射值不动，基准 = 1 − 两翼。
+    得分 <35 返回 None（无买入结论，概率传导无意义）。
+    返回 dict：probabilities / chain（逐步前后值）/ anchors / ranges。
+    """
+    if moat_score is None:
+        raise SystemExit("错误：概率映射需要护城河得分（probability_derivation"
+                         " 缺 moat_score 且顶层无 moat_score——注册码 "
+                         "PROB_DERIVATION_INVALID）")
+    wings = _prob_lerp(float(moat_score))
+    if wings is None:
+        return None
+    if variant_perception not in VARIANT_PERCEPTION_ADJ:
+        raise SystemExit(
+            f"错误：variant_perception `{variant_perception}` 非法，应为 "
+            f"{sorted(VARIANT_PERCEPTION_ADJ)}（Phase 4.5 三问结论：weak="
+            "三问答不出 / neutral / strong=分歧明确且量化）——注册码 "
+            "PROB_DERIVATION_INVALID")
+    p_pess, p_opt = wings
+    chain = [("基线（得分映射）", {"悲观": round(p_pess, 6), "乐观": round(p_opt, 6),
+                               "基准": round(1 - p_pess - p_opt, 6)})]
+    adj = VARIANT_PERCEPTION_ADJ[variant_perception]
+    if adj:
+        p_pess += adj
+        chain.append((f"变异认知 {variant_perception}（{'+' if adj > 0 else ''}{adj:.0%}）",
+                      {"悲观": round(p_pess, 6)}))
+    if red_team_pessimistic is not None:
+        if not (0.0 < red_team_pessimistic <= 1.0):
+            raise SystemExit(
+                f"错误：red_team_pessimistic {red_team_pessimistic} 须在 (0,1]，"
+                "注册码 PROB_DERIVATION_INVALID（红队最强空头逻辑的成立概率）")
+        before = p_pess
+        p_pess = max(p_pess, red_team_pessimistic)
+        if p_pess != before:
+            chain.append((f"红队悲观概率下界 max(→{red_team_pessimistic:.0%})",
+                          {"悲观": round(p_pess, 6)}))
+        else:
+            chain.append((f"红队悲观概率 {red_team_pessimistic:.0%}（低于映射，不约束）",
+                          {"悲观": round(p_pess, 6)}))
+    lo, hi = PROB_PESS_CLAMP
+    clamped = min(max(p_pess, lo), hi)
+    if clamped != p_pess:
+        chain.append((f"clamp [{lo:.0%},{hi:.0%}]", {"悲观": clamped}))
+        p_pess = clamped
+    p_base = 1.0 - p_pess - p_opt
+    return {
+        "probabilities": {"悲观": p_pess, "基准": p_base, "乐观": p_opt},
+        "chain": chain,
+        "moat_score": float(moat_score),
+        "variant_perception": variant_perception,
+        "red_team_pessimistic": red_team_pessimistic,
+        "anchors": {"35": "35/50/15", "65": "30/50/20（规范默认）",
+                    "100": "25/50/25"},
+        "ranges": {
+            "variant_perception": "±5pp（作用于悲观权重）",
+            "red_team": "max() 下界（只允许更悲观）",
+            "pessimistic_clamp": f"[{lo:.0%},{hi:.0%}]",
+            "adoption_deviation": (
+                f"采用值偏离映射 ≤{PROB_DEVIATION_FREE:.0%} 免论证；"
+                f"≤{PROB_DEVIATION_MAX:.0%} 须 [E:] 论证；超限硬拒"),
+        },
+    }
 
 
 # ── REQ-P1-01 成长股 / 再投入型估值通道（2026-09-11）────────────────────
@@ -644,7 +814,8 @@ def expected_return(price, scenarios, hold_years, index_hurdle=0.09,
                     dividend_yield=0.0, discount_rate=0.10,
                     moat=None, iv_growth=None,
                     moat_score=None, moat_score_basis=None, moat_sources=None,
-                    floor_hurdle=DEFAULT_FLOOR_HURDLE, pessimistic_hurdle=0.0,
+                    prob_derivation=None, dr_derivation=None,
+                    floor_hurdle=None, pessimistic_hurdle=0.0,
                     loss_prob_hurdle=DEFAULT_LOSS_PROB_HURDLE):
     """期望回报率引擎：把三情景估值转成"这笔钱年化几个点"。
 
@@ -719,6 +890,76 @@ def expected_return(price, scenarios, hold_years, index_hurdle=0.09,
     if discount_rate < 0.10:
         print(f"⚠ 警告：折现率 {discount_rate:.2%} 低于下限纪律 max(10%, 10Y国债+4pct)。"
               "低利率环境下限仍为 10%，请上调后重跑。", file=sys.stderr)
+
+    # ── REQ-P1-04 证据传导块解析（两块均 opt-in，不出现走 legacy 路径）──
+    # ① discount_rate_derivation：分层表一致性 + rationale_ref 证据 +
+    #    floor 门槛市场校准（P0-04③ 移交项）；
+    # ② probability_derivation：得分解析提前到 P1-03 平滑门槛通道之前
+    #    （块内得分可兼任得分通道输入，rationale_ref 兼任得分依据）。
+    dr_derivation_block = None
+    if dr_derivation is not None:
+        if not isinstance(dr_derivation, dict):
+            raise SystemExit("错误：discount_rate_derivation 须为对象（注册码 "
+                             "DR_DERIVATION_UNANCHORED）")
+        _tier = dr_derivation.get("industry_tier")
+        if _tier is None:
+            raise SystemExit("错误：discount_rate_derivation 缺 industry_tier"
+                             "（行业档白名单见 INDUSTRY_RISK_PREMIUM，注册码 "
+                             "DR_DERIVATION_UNANCHORED）")
+        _rate, _comp = stratified_discount_rate(_tier, dr_derivation.get("rf_10y"))
+        if abs(_rate - discount_rate) > 1e-9:
+            raise SystemExit(
+                f"错误：分层折现率 {_rate:.2%}（{_tier} 档）≠ scenarios.json 声明的"
+                f" discount_rate {discount_rate:.2%}（注册码 DR_STRATIFIED_RATE_MISMATCH）"
+                "——分层表是事实源：premium 档须按分层值重算三情景估值并同步"
+                " discount_rate，或修正 industry_tier/rf_10y。禁止声明分层却"
+                "沿用旧折现率（V0 与 r 不同源）")
+        _dr_rat = dr_derivation.get("rationale_ref") or ""
+        if "[E:" not in _dr_rat:
+            raise SystemExit("错误：discount_rate_derivation.rationale_ref 必填且"
+                             "须含 [E:] 证据指针（注册码 DR_DERIVATION_UNANCHORED）"
+                             "——折现率直接决定 IRR 下限与终值，裸参数与裸概率同罪")
+        _mkt = dr_derivation.get("market")
+        if _mkt is not None and _mkt not in MARKET_FLOOR_HURDLES:
+            raise SystemExit(f"错误：market `{_mkt}` 未注册，应为 "
+                             f"{sorted(MARKET_FLOOR_HURDLES)}（注册码 "
+                             "DR_DERIVATION_UNANCHORED）")
+        dr_derivation_block = dict(_comp)
+        dr_derivation_block.update({
+            "rationale_ref": _dr_rat, "market": _mkt,
+            "floor_hurdle_market": (MARKET_FLOOR_HURDLES.get(_mkt)
+                                    if _mkt else None),
+        })
+    # floor 门槛解析顺序：显式传参 > 市场校准（DR 块声明 market 时）> 全局默认。
+    # 默认仍是 6%——存量 12 案与 gate2_ab 库内调用（不传 DR 块）完全不受影响。
+    if floor_hurdle is None:
+        floor_hurdle = ((dr_derivation_block or {}).get("floor_hurdle_market")
+                        or DEFAULT_FLOOR_HURDLE)
+    if prob_derivation is not None:
+        if not isinstance(prob_derivation, dict):
+            raise SystemExit("错误：probability_derivation 须为对象（注册码 "
+                             "PROB_DERIVATION_INVALID）")
+        _pd_rat = prob_derivation.get("rationale_ref") or ""
+        if "[E:" not in _pd_rat:
+            raise SystemExit("错误：probability_derivation.rationale_ref 必填且"
+                             "须含 [E:] 证据指针（注册码 PROB_DERIVATION_INVALID）"
+                             "——概率是闸门二唯一不受闸门一污染的输入，传导链"
+                             "必须可审计")
+        _s_block = prob_derivation.get("moat_score")
+        if _s_block is not None:
+            if moat_score is not None and abs(float(_s_block) - float(moat_score)) > 1e-9:
+                raise SystemExit(
+                    f"错误：probability_derivation.moat_score {_s_block} 与顶层/"
+                    f"CLI moat_score {moat_score} 不一致（注册码 "
+                    "PROB_DERIVATION_INVALID）——禁止两套得分并存")
+            if moat_score is None:
+                moat_score = float(_s_block)
+                if not moat_score_basis:
+                    moat_score_basis = _pd_rat   # 块级 rationale 兼任得分依据
+        if moat_score is None:
+            raise SystemExit("错误：概率映射需要护城河得分——probability_derivation"
+                             " 缺 moat_score 且顶层/CLI 均未提供（注册码 "
+                             "PROB_DERIVATION_INVALID）")
 
     growth_factor = (1.0 + discount_rate) ** hold_years
     rows = []
@@ -1014,6 +1255,127 @@ def expected_return(price, scenarios, hold_years, index_hurdle=0.09,
             "dual_report": dual_report,
         }
 
+    # ── REQ-P1-04 概率传导校验 + ±10pp 敏感性表 ──────────────────────
+    # 映射输出是"证据起点的建议值"，不是铁律：分析师可在可调范围内偏离
+    # （这正是需求原文"映射公式与可调范围"的语义），但偏离须逐项论证——
+    # ≤2pp 免论、2~10pp 须 deviation_rationale 挂 [E:]、>10pp 硬拒。
+    prob_derivation_block = None
+    if prob_derivation is not None:
+        mapped = map_scenario_probabilities(
+            moat_score,
+            prob_derivation.get("variant_perception", "neutral"),
+            prob_derivation.get("red_team_pessimistic"))
+        if mapped is None:
+            raise SystemExit(
+                f"错误：护城河得分 {moat_score} < {MOAT_SCORE_NARROW_MIN}——无买入"
+                "结论，概率传导无意义（注册码 PROB_DERIVATION_INVALID）")
+        adopted = {s["name"]: s["probability"] for s in scenarios}
+        if set(adopted) != {"悲观", "基准", "乐观"}:
+            raise SystemExit(
+                f"错误：概率映射定义于标准三情景名（悲观/基准/乐观），收到 "
+                f"{sorted(adopted)}（注册码 PROB_DERIVATION_INVALID）")
+        deviations = {k: round(adopted[k] - mapped["probabilities"][k], 6)
+                      for k in ("悲观", "基准", "乐观")}
+        # 红队下界直接约束采用值：红队悲观概率是"最强空头世界观成立的概率"，
+        # 用分析师的乐观去论证它更低等于架空红队（保守不对称）——映射值之下的
+        # 偏离可论证，红队下界之下的偏离不可。
+        _rt_p = prob_derivation.get("red_team_pessimistic")
+        if _rt_p is not None and adopted["悲观"] < float(_rt_p) - 1e-9:
+            raise SystemExit(
+                f"错误：采用悲观概率 {adopted['悲观']:.2%} 低于红队悲观概率下界 "
+                f"{float(_rt_p):.2%}（注册码 PROB_DERIVATION_MISMATCH）——红队"
+                "下界不可被论证突破：把空头世界观成立的概率论证得更低，用的正是"
+                "红队要质询的那份乐观。应上调悲观权重或下调红队概率估计并挂 [E:]")
+        for _k, _dev in deviations.items():
+            if abs(_dev) > PROB_DEVIATION_MAX + 1e-9:
+                raise SystemExit(
+                    f"错误：情景 `{_k}` 采用概率 {adopted[_k]:.2%} 偏离映射值 "
+                    f"{mapped['probabilities'][_k]:.2%} 达 {_dev:+.1%}，超出可调"
+                    f"范围 ±{PROB_DEVIATION_MAX:.0%}（注册码 PROB_DERIVATION_OUT_"
+                    "OF_RANGE）——如此大的偏离意味着映射输入（得分/变异认知/红队）"
+                    "与最终概率已不是一个世界观，应修输入而不是绕映射")
+            if abs(_dev) > PROB_DEVIATION_FREE + 1e-9:
+                _devr = prob_derivation.get("deviation_rationale") or ""
+                if "[E:" not in _devr:
+                    raise SystemExit(
+                        f"错误：情景 `{_k}` 采用概率偏离映射 {_dev:+.1%}"
+                        f"（>{PROB_DEVIATION_FREE:.0%}），但 deviation_rationale "
+                        "未挂 [E:] 证据指针（注册码 PROB_DERIVATION_MISMATCH）——"
+                        "偏离映射须逐项论证，与 S7 偏离默认须证据同构")
+
+        # ±10pp 敏感性（验收条款）：悲观权重 ±10pp 对期望 IRR / 闸门二 / 档位
+        # 的影响。IRR_i 不随概率变（只变权重），故直接对 rows 重加权。
+        _by_name = {s["name"]: s for s in rows}
+        base_v_p = next((s["value_per_share"] for s in scenarios
+                         if s["name"] in ("基准", "base")), None)
+        mos_actual_p = (1.0 - price / base_v_p) if base_v_p else None
+        gate1_pass_p = ((mos_actual_p >= mos_req)
+                        if (mos_req is not None and mos_actual_p is not None)
+                        else None)
+        if moat == "none":
+            gate1_pass_p = False
+        sens_rows, tiers = [], []
+        for _shift in (-PROB_SENSITIVITY_SHIFT, 0.0, PROB_SENSITIVITY_SHIFT):
+            _pp = adopted["悲观"] + _shift
+            _po = adopted["乐观"]
+            _pb = 1.0 - _pp - _po
+            if _pb < 0.0:
+                sens_rows.append({"shift": _shift, "valid": False,
+                                  "note": "悲观+10pp 后基准概率为负，不可行"})
+                tiers.append(None)
+                continue
+            _irr_s = (_pp * _by_name["悲观"]["annualized_irr"]
+                      + _pb * _by_name["基准"]["annualized_irr"]
+                      + _po * _by_name["乐观"]["annualized_irr"])
+            _loss_s = sum(p for nm, p in (("悲观", _pp), ("基准", _pb),
+                                          ("乐观", _po))
+                          if _by_name[nm]["total_return"] < 0)
+            _g2_checks = {
+                "expected_irr_floor": _irr_s >= discount_rate,
+                "no_convergence_floor": gate2["no_convergence_floor"]["pass"],
+                "pessimistic_irr": gate2["pessimistic_irr"]["pass"],
+                "loss_probability": _loss_s <= loss_prob_hurdle,
+            }
+            _g2_pass = all(v is True for v in _g2_checks.values())
+            if moat == "none":
+                _tier = "不给买入结论"
+            elif gate1_pass_p is not True:
+                _tier = "观察等价格"
+            elif _g2_pass is not True:
+                _tier = "观察等价格"
+            else:
+                _tier = "买入候选（小仓位试探起）"
+            tiers.append(_tier)
+            sens_rows.append({
+                "shift": _shift,
+                "valid": True,
+                "probabilities": {"悲观": _pp, "基准": _pb, "乐观": _po},
+                "expected_annualized_irr": _irr_s,
+                "loss_probability": _loss_s,
+                "gate2_pass": _g2_pass,
+                "gate2_checks": _g2_checks,
+                "tier_suggestion": _tier,
+            })
+        _tiers_valid = [t for t in tiers if t]
+        tier_flip = (len(set(_tiers_valid)) > 1)
+        prob_derivation_block = {
+            "moat_score": float(moat_score),
+            "variant_perception": prob_derivation.get(
+                "variant_perception", "neutral"),
+            "red_team_pessimistic": prob_derivation.get(
+                "red_team_pessimistic"),
+            "rationale_ref": prob_derivation.get("rationale_ref"),
+            "deviation_rationale": prob_derivation.get("deviation_rationale"),
+            "mapped_probabilities": mapped["probabilities"],
+            "adopted_probabilities": adopted,
+            "deviations": deviations,
+            "transmission_chain": mapped["chain"],
+            "anchors": mapped["anchors"],
+            "adjustable_ranges": mapped["ranges"],
+        }
+        if tier_flip:
+            codes.append("PROB_SENSITIVITY_TIER_FLIP")
+
     unknown = unknown_codes(codes)
     if unknown:
         raise KeyError(f"未注册的告警码 {unknown}，请先在 scripts/alert_codes.py 登记")
@@ -1065,6 +1427,22 @@ def expected_return(price, scenarios, hold_years, index_hurdle=0.09,
     # REQ-P1-03：得分路径才挂 moat_score 块——legacy 词路径输出字节级不变
     if moat_score_block is not None:
         result["moat_score"] = moat_score_block
+    # REQ-P1-04：证据传导块 opt-in（rationale_ref 验收条款的机器载体）+
+    # ±10pp 概率敏感性表（验收条款）——legacy 路径不出现这些键
+    if dr_derivation_block is not None:
+        result["discount_rate_derivation"] = dr_derivation_block
+    if prob_derivation_block is not None:
+        prob_derivation_block["sensitivity_pm10pp"] = {
+            "rows": sens_rows,
+            "tier_flip": tier_flip,
+            "tier_flip_code": "PROB_SENSITIVITY_TIER_FLIP" if tier_flip else None,
+            "note": ("悲观权重 ±10pp 即可移动档位——结论对概率假设敏感，"
+                     "本案最该花研究精力的判断就是三情景概率"
+                     if tier_flip else
+                     "悲观权重 ±10pp 档位不动——结论对概率摆动稳健"),
+            "mandated_by": "REQ-P1-04 验收条款（概率 ±10pp 对档位的影响）",
+        }
+        result["probability_derivation"] = prob_derivation_block
     return result
 
 
@@ -1152,10 +1530,12 @@ def main():
                     help="基准情景下每股内在价值的长期增速（小数）。与股息率相加得"
                          "『价值不收敛下限』——折价永不收敛时的实际年化回报。"
                          "这是闸门二真正独立于 V0 的一项，强烈建议必填")
-    p3.add_argument("--floor-hurdle", type=float, default=DEFAULT_FLOOR_HURDLE,
+    p3.add_argument("--floor-hurdle", type=float, default=None,
                     help=f"不收敛下限的门槛（默认 {DEFAULT_FLOOR_HURDLE:.0%}，"
-                         f"约当长期国债 + 2~3pct）。含义：即使市场永不重估，"
-                         f"也要跑赢低风险替代")
+                         f"约当长期国债 + 2~3pct；discount_rate_derivation 声明"
+                         f" market 时自动切市场校准值 {MARKET_FLOOR_HURDLES}，"
+                         f"显式传参优先）。含义：即使市场永不重估，也要跑赢"
+                         f"低风险替代")
     p3.add_argument("--pessimistic-hurdle", type=float, default=DEFAULT_PESSIMISTIC_HURDLE,
                     help="悲观情景年化门槛（默认 0%，即最坏情况不亏本金）。"
                          "前提是悲观值来自独立方法，见 check_scenarios.py")
@@ -1287,6 +1667,7 @@ def main():
         moat, iv_growth = args.moat, args.iv_growth
         moat_score = args.moat_score
         moat_score_basis, moat_sources = args.moat_score_basis, None
+        prob_derivation, dr_derivation = None, None   # REQ-P1-04 证据传导块
         if args.moat_sources:
             moat_sources = [s.strip() for s in args.moat_sources.split(",")
                             if s.strip()]
@@ -1309,6 +1690,9 @@ def main():
             moat_score_basis = sd.get("moat_score_basis", moat_score_basis)
             if sd.get("moat_sources") is not None:
                 moat_sources = list(sd["moat_sources"])
+            # REQ-P1-04：证据传导两块同样以 scenarios.json 为单一事实源
+            prob_derivation = sd.get("probability_derivation")
+            dr_derivation = sd.get("discount_rate_derivation")
             print(f"口径取自 {args.scenarios_file}（已过 check_scenarios 门禁）\n")
         else:
             if args.price is None:
@@ -1328,6 +1712,8 @@ def main():
                               moat_score=moat_score,
                               moat_score_basis=moat_score_basis,
                               moat_sources=moat_sources,
+                              prob_derivation=prob_derivation,
+                              dr_derivation=dr_derivation,
                               floor_hurdle=args.floor_hurdle,
                               pessimistic_hurdle=args.pessimistic_hurdle,
                               loss_prob_hurdle=args.loss_prob_hurdle)
@@ -1435,9 +1821,48 @@ def main():
                              else "不给买入结论")
                     g1r = "✓" if r_["gate1_pass"] else "✗"
                     g2r = "✓" if r_["gate2_pass"] else "✗"
-                    print(f"    - 得分 {r_['score_side']:.0f}（{w_cn}）: 闸门一 {g1r}"
-                          f"（门槛 {req_r}） 闸门二 {g2r} → {r_['tier_suggestion']}")
+                print(f"    - 得分 {r_['score_side']:.0f}（{w_cn}）: 闸门一 {g1r}"
+                      f"（门槛 {req_r}） 闸门二 {g2r} → {r_['tier_suggestion']}")
                 print(f"  敏感性: {dr['sensitivity_note']}")
+
+        # ---- REQ-P1-04 折现率分层 + 概率传导 + ±10pp 敏感性 ----
+        drd = res.get("discount_rate_derivation")
+        if drd:
+            print(f"\n=== 折现率分层（REQ-P1-04）===")
+            print(f"  r = {drd['rate']:.2%} = {drd['formula']}"
+                  f"（{drd['industry_tier']} 档 +{drd['industry_premium']:.0%}，"
+                  f"下限 {drd['floor']:.1%}）")
+            if drd.get("floor_hurdle_market") is not None:
+                print(f"  不收敛下限门槛按市场校准: {drd['floor_hurdle_market']:.0%}"
+                      f"（market={drd['market']}，P0-04③ 口径噪声修复）")
+            print(f"  证据: {drd['rationale_ref'][:80]}")
+        pdv = res.get("probability_derivation")
+        if pdv:
+            print(f"\n=== 概率证据传导（REQ-P1-04）===")
+            for step in pdv["transmission_chain"]:
+                print(f"  {'→ '.join(f'{k} {v:.1%}' if isinstance(v, float) else f'{k} {v}' for k, v in step[1].items())}"
+                      f"    [{step[0]}]")
+            mp, ap = pdv["mapped_probabilities"], pdv["adopted_probabilities"]
+            print(f"  映射值: 悲观 {mp['悲观']:.1%} / 基准 {mp['基准']:.1%} /"
+                  f" 乐观 {mp['乐观']:.1%}")
+            print(f"  采用值: 悲观 {ap['悲观']:.1%} / 基准 {ap['基准']:.1%} /"
+                  f" 乐观 {ap['乐观']:.1%}（偏离 "
+                  + " ".join(f"{k}{v:+.1%}" for k, v in pdv["deviations"].items())
+                  + "）")
+            sens = pdv["sensitivity_pm10pp"]
+            print(f"  ±10pp 敏感性（悲观权重摆动）:")
+            for r_ in sens["rows"]:
+                if not r_.get("valid"):
+                    print(f"    {r_['shift']:+.0%}: {r_['note']}")
+                    continue
+                g2m = "✓" if r_["gate2_pass"] else "✗"
+                print(f"    悲观 {r_['probabilities']['悲观']:.0%}: 期望 IRR "
+                      f"{r_['expected_annualized_irr']:.2%}，亏损概率 "
+                      f"{r_['loss_probability']:.0%}，闸门二 {g2m}"
+                      f" → {r_['tier_suggestion']}")
+            flip = "⚠ 档位翻转——结论对概率假设敏感" if sens["tier_flip"] \
+                else "档位稳定（对概率摆动稳健）"
+            print(f"  {flip}")
         if args.output:
             with open(args.output, "w", encoding="utf-8") as f:
                 json.dump(res, f, ensure_ascii=False, indent=2)

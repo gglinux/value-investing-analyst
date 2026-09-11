@@ -134,6 +134,12 @@ _S_PREFIX_TO_CODE = [
     ("S2c", "S2C_WORST_YEAR_NOT_STRESS"),
     ("S2d", "S2D_TROUGH_PB_BASIS"),
     ("S2e", "S_DISCOUNT_RATE_FLOOR"),
+    ("S7c-DR-TIER", "DR_INDUSTRY_TIER_UNKNOWN"),
+    ("S7c-DR-RAT", "DR_DERIVATION_UNANCHORED"),
+    ("S7c-DR", "DR_STRATIFIED_RATE_MISMATCH"),
+    ("S7c-VAR", "PROB_DERIVATION_INVALID"),
+    ("S7c-RANGE", "PROB_DERIVATION_OUT_OF_RANGE"),
+    ("S7c-DEV", "PROB_DERIVATION_MISMATCH"),
     ("S7b", "S7B_IV_GROWTH_EVIDENCE"),
     ("S1", "S1_SCHEMA"),
     ("S2", "S2_BEAR_METHOD_INDEPENDENCE"),
@@ -667,6 +673,15 @@ def check(path, metrics_path=None, snapshot_path=None):
 
     # ---- S7 概率证据指针 ----
     defaults = d.get("default_probabilities") or {"悲观": 0.3, "基准": 0.5, "乐观": 0.2}
+    # REQ-P1-04：probability_derivation 块（存在且合法）本身就是概率来源的
+    # 结构化证据——得分/变异认知/红队 → 映射 → 采用值的传导链 + rationale_ref
+    # 已覆盖"偏离默认须挂证据"的语义，逐情景 probability_evidence 不再重复
+    # 要求（推导链即证据）；块不出现时维持 legacy 逐情景要求。
+    pd_block = d.get("probability_derivation")
+    pd_valid = False
+    if pd_block is not None:
+        _pd_rat = pd_block.get("rationale_ref") or ""
+        pd_valid = ("[E:" in _pd_rat)
     info["probability_deviations"] = {}
     for s in scen:
         p = float(s["probability"])
@@ -677,12 +692,14 @@ def check(path, metrics_path=None, snapshot_path=None):
             dp = None
         if dp is not None and abs(p - float(dp)) > 1e-9:
             info["probability_deviations"][s["name"]] = round(p - float(dp), 6)
-            if not E_PTR.search(s.get("probability_evidence", "") or ""):
+            if not pd_valid and not E_PTR.search(s.get("probability_evidence", "") or ""):
                 errors.append(
                     f"S7 情景 `{s['name']}` 概率 {p:.0%} 偏离默认 {float(dp):.0%}，"
                     f"但 `probability_evidence` 未挂 [E:] 指针。概率是闸门二唯一不受"
                     f"闸门一污染的输入，也是最容易被叙事污染的参数——任何偏离都必须"
-                    f"挂 Phase 3 证据，不是「偏离超过 10pct 才写理由」")
+                    f"挂 Phase 3 证据，不是「偏离超过 10pct 才写理由」"
+                    + ("；或改用 probability_derivation 块（REQ-P1-04，须挂 [E:] "
+                       "rationale_ref）" if pd_block is not None else ""))
 
     # ---- S7b iv-growth 证据指针（与 S7 同等强制）----
     # `intrinsic_value_growth` 是闸门二"不收敛下限"的加数（下限 = 股息率 + 内在价值增速），
@@ -709,6 +726,87 @@ def check(path, metrics_path=None, snapshot_path=None):
                 f"保守取 5% [E:financials_XX.json]」），与 S7 概率纪律同等强制")
         elif abs(ivg) > 1e-12:
             info["iv_growth_evidence"] = ivg_ev[:120]
+
+    # ---- S7c 证据传导块（REQ-P1-04；块存在才校验，legacy 文件零新增消息）----
+    # 交付物原文：「check_scenarios.py S7 校验概率来源字段非空」。两个块都是
+    # opt-in：出现即须结构合法 + 证据挂 [E:] + 与声明值一致——让 Phase 3 护城河
+    # 得分、Phase 4.5 变异认知、红队悲观概率对最终数字的传导可审计。
+    if pd_block is not None:
+        import reverse_dcf as _rd
+        _pd_rat = pd_block.get("rationale_ref") or ""
+        if "[E:" not in _pd_rat:
+            errors.append("S7c-VAR probability_derivation.rationale_ref 为空或未挂 "
+                          "[E:]——概率是闸门二唯一不受闸门一污染的输入，传导链"
+                          "必须可审计（REQ-P1-04 交付物：概率来源字段非空）")
+        else:
+            _score = pd_block.get("moat_score", d.get("moat_score"))
+            if _score is None:
+                errors.append("S7c-VAR probability_derivation 缺 moat_score（块内与"
+                              "顶层均未提供）——映射公式以护城河得分为锚")
+            else:
+                _vp = pd_block.get("variant_perception", "neutral")
+                _rt = pd_block.get("red_team_pessimistic")
+                _mapped = _rd.map_scenario_probabilities(
+                    float(_score), _vp, _rt)
+                if _mapped is None:
+                    errors.append(
+                        f"S7c-VAR 护城河得分 {_score} < 35：无买入结论，概率传导"
+                        "无意义")
+                else:
+                    _names = {s["name"] for s in scen}
+                    if _names != {"悲观", "基准", "乐观"}:
+                        errors.append("S7c-VAR 概率映射定义于标准三情景名"
+                                      "（悲观/基准/乐观）")
+                    else:
+                        _adopted = {s["name"]: float(s["probability"]) for s in scen}
+                        for _k, _v in _adopted.items():
+                            _dev = _v - _mapped["probabilities"][_k]
+                            if abs(_dev) > _rd.PROB_DEVIATION_MAX + 1e-9:
+                                errors.append(
+                                    f"S7c-RANGE 情景 `{_k}` 采用概率 {_v:.2%} 偏离"
+                                    f"映射值 {_mapped['probabilities'][_k]:.2%} 达 "
+                                    f"{_dev:+.1%}，超出可调范围 ±10%——应修映射输入"
+                                    "（得分/变异认知/红队）而不是绕映射")
+                            elif abs(_dev) > _rd.PROB_DEVIATION_FREE + 1e-9 and \
+                                    "[E:" not in (pd_block.get("deviation_rationale")
+                                                  or ""):
+                                errors.append(
+                                    f"S7c-DEV 情景 `{_k}` 采用概率偏离映射 "
+                                    f"{_dev:+.1%}（>2%），但 deviation_rationale "
+                                    "未挂 [E:]——偏离映射须逐项论证，与 S7 偏离"
+                                    "默认须证据同构")
+                        info["prob_derivation_mapped"] = {
+                            k: round(v, 4)
+                            for k, v in _mapped["probabilities"].items()}
+    dr_block = d.get("discount_rate_derivation")
+    if dr_block is not None:
+        import reverse_dcf as _rd
+        _tier = dr_block.get("industry_tier")
+        if _tier is None:
+            errors.append("S7c-DR-RAT discount_rate_derivation 缺 industry_tier"
+                          "（行业档白名单 stable/standard/cyclical/financials/"
+                          "speculative_growth/holding_complex）")
+        elif _tier not in _rd.INDUSTRY_RISK_PREMIUM:
+            errors.append(f"S7c-DR-TIER industry_tier `{_tier}` 不在白名单——"
+                          "行业档白名单防自造档位，与护城河词表同源纪律")
+        else:
+            _rate, _ = _rd.stratified_discount_rate(
+                _tier, dr_block.get("rf_10y"))
+            _stated = d.get("discount_rate")
+            if _stated is None or abs(_rate - float(_stated)) > 1e-9:
+                errors.append(
+                    f"S7c-DR 分层折现率 {_rate:.2%}（{_tier} 档）≠ 声明的 "
+                    f"discount_rate {_stated}——声明分层却沿用旧折现率，V0 与 r "
+                    "不同源；premium 档须按分层值重算三情景估值并同步")
+        if "[E:" not in (dr_block.get("rationale_ref") or ""):
+            errors.append("S7c-DR-RAT discount_rate_derivation.rationale_ref 为空或"
+                          "未挂 [E:]——折现率直接决定 IRR 下限与终值，裸参数与"
+                          "裸概率同罪")
+        _mkt = dr_block.get("market")
+        if _mkt is not None and _mkt not in _rd.MARKET_FLOOR_HURDLES:
+            errors.append(f"S7c-DR-RAT market `{_mkt}` 未注册（应为 "
+                          f"{sorted(_rd.MARKET_FLOOR_HURDLES)}）——floor 门槛市场"
+                          "校准仅支持已注册市场")
 
     # ---- S8 价值陷阱闸门 ----
     mos = info["margin_of_safety_vs_base"]
