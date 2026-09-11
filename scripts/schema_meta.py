@@ -65,6 +65,21 @@ UNIT_MULTIPLIER = {
     "亿元": 1e8, "亿": 1e8,
     "十亿": 1e9, "billion": 1e9, "bn": 1e9,
 }
+# 股本单位：与金额单位相互独立，是量纲哨兵锚一的分母。存量底稿里
+# 「金额百万 + 股本百万股」「金额元 + 股本万股」并存，不声明就无法换算。
+SHARES_UNIT_MULTIPLIER = {
+    "股": 1.0, "shares": 1.0,
+    "千股": 1e3, "thousand_shares": 1e3,
+    "万股": 1e4,
+    "百万股": 1e6, "million_shares": 1e6,
+    "亿股": 1e8,
+}
+# 每股收入上界（本币/股），供量纲哨兵锚一使用。按币种面值量级分档。
+RPS_UPPER_BY_CURRENCY = {
+    "CNY": 1e3, "HKD": 1e3, "TWD": 1e4, "SGD": 1e3, "AUD": 1e3, "CAD": 1e3,
+    "USD": 1e4, "EUR": 1e4, "GBP": 1e4,
+    "JPY": 1e5, "KRW": 1e6,
+}
 CURRENCIES = {"CNY", "USD", "HKD", "JPY", "EUR", "GBP", "TWD", "KRW", "SGD", "AUD", "CAD"}
 BASIS = {"consolidated", "parent", "合并", "母公司"}
 STANDARDS = {"CAS", "IFRS", "US-GAAP", "HKFRS", "JGAAP", "K-IFRS"}
@@ -78,6 +93,11 @@ ADJUSTED_LEGAL_FOR_RETURN = {"hfq_ratio"}
 class MetaSpec:
     CORE = ("unit", "currency", "data_vintage", "source_ref")
     EXTENDED = ("basis", "standard", "period_type")
+    # 可选声明：股本单位与每股字段单位。它们是「普遍例外」而非个案——
+    # 福耀「百万元（除每股数据）」、日本底稿「股本千股」、平安「金额元 + 股本万股」。
+    # 不声明时按 unit 的默认推断（股本=百万股 / 每股=元），但哨兵锚一会按
+    # 声明值换算，声明错误会被锚一直接抓出。
+    OPTIONAL = ("shares_unit", "per_share_unit")
     # `adjusted`（复权口径）只对**含价格序列**的底稿有意义——财务报表没有复权
     # 概念，对财务底稿强制它会制造一堆填 "none" 的噪声字段，稀释真正的信号。
     # 触发条件：底稿含 price/quote/ohlc 类区块，或声明 used_for_return_calc。
@@ -120,15 +140,57 @@ def _check_vintage(v):
     return None
 
 
+_ANCHOR_RE = re.compile(
+    r"(p\.?\s*\d+|第\s*\d+\s*页|#\d+|行\s*\d+|\w+\.(pdf|htm|html|xlsx|json|csv)"
+    r"|https?://|accession|\d{10}-\d{2}-\d{6}|附注\s*\d+|note\s*\d+|表\s*\d+"
+    r"|ltn\d{8,}|\[E:[^\]]+\])", re.I)
+_FILING_RE = re.compile(
+    r"(年报|年度报告|半年报|中报|季报|业绩公告|招股|10-K|10-Q|20-F|6-K|8-K|S-1"
+    r"|annual report|form\s*\d|有価証券報告書|사업보고서)", re.I)
+_YEAR_RE = re.compile(r"(19|20)\d{2}")
+
+
+def has_locator(v):
+    """source_ref 是否可定位。
+
+    两类算可定位：① 硬锚点（页码/附注号/文件名/URL/accession/公告编号/[E:] 指针）；
+    ② 命名了**具体申报文件**且带年份（如「2023 年报（披露易）」「20-F 2023」）——
+    第二个人能据此在 1 分钟内打开同一份文件。
+    被拒绝的是「公司年报数据」「公开资料」这类既无年份也无文件的声明。
+    """
+    if not isinstance(v, str):
+        return False
+    if _ANCHOR_RE.search(v):
+        return True
+    return bool(_FILING_RE.search(v) and _YEAR_RE.search(v))
+
+
 def _check_source_ref(v):
-    """source_ref：指向源文件与页码/行号。要求可定位，不接受泛指。"""
+    """source_ref：指向源文件与页码/行号。要求可定位，不接受泛指。
+
+    基础校验（所有档位）：长度与泛指词。
+    锚点校验（strict 档，在 validate_meta 中追加）：审查发现「公司年报数据」六个字
+    就能过基础校验——这不是溯源，是声明「我看过」。strict 档必须含定位锚。
+    """
     if not isinstance(v, str) or len(v.strip()) < 6:
         return f"`source_ref` = {v!r} 过短——须可定位到源文件与页码/行号/表名"
     vague = ("网上", "查询所得", "公开资料", "数据商", "接口")
-    if any(x in v for x in vague) and not re.search(r"(p\.?\s*\d+|第\s*\d+\s*页|#\d+|行\s*\d+|\w+\.(pdf|htm|html|xlsx|json))", v, re.I):
+    if any(x in v for x in vague) and not has_locator(v):
         return (f"`source_ref` = {v!r} 是泛指来源且无定位锚点——"
                 "须含页码 / 行号 / 文件名之一")
     return None
+
+
+def _check_shares_unit(v):
+    if str(v) in SHARES_UNIT_MULTIPLIER:
+        return None
+    return f"`shares_unit` = {v!r} 应为 {sorted(SHARES_UNIT_MULTIPLIER)} 之一"
+
+
+def _check_per_share_unit(v):
+    if v in UNIT_MULTIPLIER:
+        return None
+    return f"`per_share_unit` = {v!r} 应为金额单位受控词之一（通常为 '元'/'USD'）"
 
 
 def _check_basis(v):
@@ -161,6 +223,7 @@ CHECKERS = {
     "data_vintage": _check_vintage, "source_ref": _check_source_ref,
     "basis": _check_basis, "standard": _check_standard,
     "period_type": _check_period_type, "adjusted": _check_adjusted,
+    "shares_unit": _check_shares_unit, "per_share_unit": _check_per_share_unit,
 }
 
 # 旧头字段 → meta 字段的兼容映射（存量底稿已有这些顶层键）
@@ -240,7 +303,22 @@ def validate_meta(data, path=""):
         if err:
             _emit("schema：" + err, is_core)
 
+    # strict 档追加：source_ref 必须含定位锚点。「公司年报数据」能过基础校验，
+    # 但它只声明「我看过」，不能让第二个人在 30 秒内翻到同一个数。
+    if strength == "strict" and meta.get("source_ref") and not has_locator(meta["source_ref"]):
+        errors.append(tag + f"schema：strict 档 `source_ref` = {meta['source_ref']!r} 无定位锚点"
+                            "——须含页码 / 附注号 / 文件名 / URL / accession 之一")
+
+    # 可选字段：给了就必须合法（不给不报）
+    for field in MetaSpec.OPTIONAL:
+        v = meta.get(field)
+        if v is not None:
+            err = CHECKERS[field](v)
+            if err:
+                _emit("schema：" + err, False)
+
     # 字段级例外：field_overrides 登记与文件默认口径不同的字段
+    _override_keys = set(MetaSpec.ALL) | set(MetaSpec.OPTIONAL) | set(MetaSpec.PRICE_ONLY) | {"note"}
     overrides = meta.get("field_overrides") or {}
     if not isinstance(overrides, dict):
         errors.append(tag + "schema：`meta.field_overrides` 应为对象（字段名 → 口径覆盖）")
@@ -249,7 +327,7 @@ def validate_meta(data, path=""):
             if not isinstance(ov, dict):
                 errors.append(tag + f"schema：`field_overrides.{fname}` 应为对象")
                 continue
-            unknown = sorted(set(ov) - set(MetaSpec.ALL) - {"note"})
+            unknown = sorted(set(ov) - _override_keys)
             if unknown:
                 errors.append(tag + f"schema：`field_overrides.{fname}` 含未知键 {unknown}")
             for k, v in ov.items():
@@ -270,6 +348,13 @@ def validate_meta(data, path=""):
     return errors, warns
 
 
+def _fin_type(data):
+    ctype = str(data.get("company_type") or "").strip().lower()
+    FIN = {"bank", "银行", "insurance", "保险", "保险集团", "寿险", "财险",
+           "broker", "券商", "securities", "金融", "financial"}
+    return ctype in FIN
+
+
 def check_unit_sanity(data, path=""):
     """量纲哨兵的 schema 侧补充：声明单位与数值量级是否自洽。
 
@@ -280,11 +365,15 @@ def check_unit_sanity(data, path=""):
     公司规模本身横跨几个数量级，任何单一绝对区间要么漏放要么误伤。
 
     **改用底稿内部的独立锚**：`shares_diluted` 与 `revenue` 同在一份底稿里，
-    但股本单位（股/万股/百万股）与金额单位相互独立，二者相除得到的**每股收入**
-    落在一个远窄于绝对区间的范围。真实每股收入（本币）几乎总在 0.1~1000 之间——
-    低于 0.1 或高于 1000 说明两个字段的单位声明至少有一个错了。
-    净利率则提供第二个无量纲锚：它对单位错位天然免疫，一旦异常说明是
-    **同一份底稿内**不同字段单位不一致（比命名约定能发现的错误更深一层）。
+    但股本单位与金额单位相互独立，二者相除得到的**每股收入**落在一个远窄于
+    绝对区间的范围。锚一先按 `meta.unit` 与 `meta.shares_unit` 换算成
+    「每股本币」再判——不换算时 BRK.A 这类高价股会误报，声明单位错则被抓出。
+    净利率提供无量纲锚（对单位错位免疫，异常=同一底稿内字段单位不一致）；
+    资产周转率覆盖无股本字段的竞对底稿（金融类天然极低，按 company_type 跳过）。
+
+    返回 warns 列表（向后兼容）。strict 档应把这些告警升级为 ERROR——
+    用 `unit_sanity_as_errors(data)` 判断；审查发现平安底稿单位声明错却挂着
+    strict 标签通过校验，原因正是哨兵只出 WARN 且迁移不跑哨兵。
     """
     warns = []
     tag = f"[{os.path.basename(path)}] " if path else ""
@@ -295,15 +384,31 @@ def check_unit_sanity(data, path=""):
     last = rows[-1]
     rev, sh = last.get("revenue"), last.get("shares_diluted")
     ni = last.get("net_income")
+    meta = resolve_meta(data)
+    money_mult = UNIT_MULTIPLIER.get(meta.get("unit"))
+    # 股本单位：未声明时按「与金额同级」的历史约定推断（百万 ↔ 百万股），
+    # 这是存量 40 份 million 底稿的实际口径；声明了就用声明。
+    shares_mult = SHARES_UNIT_MULTIPLIER.get(meta.get("shares_unit"))
+    if shares_mult is None:
+        shares_mult = money_mult
 
-    # 锚一：每股收入（金额单位 vs 股本单位的交叉校验）
-    if all(isinstance(x, (int, float)) for x in (rev, sh)) and rev > 0 and sh > 0:
-        rps = rev / sh
-        if not (0.1 <= rps <= 1000):
+    # 锚一：每股收入（金额单位 vs 股本单位的交叉校验），换算成「每股本币」再判。
+    # 上界按币种：CNY 最高的茅台约 140 元/股；USD 有 NVR/AutoZone 上千；JPY/KRW
+    # 面值天然大两到三个量级。BRK.A（约 17 万美元/股）类极端个案走显式 waiver，
+    # 不为它放宽全局上界——放宽到能容它，平安那种 5,801 元/股的错位就漏了。
+    waiver = (data.get("meta") or {}).get("unit_sanity_waiver")
+    if (all(isinstance(x, (int, float)) for x in (rev, sh)) and rev > 0 and sh > 0
+            and money_mult and shares_mult and not waiver):
+        rps = (rev * money_mult) / (sh * shares_mult)
+        cur = str(meta.get("currency") or "").upper()
+        hi = RPS_UPPER_BY_CURRENCY.get(cur, 1e4)
+        if not (0.1 <= rps <= hi):
             warns.append(
-                f"{tag}量纲哨兵：最新年每股收入 = {rev:g}/{sh:g} = {rps:.4g}"
-                f"（{data.get('currency', '?')}），落在合理区间 [0.1, 1000] 之外——"
-                f"`revenue` 与 `shares_diluted` 的单位声明至少有一个错位")
+                f"{tag}量纲哨兵：最新年每股收入 = {rev:g}×{money_mult:g} / {sh:g}×{shares_mult:g}"
+                f" = {rps:.4g}（{cur or '?'}/股），落在 [0.1, {hi:g}] 之外——"
+                f"`revenue` 与 `shares_diluted` 的单位声明（unit={meta.get('unit')!r}, "
+                f"shares_unit={meta.get('shares_unit') or '未声明，按与金额同级推断'}）至少有一个错位；"
+                f"确为高价股请在 meta.unit_sanity_waiver 写明理由")
 
     # 锚二：净利率（无量纲，对单位错位免疫；异常=同一底稿内字段单位不一致）
     if all(isinstance(x, (int, float)) for x in (rev, ni)) and rev > 0:
@@ -323,14 +428,10 @@ def check_unit_sanity(data, path=""):
                 f"超出 [0.05, 100]——`market_cap` 与 `revenue` 可能不同单位")
 
     # 锚四：资产周转率（收入/总资产）——不依赖股本字段，覆盖锚一失效的底稿
-    # （竞对底稿常无 shares_diluted）。实业公司该比值几乎总在 0.01~10：
-    # 低于 0.01 = 收入单位偏小或资产偏大，高于 10 = 反之。金融类除外
-    # （银行资产周转率天然极低），故按 company_type 跳过。
+    # （竞对底稿常无 shares_diluted）。实业公司该比值几乎总在 0.01~10；
+    # 金融类天然极低，按 company_type 跳过。
     ta = last.get("total_assets")
-    ctype = str(data.get("company_type") or "").strip().lower()
-    FIN = {"bank", "银行", "insurance", "保险", "保险集团", "寿险", "财险",
-           "broker", "券商", "securities", "金融", "financial"}
-    if (ctype not in FIN and isinstance(ta, (int, float)) and ta > 0
+    if (not _fin_type(data) and isinstance(ta, (int, float)) and ta > 0
             and isinstance(rev, (int, float)) and rev > 0):
         turnover = rev / ta
         if not (0.01 <= turnover <= 10):
@@ -338,6 +439,27 @@ def check_unit_sanity(data, path=""):
                 f"{tag}量纲哨兵：资产周转率 = {rev:g}/{ta:g} = {turnover:.3g}，"
                 f"超出 [0.01, 10]——`revenue` 与 `total_assets` 单位可能错位")
     return warns
+
+
+def unit_sanity_as_errors(data):
+    """strict 档下量纲哨兵告警是否应升级为 ERROR。
+
+    只有 strict 才升级：legacy/standard 是过渡档，量纲告警仍是 WARN 让执行者
+    看到；但一份挂着 strict 标签的底稿量纲不自洽，比没标签更危险——
+    读者会信它。
+    """
+    return _strength(data) == "strict"
+
+
+def validate_full(data, path=""):
+    """validate_meta + 量纲哨兵的组合入口，按档位决定哨兵告警的严重度。"""
+    errors, warns = validate_meta(data, path)
+    sanity = check_unit_sanity(data, path)
+    if unit_sanity_as_errors(data):
+        errors += [w + "（strict 档量纲不自洽升级为错误）" for w in sanity]
+    else:
+        warns += sanity
+    return errors, warns
 
 
 def scan(roots):
@@ -357,7 +479,7 @@ def scan(roots):
             bad.append((f, str(e)))
             continue
         s = _strength(d)
-        errs, _ = validate_meta(d, f)
+        errs, _ = validate_full(d, f)
         buckets[s].append((f, len(errs)))
     total = sum(len(v) for v in buckets.values())
     print(f"底稿 schema 迁移进度（共 {total} 份）")
@@ -392,8 +514,7 @@ def main():
         sys.exit(0)
 
     data = json.load(open(args.input, encoding="utf-8"))
-    errors, warns = validate_meta(data, args.input)
-    warns += check_unit_sanity(data, args.input)
+    errors, warns = validate_full(data, args.input)
     print(f"schema 校验（强度 {_strength(data)}）："
           f"{'失败' if errors else '通过'}（错误 {len(errors)} / 警告 {len(warns)}）")
     for e in errors:

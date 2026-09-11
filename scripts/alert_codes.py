@@ -182,13 +182,15 @@ ALERTS = {
     # ---- 双闸门（reverse_dcf.py expected-return 自动）----
     "GATE1_PASS": ("gate", "闸门一通过：安全边际达护城河档位要求"),
     "GATE1_FAIL": ("gate", "闸门一不过：安全边际未达要求"),
-    "GATE2_PASS": ("gate", "闸门二三项全过"),
+    "GATE2_PASS": ("gate", "闸门二通过：参与判定的四项全过（期望 IRR≥r / 不收敛下限 / 悲观 IRR / 亏损概率）"),
     "GATE2_FAIL": ("gate", "闸门二未全过"),
-    "GATE2_1_IRR_FAIL": ("gate", "闸门二①：期望 IRR 低于护城河反推门槛"),
+    "GATE2_1_IRR_FAIL": ("gate", "闸门二①（诊断项，不参与判定）：期望 IRR 低于护城河反推门槛"),
+    "GATE2_1B_IRR_BELOW_R": ("gate", "闸门二①'：期望 IRR 低于折现率 r（概率加权后不如买在公允价值）"),
     "GATE2_2_FLOOR_FAIL": ("gate", "闸门二②：价值不收敛下限（股息率+内在价值增速）< 6%"),
     "GATE2_3_BEAR_FAIL": ("gate", "闸门二③：悲观情景年化 < 0"),
+    "GATE2_4_LOSS_PROB_FAIL": ("gate", "闸门二④：亏损概率 > 30%（valuation-guide 核心买入下行约束）"),
     "GATE2_UNRATED": ("gate", "闸门二不可评（缺 --iv-growth），绝不可当作通过"),
-    "GATE_EFFECTIVE_HURDLE_GAP": ("gate", "有效门槛显著高于名义门槛（悲观情景离散度推高实际折价要求）"),
+    "GATE_EFFECTIVE_HURDLE_GAP": ("gate", "【诊断】旧三项全过口径下有效门槛显著高于名义门槛（解释旧口径假阴性，不构成当前门槛）"),
 }
 
 

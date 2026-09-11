@@ -44,7 +44,7 @@ import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from schema_meta import (SCHEMA_VERSION_CURRENT, UNIT_MULTIPLIER,  # noqa: E402
-                         validate_meta)
+                         check_unit_sanity, validate_meta)
 
 # 自由文本 → 受控词表。键按长度降序匹配，避免 "million" 命中 "million USD（…）"
 UNIT_NORMALIZE = {
@@ -151,16 +151,78 @@ def build_meta(data, path):
         "source_ref": sref,
         "field_overrides": {},
     }
+    # 从残留文本解析股本/每股单位——审查发现「百万元（除每股数据）」「股本为
+    # million shares」被丢进 notes，机器仍不知道例外。能解析的落进标准键。
+    residue_text = " ".join(x for x in (u_res, s_res) if x)
+    su, psu = _parse_share_units(residue_text)
+    if su:
+        meta["shares_unit"] = su
+        why.append(f"shares_unit={su}：由原 unit 附注解析")
+    if psu:
+        meta["per_share_unit"] = psu
+        why.append(f"per_share_unit={psu}：由原 unit 附注解析")
     why.append("basis=consolidated / period_type=annual 为存量底稿统一口径（annual 区块）")
     if notes:
         meta["notes"] = notes
     meta["migrated_by"] = "scripts/migrate_schema.py"
-    return {k: v for k, v in meta.items() if v is not None}, why, missing
+    meta = {k: v for k, v in meta.items() if v is not None}
+
+    # 升档前跑量纲哨兵：声明单位与数值量级不自洽的底稿**不得**贴 strict 标签。
+    # 平安底稿（unit=million 而 revenue=105050600）此前被升到 strict 且校验通过，
+    # 一份已知量纲错误的底稿挂着 strict 比没有标签更危险——读者会信它。
+    if meta.get("schema_version") == SCHEMA_VERSION_CURRENT:
+        probe = dict(data)
+        probe["meta"] = meta
+        sanity = check_unit_sanity(probe, path)
+        if sanity:
+            meta["schema_version"] = 0
+            meta["unit_sanity_blocked"] = [s.split("量纲哨兵：", 1)[-1][:160] for s in sanity]
+            missing.append("unit_sanity")
+            why.append("量纲哨兵告警 → 拒绝升档，停在 legacy 待人工核实单位")
+    return meta, why, missing
 
 
-def migrate_file(path, write=False):
+_SHARES_UNIT_PATTERNS = [
+    (r"million\s*shares|百万股", "百万股"),
+    (r"thousand\s*shares|千股", "千股"),
+    (r"万股", "万股"),
+    (r"亿股", "亿股"),
+]
+
+
+def _parse_share_units(text):
+    """从自由文本附注解析 (shares_unit, per_share_unit)。解析不到返回 None。"""
+    if not text:
+        return None, None
+    su = None
+    for pat, val in _SHARES_UNIT_PATTERNS:
+        if re.search(pat, text, re.I):
+            su = val
+            break
+    psu = None
+    # 「除每股数据」「每股为元」类说明 ⇒ 每股字段单位为本币元
+    if re.search(r"除每股|每股.*(元|dollar|USD)|per[- ]share.*(yuan|dollar|USD)", text, re.I):
+        psu = "元"
+    return su, psu
+
+
+def migrate_file(path, write=False, recheck=False):
     data = json.load(open(path, encoding="utf-8"))
-    if (data.get("meta") or {}).get("schema_version"):
+    existing = data.get("meta") or {}
+    if existing.get("schema_version"):
+        if not recheck:
+            return ("skip", path, [], [])
+        # 已迁移底稿复检：strict 标签下量纲不自洽 → 降回 legacy
+        sanity = check_unit_sanity(data, path)
+        if existing.get("schema_version") >= SCHEMA_VERSION_CURRENT and sanity:
+            existing["schema_version"] = 0
+            existing["unit_sanity_blocked"] = [s.split("量纲哨兵：", 1)[-1][:160] for s in sanity]
+            existing["demoted_at"] = "recheck: strict 档量纲不自洽"
+            if write:
+                with open(path, "w", encoding="utf-8") as f:
+                    json.dump(data, f, ensure_ascii=False, indent=2)
+                    f.write("\n")
+            return ("demoted", path, ["量纲哨兵告警 → 降回 legacy"], ["unit_sanity"])
         return ("skip", path, [], [])
     meta, why, missing = build_meta(data, path)
     if write:
@@ -178,6 +240,8 @@ def main():
     ap.add_argument("input", nargs="?", help="单个底稿 JSON")
     ap.add_argument("--scan", nargs="+", metavar="DIR", help="批量目录")
     ap.add_argument("--write", action="store_true", help="落盘（默认 dry-run）")
+    ap.add_argument("--recheck", action="store_true",
+                    help="对已迁移 strict 底稿重跑量纲哨兵，不自洽者降回 legacy")
     args = ap.parse_args()
 
     files = []
@@ -190,19 +254,25 @@ def main():
         ap.print_help()
         sys.exit(0)
 
-    stats = {"done": 0, "partial": 0, "skip": 0}
-    partials = []
+    stats = {"done": 0, "partial": 0, "skip": 0, "demoted": 0}
+    partials, demoted = [], []
     for f in files:
-        st, p, why, missing = migrate_file(f, args.write)
+        st, p, why, missing = migrate_file(f, args.write, args.recheck)
         stats[st] += 1
         if st == "partial":
             partials.append((p, missing))
+        elif st == "demoted":
+            demoted.append(p)
 
     mode = "已落盘" if args.write else "预演（加 --write 落盘）"
     print(f"迁移{mode}：共 {len(files)} 份")
     print(f"  完整迁移（升 strict）：{stats['done']}")
     print(f"  部分迁移（留 legacy，待补字段）：{stats['partial']}")
     print(f"  跳过（已有 meta）：{stats['skip']}")
+    if args.recheck:
+        print(f"  复检降档（strict → legacy，量纲不自洽）：{stats['demoted']}")
+        for p in demoted:
+            print(f"    ↓ {os.path.relpath(p)}")
     if partials:
         print(f"\n待人工补全的底稿（{len(partials)} 份）——"
               f"缺 data_vintage/source_ref 不自动编造，补齐后手工把 "

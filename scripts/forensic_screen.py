@@ -13,7 +13,7 @@ forensic_screen.py — Phase 0 排雷条款算术化（REQ-P0-02）
 没有人会把 30 项逐条算一遍。排雷是"不错买"的第一道也是最重要的一道防线，
 把它交给耐心和警觉，等于没有防线。
 
-## 三态输出：命中 / 未命中 / 数据不足
+## 四态输出：命中 / 未命中 / 数据不足 / 不适用
 
 **这是本脚本最重要的设计决定。** 底稿现有字段只够支撑一部分条款——
 `accounts_receivable`、`inventory`、`goodwill`、`other_receivables`、
@@ -25,16 +25,33 @@ forensic_screen.py — Phase 0 排雷条款算术化（REQ-P0-02）
 排雷得分（forensic_score）也因此必须携带**覆盖率**，一个只检验了 3 条条款的
 满分毫无意义。
 
+第四态 `not_applicable`：条款对该公司形态**在定义上不成立**（银行/保险的
+"存贷双高"、"利率倒挂"、"短债长投"，其资产负债表本身就是存贷两高与期限错配）。
+它与 `insufficient_data` 必须分开：前者不进覆盖率分母（不是盲区，是无此题），
+后者进分母（是盲区）。把金融类的 V4 标成 insufficient_data 会把覆盖率压低成
+"证据不足"，标成 pass 又是伪绿灯，两个都错。
+
 ## 排雷得分（供 REQ-P1-05 尾部概率使用）
 
     score = Σ(命中条款权重)，veto 权重 10、redflag 权重 1
-    coverage = 已检验条款数 / 可算术条款总数
+    arithmetic_coverage = 算术条款已检验数 / 算术条款适用数
+    manual_pending      = 人工条款未登记数（--manual 未提供）
 
-下游 `p_tail` 映射必须同时读这两个值：低覆盖率下的低分不构成"安全"证据。
+`coverage` 保留为总口径（算术+人工），但下游 `p_tail` 映射应读
+`arithmetic_coverage`：人工条款没填不是底稿盲区，是执行者还没做作业，两者
+的补救路径完全不同。低覆盖率下的低分不构成"安全"证据。
+
+## 回放时点（--as-of）
+
+回测必须只用"当时能看到的"年报。底稿 annual 行若含 `publish_date`
+（YYYY-MM-DD 前缀，允许带括号备注），`--as-of 2015-08-31` 会剔除
+发布日晚于该日期的行；无 `publish_date` 的行按年报惯例视为次年 4 月 30 日发布。
+不给 --as-of 则用全部行（实盘分析场景）。
 
 用法：
     python3 scripts/forensic_screen.py <financials.json>
     python3 scripts/forensic_screen.py <financials.json> -o out.json
+    python3 scripts/forensic_screen.py <financials.json> --as-of 2015-08-31
     python3 scripts/forensic_screen.py <financials.json> --manual manual.json
         # manual.json 提供无法从底稿推出的人工核查结果（审计意见/质押/前科等）
 """
@@ -42,10 +59,12 @@ forensic_screen.py — Phase 0 排雷条款算术化（REQ-P0-02）
 import argparse
 import json
 import os
+import re
 import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from alert_codes import unknown_codes  # noqa: E402
+from schema_meta import _fin_type as is_financial_company  # noqa: E402
 
 # ── 阈值（全部取自 forensic-checklist.md，改动须同步该文档）──────────
 TH_CASH_RATIO = 0.25          # 货币资金/总资产
@@ -63,6 +82,12 @@ TH_NONRECURRING = 0.60        # 扣非净利/净利 低于此值
 TH_SHORT_DEBT_RATIO = 0.60    # 短期借款/有息负债，配合长期资产占比
 
 VETO_WEIGHT, REDFLAG_WEIGHT = 10, 1
+
+# 货币资金候选字段。苹果等美股底稿把短期投资并入现金口径
+# （cash_and_short_term_investments），不加别名会让 V4/V4A/R21 在这类底稿上全部
+# 落成 insufficient_data，把一个字段命名差异显示成盲区。
+CASH_FIELDS = ("cash", "cash_and_equivalents", "cash_and_short_term_investments",
+               "cash_and_investments")
 
 
 def _g(row, *names):
@@ -90,9 +115,10 @@ class Clause:
 
     def __init__(self, cid, code, level, name):
         self.cid, self.code, self.level, self.name = cid, code, level, name
-        self.status = "insufficient_data"   # hit / pass / insufficient_data
+        self.status = "insufficient_data"   # hit / pass / insufficient_data / not_applicable
         self.detail = ""
         self.missing = []
+        self.hint = ""                      # insufficient_data 时给人工的定向提示
 
     def hit(self, detail):
         self.status, self.detail = "hit", detail
@@ -102,16 +128,39 @@ class Clause:
         self.status, self.detail = "pass", detail
         return self
 
-    def na(self, missing):
+    def na(self, missing, hint=""):
         self.status = "insufficient_data"
         self.missing = list(missing)
+        self.hint = hint
         self.detail = f"缺字段 {self.missing}——未检验（不等于通过）"
+        if hint:
+            self.detail += f"｜提示：{hint}"
+        return self
+
+    def not_applicable(self, reason):
+        """条款对该公司形态在定义上不成立。不进覆盖率分母。"""
+        self.status, self.detail = "not_applicable", f"不适用：{reason}"
         return self
 
     def to_dict(self):
-        return {"id": self.cid, "code": self.code, "level": self.level,
-                "name": self.name, "status": self.status,
-                "detail": self.detail, "missing_fields": self.missing}
+        d = {"id": self.cid, "code": self.code, "level": self.level,
+             "name": self.name, "status": self.status,
+             "detail": self.detail, "missing_fields": self.missing}
+        if self.hint:
+            d["hint"] = self.hint
+        return d
+
+
+# 金融类（银行/保险/券商）在定义上不适用的条款：其资产负债表本身就是
+# 高现金+高负债（V4）、利息收入是主营而非现金真实性信号（V4A）、
+# 短借长贷是商业模式而非期限错配（R9）。R1 净利/OCF 背离对银行也不成立
+# （OCF 受存贷款净增额主导，与利润无稳定关系）。
+FIN_NOT_APPLICABLE = {
+    "V4": "金融类资产负债表天然存贷两高，条款定义不成立",
+    "V4A": "金融类利息收入为主营收入，非现金真实性信号",
+    "R1": "金融类 OCF 由存贷款/保费净增额主导，与净利无稳定关系",
+    "R9": "金融类短借长贷为商业模式本身，非期限错配",
+}
 
 
 # ── 条款实现 ────────────────────────────────────────────────────────
@@ -122,7 +171,7 @@ def c_deposit_loan_double_high(rows, manual):
     """V4 存贷双高：货币资金与有息负债同时 > 总资产 25%。康美原型。"""
     c = Clause("V4", "P0_V4_DEPOSIT_LOAN_DOUBLE_HIGH", "veto", "存贷双高")
     last = rows[-1]
-    cash = _g(last, "cash", "cash_and_equivalents")
+    cash = _g(last, *CASH_FIELDS)
     debt = _g(last, "total_debt", "interest_bearing_debt")
     ta = _g(last, "total_assets")
     miss = [n for n, v in (("cash", cash), ("total_debt", debt), ("total_assets", ta))
@@ -144,7 +193,7 @@ def c_interest_inversion(rows, manual):
         return c.na(["annual>=2"])
     last, prev = rows[-1], rows[-2]
     ii = _g(last, "interest_income")
-    c1, c0 = _g(last, "cash", "cash_and_equivalents"), _g(prev, "cash", "cash_and_equivalents")
+    c1, c0 = _g(last, *CASH_FIELDS), _g(prev, *CASH_FIELDS)
     if ii is None or c1 is None or c0 is None:
         return c.na([n for n, v in (("interest_income", ii), ("cash", c1)) if v is None]
                     or ["cash(前一年)"])
@@ -255,12 +304,19 @@ def c_financing_vs_return(rows, manual):
                   if x is not None)
     has_fin = any(_g(r, "equity_raised", "financing_raised") is not None for r in rows)
     if not has_fin:
-        # 退化路径：无融资字段时用股本膨胀做代理，仅在明显膨胀时给提示
+        # 退化路径：无融资字段时用股本膨胀做**提示**而非命中。
+        # 一版曾把「股本 >1.5 倍且无分红回购」直接算 hit，结果 Zoom（IPO 前
+        # 优先股转普通股，股本膨胀是上市而非抽血）与苹果（1:7 拆股、股本
+        # 膨胀 7 倍但回购全球第一）都被误杀。股本变动不区分 IPO/拆股/增发，
+        # 不够格做红旗判据，只够格提醒人去查融资总额。
         s0 = _g(rows[0], "shares_diluted")
         s1 = _g(rows[-1], "shares_diluted")
-        if s0 and s1 and s0 > 0 and s1 / s0 > 1.5 and (div + buyback) <= 0:
-            return c.hit(f"股本自 {rows[0]['year']} 增至 {s1 / s0:.2f} 倍且期间无分红回购"
-                         f"——代理判据（缺 equity_raised 字段），须人工核实融资总额")
+        if s0 and s1 and s0 > 0 and s1 / s0 > 1.5:
+            ratio = s1 / s0
+            return c.na(["equity_raised"],
+                        hint=f"股本自 {rows[0]['year']} 增至 {ratio:.2f} 倍"
+                             f"{'且期间无分红回购' if (div + buyback) <= 0 else ''}"
+                             f"——须人工核实是增发抽血还是 IPO/拆股（后者不构成红旗）")
         return c.na(["equity_raised"])
     if (div + buyback) <= 0:
         return c.hit(f"累计融资 {fin:.0f}，累计分红回购为 0——纯抽血") if fin > 0 else c.ok("无融资无回报")
@@ -333,7 +389,7 @@ def c_going_concern(rows, manual):
     if any(o is None for o in ocfs):
         return c.na(["ocf"])
     if all(o < 0 for o in ocfs):
-        cash = _g(last, "cash", "cash_and_equivalents")
+        cash = _g(last, *CASH_FIELDS)
         burn = abs(sum(ocfs) / len(ocfs))
         seq = ", ".join(f"{r['year']}:{o:.0f}" for r, o in zip(recent, ocfs))
         if cash is not None and burn > 0:
@@ -372,14 +428,64 @@ ARITHMETIC_CLAUSES = [
 ]
 
 
-def screen(data, manual=None):
+_DATE_RE = re.compile(r"^\s*(\d{4})-(\d{2})-(\d{2})")
+
+
+def _publish_date(row):
+    """annual 行的发布日（YYYY-MM-DD）。无 publish_date 时按年报惯例视为次年 4 月 30 日。
+
+    底稿里的 publish_date 常带括号备注（"2015-03-26(分红预案日,年报同期,惯例推算)"），
+    只取前缀日期。
+    """
+    raw = row.get("publish_date")
+    if isinstance(raw, str):
+        m = _DATE_RE.match(raw)
+        if m:
+            return f"{m.group(1)}-{m.group(2)}-{m.group(3)}"
+    y = row.get("year")
+    if isinstance(y, int):
+        return f"{y + 1}-04-30"
+    return None
+
+
+def filter_as_of(rows, as_of):
+    """只保留在 as_of（YYYY-MM-DD）当天或之前已发布的年报行。
+
+    回测的时点纪律：2015-08-31 看茅台，不能用 2015 年报（2016-03 才出）。
+    没有 publish_date 的行按惯例日推断——宁可少用一年，不可偷看一年。
+    返回 (kept_rows, dropped_years)。
+    """
+    if not as_of:
+        return rows, []
+    if not _DATE_RE.match(as_of):
+        raise ValueError(f"--as-of 须为 YYYY-MM-DD，得到 {as_of!r}")
+    kept, dropped = [], []
+    for r in rows:
+        pd = _publish_date(r)
+        if pd is None or pd <= as_of:
+            kept.append(r)
+        else:
+            dropped.append(r.get("year"))
+    return kept, dropped
+
+
+def screen(data, manual=None, as_of=None):
     manual = manual or {}
     rows = sorted([r for r in (data.get("annual") or []) if isinstance(r, dict)],
                   key=lambda r: r.get("year", 0))
+    rows, dropped_years = filter_as_of(rows, as_of)
     if not rows:
-        return {"error": "annual 为空，无法排雷"}
+        return {"error": "annual 为空，无法排雷"
+                         + (f"（--as-of {as_of} 剔除了 {dropped_years}）" if dropped_years else "")}
 
-    clauses = [f(rows, manual) for f in ARITHMETIC_CLAUSES]
+    is_fin = is_financial_company(data)
+    clauses = []
+    for f in ARITHMETIC_CLAUSES:
+        c = f(rows, manual)
+        if is_fin and c.cid in FIN_NOT_APPLICABLE:
+            c.not_applicable(FIN_NOT_APPLICABLE[c.cid])
+        clauses.append(c)
+    n_arith = len(clauses)
 
     for cid, code, level, name, key in MANUAL_CLAUSES:
         c = Clause(cid, code, level, name)
@@ -392,14 +498,26 @@ def screen(data, manual=None):
             c.ok(f"人工核查登记：未发现（{manual.get(key + '_note') or '无备注'}）")
         clauses.append(c)
 
+    arith, manual_cl = clauses[:n_arith], clauses[n_arith:]
     hits = [c for c in clauses if c.status == "hit"]
     checked = [c for c in clauses if c.status in ("hit", "pass")]
     na = [c for c in clauses if c.status == "insufficient_data"]
+    not_app = [c for c in clauses if c.status == "not_applicable"]
 
     veto_hits = [c for c in hits if c.level == "veto"]
     redflag_hits = [c for c in hits if c.level == "redflag"]
     score = VETO_WEIGHT * len(veto_hits) + REDFLAG_WEIGHT * len(redflag_hits)
-    coverage = len(checked) / len(clauses) if clauses else 0.0
+
+    # 覆盖率三个口径，分母都剔除 not_applicable（无此题 ≠ 盲区）：
+    #   coverage             总口径（算术+人工），向后兼容
+    #   arithmetic_coverage  算术条款：底稿字段盲区，补救=补底稿字段
+    #   manual_pending       人工条款未登记数：执行者作业未做，补救=填 --manual
+    applicable = [c for c in clauses if c.status != "not_applicable"]
+    coverage = len(checked) / len(applicable) if applicable else 0.0
+    arith_app = [c for c in arith if c.status != "not_applicable"]
+    arith_checked = [c for c in arith_app if c.status in ("hit", "pass")]
+    arithmetic_coverage = len(arith_checked) / len(arith_app) if arith_app else 0.0
+    manual_pending = [c.cid for c in manual_cl if c.status == "insufficient_data"]
 
     codes = sorted({c.code for c in hits})
     unknown = unknown_codes(codes)
@@ -417,9 +535,16 @@ def screen(data, manual=None):
         verdict = "通过"
         basis = f"红旗命中 {len(redflag_hits)} 条（< 3）"
 
-    if coverage < 0.5:
-        basis += (f"｜⚠ 覆盖率仅 {coverage:.0%}（{len(na)} 条因缺字段未检验）"
+    arith_na = [c for c in arith_app if c.status == "insufficient_data"]
+    if arithmetic_coverage < 0.5:
+        basis += (f"｜⚠ 算术覆盖率仅 {arithmetic_coverage:.0%}（{len(arith_na)} 条因缺字段未检验）"
                   f"——本结论证据强度低，不得表述为『已排雷』")
+    if manual_pending:
+        basis += f"｜人工条款未登记 {len(manual_pending)} 条 {manual_pending}（须 --manual 补齐）"
+    if is_fin:
+        basis += f"｜金融类：{[c.cid for c in not_app]} 不适用"
+    if dropped_years:
+        basis += f"｜--as-of {as_of} 剔除未发布年份 {dropped_years}"
 
     return {
         "verdict": verdict,
@@ -429,15 +554,25 @@ def screen(data, manual=None):
         "score_basis": f"veto×{VETO_WEIGHT}×{len(veto_hits)} + "
                        f"redflag×{REDFLAG_WEIGHT}×{len(redflag_hits)}",
         "coverage": round(coverage, 3),
-        "coverage_basis": f"{len(checked)}/{len(clauses)} 条已检验",
+        "coverage_basis": f"{len(checked)}/{len(applicable)} 条已检验（不含不适用）",
+        "arithmetic_coverage": round(arithmetic_coverage, 3),
+        "arithmetic_coverage_basis": f"{len(arith_checked)}/{len(arith_app)} 条算术条款已检验",
+        "manual_pending": manual_pending,
+        "company_is_financial": is_fin,
+        "as_of": as_of,
+        "rows_used": [r.get("year") for r in rows],
+        "rows_dropped_by_as_of": dropped_years,
         "counts": {"hit": len(hits), "pass": len(checked) - len(hits),
-                   "insufficient_data": len(na), "total": len(clauses)},
+                   "insufficient_data": len(na), "not_applicable": len(not_app),
+                   "total": len(clauses)},
         "insufficient_fields": sorted({m for c in na for m in c.missing}),
+        "hints": {c.cid: c.hint for c in clauses if c.hint},
         "clauses": [c.to_dict() for c in clauses],
-        # 下游（REQ-P1-05 尾部概率）必须同时读 score 与 coverage：
+        # 下游（REQ-P1-05 尾部概率）必须同时读 score 与 arithmetic_coverage：
         # 低覆盖率下的低分不是「安全」的证据。
-        "downstream_note": "p_tail 映射须同时消费 forensic_score 与 coverage；"
-                           "coverage < 0.5 时低分不构成安全证据",
+        "downstream_note": "p_tail 映射须同时消费 forensic_score 与 arithmetic_coverage；"
+                           "arithmetic_coverage < 0.5 时低分不构成安全证据；"
+                           "manual_pending 非空时结论未闭环",
     }
 
 
@@ -445,12 +580,14 @@ def main():
     ap = argparse.ArgumentParser(description="Phase 0 排雷条款算术化（REQ-P0-02）")
     ap.add_argument("input", help="财务底稿 JSON")
     ap.add_argument("--manual", help="人工核查结果 JSON（审计意见/质押/前科等）")
+    ap.add_argument("--as-of", dest="as_of",
+                    help="回放时点 YYYY-MM-DD：只用该日已发布的年报行（回测必填）")
     ap.add_argument("-o", "--output", help="结果 JSON 输出路径")
     args = ap.parse_args()
 
     data = json.load(open(args.input, encoding="utf-8"))
     manual = json.load(open(args.manual, encoding="utf-8")) if args.manual else {}
-    res = screen(data, manual)
+    res = screen(data, manual, as_of=args.as_of)
 
     if res.get("error"):
         print(f"❌ {res['error']}")
@@ -460,12 +597,17 @@ def main():
     print(f"{icon} Phase 0 排雷：{res['verdict']}")
     print(f"   依据：{res['basis']}")
     print(f"   排雷得分 {res['forensic_score']}（{res['score_basis']}）｜"
-          f"覆盖率 {res['coverage']:.0%}（{res['coverage_basis']}）")
+          f"算术覆盖率 {res['arithmetic_coverage']:.0%}（{res['arithmetic_coverage_basis']}）｜"
+          f"人工待登记 {len(res['manual_pending'])} 条")
+    if res["as_of"]:
+        print(f"   回放时点 {res['as_of']}：使用年份 {res['rows_used']}"
+              + (f"，剔除 {res['rows_dropped_by_as_of']}" if res['rows_dropped_by_as_of'] else ""))
     if res["alert_codes"]:
         print(f"   告警码：{res['alert_codes']}")
     print()
     for c in res["clauses"]:
-        mark = {"hit": "⛔", "pass": "  ", "insufficient_data": "？"}[c["status"]]
+        mark = {"hit": "⛔", "pass": "  ", "insufficient_data": "？",
+                "not_applicable": "－"}[c["status"]]
         print(f" {mark} [{c['id']:<4}] {c['name']:<16} {c['detail']}")
     if res["insufficient_fields"]:
         print(f"\n未检验条款所缺字段：{res['insufficient_fields']}")

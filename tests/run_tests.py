@@ -1566,14 +1566,67 @@ _sc = [{"name": "悲观", "value_per_share": 6.20, "probability": 0.45},
        {"name": "乐观", "value_per_share": 20.93, "probability": 0.15}]
 _r = rd.expected_return(6.99, _sc, 5, 0.13, 0.087, 0.10, moat="narrow", iv_growth=0.0)
 _g = _r["gate2"]
-check("gate2 三项齐备", set(_g) >= {"consistency_expected_irr", "no_convergence_floor",
-                                    "pessimistic_irr", "pass", "independent_checks"})
+check("gate2 五项齐备（四参与 + 一诊断）",
+      set(_g) >= {"consistency_expected_irr", "expected_irr_floor", "no_convergence_floor",
+                  "pessimistic_irr", "loss_probability", "pass",
+                  "independent_checks", "participating_checks", "diagnostic_only"})
 check("不收敛下限 = 股息率 + 内在价值增速",
       abs(_g["no_convergence_floor"]["value"] - 0.087) < 1e-9)
-check("独立项只认下限与悲观年化",
-      _g["independent_checks"] == ["no_convergence_floor", "pessimistic_irr"])
+check("独立项 = 下限 + 悲观年化 + 亏损概率（REQ-P0-04）",
+      _g["independent_checks"] == ["no_convergence_floor", "pessimistic_irr", "loss_probability"])
+check("参与判定项 = ①' IRR≥r + 三独立项，护城河反推门槛只诊断",
+      _g["participating_checks"] == ["expected_irr_floor", "no_convergence_floor",
+                                     "pessimistic_irr", "loss_probability"]
+      and _g["diagnostic_only"] == ["consistency_expected_irr"])
+check("①' 期望 IRR 下限门槛 = 折现率 r",
+      abs(_g["expected_irr_floor"]["hurdle"] - 0.10) < 1e-9)
+check("④ 亏损概率门槛默认 30%", abs(_g["loss_probability"]["hurdle"] - 0.30) < 1e-9)
 check("期望 IRR 项被标注为自洽性校验而非独立证据",
       "自洽性校验" in _g["consistency_expected_irr"]["basis"])
+check("effective_hurdle 标注 diagnostic_only（不构成当前门槛）",
+      (_g.get("effective_hurdle") is None)
+      or _g["effective_hurdle"].get("status") == "diagnostic_only")
+# 护城河反推门槛不达标但 ①'②③④ 全过 → 新口径放行（神华 2015 形态：IRR 17.8% < 21.8% 但 > r）
+_sc_sh = [{"name": "悲观", "value_per_share": 9.0, "probability": 0.30},
+          {"name": "基准", "value_per_share": 14.0, "probability": 0.50},
+          {"name": "乐观", "value_per_share": 18.0, "probability": 0.20}]
+_r_sh = rd.expected_return(8.0, _sc_sh, 5, 0.13, 0.07, 0.10, moat="narrow", iv_growth=0.0)
+check("护城河反推门槛不达标不再单独否决闸门二（诊断项）",
+      _r_sh["gate2"]["consistency_expected_irr"]["pass"] is False
+      and _r_sh["gate2"]["expected_irr_floor"]["pass"] is True
+      and _r_sh["gate2"]["pass"] is True
+      and "GATE2_1_IRR_FAIL" in _r_sh["gate2"]["codes"],
+      str({k: _r_sh["gate2"][k] for k in ("pass", "codes")}))
+# 期望 IRR < r（买在价值之上）→ ①' 拦住，即使 ②③ 过
+_sc_hi = [{"name": "悲观", "value_per_share": 9.5, "probability": 0.30},
+          {"name": "基准", "value_per_share": 10.0, "probability": 0.50},
+          {"name": "乐观", "value_per_share": 10.5, "probability": 0.20}]
+_r_hi = rd.expected_return(10.5, _sc_hi, 5, 0.13, 0.08, 0.10, moat="wide", iv_growth=0.0)
+check("期望 IRR < 折现率 → ①' 不过 → 闸门二不过（GATE2_1B_IRR_BELOW_R）",
+      _r_hi["gate2"]["expected_irr_floor"]["pass"] is False
+      and _r_hi["gate2"]["pass"] is False
+      and "GATE2_1B_IRR_BELOW_R" in _r_hi["gate2"]["codes"])
+# 亏损概率 > 30% → ④ 拦住
+_sc_lp = [{"name": "悲观", "value_per_share": 3.0, "probability": 0.45},
+          {"name": "基准", "value_per_share": 18.0, "probability": 0.40},
+          {"name": "乐观", "value_per_share": 25.0, "probability": 0.15}]
+_r_lp = rd.expected_return(6.99, _sc_lp, 5, 0.13, 0.087, 0.10, moat="narrow", iv_growth=0.0)
+check("亏损概率 45% > 30% → ④ 不过（GATE2_4_LOSS_PROB_FAIL）",
+      _r_lp["loss_probability"] > 0.30
+      and _r_lp["gate2"]["loss_probability"]["pass"] is False
+      and _r_lp["gate2"]["pass"] is False
+      and "GATE2_4_LOSS_PROB_FAIL" in _r_lp["gate2"]["codes"],
+      f"lossP={_r_lp['loss_probability']}")
+check("亏损概率门槛可调（--loss-prob-hurdle 0.5 放行 45%）",
+      rd.expected_return(6.99, _sc_lp, 5, 0.13, 0.087, 0.10, moat="narrow", iv_growth=0.0,
+                         loss_prob_hurdle=0.50)["gate2"]["loss_probability"]["pass"] is True)
+import alert_codes as _ac106  # noqa: E402
+check("新告警码已注册", not _ac106.unknown_codes(["GATE2_1B_IRR_BELOW_R", "GATE2_4_LOSS_PROB_FAIL"]))
+# A/B 回归：任何 should_fail 案例在新口径下 pass = REQ-P0-04 回退条件
+_ab = subprocess.run([sys.executable, os.path.join(SCRIPTS, "gate2_ab.py"), "--assert"],
+                     capture_output=True, text=True)
+check("gate2_ab --assert：新口径未放行任何 should_fail 案例（回退条件未触发）",
+      _ab.returncode == 0, (_ab.stdout[-400:] + _ab.stderr[-200:]))
 # 缺 iv_growth → 不可评，绝不能当作通过（静默通过是最危险的形态）
 _r2 = rd.expected_return(6.99, _sc, 5, 0.13, 0.087, 0.10, moat="narrow")
 check("缺 --iv-growth 时闸门二不可评（pass=None，不得视为通过）",
@@ -1583,7 +1636,8 @@ _r3 = rd.expected_return(6.99, _sc, 5, 0.13, 0.0, 0.10, moat="narrow", iv_growth
 check("零股息+零增长 → 不收敛下限 0% 不达标 → 闸门二不过",
       _r3["gate2"]["no_convergence_floor"]["pass"] is False and _r3["gate2"]["pass"] is False)
 check("此时期望 IRR 仍可能达标（证明两项确实不同维度）",
-      _r3["gate2"]["consistency_expected_irr"]["pass"] is True)
+      _r3["gate2"]["consistency_expected_irr"]["pass"] is True
+      and _r3["gate2"]["expected_irr_floor"]["pass"] is True)
 _r4 = rd.expected_return(6.99, _sc, 5, 0.13, 0.087, 0.10, moat="none", iv_growth=0.05)
 check("无护城河直接不过闸门二", _r4["gate2"]["pass"] is False)
 check("旧字段 beats_index 仍在（向后兼容）", "beats_index" in _r)
@@ -2161,6 +2215,123 @@ check("披露代号不参与任何断言判定（纯披露）",
       not [k for k, v in AC.ASSERTIONS.items() if "GATE_EFFECTIVE_HURDLE_GAP" in v])
 
 # ═══════════════════════════════════════════════════════════════════
+print("== 14.5 底稿 schema 强类型化行为测试（REQ-P0-03） ==")
+# 教训：一版 schema 校验只查「字段是否存在」，平安底稿 unit=百万 却填了 shares 单位
+# 「亿股」的数量级，strict 标签照发。这里只测行为（拦不拦得住），不测字段清单。
+import schema_meta as SM  # noqa: E402
+import copy as _c145
+_mt_fin_path = glob.glob(os.path.join(ROOT, "backtest", "600519.SH_2015-08-31",
+                                      "data", "financials_*.json"))[0]
+_mt_fin = json.load(open(_mt_fin_path, encoding="utf-8"))
+_e0, _w0 = SM.validate_full(_mt_fin, _mt_fin_path)
+check("茅台 strict 底稿量纲自洽（基线无 ERROR）", not _e0, str(_e0)[:200])
+# 注入：股本单位声明错 1e4 倍 → 每股收入 2821 元 > CNY 上界 1000 → strict 升级 ERROR
+_bad = _c145.deepcopy(_mt_fin)
+_bad["meta"]["shares_unit"] = "万股"
+_e1, _w1 = SM.validate_full(_bad, "inject")
+check("注入错误 shares_unit（万股）→ 量纲哨兵在 strict 档报 ERROR",
+      any("每股" in e or "unit_sanity" in e or "量纲" in e for e in _e1), str(_e1)[:200])
+# 同一注入在 legacy 档只是 WARN（过渡档不阻断，但要能看见）
+_bad_legacy = _c145.deepcopy(_bad)
+_bad_legacy["meta"]["schema_version"] = 0
+_e2, _w2 = SM.validate_full(_bad_legacy, "inject")
+check("同一注入在 legacy 档降为 WARN（不阻断但可见）",
+      not [e for e in _e2 if "每股" in e] and any("每股" in w or "量纲" in w for w in _w2),
+      f"errors={str(_e2)[:120]} warns={str(_w2)[:120]}")
+# 显式豁免：unit_sanity_waiver 让 BRK.A 这类每股天价合法通过
+_waived = _c145.deepcopy(_bad)
+_waived["meta"]["unit_sanity_waiver"] = "测试：每股收入超上界为真实（BRK.A 形态）"
+_e3, _ = SM.validate_full(_waived, "inject")
+check("unit_sanity_waiver 显式豁免后 strict 不再报量纲 ERROR",
+      not [e for e in _e3 if "每股" in e], str(_e3)[:200])
+# source_ref 可定位锚：strict 档无锚 → ERROR；申报文件+年份算锚
+check("has_locator：页码/附注/URL/申报文件+年份为锚，裸文字不是",
+      SM.has_locator("2023年报 p.45") and SM.has_locator("20-F 2023")
+      and SM.has_locator("https://www.sec.gov/Archives/edgar/data/x") and not SM.has_locator("公司官网"))
+_noanchor = _c145.deepcopy(_mt_fin)
+_noanchor["meta"]["source_ref"] = "公司官网与行情终端"
+_e4, _ = SM.validate_full(_noanchor, "inject")
+check("strict 档 source_ref 无可定位锚 → ERROR",
+      any("source_ref" in e for e in _e4), str(_e4)[:200])
+# 快照↔底稿跨文件比对（OBS-600660-01）：底稿单位改错 10 倍时市销率越界
+import check_market_snapshot as CMS  # noqa: E402
+_fy_dir = os.path.join(ROOT, "backtest", "600660.SH_2018-12-31", "data")
+_fy_snap = glob.glob(os.path.join(_fy_dir, "market_snapshot*.json"))
+_fy_fin = glob.glob(os.path.join(_fy_dir, "financials_600660*.json")) or \
+    [f for f in glob.glob(os.path.join(_fy_dir, "financials_*.json")) if "peer" not in f]
+if _fy_snap and _fy_fin:
+    _ce, _cw = [], []
+    CMS.check_against_financials(_fy_snap[0], _fy_fin[0], _ce, _cw)
+    check("福耀快照↔底稿跨文件比对基线无 ERROR", not _ce, str(_ce)[:200])
+    _tmpd = tempfile.mkdtemp()
+    _fin10 = json.load(open(_fy_fin[0], encoding="utf-8"))
+    for _row in _fin10.get("annual", []):
+        for _k in ("revenue", "net_income", "total_assets", "total_equity", "ocf", "cash", "total_debt"):
+            if isinstance(_row.get(_k), (int, float)):
+                _row[_k] = _row[_k] * 100
+    _fin10_path = os.path.join(_tmpd, "fin_x100.json")
+    json.dump(_fin10, open(_fin10_path, "w", encoding="utf-8"), ensure_ascii=False)
+    _ce2, _cw2 = [], []
+    CMS.check_against_financials(_fy_snap[0], _fin10_path, _ce2, _cw2)
+    check("底稿数值 ×100 后快照↔底稿市销率越界被拦（SNAPSHOT_FIN_PS）",
+          any("SNAPSHOT_FIN_PS" in e for e in _ce2), str(_ce2)[:200])
+else:
+    check("福耀案快照/底稿文件存在（跨文件比对测试前置）", False, f"{_fy_snap} {_fy_fin}")
+
+# ═══════════════════════════════════════════════════════════════════
+print("== 14.6 排雷算术化行为测试（REQ-P0-02） ==")
+import forensic_screen as FS  # noqa: E402
+def _fs_case(case, as_of=None, **kw):
+    _d = os.path.join(ROOT, "backtest", case, "data")
+    _fs = [f for f in glob.glob(os.path.join(_d, "financials_*.json"))
+           if "peer" not in f and "audit" not in f]
+    return FS.screen(json.load(open(_fs[0], encoding="utf-8")), as_of=as_of, **kw)
+_km = _fs_case("600518.SH_2017-12-31", as_of="2017-12-31")
+check("康美 2017：V4 存贷双高命中（一票否决 → 排除）",
+      _km["verdict"].startswith("排除") and "P0_V4_DEPOSIT_LOAN_DOUBLE_HIGH" in _km["alert_codes"],
+      str(_km["alert_codes"]))
+_ek = _fs_case("EK_2011-06-30", as_of="2011-06-30")
+check("柯达 2011：R21 持续经营存疑命中", "P0_R21_GOING_CONCERN" in _ek["alert_codes"], str(_ek["alert_codes"]))
+for _neg in ("600660.SH_2018-12-31", "AAPL_2016-04-30", "ZM_2021-10-31", "NFLX_2016-12-31"):
+    _r = _fs_case(_neg, as_of=_neg.rsplit("_", 1)[1])
+    check(f"{_neg}：排雷无命中（负样本零误杀）", not _r["alert_codes"] and _r["verdict"] == "通过",
+          str(_r["alert_codes"]))
+_zm = _fs_case("ZM_2021-10-31")
+_r11 = [c for c in _zm["clauses"] if c["id"] == "R11"][0]
+check("R11 股本膨胀代理判据只提示不命中（Zoom IPO 形态）",
+      _r11["status"] == "insufficient_data" and "R11" in _zm["hints"], str(_r11)[:200])
+check("四态计数含 not_applicable 且覆盖率拆分为 arithmetic_coverage + manual_pending",
+      "not_applicable" in _zm["counts"] and "arithmetic_coverage" in _zm
+      and _zm["manual_pending"] == ["V1", "V2", "V3", "V5", "V6"])
+# 金融类：V4/V4A/R1/R9 不适用且不进分母
+_bank = {"company_type": "银行", "annual": [
+    {"year": y, "revenue": 1000, "net_income": 300, "ocf": -50, "total_assets": 30000,
+     "total_equity": 2500, "cash": 9000, "total_debt": 20000, "short_term_debt": 18000}
+    for y in range(2019, 2025)]}
+_rb = FS.screen(_bank)
+_na_ids = [c["id"] for c in _rb["clauses"] if c["status"] == "not_applicable"]
+check("银行：V4/V4A/R1/R9 判 not_applicable（存贷两高是商业模式，不是雷）",
+      set(_na_ids) == {"V4", "V4A", "R1", "R9"} and not _rb["alert_codes"], f"{_na_ids} {_rb['alert_codes']}")
+check("not_applicable 不进 arithmetic_coverage 分母",
+      "/7 条" in _rb["arithmetic_coverage_basis"], _rb["arithmetic_coverage_basis"])
+_bank_as_ind = dict(_bank, company_type="制造业")
+check("同一底稿标成制造业 → V4 存贷双高命中（证明是类型驱动而非字段缺失）",
+      "P0_V4_DEPOSIT_LOAN_DOUBLE_HIGH" in FS.screen(_bank_as_ind)["alert_codes"])
+# --as-of 时点纪律
+_asof = {"annual": [{"year": 2013, "publish_date": "2014-03-20", "revenue": 1, "net_income": 1, "ocf": 1},
+                    {"year": 2014, "publish_date": "2015-03-25", "revenue": 1, "net_income": 1, "ocf": 1},
+                    {"year": 2015, "revenue": 1, "net_income": 1, "ocf": 1}]}
+_kept, _drop = FS.filter_as_of(sorted(_asof["annual"], key=lambda r: r["year"]), "2015-08-31")
+check("--as-of 2015-08-31：按 publish_date 剔除未发布行，无字段按次年 4/30 推断",
+      [r["year"] for r in _kept] == [2013, 2014] and _drop == [2015], f"{[r['year'] for r in _kept]} {_drop}")
+check("NFLX 2016-12-31 回放剔除 publish_date=2017-01-27 的 2014 行",
+      _fs_case("NFLX_2016-12-31", as_of="2016-12-31")["rows_dropped_by_as_of"] == [2014])
+check("cash 别名 cash_and_short_term_investments 被 V4 识别",
+      [c for c in FS.screen({"annual": [{"year": 2020, "cash_and_short_term_investments": 30,
+                                          "total_debt": 30, "total_assets": 100}]})["clauses"]
+       if c["id"] == "V4"][0]["status"] == "hit")
+
+# ═══════════════════════════════════════════════════════════════════
 print("== 15 脚本接入完整性（元测试） ==")
 # 教训：阶段二写了 check_market_snapshot.py、跑通了、验证它能逮住海控存量错误，
 # 但**忘了在 SKILL.md 里引用它**——脚本存在 ≠ agent 会执行。SKILL.md 是 agent
@@ -2178,7 +2349,8 @@ _EXEMPT = {
     "prepare_case.py": "回放隔离协议资产（答案密封/揭示闸门），由回测会话在 Step 4 调用，非分析主流程",
     "schema_meta.py": "底稿元数据 schema 校验模块（REQ-P0-03），被 validate_data.py import",
     "migrate_schema.py": "存量底稿 meta 块迁移工具（REQ-P0-03 配套），一次性迁移脚本，非分析主流程",
-    "forensic_screen.py": "Phase 0 排雷算术化（REQ-P0-02），在 forensic-checklist.md 中引用",
+    "forensic_screen.py": "Phase 0 排雷算术化（REQ-P0-02），在 SKILL.md Phase 0 与 forensic-checklist.md 中引用",
+    "gate2_ab.py": "REQ-P0-04 闸门二新旧口径 A/B 回归工具，由 tests/run_tests.py 10.6 调用，非分析主流程",
 }
 _scripts = sorted(f for f in os.listdir(SCRIPTS)
                   if f.endswith((".py", ".sh")) and not f.startswith("_"))

@@ -219,6 +219,8 @@ must_trigger 在密封时才写入）。
 **Step 2 — 完整跑一遍 skill**
 不走捷径、不简化、不跳 Phase。Phase 0 排雷 → 数据采集与双源核对 → 定量画像 → 五维定性 → 估值与安全边际 → 双闸门定档 → 三人独立评估 + 芒格红队。产出标准 HTML 报告并通过 `verify_report.py`。
 
+两条机器化纪律（第四批起强制）：① Phase 0 必须跑 `python3 scripts/forensic_screen.py <financials> --as-of <回放时点> -o data/forensic.json`，`--as-of` 保证只用当日已发布年报（`publish_date` 驱动），其输出的 `P0_*` 码原样进 `verdict.json.codes` 并标 `engine_derived`——人工登记的排雷命中若脚本未命中，须在 `diff.md` 说明是字段缺失（`insufficient_data`）还是条款未算术化；② 闸门二按 `reverse_dcf.py` 的 `gate2.pass`（四项参与判定）落 `GATE2_*` 码，护城河反推门槛 `GATE2_1_IRR_FAIL` 是诊断码、不构成闸门二不过的理由。
+
 **Step 3 — 落盘存档结论 + 时序存证**
 把以下内容写入 `verdict.json`：`final_verdict` 与 `verdict_ordinal`（档位序数）、闸门一/闸门二结果、`codes`（本次触发的全部告警代号，取自 `scripts/alert_codes.py` 注册表）、`codes_provenance`（区分 engine_derived 与 manually_recorded）、三情景每股价值、期望年化 IRR、`frozen_before_diff: true` 与 `frozen_at`。
 

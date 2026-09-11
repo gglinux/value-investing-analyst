@@ -8,12 +8,16 @@
 
 ```bash
 python3 scripts/forensic_screen.py <financials.json> --manual manual.json -o forensic.json
+python3 scripts/forensic_screen.py <financials.json> --as-of 2015-08-31     # 回测：只用该日已发布年报
 ```
 
-脚本输出三态，**`insufficient_data` 不等于通过**——"没查出问题"和"没查"是两件事，
-把后者显示成前者等于用绿灯掩盖盲区。排雷得分（`forensic_score`）必须与覆盖率
-（`coverage`）一起读：低覆盖率下的低分不构成安全证据，下游 `p_tail`（REQ-P1-05）
-同时消费这两个值。
+脚本输出四态：`hit` / `pass` / `insufficient_data` / `not_applicable`。
+
+- **`insufficient_data` 不等于通过**——"没查出问题"和"没查"是两件事，把后者显示成前者等于用绿灯掩盖盲区。
+- **`not_applicable`** 只给金融类（银行/保险/券商，按 `company_type`）的 V4/V4A/R1/R9：其资产负债表天然存贷两高、短借长贷是商业模式、OCF 由存贷款净增额主导，条款在定义上不成立。它**不进覆盖率分母**——无此题不是盲区。
+- 覆盖率拆两个口径：`arithmetic_coverage`（算术条款已检验 / 适用算术条款，补救 = 补底稿字段）与 `manual_pending`（人工条款未登记清单，补救 = 填 `--manual`）。排雷得分（`forensic_score`）必须与 `arithmetic_coverage` 一起读：低覆盖率下的低分不构成安全证据，下游 `p_tail`（REQ-P1-05）同时消费这两个值。
+- **R11 代理判据只提示不命中**：缺 `equity_raised` 时股本 >1.5 倍只落 `insufficient_data` 并在 `hints.R11` 给出人工核实方向——股本膨胀不区分 IPO/拆股/增发，一版把它当 hit 曾误杀 Zoom（IPO 前优先股转股）与苹果（1:7 拆股、回购全球第一）。
+- **`--as-of` 是回测时点纪律**：按 annual 行 `publish_date` 前缀日期过滤，无该字段按次年 4 月 30 日推断——宁少用一年，不偷看一年。
 
 | 状态 | 条款 | 说明 |
 |---|---|---|

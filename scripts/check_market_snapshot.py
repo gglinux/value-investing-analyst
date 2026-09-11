@@ -255,14 +255,96 @@ def check(fp, report_currency=None):
     return errors, warnings
 
 
+def check_against_financials(snapshot_path, fin_path, errors, warnings):
+    """跨文件量纲比对（OBS-600660-01 原型）。
+
+    福耀/海控两案的错位都发生在**市值传参与底稿单位之间**，不在单文件内部。
+    快照三角校验只能保证快照自洽，底稿 schema 只能保证底稿自洽——
+    两份文件各自正确却互相错位，此前没有任何机器检查。这里做三件事：
+
+    1. 币种链：快照 market_cap.currency 必须等于底稿 meta.currency，或快照带 fx；
+    2. 股本交叉：快照 shares（百万股）vs 底稿最新年 shares_diluted（按 meta.shares_unit
+       换算到百万股），偏差 > 5% 即 WARN（回购/增发可解释小差，10 倍差不可解释）；
+    3. 市销率交叉：快照市值（换算到底稿 unit）/ 底稿最新年营收，越出 [0.05, 100] 即 FAIL。
+       它不依赖股本字段，是竞对底稿也能做的兜底锚。
+    """
+    try:
+        from schema_meta import (SHARES_UNIT_MULTIPLIER, UNIT_MULTIPLIER,
+                                 resolve_meta)
+    except ImportError:
+        _warn(warnings, "SNAPSHOT_FIN_SKIP", "schema_meta 不可用，跳过跨文件比对")
+        return
+    with open(snapshot_path, "r", encoding="utf-8") as f:
+        snap = json.load(f)
+    with open(fin_path, "r", encoding="utf-8") as f:
+        fin = json.load(f)
+    meta = resolve_meta(fin)
+    fin_cur = str(meta.get("currency") or "").upper()
+    fin_mult = UNIT_MULTIPLIER.get(meta.get("unit"))
+    if fin_mult is None:
+        _warn(warnings, "SNAPSHOT_FIN_SKIP",
+              f"底稿 meta.unit={meta.get('unit')!r} 不可换算，跳过跨文件比对——先修底稿 schema")
+        return
+
+    _w = []
+    mcap_m, mcap_cur = read_market_cap_million(snap, _w)
+    shares_m = read_shares_million(snap, _w)
+    rows = sorted([r for r in (fin.get("annual") or []) if isinstance(r, dict)],
+                  key=lambda r: r.get("year", 0))
+    last = rows[-1] if rows else {}
+
+    # 1. 币种链
+    mcap_cur = str(mcap_cur or "").upper()
+    if mcap_cur and fin_cur and mcap_cur != fin_cur:
+        fx = snap.get("fx")
+        if not (isinstance(fx, dict) and fx.get("quote_to_report")):
+            _err(errors, "SNAPSHOT_FIN_CURRENCY",
+                 f"快照市值币种 {mcap_cur} ≠ 底稿币种 {fin_cur} 且无 fx.quote_to_report——"
+                 f"跨币种混算无据")
+            return
+        mcap_m = mcap_m * float(fx["quote_to_report"]) if mcap_m else mcap_m
+
+    # 2. 股本交叉
+    sh = last.get("shares_diluted")
+    sh_mult = SHARES_UNIT_MULTIPLIER.get(meta.get("shares_unit")) or fin_mult
+    if isinstance(sh, (int, float)) and sh > 0 and shares_m:
+        fin_sh_m = sh * sh_mult / 1e6
+        dev = shares_m / fin_sh_m - 1
+        if abs(dev) > 0.05:
+            level = _err if abs(dev) > 0.5 else _warn
+            level(errors if level is _err else warnings, "SNAPSHOT_FIN_SHARES",
+                  f"快照股本 {shares_m:,.0f} 百万股 vs 底稿 {last.get('year')} 年 "
+                  f"shares_diluted={sh:g}（shares_unit={meta.get('shares_unit') or '按 unit 同级推断'}）"
+                  f"= {fin_sh_m:,.0f} 百万股，偏差 {dev:+.0%}"
+                  + ("——超 50%，量纲错位而非回购/增发" if abs(dev) > 0.5 else "——请核对回购/增发"))
+        else:
+            print(f"  跨文件股本一致：快照 {shares_m:,.0f} ≈ 底稿 {fin_sh_m:,.0f} 百万股（{dev:+.1%}）")
+
+    # 3. 市销率交叉（兜底锚，不依赖股本）
+    rev = last.get("revenue")
+    if isinstance(rev, (int, float)) and rev > 0 and mcap_m:
+        rev_m = rev * fin_mult / 1e6
+        ps = mcap_m / rev_m
+        if not (0.05 <= ps <= 100):
+            _err(errors, "SNAPSHOT_FIN_PS",
+                 f"快照市值 {mcap_m:,.0f} 百万 / 底稿 {last.get('year')} 年营收 {rev_m:,.0f} 百万 "
+                 f"= 市销率 {ps:.3g}，越出 [0.05, 100]——市值与底稿至少一方量纲错位"
+                 f"（福耀/海控原型：市值按亿填却标百万）")
+        else:
+            print(f"  跨文件市销率 {ps:.2f}（合理带内）")
+
+
 def main():
     ap = argparse.ArgumentParser(description="行情快照契约校验（量纲三角 + 币种链 + schema）")
     ap.add_argument("snapshot", help="market_snapshot.json 路径")
     ap.add_argument("--report-currency", help="报表币种（缺省读快照内 currency_report）")
+    ap.add_argument("--fin", help="财务底稿路径：启用快照 ↔ 底稿跨文件量纲比对（OBS-600660-01 原型）")
     ap.add_argument("-o", "--output", help="结果 JSON 输出路径")
     args = ap.parse_args()
 
     errors, warnings = check(args.snapshot, args.report_currency)
+    if args.fin:
+        check_against_financials(args.snapshot, args.fin, errors, warnings)
     print(f"快照契约校验：{os.path.basename(args.snapshot)}")
     for code, msg in warnings:
         print(f"  [WARN] [{code}] {msg}")

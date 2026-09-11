@@ -185,6 +185,9 @@ MOAT_MOS_REQUIREMENT = {"wide": 0.25, "narrow": 0.40, "none": None}
 # 也要跑赢低风险替代"。取 6% 是 A 股/美股十年国债（约 2~4.5%）加溢价后的中枢，
 # 可按市场用 --floor-hurdle 显式调整并在报告论证。
 DEFAULT_FLOOR_HURDLE = 0.06
+# 亏损概率门槛：valuation-guide 第四步半「核心买入档追加下行约束：亏损概率 ≤ 30%」。
+# 此前只在文档、未落码（REQ-P0-04 审查发现）。
+DEFAULT_LOSS_PROB_HURDLE = 0.30
 
 
 def moat_irr_hurdle(moat, discount_rate, hold_years):
@@ -202,7 +205,8 @@ def moat_irr_hurdle(moat, discount_rate, hold_years):
 def expected_return(price, scenarios, hold_years, index_hurdle=0.09,
                     dividend_yield=0.0, discount_rate=0.10,
                     moat=None, iv_growth=None,
-                    floor_hurdle=DEFAULT_FLOOR_HURDLE, pessimistic_hurdle=0.0):
+                    floor_hurdle=DEFAULT_FLOOR_HURDLE, pessimistic_hurdle=0.0,
+                    loss_prob_hurdle=DEFAULT_LOSS_PROB_HURDLE):
     """期望回报率引擎：把三情景估值转成"这笔钱年化几个点"。
 
     价值投资的决策变量不是"公司好不好"，而是"相对机会成本，这笔钱划不划算"。
@@ -361,35 +365,61 @@ def expected_return(price, scenarios, hold_years, index_hurdle=0.09,
     }
     _checks = [gate2[k]["pass"] for k in
                ("consistency_expected_irr", "no_convergence_floor", "pessimistic_irr")]
-    gate2["independent_checks"] = ["no_convergence_floor", "pessimistic_irr"]
-    gate2["evaluable"] = all(c is not None for c in _checks)
 
-    # ── REQ-P0-04 双闸门第二维度换源（2026-09-11）────────────────────
+    # ── REQ-P0-04 双闸门第二维度换源（2026-09-11，审查后二版）──────────
     # 旧逻辑：三项全过才过。问题在于①与闸门一共用 V0（代码注释已承认），
     # 两个同源闸门把名义门槛 25% 的有效门槛抬到 ~40%。这不是"系统偏保守"，
     # 是公式结构缺陷——额外 15pct 安全边际不能更好拦截坏公司（假阳性公司同样
     # 通过或不通过两个同源闸门），只让系统在该出手时不出手。
     #
-    # 新逻辑：**两项独立检验（②③）全过即过**。①降级为诊断性自洽校验——
-    # 它仍然被计算和披露，不达标时输出 GATE2_1_IRR_FAIL 供人工审查，
-    # 但**不参与 gate2["pass"] 的组合判定**。这等效于把第二维度的源从
-    # "闸门一 V0 的函数"切换为"独立于 V0 的股息+内在价值增速"和"独立的悲观情景"。
+    # 新逻辑：闸门二 = 以下检验全过：
+    #   ①' expected_irr_floor    期望 IRR ≥ 折现率 r（**最低机会成本**，不是护城河反推门槛）。
+    #       审查发现一版把①整体降级后，闸门二对期望值不设任何下限——期望 IRR 低于 r
+    #       的标的只要股息+增速 ≥6% 且悲观 IRR ≥0 就能过，而"期望值不得低于机会成本"
+    #       只剩 Phase 5 散文。r 是 IRR 的数学下限（P=V0 时 IRR=r），要求 ≥r 等价于
+    #       "概率加权后至少不比买在公允价值差"，不再与闸门一的 25%/40% 重复计价。
+    #   ②  no_convergence_floor   股息率 + 内在价值增速 ≥ 6%（独立于 V0）
+    #   ③  pessimistic_irr        悲观情景年化 ≥ 0（独立，前提悲观值独立推导）
+    #   ④  loss_probability       亏损概率 ≤ 30%（valuation-guide 第四步半已声明为
+    #       核心买入下行约束，此前只在文档、未落码；它与③同属"错了会怎样"，
+    #       但③看最坏情景的深度，④看亏损情景的概率质量，二者不可互推）
+    #   ①  consistency_expected_irr 护城河反推门槛（16.5%/21.8%）**降为诊断披露**：
+    #       仍计算、仍输出 GATE2_1_IRR_FAIL 供人工审查，不参与 pass 判定。
     #
-    # 回退条件：如果 REQ-P0-01 第四批假阳性基线出现新增 FP，本改动回滚。
+    # 回退条件：REQ-P0-01 第四批假阳性基线若出现新增 FP，本改动回滚。
     # 检验方法：重跑 12 案 --rerun --baseline；正向错过数应下降，假阳性不新增。
-    _independent = [gate2[k]["pass"] for k in gate2["independent_checks"]]
-    _indep_evaluable = all(c is not None for c in _independent)
-    gate2["pass"] = all(c is True for c in _independent) if _indep_evaluable else None
-    gate2["missing_inputs"] = [k for k in
-                               ("no_convergence_floor",)
+    gate2["expected_irr_floor"] = {
+        "value": exp_irr,
+        "hurdle": discount_rate,
+        "pass": exp_irr >= discount_rate,
+        "basis": "最低机会成本——期望 IRR 不得低于折现率 r（P=V0 时 IRR=r）。"
+                 "与闸门一不重复计价：闸门一要求折价 25%/40%，本项只要求"
+                 "概率加权后不比买在公允价值差",
+    }
+    gate2["loss_probability"] = {
+        "value": loss_prob,
+        "hurdle": loss_prob_hurdle,
+        "pass": loss_prob <= loss_prob_hurdle,
+        "basis": "独立信息——亏损情景的概率质量。③看最坏情景多深，本项看"
+                 "多大概率落入亏损，二者不可互推（valuation-guide 第四步半核心买入下行约束）",
+    }
+    gate2["independent_checks"] = ["no_convergence_floor", "pessimistic_irr", "loss_probability"]
+    gate2["participating_checks"] = ["expected_irr_floor"] + gate2["independent_checks"]
+    gate2["diagnostic_only"] = ["consistency_expected_irr"]
+    _participating = [gate2[k]["pass"] for k in gate2["participating_checks"]]
+    # evaluable 按参与判定的检验算——一版仍按三项旧口径算，①为 None 时会
+    # 同时输出 GATE2_PASS 与 GATE2_UNRATED，自相矛盾。
+    gate2["evaluable"] = all(c is not None for c in _participating)
+    gate2["pass"] = all(c is True for c in _participating) if gate2["evaluable"] else None
+    gate2["missing_inputs"] = [k for k in gate2["participating_checks"]
                                if gate2[k]["pass"] is None]
-    # ①降级披露：不达标不阻塞但必须在报告中显著披露（期望 IRR 低于门槛
-    # 通常意味着情景概率赋值问题或离散度过大，值得人工复核）。
     gate2["consistency_check_diagnostic"] = (
-        "①自洽性校验不达标（不阻塞闸门二，但须在报告中显著披露——"
-        "期望 IRR 低于门槛说明情景赋概率或离散度有待人工审查）"
+        "①护城河反推门槛未达（诊断项，不阻塞闸门二，须在报告中显著披露——"
+        "期望 IRR 低于 16.5%/21.8% 通常意味着情景离散度大或概率赋值偏悲观，值得人工复核）"
         if gate2["consistency_expected_irr"]["pass"] is False else
-        "①自洽性校验达标（与独立检验②③一致）")
+        "①护城河反推门槛达标（与参与判定的检验一致）"
+        if gate2["consistency_expected_irr"]["pass"] is True else
+        "①护城河反推门槛不可评（缺 --moat）")
     if moat == "none":
         gate2["pass"] = False
         gate2["note"] = "无护城河不给买入结论（valuation-guide 第四步），闸门二直接不过"
@@ -406,18 +436,20 @@ def expected_return(price, scenarios, hold_years, index_hurdle=0.09,
         codes.append("GATE2_UNRATED")
     if gate2["consistency_expected_irr"]["pass"] is False:
         codes.append("GATE2_1_IRR_FAIL")
+    if gate2["expected_irr_floor"]["pass"] is False:
+        codes.append("GATE2_1B_IRR_BELOW_R")
     if gate2["no_convergence_floor"]["pass"] is False:
         codes.append("GATE2_2_FLOOR_FAIL")
     if gate2["pessimistic_irr"]["pass"] is False:
         codes.append("GATE2_3_BEAR_FAIL")
-    # ---- 名义门槛 vs 有效门槛（纯披露，不改任何 pass/fail 判定）----
-    # SKILL.md 曾称闸门二①「与闸门一同源，只是自洽性校验」——该说法不准确：
-    # 闸门一只用**基准情景**算折价，而①用的是**概率加权**期望 IRR，悲观情景
-    # 以其概率权重进入。两者不同源，且①严于闸门一。
-    # 茅台实测：基准 IRR 11.46% → 加权 5.82%（悲观拖累 5.64pct），要让加权值
-    # 达门槛 16.51% 需基准 IRR 22.15%，对应折价 40.8% —— 而闸门一名义只要求
-    # 25%，有效门槛被悄悄抬高 15.8pct。苹果旁证：折价 42.2% 而期望 IRR 仅超
-    # 门槛 0.58pct。名义门槛写在报告里会误导读者，故必须并列披露。
+    if gate2["loss_probability"]["pass"] is False:
+        codes.append("GATE2_4_LOSS_PROB_FAIL")
+    # ---- 名义门槛 vs 有效门槛（纯诊断披露，不改任何 pass/fail 判定）----
+    # 一版文案称「使①刚好通过所需的折价率即有效门槛」。REQ-P0-04 后①不参与判定，
+    # 这个数不再约束任何东西——保留是因为它量化了**情景离散度的代价**：
+    # 茅台基准 IRR 11.46% → 加权 5.82%，悲观拖累 5.64pct。读者需要知道
+    # 「若沿用旧三项全过口径，实际要求折价 40.8% 而非名义 25%」这一历史事实，
+    # 以理解为什么旧口径下神华/茅台被错过。它是回测解释工具，不是当前门槛。
     base_irr = next((s["annualized_irr"] for s in rows
                      if s["name"] in ("基准", "base")), None)
     if base_irr is not None and irr_hurdle is not None and mos_req is not None:
@@ -433,9 +465,11 @@ def expected_return(price, scenarios, hold_years, index_hurdle=0.09,
             "base_irr_needed_to_clear": need_base,
             "effective_margin_of_safety_required": eff_mos,
             "gap_vs_nominal_pct": (eff_mos - mos_req) if eff_mos is not None else None,
-            "basis": "闸门二①按概率加权，悲观情景以其权重拖累期望 IRR；"
-                     "使①刚好通过所需的折价率即有效门槛。名义门槛只反映闸门一"
-                     "（仅用基准情景），二者差额 = 情景离散度与概率赋值的代价",
+            "status": "diagnostic_only",
+            "basis": "【诊断口径，不构成当前门槛】若沿用旧「三项全过」口径，使①护城河反推门槛"
+                     "刚好通过所需的折价率。REQ-P0-04 后①不参与判定，本数只用于量化"
+                     "情景离散度的代价并解释旧口径下的假阴性（茅台/神华）。"
+                     "当前闸门二对期望值的唯一要求是 ≥ 折现率 r（expected_irr_floor）",
         }
         if eff_mos is not None and eff_mos - mos_req > 0.05:
             codes.append("GATE_EFFECTIVE_HURDLE_GAP")
@@ -479,8 +513,9 @@ def expected_return(price, scenarios, hold_years, index_hurdle=0.09,
         "excess_vs_index": exp_irr - index_hurdle,
         "hurdle_above_discount_rate": index_hurdle > discount_rate,
         "gate2": gate2,
-        "gate2_decision_note": "闸门二判定看 gate2.pass（三项全过）。beats_index 保留仅作"
-                               "机会成本对照展示，不再单独决定档位——它与安全边际同源",
+        "gate2_decision_note": "闸门二判定看 gate2.pass（participating_checks 全过：期望 IRR ≥ r、"
+                               "不收敛下限 ≥ 6%、悲观 IRR ≥ 0、亏损概率 ≤ 30%；护城河反推门槛为诊断项）。"
+                               "beats_index 保留仅作机会成本对照展示，不再单独决定档位——它与安全边际同源",
         "note": "IRR=(1+r)×(V0/P)^(1/H)−1：内在价值随时间以折现率增值，"
                 "已隐含分红+留存增值全部股东回报，股息不再叠加（叠加即重复计算）；"
                 f"折现率 r={discount_rate:.1%} 是 IRR 的下限（P=V0 时 IRR=r），"
@@ -567,6 +602,9 @@ def main():
     p3.add_argument("--pessimistic-hurdle", type=float, default=0.0,
                     help="悲观情景年化门槛（默认 0%，即最坏情况不亏本金）。"
                          "前提是悲观值来自独立方法，见 check_scenarios.py")
+    p3.add_argument("--loss-prob-hurdle", type=float, default=DEFAULT_LOSS_PROB_HURDLE,
+                    help=f"亏损概率上限（默认 {DEFAULT_LOSS_PROB_HURDLE:.0%}，"
+                         f"valuation-guide 核心买入下行约束）。闸门二第④项")
     p3.add_argument("--scenarios-file",
                     help="已通过 check_scenarios.py 门禁的 data/scenarios.json。"
                          "提供时自动读取 price/情景/概率/折现率/护城河/股息率/"
@@ -613,7 +651,8 @@ def main():
                               dividend_yield, discount_rate,
                               moat=moat, iv_growth=iv_growth,
                               floor_hurdle=args.floor_hurdle,
-                              pessimistic_hurdle=args.pessimistic_hurdle)
+                              pessimistic_hurdle=args.pessimistic_hurdle,
+                              loss_prob_hurdle=args.loss_prob_hurdle)
         print(f"现价 {res['price']:,.2f}，持有期 {res['hold_years']} 年，"
               f"折现率 {res['discount_rate']:.1%}"
               f"（内在价值按此速率增值）\n")
@@ -651,13 +690,14 @@ def main():
         print(f"（机会成本对照，仅展示）期望年化 {verdict}指数门槛 "
               f"{abs(res['excess_vs_index']):.2%}")
 
-        # ---- 闸门二三项判定（v2.15：换维度，不再由 beats_index 定档）----
+        # ---- 闸门二判定（REQ-P0-04：四项参与 + 护城河反推门槛为诊断）----
         g = res["gate2"]
         print(f"\n=== 闸门二（护城河档位：{g['moat'] or '未指定'}）===")
         rows = [
-            ("① 期望 IRR（自洽性校验，非独立证据）", g["consistency_expected_irr"]),
+            ("①' 期望 IRR ≥ 折现率 r（最低机会成本）", g["expected_irr_floor"]),
             ("② 不收敛下限 = 股息率 + 内在价值增速（独立）", g["no_convergence_floor"]),
             ("③ 悲观情景年化（独立）", g["pessimistic_irr"]),
+            ("④ 亏损概率 ≤ 上限（独立）", g["loss_probability"]),
         ]
         for label, item in rows:
             v, h, ok = item["value"], item["hurdle"], item["pass"]
@@ -665,15 +705,21 @@ def main():
             h_txt = f"{h:.2%}" if h is not None else "未设定"
             mark = "✓" if ok is True else ("✗" if ok is False else "—")
             print(f"  {mark} {label}: {v_txt}  门槛 {h_txt}")
-        if g["consistency_expected_irr"]["hurdle_derivation"]:
-            print(f"     ①门槛来源：{g['consistency_expected_irr']['hurdle_derivation']}")
+        ci = g["consistency_expected_irr"]
+        ci_mark = "✓" if ci["pass"] is True else ("✗" if ci["pass"] is False else "—")
+        ci_h = f"{ci['hurdle']:.2%}" if ci["hurdle"] is not None else "未设定"
+        print(f"  {ci_mark} [诊断] ① 期望 IRR vs 护城河反推门槛 {ci_h}（不参与判定）")
+        if ci["hurdle_derivation"]:
+            print(f"     ①门槛来源：{ci['hurdle_derivation']}")
+        if ci["pass"] is False:
+            print(f"     {g['consistency_check_diagnostic']}")
         if g["missing_inputs"]:
             print(f"  ⚠️  缺输入无法判定：{g['missing_inputs']}"
-                  f"（--moat / --iv-growth 未提供时闸门二不可评）")
+                  f"（--iv-growth 未提供时闸门二不可评）")
         if g.get("note"):
             print(f"  {g['note']}")
         if g["pass"] is True:
-            print("  闸门二：通过（三项全过）")
+            print("  闸门二：通过（参与判定的四项全过）")
         elif g["pass"] is False:
             print("  闸门二：不通过 → 档位最高「观察等价格」")
             fl = g["no_convergence_floor"]
