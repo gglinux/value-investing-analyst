@@ -4,10 +4,12 @@
 reverse_dcf.py — 反向 DCF 求解器（Phase 4 强制使用）
 
 目的：用当前市值反推市场隐含预期，替代模型手算，保证解法一致、可复现。
-两种模式：
+四种模式：
   1. implied-growth：给定利润率/折现率等假设，反解现价隐含的收入增速 g
   2. forward-value：给定三情景假设，正向计算每股价值（供三情景 DCF 复用同一引擎）
   3. expected-return：三情景每股价值 + 概率 → 期望年化回报率/亏损概率（Phase 4.5 强制）
+  4. growth：成熟期稳态利润 × 到达概率折回（REQ-P1-01 成长股/再投入型通道，
+     当期 OE 被增长性资本开支压低时替代 OE 基期；反解"现价隐含到达概率"）
 
 用法：
   python3 reverse_dcf.py implied-growth --market-cap 50000 --base-oe 2000 \
@@ -18,8 +20,14 @@ reverse_dcf.py — 反向 DCF 求解器（Phase 4 强制使用）
   python3 reverse_dcf.py expected-return --price 209.75 --hold-years 5 \
       --scenarios "悲观:105:0.3,基准:212:0.5,乐观:397:0.2" --index-hurdle 0.09 \
       [--dividend-yield 0.05]   # 高股息标的必填，与门槛比较用含息 IRR
+  python3 reverse_dcf.py growth --market-cap 53128 --current-revenue 8832 \
+      --mature-revenue 36000 --mature-oe-margin 0.20 --terminal-multiple 20 \
+      --arrival-prob 0.25 --years-to-maturity 10 --shares 436.456 \
+      --contribution-margin 0.44 --failure-equity-value 646 \
+      --mature-state-basis "渗透率×ARPU×利润率反推 [E:...]" \
+      --arrival-prob-basis "基率锚+单元经济证据 [E:...]"   # REQ-P1-01 成长股通道
 
-单位：market-cap / base-oe 用同一货币单位（建议百万）；shares 百万股。
+单位：market-cap / base-oe / mature-oe 用同一货币单位（建议百万）；shares 百万股。
 base-oe = 基期 Owner Earnings（来自 compute_metrics.py 输出，保持口径一致）。
 **周期高位公司必须用 compute_metrics 输出的 normalization.base_oe_recommended 作基期**，
 禁止直接用当期 Owner Earnings（周期顶部利润外推是价值投资最经典的翻车方式）。
@@ -210,6 +218,148 @@ def moat_irr_hurdle(moat, discount_rate, hold_years):
     if mos is None:
         return None, None
     return mos, (1.0 + discount_rate) * (1.0 / (1.0 - mos)) ** (1.0 / hold_years) - 1.0
+
+
+# ── REQ-P1-01 成长股 / 再投入型估值通道（2026-09-11）────────────────────
+#
+# 动因（B2-09 Netflix 案，全回测最深假阴性 2 档）：估值以当期 Owner Earnings 为
+# 基期做反向 DCF，对高再投入公司（Netflix 2016、亚马逊 2010 类）当期 OE 被
+# 增长性资本开支压低甚至为负——131x OE 的静态倍数下任何买入档位在数学上不可达，
+# 框架对这类公司"无语言可说"。用 OE 框架估成长股不是保守，是用错了尺子：它把
+# "为未来投入"和"赚不到钱"混为一谈。
+#
+# 通道数学：以**成熟期稳态利润 × 到达概率折回**替代当期 OE 作估值基期——
+#   V = p_arrival × TV(成熟期 OE) / (1+r)^N + (1−p_arrival) × 失败残值
+#   其中 TV = 成熟期 OE × 终局倍数（市场口径）或 × (1+g)/(r−g)（Gordon 保守口径）。
+#
+# 与旧通道的正交性（这是"通道建设而非阈值放松"的关键）：
+#   1. 单元经济门（硬拒绝）：规模化边际贡献率 ≤0 或 LTV/CAC <1 的公司，增长在
+#      单位层面毁灭价值——那不是再投入而是烧钱，本通道直接拒绝为其服务
+#      （exit 2 + GROWTH_UNIT_ECONOMICS_UNPROVEN）。这是区分 Netflix 与乐视型
+#      成长陷阱的第一道门：两类公司在旧框架里得到同样的"观察/拒绝"，在新通道
+#      里得到相反结论。
+#   2. 到达概率必须挂基率锚：p_arrival 是"增长兑现 + 利润率扩张 + 竞争存活"的
+#      联合概率，不应超过同等规模公司达成所需收入 CAGR 的历史比例（基率表）。
+#      现值锚来自 valuation-guide 基率检验表（Mauboussin）；REQ-P1-05 的
+#      references/base-rates.md 建成后由 --base-rates-file 接管（挂钩接口）。
+#   3. 终值结构性主导（本通道价值 100% 来自成熟期终值折回）：按既有终值纪律，
+#      禁止以"安全边际达标"单独支撑核心买入——通道档位上限锁死"小仓位试探"。
+#   4. 反向求解：implied-growth 反解的是"现价隐含增速"，本通道反解的是
+#      "现价隐含到达概率"——implied p ≥100% 意味着连必然到达都解释不了现价。
+
+# 收入基率锚（事实源：valuation-guide.md 第二步基率检验表，Mauboussin《The Base
+# Rate Book》美股 1950-2015 全样本；量级适用于各市场）。
+# 结构：(收入规模下限[十亿美元], {所需 10 年 CAGR 阈值: 历史达成比例})
+# <100 亿美元档的 ≥10% 行原表未列，为插值估计（interpolated=True 标注）。
+# REQ-P1-05 建成 references/base-rates.md 后，本表由 --base-rates-file 覆盖，
+# 避免两处事实源漂移（当前以引擎表为临时事实源，文档表与之一致）。
+REVENUE_CAGR_BASE_RATES = [
+    (50, {0.20: 0.01, 0.10: 0.10}),
+    (10, {0.20: 0.03, 0.10: 0.15}),
+    (0, {0.20: 0.10, 0.10: 0.25}),   # ≥10% 一行为插值估计
+]
+GROWTH_VERDICT_CAP = "小仓位试探"   # 终值结构性主导 ⇒ 通道档位上限
+
+
+def revenue_growth_base_rate(current_revenue, required_cagr, table=None):
+    """收入基率锚：历史上同等规模公司 10 年 CAGR 达到 required 的比例**上界**。
+
+    返回 (anchor, meta)：anchor=None 表示基率表对该增速无上界约束
+    （所需增速低于表内最低档 10%，或成熟态不高于当期规模）。
+    锚是上界的理由：P(CAGR ≥ required) ≤ P(CAGR ≥ t) 对一切 t ≤ required 成立，
+    故取表内 ≤ required 的最大档位；required ≥ 20% 时退用 ≥20% 档（同为上界）。
+    注意规模分档按表格标定币种（美元）——current_revenue 与成熟态同币种时，
+    所需 CAGR 比值是币种无关的，但规模分档跨币种时须先换算（见 --base-rate-revenue-usd）。
+    """
+    table = table or REVENUE_CAGR_BASE_RATES
+    meta = {"required_cagr": required_cagr, "interpolated": False}
+    if required_cagr is None or required_cagr <= 0:
+        meta["note"] = "成熟态不高于当期规模，无增长基率约束"
+        return None, meta
+    b = current_revenue / 1000.0  # 百万 → 十亿（表格口径）
+    for floor, rows in table:
+        if b >= floor:
+            meta["scale_band"] = ("≥%d0亿美元" % floor) if floor else "<100亿美元"
+            break
+    thresholds = sorted(rows.keys(), reverse=True)  # [0.20, 0.10]
+    below = [t for t in thresholds if t <= required_cagr]
+    if not below:
+        # required < 最低档（10%）：P(≥required) ≥ P(≥10%)，表内任何行都不构成上界
+        meta["note"] = "所需增速 %.1f%% 低于表内最低档 10%%，基率表无上界约束" % (required_cagr * 100)
+        return None, meta
+    t = max(below)
+    anchor = rows[t]
+    meta["table_threshold"] = t
+    if floor == 0 and t == 0.10:
+        meta["interpolated"] = True
+        meta["note"] = "<100亿美元档的 ≥10%% 行为插值估计（原表未列）"
+    return anchor, meta
+
+
+def growth_channel_value(mature_oe, arrival_prob, years_to_maturity, discount_rate,
+                         terminal_growth=DEFAULT_TERMINAL_GROWTH,
+                         terminal_multiple=None,
+                         failure_equity_value=0.0,
+                         terminal_g_cap=DEFAULT_TERMINAL_GROWTH_CAP,
+                         min_spread=DEFAULT_MIN_SPREAD):
+    """成熟期稳态利润 × 到达概率折回（REQ-P1-01）。
+
+    返回 dict（含成功分支终值、失败分支、概率加权价值与终值占比披露）。
+    护栏与 forward-value 同源：永续上限 / r-g 间距 / 正基期，一处不放。
+    """
+    if mature_oe is None or mature_oe <= 0:
+        raise SystemExit(
+            f"错误：成熟期稳态 Owner Earnings 必须为正，收到 {mature_oe}。"
+            "成熟态本身不盈利说明『到达后也不值钱』——先回 growth-framework.md "
+            "第三段（成熟期利润率反推）重做单位经济外推，再进本通道。")
+    if not (0.0 < arrival_prob <= 1.0):
+        raise SystemExit(
+            f"错误：到达概率应在 (0, 1]（小数），收到 {arrival_prob}。"
+            "若填的是 40 这类百分数，请改写 0.40。p=1 意为『必然到达』，"
+            "须有极强证据并接受红队质询。")
+    if not isinstance(years_to_maturity, int) or years_to_maturity < 1:
+        raise SystemExit(f"错误：到达年数须为 ≥1 的整数，收到 {years_to_maturity}。")
+    if failure_equity_value < 0:
+        raise SystemExit(f"错误：失败残值不得为负（有限责任下股权残值下限为 0），"
+                         f"收到 {failure_equity_value}。")
+    if terminal_growth > terminal_g_cap:
+        raise SystemExit(
+            f"错误：永续增速 {terminal_growth:.2%} 超过上限 {terminal_g_cap:.2%}。"
+            "成熟期之后仍快于整体经济增长在数学上不可持续（与 forward-value 同一护栏）。")
+    if discount_rate <= terminal_growth:
+        raise SystemExit("错误：折现率必须大于永续增长率")
+    if discount_rate - terminal_growth < min_spread:
+        raise SystemExit(
+            f"错误：折现率 {discount_rate:.2%} 与永续增速 {terminal_growth:.2%} 间距不足"
+            f" {min_spread:.2%}——Gordon 分母趋零时终值爆炸，与 forward-value 同一护栏。")
+    gordon_tv = mature_oe * (1.0 + terminal_growth) / (discount_rate - terminal_growth)
+    if terminal_multiple is not None:
+        if terminal_multiple <= 0:
+            raise SystemExit(f"错误：终局倍数必须为正，收到 {terminal_multiple}。")
+        tv, tv_method = mature_oe * terminal_multiple, "multiple"
+    else:
+        tv, tv_method = gordon_tv, "gordon"
+    pv = tv / ((1.0 + discount_rate) ** years_to_maturity)
+    v = arrival_prob * pv + (1.0 - arrival_prob) * failure_equity_value
+    return {
+        "mature_oe": mature_oe,
+        "terminal_value_mature": tv,
+        "terminal_value_method": tv_method,
+        "terminal_multiple": terminal_multiple,
+        "gordon_cross_check_tv": gordon_tv,
+        "gordon_implied_multiple": gordon_tv / mature_oe,
+        "pv_today": pv,
+        "failure_equity_value": failure_equity_value,
+        "arrival_prob": arrival_prob,
+        "years_to_maturity": years_to_maturity,
+        "probability_weighted_value": v,
+        # 终值占比披露：本通道价值按构造 100% 来自成熟期终值折回，
+        # 这是档位上限锁死"小仓位试探"的原因（valuation-guide 终值纪律）。
+        "terminal_value_ratio": 1.0,
+        "terminal_value_ratio_note": "结构性终值主导（按构造为 1.0）：估值主体是"
+                                     "『到达后的成熟态』这个尚未发生的状态，"
+                                     "禁止以安全边际单独支撑核心买入",
+    }
 
 
 def expected_return(price, scenarios, hold_years, index_hurdle=0.09,
@@ -625,6 +775,62 @@ def main():
                          "仅用于披露分红占总回报比例——现金落袋 vs 账面增值的回报质量差异")
     p3.add_argument("-o", "--output", help="输出 JSON 路径")
 
+    # ── REQ-P1-01：成长股 / 再投入型估值通道 ──
+    p4 = sub.add_parser(
+        "growth", help="成长股通道：成熟期稳态利润 × 到达概率折回，替代当期 OE 基期")
+    p4.add_argument("--mature-oe", type=float,
+                    help="成熟期稳态 Owner Earnings（与 market-cap 同币种同单位，建议百万）。"
+                         "与 --mature-revenue + --mature-oe-margin 二选一")
+    p4.add_argument("--mature-revenue", type=float,
+                    help="成熟期稳态收入（三段式第一二段：渗透率天花板 × 份额 × ARPU 的产出）")
+    p4.add_argument("--mature-oe-margin", type=float,
+                    help="成熟期稳态 OE 利润率（小数；三段式第三段由单位经济反推，"
+                         "非当期利润率外推）")
+    p4.add_argument("--mature-state-basis", required=True,
+                    help="成熟态推导依据（必填，须含 [E:] 指针）：渗透率/会员数/ARPU/利润率"
+                         "各自的证据来源。成熟态是本通道最大的假设，必须可审计")
+    p4.add_argument("--arrival-prob", type=float, required=True,
+                    help="到达概率 p（(0,1] 小数）：增长兑现+利润率扩张+竞争存活的联合概率。"
+                         "有基率锚时不应超过锚（见 --current-revenue）；无锚须论证")
+    p4.add_argument("--arrival-prob-basis", required=True,
+                    help="到达概率推导依据（必填，须含 [E:] 指针）——裸概率禁止，"
+                         "它与情景概率同为最易被叙事污染的参数")
+    p4.add_argument("--current-revenue", type=float, required=True,
+                    help="当期收入（与成熟态同币种；用于反推所需 CAGR 并查基率锚——"
+                         "到达概率与基率表挂钩的机器强制项）")
+    p4.add_argument("--base-rate-revenue-usd", type=float,
+                    help="规模分档用的美元口径收入（百万）。基率表按美元标定，"
+                         "报告币种非美元时须换算后传入，否则分档可能错带")
+    p4.add_argument("--base-rates-file",
+                    help="基率表文件（REQ-P1-05 的 references/base-rates.md 建成后接入，"
+                         "JSON 数组格式同 REVENUE_CAGR_BASE_RATES）。缺省用引擎内置表")
+    p4.add_argument("--contribution-margin", type=float, required=True,
+                    help="规模化边际贡献率（小数，可负）：收入 − 直接变动成本（内容/获客/"
+                         "履约）后再除以收入。≤0 即单元经济未证，本通道拒绝服务（exit 2）")
+    p4.add_argument("--ltv-cac", type=float,
+                    help="LTV/CAC（可选但强烈建议）：客户终身价值 / 获客成本。<1 即获客在"
+                         "毁灭价值，同样触发单元经济未证拒绝")
+    p4.add_argument("--years-to-maturity", type=int, default=10,
+                    help="到达年数 N（默认 10）：成熟态兑现所需年数，即折回期")
+    p4.add_argument("--discount-rate", type=float, default=DEFAULT_DISCOUNT_RATE)
+    p4.add_argument("--terminal-growth", type=float, default=DEFAULT_TERMINAL_GROWTH,
+                    help="成熟期之后的永续增速（Gordon 口径与保守交叉核对共用）")
+    p4.add_argument("--terminal-multiple", type=float,
+                    help="终局倍数（成熟期 OE × 倍数作终值，市场口径）。缺省用 Gordon"
+                         "（保守口径）；两口径都会输出并披露分歧——分歧 >30% 时"
+                         "报告必须双口径并列（与基率检验同属『假设要过外部视角』）")
+    p4.add_argument("--failure-equity-value", type=float, default=0.0,
+                    help="到达失败时的股权残值（与 mature-oe 同单位；默认 0=归零口径）。"
+                         "建议用独立方法锚（清算/历史最差年×危机倍数），与悲观情景同源")
+    p4.add_argument("--market-cap", type=float, required=True,
+                    help="当前市值（股权口径，与 mature-oe 同币种同单位）——用于反解"
+                         "『现价隐含到达概率』，即本通道的反向 DCF")
+    p4.add_argument("--shares", type=float,
+                    help="摊薄股本（百万股），提供则输出每股口径")
+    p4.add_argument("--terminal-growth-cap", type=float, default=DEFAULT_TERMINAL_GROWTH_CAP)
+    p4.add_argument("--min-spread", type=float, default=DEFAULT_MIN_SPREAD)
+    p4.add_argument("-o", "--output", help="输出 JSON 路径")
+
     args = ap.parse_args()
 
     if args.mode == "expected-return":
@@ -741,6 +947,231 @@ def main():
         if args.output:
             with open(args.output, "w", encoding="utf-8") as f:
                 json.dump(res, f, ensure_ascii=False, indent=2)
+            print(f"\n已写入 {args.output}")
+        return
+
+    if args.mode == "growth":
+        # ---- 单元经济门（第一道门，先于一切估值）----
+        # 区分「再投入」与「烧钱」的唯一可量化标准（REQ-P1-01 价值主张）：
+        # 边际贡献率 ≤0 = 每多做一个单位生意就多亏一份钱，增长本身在毁灭价值。
+        # 这类公司在旧框架与 Netflix 得到同样的"观察/拒绝"，在本通道被显式拒绝
+        # ——Netflix（US 边际贡献 44%）与乐视型（内容成本无边界、贡献率为负）
+        # 由此分道。拒绝服务而非给一个错数（与负基期拒绝同一纪律）。
+        ue_proven = args.contribution_margin > 0 and (args.ltv_cac is None or args.ltv_cac >= 1.0)
+        ue_detail = []
+        if args.contribution_margin <= 0:
+            ue_detail.append(f"规模化边际贡献率 {args.contribution_margin:.1%} ≤ 0")
+        if args.ltv_cac is not None and args.ltv_cac < 1.0:
+            ue_detail.append(f"LTV/CAC {args.ltv_cac:.2f} < 1（获客本身在毁灭价值）")
+        if not ue_proven:
+            print("🔴 单元经济未证：" + "；".join(ue_detail) + "。")
+            print("   增长在单位层面毁灭价值——这不是『为未来投入』而是『烧钱』，")
+            print("   成长通道对此类公司不适用（GROWTH_UNIT_ECONOMICS_UNPROVEN）。")
+            print("   按 valuation-guide 方法树改走标准 OE 管道，结论通常是拒绝/排除；")
+            print("   禁止通过调高到达概率或终局倍数让烧钱公司在成长通道里『看起来值钱』。")
+            sys.exit(2)
+        for _label, _val in (("--mature-state-basis", args.mature_state_basis),
+                             ("--arrival-prob-basis", args.arrival_prob_basis)):
+            if "[E:" not in (_val or ""):
+                _code = ("GROWTH_ARRIVAL_PROB_UNANCHORED"
+                         if _label == "--arrival-prob-basis" else None)
+                raise SystemExit(
+                    f"错误：{_label} 必须含 [E:] 证据指针——成熟态与到达概率是本通道"
+                    f"最大的两个假设，裸假设禁止（与 S7 概率纪律同源）。"
+                    + (f"违反项告警码：{_code}（人工登记进 verdict.codes）。"
+                       if _code else ""))
+        if args.mature_oe is None:
+            if args.mature_revenue is None or args.mature_oe_margin is None:
+                raise SystemExit("错误：须提供 --mature-oe，或 --mature-revenue + "
+                                 "--mature-oe-margin（三段式产出）")
+            mature_oe = args.mature_revenue * args.mature_oe_margin
+        else:
+            mature_oe = args.mature_oe
+            if args.mature_revenue is not None and args.mature_oe_margin is not None:
+                print("⚠ 同时提供了 --mature-oe 与 revenue×margin，以 --mature-oe 为准",
+                      file=sys.stderr)
+
+        # ---- 基率锚（到达概率与基率表挂钩，REQ-P1-05 接口）----
+        table = None
+        if args.base_rates_file:
+            with open(args.base_rates_file, "r", encoding="utf-8") as _f:
+                table = json.load(_f)
+        # 所需 CAGR 优先用收入比值（与基率表口径一致）；直接给 --mature-oe 时
+        # 以 OE 增长作增长要求的代理并在输出标注（OE 含利润率扩张，会高估增速要求，
+        # 使锚偏紧——方向保守，可接受但须披露）。
+        if args.current_revenue > 0 and args.mature_revenue:
+            required_cagr = (args.mature_revenue / args.current_revenue) ** (
+                1.0 / args.years_to_maturity) - 1.0
+            cagr_basis = "revenue"
+        elif args.current_revenue > 0:
+            required_cagr = (mature_oe / args.current_revenue) ** (
+                1.0 / args.years_to_maturity) - 1.0
+            cagr_basis = "oe_proxy"
+        else:
+            required_cagr, cagr_basis = None, "unavailable"
+        band_rev = args.base_rate_revenue_usd or args.current_revenue
+        anchor, anchor_meta = revenue_growth_base_rate(band_rev, required_cagr, table)
+        anchor_meta["cagr_basis"] = cagr_basis
+
+        res = growth_channel_value(
+            mature_oe, args.arrival_prob, args.years_to_maturity, args.discount_rate,
+            terminal_growth=args.terminal_growth, terminal_multiple=args.terminal_multiple,
+            failure_equity_value=args.failure_equity_value,
+            terminal_g_cap=args.terminal_growth_cap, min_spread=args.min_spread)
+
+        # ---- 反向求解：现价隐含到达概率 ----
+        pv, fail_v = res["pv_today"], res["failure_equity_value"]
+        implied_p = None
+        if pv > fail_v:
+            implied_p = (args.market_cap - fail_v) / (pv - fail_v)
+        gordon_pv = res["gordon_cross_check_tv"] / ((1.0 + args.discount_rate)
+                                                    ** args.years_to_maturity)
+        gordon_implied_p = ((args.market_cap - fail_v) / (gordon_pv - fail_v)
+                            if gordon_pv > fail_v else None)
+
+        codes = ["GROWTH_TERMINAL_DOMINATED"]  # 结构性披露：永远随通道输出
+        if implied_p is not None and implied_p >= 1.0:
+            codes.append("GROWTH_PRICE_IMPLIES_CERTAIN_ARRIVAL")
+        if anchor is not None and implied_p is not None and (
+                (anchor > 0 and implied_p >= 2.0 * anchor) or implied_p - anchor >= 0.25):
+            codes.append("GROWTH_IMPLIED_VS_BASERATE_GAP")
+        if anchor is not None and args.arrival_prob > anchor:
+            codes.append("GROWTH_ARRIVAL_PROB_ABOVE_BASERATE")
+        unknown = unknown_codes(codes)
+        if unknown:
+            raise KeyError(f"未注册的告警码 {unknown}，请先在 scripts/alert_codes.py 登记")
+
+        # ---- 档位带（引擎建议、裁决层定档——与双闸门哲学一致）----
+        vps = res["probability_weighted_value"] / args.shares if args.shares else None
+        if implied_p is not None and implied_p >= 1.0:
+            band = "拒绝（透支）"
+            band_reason = (f"现价隐含到达概率 {implied_p:.0%} ≥ 100%：连『必然到达』都"
+                           "解释不了现价——价格已透支通道内全部假设，或定价了通道外"
+                           "的叙事（叙事溢价）。除非论证更高成熟态/更短到达期且过基率检验")
+        elif vps is not None and args.market_cap and args.shares and \
+                res["probability_weighted_value"] >= args.market_cap:
+            band = "小仓位试探候选"
+            band_reason = ("价格 ≤ 概率加权成长价值：到达赔率站在买方——但仍受通道档位"
+                           "上限约束（终值结构性主导），且必须过 expected-return 闸门二"
+                           "（期望 IRR ≥ r / 悲观 IRR / 亏损概率）")
+        else:
+            band = "观察等价格"
+            band_reason = ("单元经济已证、公司真实，与市场的分歧在到达赔率而非生意真假"
+                           "——触发参考 = 概率加权成长价值（须披露可达性）；"
+                           "单元经济证据深化或价格回落均可重估")
+        out = {
+            "mode": "growth",
+            "mature_state": {
+                "mature_oe": mature_oe,
+                "mature_revenue": args.mature_revenue,
+                "mature_oe_margin": args.mature_oe_margin,
+                "basis": args.mature_state_basis,
+            },
+            "unit_economics": {
+                "contribution_margin": args.contribution_margin,
+                "ltv_cac": args.ltv_cac,
+                "proven": True,
+                "gate_note": "GROWTH_UNIT_ECONOMICS_UNPROVEN 未触发（规模化边际贡献率>0"
+                             + (" 且 LTV/CAC≥1" if args.ltv_cac is not None else "") + "）",
+            },
+            "arrival": {
+                "probability": args.arrival_prob,
+                "basis": args.arrival_prob_basis,
+                "years_to_maturity": args.years_to_maturity,
+                "required_cagr": required_cagr,
+                "required_cagr_basis": cagr_basis,
+                "base_rate_anchor": anchor,
+                "base_rate_meta": anchor_meta,
+                "base_rate_hook": "REQ-P1-05：references/base-rates.md 建成后由 "
+                                  "--base-rates-file 接管（当前为引擎内置表，"
+                                  "与 valuation-guide 基率检验表同源）",
+            },
+            **res,
+            "implied": {
+                "market_cap": args.market_cap,
+                "implied_arrival_prob": implied_p,
+                "gordon_cross_check_implied_prob": gordon_implied_p,
+                "note": "反解 MC = p×PV(终值) + (1−p)×失败残值；≥100% 即透支信号",
+            },
+            "value_per_share": vps,
+            "sensitivity": {
+                "arrival_prob_pm0.10": [
+                    (min(1.0, args.arrival_prob + 0.10) * pv
+                     + (1 - min(1.0, args.arrival_prob + 0.10)) * fail_v) / args.shares
+                    if args.shares else None,
+                    (max(0.0, args.arrival_prob - 0.10) * pv
+                     + (1 - max(0.0, args.arrival_prob - 0.10)) * fail_v) / args.shares
+                    if args.shares else None],
+                "years_to_maturity_pm2": [
+                    (args.arrival_prob * res["terminal_value_mature"]
+                     / ((1 + args.discount_rate) ** (args.years_to_maturity + 2))
+                     + (1 - args.arrival_prob) * fail_v) / args.shares
+                    if args.shares else None,
+                    (args.arrival_prob * res["terminal_value_mature"]
+                     / ((1 + args.discount_rate) ** max(1, args.years_to_maturity - 2))
+                     + (1 - args.arrival_prob) * fail_v) / args.shares
+                    if args.shares else None],
+                "terminal_multiple_pm20pct": ([
+                    (args.arrival_prob * (mature_oe * args.terminal_multiple * 1.2)
+                     / ((1 + args.discount_rate) ** args.years_to_maturity)
+                     + (1 - args.arrival_prob) * fail_v) / args.shares if args.shares else None,
+                    (args.arrival_prob * (mature_oe * args.terminal_multiple * 0.8)
+                     / ((1 + args.discount_rate) ** args.years_to_maturity)
+                     + (1 - args.arrival_prob) * fail_v) / args.shares if args.shares else None]
+                    if args.terminal_multiple else None),
+            },
+            "verdict_band": {
+                "cap": GROWTH_VERDICT_CAP,
+                "suggestion": band,
+                "reasons": band_reason,
+                "codes": codes,
+                "note": "引擎建议档位带，最终档位由双闸门与裁决层确定；"
+                        "通道档位上限恒为小仓位试探（终值结构性主导纪律）",
+            },
+            "codes": codes,
+        }
+        # ---- 打印 ----
+        tv_m = res["terminal_value_mature"]
+        print(f"成熟期稳态 OE : {mature_oe:,.0f}（{args.mature_state_basis[:60]}…）")
+        print(f"终值（{res['terminal_value_method']}口径）: {tv_m:,.0f}"
+              f"（Gordon 交叉核对 {res['gordon_cross_check_tv']:,.0f}，"
+              f"隐含倍数 {res['gordon_implied_multiple']:.1f}x）")
+        if res["terminal_value_method"] == "multiple":
+            div = abs(tv_m - res["gordon_cross_check_tv"]) / res["gordon_cross_check_tv"]
+            if div > 0.30:
+                print(f"⚠ 终局倍数与 Gordon 口径分歧 {div:.0%} > 30%：报告必须双口径并列，"
+                      f"并论证所选口径的依据（市场倍数含质量溢价，Gordon 是纪律下限）")
+        print(f"折回 {args.years_to_maturity} 年（r={args.discount_rate:.1%}）: "
+              f"成功分支现值 {pv:,.0f}")
+        print(f"到达概率 p={args.arrival_prob:.0%} × 成功 + {1 - args.arrival_prob:.0%} × "
+              f"失败残值 {fail_v:,.0f}")
+        print(f"概率加权价值 : {res['probability_weighted_value']:,.0f}"
+              + (f"（每股 {vps:,.2f}）" if vps else ""))
+        if anchor is not None:
+            _cagr_label = {"revenue": "收入 CAGR", "oe_proxy": "OE CAGR（代理）"}.get(
+                cagr_basis, "CAGR")
+            print(f"\n基率锚       : 所需{_cagr_label} {required_cagr:.1%}（规模分档 "
+                  f"{anchor_meta.get('scale_band', '?')}）→ 历史达成比例上界 {anchor:.0%}")
+            if args.arrival_prob > anchor:
+                print(f"⚠ 到达概率 {args.arrival_prob:.0%} 高于基率锚 {anchor:.0%}"
+                      f"（GROWTH_ARRIVAL_PROB_ABOVE_BASERATE）：到达=增长+利润率扩张+"
+                      f"竞争存活的联合概率，超过『仅增长兑现』的历史比例须在 basis 中论证")
+        else:
+            print(f"\n基率锚       : 无（{anchor_meta.get('note', '未提供')}）")
+        if implied_p is not None:
+            print(f"现价隐含到达概率 : {implied_p:.0%}"
+                  + (f"（Gordon 口径 {gordon_implied_p:.0%}）" if gordon_implied_p else ""))
+            if implied_p >= 1.0:
+                print("🔴 隐含概率 ≥100%：连必然到达都解释不了现价——透支信号")
+            elif anchor is not None and implied_p >= 2.0 * anchor:
+                print(f"⚠ 市场要求的到达概率是基率锚的 {implied_p / anchor:.1f} 倍——"
+                      f"市场比框架乐观，分歧显式化（这是观察/拒绝的分界输入）")
+        print(f"\n档位带（上限 {GROWTH_VERDICT_CAP}）: {band}")
+        print(f"  {band_reason}")
+        print(f"告警码: {' '.join(codes)}")
+        if args.output:
+            with open(args.output, "w", encoding="utf-8") as f:
+                json.dump(out, f, ensure_ascii=False, indent=2)
             print(f"\n已写入 {args.output}")
         return
 

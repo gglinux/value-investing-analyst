@@ -164,6 +164,10 @@ DCF_METHODS = {
     "reverse_dcf": "反向 DCF",
     "sotp": "分部加总（盈利能力口径）",
     "pb_roe": "PB-ROE 回归",
+    # REQ-P1-01 成长股通道：成熟期稳态利润×到达概率折回（reverse_dcf.py growth）。
+    # 只允许出现在基准/乐观——悲观情景仍须走独立方法白名单（到达失败分支的
+    # 失败残值锚定建议复用悲观情景的独立方法，两处同源）。
+    "growth_terminal_backcast": "成长股通道：成熟期稳态 OE×终局倍数折回×到达概率",
 }
 MOATS = {"wide", "narrow", "none"}
 DISPERSION_MAX = 0.85          # S4：悲观/基准 上限

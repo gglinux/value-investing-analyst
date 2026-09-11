@@ -2626,6 +2626,156 @@ check("低于存款基准但缺利息支出 → insufficient_data（veto 不半�
       _v4a_noie.get("hint", ""))
 
 # ═══════════════════════════════════════════════════════════════════
+print("== 14.7 成长股通道（REQ-P1-01，reverse_dcf growth）==")
+# 动因：B2-09 Netflix 案（全回测最深假阴性 2 档）——纯 OE 框架对「当期 OE 极小
+# 但单元经济已证」的公司无语言可说。通道 = 成熟期稳态利润×到达概率折回；
+# 测试锁定四件事：数值数学、单元经济硬拒绝、基率锚挂钩、档位带语义。
+import reverse_dcf as _RD  # noqa: E402  (已在 7.55 导入，幂等)
+
+# --- A. 数值数学：成功分支折回 + 概率加权 + 失败残值 ---
+_gc = _RD.growth_channel_value(7200.0, 0.25, 10, 0.10,
+                               terminal_multiple=20.0, failure_equity_value=646.0)
+check("终值 = 成熟OE×倍数", abs(_gc["terminal_value_mature"] - 144000.0) < 1e-6)
+check("成功分支现值 = 终值/(1+r)^N",
+      abs(_gc["pv_today"] - 144000.0 / 1.1 ** 10) < 1e-6)
+check("概率加权价值 = p×PV + (1−p)×残值",
+      abs(_gc["probability_weighted_value"] - (0.25 * 144000 / 1.1 ** 10 + 0.75 * 646)) < 1e-6)
+check("Gordon 交叉核对 = OE×(1+g)/(r−g)",
+      abs(_gc["gordon_cross_check_tv"] - 7200 * 1.025 / 0.075) < 1e-6)
+check("终值占比结构性披露为 1.0（档位上限的依据）",
+      _gc["terminal_value_ratio"] == 1.0)
+
+# --- B. 极端值反推（体检纪律）：MC = 概率加权价值 ⇒ implied p = 供给的 p ---
+# 另一个铁律：MC = PV（p=1 的成功分支）⇒ implied p = 100%；
+# MC = PV + (PV−F)/2 ⇒ implied p = 50%。反解公式错一步就暴露。
+_pv = _gc["pv_today"]
+_imp_full = (144000 / 1.1 ** 10 - 646) / (_pv - 646)   # p=1
+_imp_half = (646 + (_pv - 646) / 2 - 646) / (_pv - 646)  # p=0.5
+check("极端值反推：MC=PV ⇒ implied p=1（数学自洽）", abs(_imp_full - 1.0) < 1e-9)
+check("极端值反推：MC=P/2+F/2 ⇒ implied p=0.5", abs(_imp_half - 0.5) < 1e-9)
+
+# --- C. 单元经济硬拒绝（区分 Netflix 与乐视的第一道门）---
+with tempfile.TemporaryDirectory() as _td:
+    _gargs = ["growth", "--market-cap", "53128", "--current-revenue", "8832",
+              "--mature-oe", "7200", "--arrival-prob", "0.5",
+              "--contribution-margin", "-0.05",
+              "--mature-state-basis", "x [E:a]", "--arrival-prob-basis", "y [E:b]"]
+    _p_neg = run(_gargs)
+    check("边际贡献率 ≤0 → 通道拒绝服务（exit 2）",
+          _p_neg.returncode == 2 and "GROWTH_UNIT_ECONOMICS_UNPROVEN" in _p_neg.stdout,
+          f"rc={_p_neg.returncode}")
+    _p_ltv = run([a if a != "-0.05" else "0.30" for a in _gargs] + ["--ltv-cac", "0.7"])
+    check("LTV/CAC <1 → 同样拒绝（exit 2）",
+          _p_ltv.returncode == 2 and "LTV/CAC" in _p_ltv.stdout, f"rc={_p_ltv.returncode}")
+
+# --- D. 裸概率禁止（与 S7 概率纪律同源）---
+    _p_naked = run(["growth", "--market-cap", "53128", "--current-revenue", "8832",
+                    "--mature-oe", "7200", "--arrival-prob", "0.5",
+                    "--contribution-margin", "0.30",
+                    "--mature-state-basis", "x [E:a]", "--arrival-prob-basis", "无证据"])
+    check("到达概率未挂 [E:] → 拒绝（exit 1）且提示注册码",
+          _p_naked.returncode == 1 and "GROWTH_ARRIVAL_PROB_UNANCHORED" in
+          (_p_naked.stderr or "") + (_p_naked.stdout or ""),
+          f"rc={_p_naked.returncode} stderr={(_p_naked.stderr or '')[:120]}")
+
+# --- E. 基率锚挂钩（REQ-P1-05 接口预留）---
+_a1, _m1 = _RD.revenue_growth_base_rate(8832, 0.1505)
+check("NFLX 形态：<100亿规模 × 15.05% 所需增速 → 锚 25%（≥10% 插值行）",
+      _a1 == 0.25 and _m1["interpolated"] is True and _m1["scale_band"] == "<100亿美元",
+      str(_m1))
+_a2, _m2 = _RD.revenue_growth_base_rate(8832, 0.22)
+check("所需增速 ≥20% → 用 ≥20% 行（同为上界）", _a2 == 0.10 and _m2["interpolated"] is False)
+_a3, _m3 = _RD.revenue_growth_base_rate(8832, 0.05)
+check("所需增速低于表内最低档 10% → 无上界约束（anchor=None）",
+      _a3 is None and "无上界约束" in _m3.get("note", ""), str(_m3))
+_a4, _m4 = _RD.revenue_growth_base_rate(8832, -0.02)
+check("成熟态不高于当期规模 → 无增长基率约束", _a4 is None)
+_a5, _m5 = _RD.revenue_growth_base_rate(60000, 0.15)
+check("规模 ≥500亿美元 → 分档正确（≥10% 行 10%）", _a5 == 0.10 and
+      _m5["scale_band"] == "≥500亿美元", str(_m5))
+
+# --- F. CLI 端到端：Netflix 2016 形态（验收锚）---
+with tempfile.TemporaryDirectory() as _td:
+    _fp = os.path.join(_td, "growth.json")
+    _p_nflx = run(["growth", "--market-cap", "53128", "--current-revenue", "8832",
+                   "--mature-revenue", "36000", "--mature-oe-margin", "0.20",
+                   "--terminal-multiple", "20", "--arrival-prob", "0.25",
+                   "--years-to-maturity", "10", "--shares", "436.456",
+                   "--contribution-margin", "0.44", "--failure-equity-value", "646",
+                   "--mature-state-basis", "300M会员×$10×12=360亿×20% [E:q.json]",
+                   "--arrival-prob-basis", "基率锚25%取等值 [E:vg.md]", "-o", _fp])
+    check("growth 模式运行成功（NFLX 2016 验收形态）", _p_nflx.returncode == 0,
+          (_p_nflx.stderr or "")[:200])
+    if _p_nflx.returncode == 0:
+        _g = json.load(open(_fp))
+        # 每股价值 = (0.25×(36000×0.20×20)/1.1^10 + 0.75×646)/436.456 ≈ 32.91
+        check("每股价值数学正确（≈32.91，vs 旧 OE 通道 13.71）",
+              abs(_g["value_per_share"] - 32.91) < 0.05, str(_g["value_per_share"]))
+        _imp = _g["implied"]["implied_arrival_prob"]
+        check("现价隐含到达概率 ≈ 96%（<100%，非透支）", 0.90 < _imp < 1.0, str(_imp))
+        check("隐含概率 vs 基率锚 3.8 倍 → GROWTH_IMPLIED_VS_BASERATE_GAP",
+              "GROWTH_IMPLIED_VS_BASERATE_GAP" in _g["codes"])
+        check("GROWTH_TERMINAL_DOMINATED 恒随通道输出",
+              "GROWTH_TERMINAL_DOMINATED" in _g["codes"])
+        check("p=25% 不高于锚 25% → 不触发 ABOVE_BASERATE",
+              "GROWTH_ARRIVAL_PROB_ABOVE_BASERATE" not in _g["codes"])
+        check("档位带=观察等价格、上限=小仓位试探",
+              _g["verdict_band"]["suggestion"] == "观察等价格"
+              and _g["verdict_band"]["cap"] == "小仓位试探")
+        check("Gordon 交叉核对口径同时输出",
+              _g["implied"]["gordon_cross_check_implied_prob"] > 1.0)
+    # 透支形态：市值抬到连必然到达都解释不了
+    _p_ovr = run(["growth", "--market-cap", "53128", "--current-revenue", "8832",
+                  "--mature-oe", "7200", "--arrival-prob", "0.25",
+                  "--contribution-margin", "0.44",
+                  "--mature-state-basis", "x [E:a]", "--arrival-prob-basis", "y [E:b]"])
+    # 无 --terminal-multiple → Gordon 口径：PV=37936 < MC → implied p ≥ 1
+    if _p_ovr.returncode == 0 or "透支" in (_p_ovr.stdout or ""):
+        check("Gordon 口径下现价隐含 p ≥100% → 透支拒绝档带 + 注册码",
+              "GROWTH_PRICE_IMPLIES_CERTAIN_ARRIVAL" in (_p_ovr.stdout or "")
+              and "拒绝（透支）" in (_p_ovr.stdout or ""), _p_ovr.stdout[-300:])
+
+# --- G. p 高于基率锚 → ABOVE_BASERATE 警示码 ---
+with tempfile.TemporaryDirectory() as _td:
+    _fp2 = os.path.join(_td, "g2.json")
+    _p_hi = run(["growth", "--market-cap", "20000", "--current-revenue", "8832",
+                 "--mature-revenue", "36000", "--mature-oe-margin", "0.20",
+                 "--terminal-multiple", "20", "--arrival-prob", "0.50",
+                 "--years-to-maturity", "10", "--shares", "436.456",
+                 "--contribution-margin", "0.44",
+                 "--mature-state-basis", "x [E:a]", "--arrival-prob-basis", "y [E:b]",
+                 "-o", _fp2])
+    check("p=50% > 锚 25% → GROWTH_ARRIVAL_PROB_ABOVE_BASERATE",
+          _p_hi.returncode == 0 and "GROWTH_ARRIVAL_PROB_ABOVE_BASERATE" in _p_hi.stdout)
+
+# --- H. check_scenarios 接线：growth_terminal_backcast 可作基准方法 ---
+import copy as _copy  # noqa: E402
+_scen_growth = _copy.deepcopy(GOOD)
+_scen_growth["scenarios"][1]["method"] = "growth_terminal_backcast"
+_d, _e, _w, _i = _run_cs(_scen_growth)
+check("基准情景 method=growth_terminal_backcast 不被 S2 误拦",
+      not any(x.startswith("S2") for x in _e), str(_e))
+# 反向：悲观情景用 growth_terminal_backcast（DCF 系）必须被拦——它不是独立下行估计
+_scen_bad = _copy.deepcopy(GOOD)
+_scen_bad["scenarios"][0]["method"] = "growth_terminal_backcast"
+_d2, _e2, _w2, _i2 = _run_cs(_scen_bad)
+check("悲观情景用 growth_terminal_backcast → S2 拦截（非独立方法）",
+      any(x.startswith("S2 悲观情景方法") for x in _e2), str(_e2))
+
+# --- I. 告警码全部已注册（写错必须被逮住）---
+_growth_codes = ["GROWTH_UNIT_ECONOMICS_UNPROVEN", "GROWTH_ARRIVAL_PROB_UNANCHORED",
+                 "GROWTH_ARRIVAL_PROB_ABOVE_BASERATE", "GROWTH_PRICE_IMPLIES_CERTAIN_ARRIVAL",
+                 "GROWTH_IMPLIED_VS_BASERATE_GAP", "GROWTH_TERMINAL_DOMINATED"]
+check("六个 GROWTH_* 码全部在 ALERTS 注册表", not AC.unknown_codes(_growth_codes),
+      str(AC.unknown_codes(_growth_codes)))
+_docs_local = open(os.path.join(ROOT, "SKILL.md"), encoding="utf-8").read() + "".join(
+    open(os.path.join(ROOT, "references", _r), encoding="utf-8").read()
+    for _r in os.listdir(os.path.join(ROOT, "references")) if _r.endswith(".md"))
+check("文档已接入成长通道（growth-framework/company-types/valuation-guide/SKILL）",
+      all(_kw in _docs_local for _kw in
+          ("growth_terminal_backcast", "GROWTH_UNIT_ECONOMICS_UNPROVEN", "成熟期稳态利润")))
+
+# ═══════════════════════════════════════════════════════════════════
 print("== 15 脚本接入完整性（元测试） ==")
 # 教训：阶段二写了 check_market_snapshot.py、跑通了、验证它能逮住海控存量错误，
 # 但**忘了在 SKILL.md 里引用它**——脚本存在 ≠ agent 会执行。SKILL.md 是 agent

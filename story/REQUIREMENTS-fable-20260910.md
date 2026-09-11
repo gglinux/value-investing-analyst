@@ -268,9 +268,20 @@
 - 价值：让系统对成长股既能说"买"也能说"不买"，并且两者都有依据。单位经济（LTV/CAC、边际贡献率）是区分"再投入"和"烧钱"的唯一可量化标准，这一维度加进来后，Netflix 和乐视在框架内会得到相反的结论，而不是同样的"观察"。
 - 交付物：`growth-framework.md` 补齐单位经济（LTV/CAC、边际贡献率）、渗透率天花板、成熟期利润率反推三段式；`reverse_dcf.py` 新增 `--mode growth`，以成熟期稳态利润 × 到达概率 折回替代当期 OE。到达概率与基率表（REQ-P1-05）挂钩。
 - 验收：Netflix 案例缺口 ≤1 档；至少 2 个新成长股案例作锚（正向与假阳性各一）。
-- 涉及文件：`references/company-types.md` 卡四、`references/growth-framework.md`、`references/valuation-guide.md`、`scripts/reverse_dcf.py`
+- 涉及文件：`references/company-types.md` 卡四、`references/growth-framework.md`、`references/valuation-guide.md`、`scripts/reverse_dcf.py`（注：需求原文「卡四」系旧编号——成长/再投入型现行为卡二，卡四现为隐蔽资产；已按现行编号落码）
 - 依赖：REQ-P0-04、REQ-P1-05
-- 状态：todo
+- 状态：**doing**（2026-09-11 通道落码 + Netflix 验收演示完成，缺口 2→1 档；2 个新案例锚待批次执行）
+- 进展：
+  - ✅ `growth-framework.md` 新增「第三半：成熟态三段式与成长股估值通道」：①单位经济（规模化边际贡献率 + LTV/CAC，第一道门）②渗透率天花板（成熟会员/用户 × 成熟 ARPU 自下而上，禁止增速外推当天花板）③成熟期利润率反推（单元经济法首选 / 同业成熟态法，禁止当期利润率外推）④到达概率与基率锚（联合概率 ≤ 收入基率锚；多情景混算的条件/无条件概率语义——无条件混合到达概率 = Σ 情景概率 × 条件 p）。
+  - ✅ `reverse_dcf.py` 新增 `growth` 子命令（subparsers 的 dest 即 mode，与需求 `--mode growth` 一致）：成熟期稳态 OE × 终局倍数（Gordon 恒作交叉核对，分歧 >30% 强制双口径并列）折回 N 年 × 到达概率 + 失败残值；**反解「现价隐含到达概率」**（成长通道形态的反向 DCF）；基率锚机器反查（`REVENUE_CAGR_BASE_RATES` 与 valuation-guide 基率表同源，`--base-rates-file` 为 REQ-P1-05 预留接管接口）；护栏与 forward-value 同源（永续上限 / r-g 间距 / 正基期 / 成熟态与到达概率双 [E:] 强制）。
+  - ✅ 六个 `GROWTH_*` 告警码注册（alert_codes.py 新增 growth 层）：`UNIT_ECONOMICS_UNPROVEN`（exit 2 硬拒绝——Netflix 与乐视型分道的第一道门）、`ARRIVAL_PROB_UNANCHORED`（裸概率禁止，与 S7 同源）、`ARRIVAL_PROB_ABOVE_BASERATE`（越锚警示须论证例外）、`PRICE_IMPLIES_CERTAIN_ARRIVAL`（隐含 p ≥100% 透支）、`IMPLIED_VS_BASERATE_GAP`（市场 vs 框架的赔率分歧显式化）、`TERMINAL_DOMINATED`（结构性终值主导，档位上限依据）。
+  - ✅ 通道三纪律：单元经济未证即通道拒绝服务（禁止调高 p/倍数让烧钱公司"看起来值钱"）；**档位上限恒为小仓位试探**（通道价值 100% 来自成熟期终值折回，与终值纪律一致）；到达概率不得高于基率锚。引擎输出档位带建议（透支→拒绝 / 价格 ≤ 概率加权价值→试探候选 / 其余→观察等价格），最终档位仍由双闸门与裁决层定——与既有哲学一致。
+  - ✅ 接线五处：company-types 卡二估值通道 cell（旧「通道失语披露级处理」条文废除）、valuation-guide 方法树行 + 通道纪律段、SKILL.md Phase 4 一行指针（体积红线内）、backtest/PROMPT.md Step 2 机器化纪律（第三批起强制）、check_scenarios `DCF_METHODS` 注册 `growth_terminal_backcast`（基准/乐观可用；悲观禁用，S2 照拦——下行估计必须独立）。
+  - ✅ **验收「Netflix 缺口 ≤1 档」达成**：成长通道对照轨落盘 `backtest/NFLX_2016-12-31/data/growth_{value,scenarios,expected_return}_REQ-P1-01.json`（冻结底稿 scenarios.json/verdict.json 未动，文件名避开 runner 的 `scenarios*` glob）。基准 32.91（成熟态 300M 会员×$10×20% OE×20x×p=0.25 基率锚取等值）/ 乐观 94.92（350M×$11×24%×24x×p=0.40 条件概率，越锚已论证披露）/ 悲观 1.48（原案 worst_year_margin 独立方法逐字保留，失败残值同源）。check_scenarios 0 错 0 警通过；expected-return 闸门二四项全灭 → 档位上限「观察等价格」；通道档位带=观察等价格（单元经济已证 + 隐含到达概率 96% <100%）。**档位 1（拒绝）→2（观察等价格），缺口 2→1 档**。语言质变：从「131x OE 无解、现价 9.0× 基准价值、无语言可说」到「现价隐含到达概率 96%（Gordon 口径 141%）vs 基率锚 25%——市场比框架乐观 3.8 倍」的显式赔率分歧，且该分歧可证伪（单元经济证据深化或价格回落即重估）。
+  - ✅ 判别力锚定（不错买方向）：乐视型（贡献利润率 ≤0）在通道入口即被拒（tests 锁定 exit 2）；通道不放松任何下行输入——悲观 1.48、亏损概率 80%、悲观年化 −29.3% 原样呈现。这是「通道建设而非阈值放松」：BATCH2 第八节指定的修复方向。
+  - ✅ `tests/run_tests.py` 新增 14.7 段 29 项行为测试（终值/折回/概率加权数学、极端值反推自洽 MC=PV⇒p=1、单元经济双判据硬拒绝、裸概率拒绝、基率查表五形态、NFLX 验收形态端到端含隐含概率与档位带、Gordon 口径透支、越锚警示、check_scenarios 正反接线、六码注册、文档接入）；全套件 558 项全绿；`--rerun --baseline` 12 案代号集合与基线一致、假阳性轨 0 新增。
+  - ⏳ 待办：验收条款「至少 2 个新成长股案例作锚（正向与假阳性各一）」待批次执行——建议正向：亚马逊 2010-12-31 或拼多多 2018-06-30（OE 极小 + 单元经济已证形态，注意 BATCH2 第七节提示 Meta 2022 有巨额 OE、走标准通道大概率不复现）；假阳性：乐视 2015-05（已在 PROMPT 假阳性对照替补池，放行路径=成长叙事）——建议入第五批（类型卡阈值锚批）与通道判别力复验同批执行。
+  - 📌 设计说明：官方期望 {3,4} 中的档位 3 在基率锚约束下**刻意不可达**——需 p>25% 或倍数>20x，通道不给（防拟合答案，REQ-P0-08 纪律）；该残差移交 REQ-P1-04（概率证据传导）与 REQ-P1-05（基率表建成后的到达概率校准）跟踪。基率表挂钩接口已就绪（`--base-rates-file` + 引擎内置表标注 REQ-P1-05 接管）。
 
 ### REQ-P1-02 持仓型控股 SOTP 通道
 - 来源：D
@@ -572,3 +583,4 @@
 | 2026-09-10 | v1.2 | REQ-P0-01 基础设施落地：runner FP/FN 双向统计 + `fp_control` 字段 + 基线 `_fp_fn` 段 + PROMPT 执行顺序 1→2→4→3→5 + 对照替补池；状态 todo → doing |
 | 2026-09-11 | v1.3 | REQ-P0-02 审查修订三版：V4A 复合判据（双高形态 ∧ 币种×年份存款基准 ∧ 融资成本一半）+ `phase0_arithmetic` 取数兜底 + `--deposit-rate` 覆盖；康美真实数据首次命中，负样本零误杀 |
 | 2026-09-11 | v1.3 | REQ-P0-04 三版审查修订：交付物/验收按 as-built 改写（换源候选维度未建、实际为"去同源化 + 下行约束落码"，外部锚移交 REQ-P1-05/P2-06）；新增存量 12 案 rerun + 基线重建 + 神华档位重判待办；茅台"被 ③ 拦"修正为 ①' ③ 双拦（valuation-guide 同步） |
+| 2026-09-11 | v1.4 | REQ-P1-01 成长股通道落码：growth-framework 三段式 + reverse_dcf `growth` 模式（成熟期稳态利润×到达概率折回 + 现价隐含到达概率反解 + 基率锚挂钩）+ 六个 GROWTH_* 告警码 + 五处接线；Netflix 验收演示档位 1→2、缺口 2→1 档；tests 14.7 段 29 项、套件 558 全绿、基线一致；状态 todo → doing（2 个新案例锚待批次执行） |

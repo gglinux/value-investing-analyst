@@ -1,0 +1,135 @@
+{
+  "company": "Netflix",
+  "ticker": "NFLX",
+  "currency": "USD",
+  "purpose": "REQ-P1-01 成长股通道验收演示（2026-09-11）。非冻结底稿——原冻结 scenarios.json（纯 OE 通道）不动，本文件为成长通道对照轨：基准/乐观以成熟期稳态利润×到达概率折回（reverse_dcf.py growth）替代当期 OE 基期，悲观沿用原案独立方法（worst_year_margin，逐字复制）。持有期取到达年数 N=10（价值在成熟期兑现，5 年期 IRR 系统性低估长跑道复利）。",
+  "price": 123.8,
+  "price_source": "2016-12-30 收盘价（与原案同源）[E:market_snapshot_NFLX_2016.json]",
+  "moat": "narrow",
+  "moat_note": "与原案一致（窄且改善），评级从 Netflix 自身证据独立推导 [E:qualitative_NFLX_2016.json]",
+  "discount_rate": 0.1,
+  "discount_rate_note": "与原案一致：max(10%, 10Y UST 2.45%+4pct)=10% [E:market_snapshot_NFLX_2016.json]",
+  "hold_years": 10,
+  "hold_years_note": "成长通道纪律：持有期=到达年数 N（growth-framework 第三半节）",
+  "dividend_yield": 0.0,
+  "dividend_yield_basis": "sustainable_forward",
+  "dividend_yield_source": "零分红（与原案一致）[E:metrics_NFLX_2016.json]",
+  "intrinsic_value_growth": 0.0,
+  "iv_growth_evidence": "取 0：与原案同一纪律口径——基准情景折回后永续增速=0，成长期权已在乐观情景的成熟态中定价、不进不收敛下限 [E:normalization_NFLX_2016.json]",
+  "default_probabilities": {
+    "悲观": 0.3,
+    "基准": 0.5,
+    "乐观": 0.2
+  },
+  "growth_channel": {
+    "verdict_cap": "小仓位试探",
+    "unit_economics": {
+      "contribution_margin": 0.44,
+      "evidence": "US 分部贡献利润率 44%（2015 已证）；每会员月内容成本 7.67 vs 收入 8.32 [E:qualitative_NFLX_2016.json][E:metrics_NFLX_2016.json]",
+      "gate": "GROWTH_UNIT_ECONOMICS_UNPROVEN 未触发（>0）"
+    },
+    "engine_runs": {
+      "base": "data/growth_value_REQ-P1-01.json",
+      "base_inputs": {
+        "market_cap_m": 53128,
+        "current_revenue_m": 8832,
+        "mature_revenue_m": 36000,
+        "mature_oe_margin": 0.2,
+        "terminal_multiple": 20,
+        "arrival_prob": 0.25,
+        "years_to_maturity": 10,
+        "shares_m": 436.456,
+        "failure_equity_value_m": 646
+      }
+    },
+    "base_rate_anchor": {
+      "required_cagr": 0.1505,
+      "scale_band": "<100亿美元",
+      "anchor": 0.25,
+      "note": "≥10% 行为插值估计；无条件混合到达概率 0.5×0.25+0.2×0.40=20.5% ≤ 锚",
+      "req_p1_05_hook": "references/base-rates.md 建成后由 --base-rates-file 接管"
+    }
+  },
+  "scenarios": [
+    {
+      "name": "悲观",
+      "value_per_share": 1.48,
+      "probability": 0.3,
+      "method": "worst_year_margin",
+      "method_note": "独立路径（与原案逐字一致，全程不走 DCF）：历史最差年净利率×当期收入×危机期倍数。最差年=2012（净利率 0.4752%，Qwikster+内容采购前置+国际启动三重叠加）；当期收入取 2015 实际 6,779.5；危机期倍数 20x（成熟媒体/内容公司 PE 15-20x 上界）。S2b 机器重算=0.004752×6,779.511×20/436.456=1.48 美元 [E:metrics_NFLX_2016.json][E:financials_NFLX_2016.json]",
+      "method_inputs": {
+        "worst_year": 2012,
+        "worst_margin": 0.004752,
+        "revenue_m": 6779.511,
+        "crisis_multiple": 20,
+        "shares_m": 436.456,
+        "worst_year_stress_evidence": "2012 实证压力年三重叠加：Qwikster 品牌事故+内容采购前置（2011 capex/收入 77%）+国际扩张启动亏损前置。净利率 0.4752% 为九年最低且塌陷持续两年 [E:metrics_NFLX_2016.json][E:business_drivers_NFLX_2016.json]",
+        "crisis_multiple_evidence": "20x 取成熟媒体/内容公司 PE 15-20x 上界；敏感度 15x→1.11、25x→1.85 [E:metrics_NFLX_2016.json]"
+      },
+      "stressed_assumptions": [
+        "margin",
+        "competition",
+        "financing_rollover"
+      ],
+      "probability_evidence": "[E:manifest.json][E:metrics_NFLX_2016.json] 与原案一致：内容军备竞赛（支出/收入 88→93%）、竞争升级（Disney 收 BAMTech）、国际单元经济未证（Intl 贡献利润率 −5.9%）、融资滚动依赖（FCF 连续 6 年为负）任一兑现即滑向本情景",
+      "non_operating_addback_per_share": 0.0
+    },
+    {
+      "name": "基准",
+      "value_per_share": 32.91,
+      "probability": 0.5,
+      "method": "growth_terminal_backcast",
+      "method_note": "成长通道（REQ-P1-01）：成熟期稳态 OE×终局倍数折回×到达概率。成熟态=300M 会员×$10/月=36,000 百万收入×20% 成熟 OE 利润率（US 分部贡献利润率 44% 减成熟期费用率）=7,200 百万 OE；终局倍数 20x（成熟媒体/内容公司上界，与原案悲观情景危机倍数同源锚）→终值 144,000；折回 10 年（r=10%）=55,518；p=0.25（=基率锚：所需收入 CAGR 15.1% 查 <100亿美元 ≥10% 档达成上界 25%，到达=增长+利润率扩张+竞争存活联合概率不越锚）×成功 + 0.75×失败残值 646（=悲观情景 1.48×436.456，两处同源）=14,364 百万 ÷436.456M 股=32.91 美元。引擎输出：data/growth_value_REQ-P1-01.json；Gordon 交叉核对 23.0 美元（隐含到达概率 141%——保守口径下现价已透支）[E:qualitative_NFLX_2016.json][E:business_drivers_NFLX_2016.json][E:market_snapshot_NFLX_2016.json]",
+      "method_inputs": {
+        "market_cap_m": 53128,
+        "current_revenue_m": 8832,
+        "mature_revenue_m": 36000,
+        "mature_oe_margin": 0.2,
+        "terminal_multiple": 20,
+        "arrival_prob": 0.25,
+        "years_to_maturity": 10,
+        "shares_m": 436.456,
+        "failure_equity_value_m": 646,
+        "discount_rate": 0.1,
+        "engine_output": "data/growth_value_REQ-P1-01.json"
+      },
+      "stressed_assumptions": [
+        "mature_state_members",
+        "mature_oe_margin",
+        "arrival_probability"
+      ],
+      "probability_evidence": "[E:valuation-guide.md基率表][E:metrics_NFLX_2016.json] 50%=基准世界（增长叙事的最小外推）；条件到达概率 0.25 取基率锚等值不越锚",
+      "non_operating_addback_per_share": 0.0
+    },
+    {
+      "name": "乐观",
+      "value_per_share": 94.92,
+      "probability": 0.2,
+      "method": "growth_terminal_backcast",
+      "method_note": "成长通道乐观态：350M 会员×$11/月=46,200 百万收入×24% 成熟 OE 利润率（国际爬坡至 US 级+规模效应）=11,088 百万 OE；终局倍数 24x（成熟平台溢价）→终值 266,112；折回 10 年=102,588；条件到达概率 p=0.40（高于基率锚 25%，例外论证：US 单元经济已证+两轮提价无流失+190 国 TAM 早期；无条件混合到达概率 0.5×0.25+0.2×0.40=20.5% ≤ 锚）×成功 + 0.6×失败残值 646=41,427 百万 ÷436.456M 股=94.92 美元。引擎告警：GROWTH_ARRIVAL_PROB_ABOVE_BASERATE（条件概率越锚，已按纪律论证并披露）[E:qualitative_NFLX_2016.json]",
+      "method_inputs": {
+        "mature_revenue_m": 46200,
+        "mature_oe_margin": 0.24,
+        "terminal_multiple": 24,
+        "arrival_prob": 0.4,
+        "years_to_maturity": 10,
+        "shares_m": 436.456,
+        "failure_equity_value_m": 646,
+        "discount_rate": 0.1
+      },
+      "stressed_assumptions": [
+        "mature_state_members",
+        "mature_oe_margin",
+        "terminal_multiple",
+        "arrival_probability"
+      ],
+      "probability_evidence": "[E:qualitative_NFLX_2016.json] 20%=乐观世界（需同时兑现国际利润率爬坡+军备竞赛不失控+定价权持续）",
+      "non_operating_addback_per_share": 0.0
+    }
+  ],
+  "sensitivity": {
+    "note": "成长通道敏感性见引擎输出 growth_value_REQ-P1-01.json 的 sensitivity 段（p±0.10、N±2、倍数±20%）；结论对到达概率最敏感——p 从 0.25→0.35 时基准每股 32.91→45.6，仍低于现价",
+    "implied_arrival_probability": "现价 123.80 隐含到达概率：基准成熟态口径 96%、Gordon 口径 141%、乐观成熟态口径 51%——市场定价介于『基准态近乎必然到达』与『乐观态对半开』之间，基率锚上界 25%"
+  },
+  "verdict_band_note": "REQ-P1-01 验收：成长通道使本案从『纯 OE 框架无语言可说（131x OE、隐含增速无解、9.0×基准价值）』变为『有语言：基准 32.91 / 乐观 94.92 / 现价隐含到达概率 96% vs 基率锚 25%』。双闸门仍不过（gate1 MoS 深负；gate2 ①' 期望 IRR < r）→ 档位上限=观察等价格；成长通道档位带建议=观察等价格（单元经济已证、implied p<100%、与市场分歧在到达赔率而非生意真假）。档位 1（拒绝）→2（观察等价格），缺口 2→1 档。官方期望 {3,4} 中的档位 3（小仓位试探）需要到达概率或终局倍数高于基率锚约束——通道刻意不给（防拟合答案），该残差归 REQ-P1-04（概率证据传导）与 REQ-P1-05（基率表建成后的到达概率校准）跟踪。"
+}

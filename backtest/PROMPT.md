@@ -221,6 +221,8 @@ must_trigger 在密封时才写入）。
 
 两条机器化纪律（第三批起强制，即下一执行批次第四批起）：① Phase 0 必须跑 `python3 scripts/forensic_screen.py <financials> --as-of <回放时点> -o data/forensic.json`，`--as-of` 保证只用当日已发布年报（`publish_date` 驱动），其输出的 `P0_*` 码原样进 `verdict.json.codes` 并标 `engine_derived`——人工登记的排雷命中若脚本未命中，须在 `diff.md` 说明是字段缺失（`insufficient_data`）还是条款未算术化；② 闸门二按 `reverse_dcf.py` 的 `gate2.pass`（四项参与判定）落 `GATE2_*` 码，护城河反推门槛 `GATE2_1_IRR_FAIL` 是诊断码、不构成闸门二不过的理由。
 
+**成长股通道（REQ-P1-01，第三批起强制）**：判型为再投入子型（当期 OE 被增长性资本开支压低）时，估值必须走 `python3 scripts/reverse_dcf.py growth`（成熟期稳态利润×到达概率折回，用法与三段式见 references/growth-framework.md 第三半节），其 `GROWTH_*` 码以 `engine_derived` 进 `verdict.json.codes`；单元经济未证（`GROWTH_UNIT_ECONOMICS_UNPROVEN`，exit 2）即通道不适用，按标准 OE 管道走并在 diff.md 登记。通道档位上限恒为小仓位试探（终值结构性主导纪律），基准/乐观情景 method 登记 `growth_terminal_backcast`。
+
 **时点纪律（REQ-P0-06，第三批起强制）**：底稿 `meta.data_vintage` 与每行 `publish_date` 都不得晚于 `meta.json.replay_date`；`validate_data.py` 自动读同目录 `meta.json` 取回放时点做行级校验（不再靠路径名猜）。确属「文献时点晚于事实时点」的历史事实回取，在 `meta.point_in_time_waiver = {reason, affected_years}` 显式豁免并在报告数据附录带 `data-appendix="point-in-time-waiver"` 披露；用了重述值必须在该行 `restated_from = {<字段>: {original, reason}}` 登记原值与原因（两者缺一即 ERROR），报告附录带 `data-appendix="restatements"`。`data_vintage` 不得早于任何一行 `publish_date`（把 vintage 填成截断日、行级发布日留空的底稿会被一致性检查拦下）。
 
 **源冲突裁决（REQ-P0-07，第三批起强制）**：`crosscheck_official.py --audit`（A/港股）或 EDGAR 模式（美股）按三级阈值比对：命门 >1% 阻断、资产负债表 >3% 告警、其他 >5% 登记，以 tier 更高的源为准（tier 由 `crosscheck[].source_tier` 或 source 文本推断）。差异用 `--write` 落盘到底稿 `crosscheck_conflicts`，报告数据附录带 `data-appendix="source-conflicts"` 列出差异表（`verify_report.py` 校验）。豁免必须是五要素结构 `{adopted_value, adopted_source, rejected_value, rejected_source, reason}`。

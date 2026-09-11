@@ -29,6 +29,7 @@
 | `NORM_*` | 周期正常化与基期纪律 | `compute_metrics.py` 自动 |
 | `S*` | 三情景门禁十一项 | `check_scenarios.py` 自动 |
 | `GATE*` | 双闸门结果 | `reverse_dcf.py expected-return` 自动 |
+| `GROWTH_*` | 成长股通道门禁与诊断 | `reverse_dcf.py growth` 自动（UNANCHORED 为硬拒绝、人工登记） |
 
 `P0_*` 合计 6+20+4 = 30 项，与福耀案「0/6+0/20+0/4 = 0/30 误杀」口径一致。
 
@@ -191,6 +192,31 @@ ALERTS = {
     "GATE2_4_LOSS_PROB_FAIL": ("gate", "闸门二④：亏损概率 > 30%（valuation-guide 核心买入下行约束）"),
     "GATE2_UNRATED": ("gate", "闸门二不可评（缺 --iv-growth），绝不可当作通过"),
     "GATE_EFFECTIVE_HURDLE_GAP": ("gate", "【诊断】旧三项全过口径下有效门槛显著高于名义门槛（解释旧口径假阴性，不构成当前门槛）"),
+
+    # ---- 成长股通道（reverse_dcf.py growth 自动，REQ-P1-01）----
+    # 动因：B2-09 Netflix 案（全回测最深假阴性）——纯 OE 框架对「当期 OE 极小但
+    # 单元经济已证」的公司无语言可说。通道以成熟期稳态利润×到达概率折回替代当期
+    # OE 基期；以下代号为通道的门禁与诊断输出。
+    "GROWTH_UNIT_ECONOMICS_UNPROVEN": (
+        "growth", "单元经济未证：规模化边际贡献率 ≤0 或 LTV/CAC <1——增长在单位层面"
+        "毁灭价值，是烧钱不是再投入。成长通道拒绝服务（exit 2），改走标准管道；"
+        "这是区分 Netflix 型再投入与乐视型成长陷阱的第一道门"),
+    "GROWTH_ARRIVAL_PROB_UNANCHORED": (
+        "growth", "到达概率未挂证据：--arrival-prob-basis 缺失或无 [E:] 指针——裸概率禁止"
+        "（与 S7 概率纪律同源；该参数直接决定通道价值）"),
+    "GROWTH_ARRIVAL_PROB_ABOVE_BASERATE": (
+        "growth", "到达概率高于收入基率锚：到达=增长兑现+利润率扩张+竞争存活的联合概率，"
+        "不应超过同等规模公司达成所需 CAGR 的历史比例——超出须在 basis 中论证例外"),
+    "GROWTH_PRICE_IMPLIES_CERTAIN_ARRIVAL": (
+        "growth", "现价隐含到达概率 ≥100%：连『必然到达』都解释不了现价——透支信号，"
+        "价格已定价通道外叙事"),
+    "GROWTH_IMPLIED_VS_BASERATE_GAP": (
+        "growth", "现价隐含到达概率显著高于基率锚（≥2 倍或绝对差 ≥25pct）：市场对到达的"
+        "定价远超历史达成比例——分歧显式化，是观察/拒绝档位带的分界输入"),
+    "GROWTH_TERMINAL_DOMINATED": (
+        "growth", "成长通道估值 100% 来自成熟期终值折回（结构性终值主导，按构造恒触发）："
+        "估值主体是尚未发生的成熟态，禁止以安全边际单独支撑核心买入，"
+        "通道档位上限恒为小仓位试探"),
 }
 
 
