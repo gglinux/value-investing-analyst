@@ -63,12 +63,14 @@ from datetime import date, datetime, timedelta
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from schema_meta import validate_full  # noqa: E402
+# REQ-P0-07 阈值与豁免格式单点定义在 crosscheck_official（生产端），本文件（消费端）只 import，
+# 避免两处 TOL 各自漂移。
+from crosscheck_official import (TOL, TOL_BALANCE_SHEET, TOL_OTHER,  # noqa: E402,F401
+                                 CORE_FIELDS as CROSSCHECK_KEYS, exempt_detail)
 
 SPIKE_KEYS = ["revenue", "net_income", "ocf", "capex", "total_equity", "shares_diluted"]
 SPIKE_THRESHOLD = 0.5
-CROSSCHECK_KEYS = ["revenue", "net_income", "ocf", "shares_diluted"]
 CROSSCHECK_MIN_YEARS = 3
-TOL = 0.01  # 1% 相对容差
 
 # A1/A2 共用：官方披露原文来源特征（降级来源：季度加总/接口/估算/推算）
 OFFICIAL_SOURCE_HINTS = ["10-K", "10K", "20-F", "20F", "审计", "年报", "annual report",
@@ -148,6 +150,9 @@ def main():
                     help="跳过双源核对检查（仅限竞对公司，报告须披露）")
     ap.add_argument("--consensus", default=None,
                     help="可选：一致预期 JSON 路径，启用 C5 回落信号 lint")
+    ap.add_argument("--replay-date", default=None, dest="replay_date",
+                    help="回测回放时点 YYYY-MM-DD（REQ-P0-06）。缺省时读同案例目录 meta.json，"
+                         "再回退到路径名 <ticker>_<date>；均无则按实盘案例处理")
     args = ap.parse_args()
 
     with open(args.input, "r", encoding="utf-8") as f:
@@ -199,49 +204,130 @@ def main():
 
     # 1.5b REQ-P0-06 时点正确性：data_vintage ≤ 截断日（回测强制，实盘告警）
     # 重述后的数字通常更干净（康美 2018 重述版把 300 亿货币资金调掉），用它做回测等于开卷。
+    #
+    # 审查后修订（2026-09-11）：
+    #   - replay_date 优先取 --replay-date 参数，其次同案例目录 meta.json，最后才从
+    #     路径名猜（原版只靠路径字串 "backtest" + 正则，脆弱）；
+    #   - 除文件级 data_vintage 外加**行级**校验：任一 annual 行 publish_date > replay_date
+    #     且无 restated_from 登记 → ERROR（原版漏此项，NFLX 2014 行取自 FY2016 10-K
+    #     照样进估值）；
+    #   - 加一致性检查：data_vintage 不得早于各行 publish_date 最大值（神华/鞍钢竞对底稿
+    #     把 vintage 精确填成截断日、行级 publish_date 全空，这是"填成截断日以过检"）；
+    #   - 回测案例主公司底稿 publish_date 缺失从 WARN 升为 ERROR（竞对底稿仍 WARN）；
+    #   - 显式豁免出口：meta.point_in_time_waiver = {reason, affected_years:[...]}。
+    #     无豁免即 ERROR，有豁免降 WARN 并要求报告披露。用户裁决：历史 case 数据不动，
+    #     所以必须有例外机制而非硬阻断。
+    import re as _re06
     meta = data.get("meta") or {}
     vintage_raw = str(meta.get("data_vintage") or "").strip()
-    # 自动检测是否属于回测案例（路径含 backtest/）
-    is_backtest = "backtest" in str(args.input)
-    if vintage_raw:
-        import re as _re06
+    replay_date = None
+    replay_src = None
+    if getattr(args, "replay_date", None):
+        replay_date, replay_src = args.replay_date, "--replay-date"
+    else:
+        _case_dir = os.path.dirname(os.path.dirname(os.path.abspath(args.input)))
+        _mp = os.path.join(_case_dir, "meta.json")
+        if os.path.exists(_mp):
+            try:
+                with open(_mp, "r", encoding="utf-8") as _mf:
+                    _rd = (json.load(_mf) or {}).get("replay_date")
+                if _rd:
+                    replay_date, replay_src = str(_rd)[:10], "meta.json"
+            except Exception:  # noqa: BLE001
+                pass
+        if replay_date is None:
+            _dp = _re06.search(r"_(\d{4}-\d{2}-\d{2})(?:/|$)", str(args.input).replace(os.sep, "/"))
+            if _dp and "backtest" in str(args.input):
+                replay_date, replay_src = _dp.group(1), "路径名"
+    is_backtest = replay_date is not None
+    is_peer_doc = bool(data.get("is_peer") or data.get("role") == "peer" or args.skip_crosscheck)
+    waiver = meta.get("point_in_time_waiver") or {}
+    waiver_years = set()
+    if isinstance(waiver, dict) and waiver.get("reason"):
+        waiver_years = {int(y) for y in (waiver.get("affected_years") or []) if str(y).isdigit()}
+    _pit_issues = []   # (year|None, msg)
+
+    if is_backtest:
+        vintage_date = None
         _vm = _re06.match(r"(\d{4}-\d{2}-\d{2})", vintage_raw)
         if _vm:
             vintage_date = _vm.group(1)
-            # 如果底稿路径含 replay_date（形如 <ticker>_YYYY-MM-DD），校验 vintage ≤ replay
-            _rp = _re06.search(r"_(\d{4}-\d{2}-\d{2})", os.path.basename(args.input))
-            replay_date = None
-            if _rp:
-                replay_date = _rp.group(1)
-            elif is_backtest:
-                # 从目录名取
-                _dp = _re06.search(r"_(\d{4}-\d{2}-\d{2})", str(args.input))
-                if _dp:
-                    replay_date = _dp.group(1)
-            if replay_date and vintage_date > replay_date:
-                msg = (f"时点正确性（REQ-P0-06）：data_vintage {vintage_date} > "
-                       f"回放时点 {replay_date}——底稿数据可得日期晚于截断日，"
-                       "构成前视偏差（康美重述版/追溯调整/准则切换可比数据都会踩此线）")
-                if is_backtest:
-                    errors.append(msg)
-                else:
-                    warns.append(msg + "（非回测案例降级为警告）")
-    elif is_backtest:
-        warns.append("时点正确性（REQ-P0-06）：回测案例缺 meta.data_vintage——"
-                     "无法校验数据是否为截断日当时可得")
+            if vintage_date > replay_date:
+                _pit_issues.append((None, f"data_vintage {vintage_date} > 回放时点 {replay_date}"
+                                    f"（{replay_src}）——底稿数据可得日期晚于截断日"))
+        elif vintage_raw:
+            warns.append(f"时点正确性（REQ-P0-06）：data_vintage「{vintage_raw}」不是 YYYY-MM-DD 起始格式，无法校验")
+        else:
+            warns.append("时点正确性（REQ-P0-06）：回测案例缺 meta.data_vintage——无法校验数据是否为截断日当时可得")
+        # 行级
+        pub_max = None
+        for r in rows:
+            pd_ = str(r.get("publish_date") or "")[:10]
+            if pd_ and _re06.match(r"\d{4}-\d{2}-\d{2}$", pd_):
+                pub_max = max(pub_max or pd_, pd_)
+                if pd_ > replay_date and not r.get("restated_from"):
+                    _pit_issues.append((r.get("year"),
+                                        f"{r.get('year')} 行 publish_date {pd_} > 回放时点 {replay_date} "
+                                        f"且未登记 restated_from——该行数据在截断日不可得"))
+        # 一致性：vintage 不得早于任何一行的发布日
+        if vintage_date and pub_max and vintage_date < pub_max:
+            _pit_issues.append((None, f"data_vintage {vintage_date} 早于行级 publish_date 最大值 {pub_max}"
+                                "——vintage 应 ≥ 所有行的发布日，疑为按截断日填写而非真实可得日"))
+        # 覆盖率：回测主公司底稿 publish_date 缺失升级为 ERROR——但只针对**可能跨截断日**
+        # 的年份（财年 ≥ 回放年 −1；年报最早在次年 1 月发布，更早的财年在截断日必然已可得，
+        # 缺发布日只影响审计留痕不影响时点判定，降 WARN）。
+        _ry = int(replay_date[:4])
+        _nopub_risky = [r.get("year") for r in rows
+                        if not r.get("publish_date") and isinstance(r.get("year"), int) and r["year"] >= _ry - 1]
+        _nopub_old = [r.get("year") for r in rows
+                      if not r.get("publish_date") and not (isinstance(r.get("year"), int) and r["year"] >= _ry - 1)]
+        if _nopub_risky and not is_peer_doc:
+            _pit_issues.append((None, f"回测底稿 {_nopub_risky} 行缺 publish_date 且财年临近回放时点 {replay_date}"
+                                "——无法按发布日判定截断日可得性"))
+        elif _nopub_risky and is_peer_doc:
+            warns.append(f"时点正确性（REQ-P0-06）：竞对底稿 {_nopub_risky} 行缺 publish_date 且财年临近回放时点——"
+                         "竞对对比数据无法按发布日截断，报告脚注须披露")
+        if _nopub_old:
+            warns.append(f"时点正确性（REQ-P0-06）：{len(_nopub_old)} 行缺 publish_date {_nopub_old[:5]}"
+                         f"{'…' if len(_nopub_old) > 5 else ''}——财年远早于回放时点，不影响时点判定，建议补齐留痕")
+        for y, msg in _pit_issues:
+            full = f"时点正确性（REQ-P0-06）：{msg}"
+            if waiver_years and (y is None or y in waiver_years) or (waiver.get("reason") and not waiver.get("affected_years")):
+                warns.append(full + f"——已豁免（meta.point_in_time_waiver：{waiver.get('reason')}），报告须披露")
+            else:
+                errors.append(full + "，构成前视偏差。确属可回取的历史事实（文献晚于事实）时，"
+                              "在 meta.point_in_time_waiver 写 {reason, affected_years} 显式豁免并在报告披露")
+    else:
+        _vm = _re06.match(r"(\d{4}-\d{2}-\d{2})", vintage_raw)
+        if not _vm and not vintage_raw:
+            warns.append("时点正确性（REQ-P0-06）：缺 meta.data_vintage（实盘案例建议登记数据抓取日）")
 
     # 1.5c REQ-P0-06 重述处理：含 restated_from 字段的行必须登记原值与理由
+    # 结构：{"<field>": {"original": <原值>, "reason": "<重述原因>", "restated_in": "<载体文献>"}}
+    # original 与 reason 均为必填（原版只查 original，文档要求的 reason 未强制）。
+    restated_fields = []
     for r in rows:
         rf = r.get("restated_from")
-        if rf is not None:
-            if not isinstance(rf, dict):
-                warns.append(f"重述处理（{r.get('year')}）：`restated_from` 应为 dict "
-                             "（键=字段名, 值={{original: 原值, reason: 理由}}）")
-            else:
-                for fld, detail in rf.items():
-                    if not isinstance(detail, dict) or "original" not in detail:
-                        warns.append(f"重述处理（{r.get('year')}.{fld}）：缺 original 原值——"
-                                     "重述值如需使用，须登记原值供比对")
+        if rf is None:
+            continue
+        if not isinstance(rf, dict) or not rf:
+            errors.append(f"重述处理（REQ-P0-06，{r.get('year')}）：`restated_from` 应为非空 dict "
+                          "（键=字段名, 值={original: 原值, reason: 理由}）")
+            continue
+        for fld, detail in rf.items():
+            if not isinstance(detail, dict):
+                errors.append(f"重述处理（REQ-P0-06，{r.get('year')}.{fld}）：值应为 dict {{original, reason}}")
+                continue
+            if "original" not in detail:
+                errors.append(f"重述处理（REQ-P0-06，{r.get('year')}.{fld}）：缺 original 原值——"
+                              "重述值如需使用，须登记原值供比对")
+            if not detail.get("reason"):
+                errors.append(f"重述处理（REQ-P0-06，{r.get('year')}.{fld}）：缺 reason——"
+                              "须说明重述原因（追溯调整/准则切换/差错更正）")
+            restated_fields.append(f"{r.get('year')}.{fld}")
+    if restated_fields:
+        warns.append(f"重述处理（REQ-P0-06）：底稿含 {len(restated_fields)} 处重述值 {restated_fields[:6]}"
+                     f"{'…' if len(restated_fields) > 6 else ''}——报告数据附录须列出原值/重述值/原因")
 
     # 1.6 信息时效检查：分析日距最新登记的财报发布日超过 100 天时，
     # 极可能存在未消化的新季报/盈利预告（腾讯 AI capex +176% 是季中爆出的教训）。
@@ -490,22 +576,34 @@ def main():
                     # 此前仅告警，导致 11 个归档案例中 6 个从未核对 shares_diluted——
                     # 而它是 eps/oe_ps/每股内在价值的分母，错了会线性缩放整个估值
                     # 与安全边际。缺口必须显式豁免，不能靠告警被忽略。
-                    exempt = (data.get("crosscheck_exempt") or {}).get(k)
-                    if exempt:
-                        warns.append(f"双源核对 {y}: `{k}` 官方值缺失，已豁免（{exempt}）；"
+                    ok_ex, ex_desc, ex_problems = exempt_detail(data.get("crosscheck_exempt") or {}, k)
+                    if ok_ex:
+                        warns.append(f"双源核对 {y}: `{k}` 官方值缺失，已豁免（{ex_desc}）；"
                                      "报告脚注须披露该科目未经原文核对")
+                        for p in ex_problems:
+                            warns.append(f"双源核对（REQ-P0-07）: {p}")
                     else:
                         errors.append(
                             f"双源核对(A4) {y}: 强制科目 `{k}` 缺官方值——该科目实际未被"
                             f"交叉核对。请从年报原文补录；确无法取得时在底稿写 "
-                            f'`"crosscheck_exempt": {{"{k}": "<原因与替代验证方式>"}}` 显式豁免')
+                            f'`"crosscheck_exempt": {{"{k}": {{adopted_value, adopted_source, '
+                            f'rejected_value, rejected_source, reason}}}}` 显式豁免')
                     continue
                 d = rel_diff(float(ov), float(dv) if dv is not None else None)
                 if d is None:
                     errors.append(f"双源核对 {y}: 底稿缺 `{k}`，无法比对")
                 elif d > TOL:
-                    errors.append(f"双源核对 {y}: `{k}` 底稿({dv}) vs 官方({ov}) 偏差 {d:.1%}，"
-                                  "以官方披露为准修正底稿并在 spike_notes 记录差异原因")
+                    ok_ex, ex_desc, ex_problems = exempt_detail(data.get("crosscheck_exempt") or {}, k)
+                    if ok_ex:
+                        # 口径裁决豁免（与 crosscheck_official 同语义）：底稿为冻结裁决的派生口径
+                        warns.append(f"双源核对 {y}: `{k}` 底稿({dv}) vs 官方({ov}) 偏差 {d:.1%}，"
+                                     f"已豁免（{ex_desc}）；差异须进报告数据附录")
+                        for p in ex_problems:
+                            warns.append(f"双源核对（REQ-P0-07）: {p}")
+                    else:
+                        errors.append(f"双源核对(REQ-P0-07) {y}: 命门科目 `{k}` 底稿({dv}) vs 官方({ov}) "
+                                      f"偏差 {d:.1%} > {TOL:.0%}——以高优先级源为准修正底稿并在 "
+                                      "crosscheck_conflicts/spike_notes 记录差异原因")
 
     # 5.5 校验覆盖率哨兵（v2.11 新增）——最危险的失效形态：
     # "0 错误"可能意味着"检查全通过"，也可能意味着"因为缺数据，检查根本没跑"。

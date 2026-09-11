@@ -2216,39 +2216,210 @@ check("披露代号不参与任何断言判定（纯披露）",
 
 # ═══════════════════════════════════════════════════════════════════
 print("== 14.3 REQ-P0-05 隔离协议 + P0-06 时点 + P0-07 源裁决 + P0-08 规则版本 ==")
-# --- P0-05 隔离 ---
-_sc_check = subprocess.run([sys.executable, os.path.join(SCRIPTS, "prepare_case.py"),
-    "--seal-check", os.path.join(ROOT, "backtest", "600519.SH_2015-08-31")],
-    capture_output=True, text=True)
-check("P0-05 --seal-check 检出一二批旧流程污染（答案与 verdict 同 commit）",
-      _sc_check.returncode == 1 and "隔离检查失败" in _sc_check.stdout, _sc_check.stdout[:200])
-# --- P0-08 规则版本快照 ---
-_snap = subprocess.run([sys.executable, os.path.join(SCRIPTS, "prepare_case.py"),
-    "--snapshot-rules"], capture_output=True, text=True)
-_snap_d = json.loads(_snap.stdout)
-check("P0-08 --snapshot-rules 输出 skill_commit 与 thresholds",
-      "skill_commit" in _snap_d and "thresholds" in _snap_d
-      and _snap_d["thresholds"].get("mos_wide") == 0.25, str(_snap_d)[:200])
-# --- P0-06 时点校验（注入未来 vintage → 回测阻断）---
-_tmpd6 = tempfile.mkdtemp()
-_fin_fake = {"company": "Test", "currency": "CNY", "unit": "million",
-    "meta": {"schema_version": 0, "unit": "百万", "currency": "CNY",
-             "data_vintage": "2025-03-30"},
-    "annual": [{"year": 2020, "revenue": 100, "net_income": 10, "ocf": 15,
-                "total_assets": 200, "total_equity": 80, "shares_diluted": 10}]}
-_fin6_path = os.path.join(_tmpd6, "backtest", "TEST_2024-12-31", "data", "financials_test.json")
-os.makedirs(os.path.dirname(_fin6_path))
-json.dump(_fin_fake, open(_fin6_path, "w", encoding="utf-8"), ensure_ascii=False)
-_vd6 = subprocess.run([sys.executable, os.path.join(SCRIPTS, "validate_data.py"), _fin6_path],
-    capture_output=True, text=True)
-check("P0-06 data_vintage > replay_date → 回测案例报 ERROR",
-      _vd6.returncode != 0 and "REQ-P0-06" in _vd6.stdout, _vd6.stdout[:300])
-# --- P0-07 源优先级常量存在 ---
+import prepare_case as PC  # noqa: E402
 import crosscheck_official as CCO  # noqa: E402
-check("P0-07 源优先级表 SOURCE_PRIORITY 已注册",
-      hasattr(CCO, "SOURCE_PRIORITY") and CCO.SOURCE_PRIORITY.get("edgar_xbrl") == 1)
-check("P0-07 差异阈值：命门 1%, 资产负债表 3%, 其他 5%",
+import run_backtest_assertions as RBA  # noqa: E402
+# --- P0-05 隔离：pre 模式 vs audit 模式 ---
+_mt_case = os.path.join(ROOT, "backtest", "600519.SH_2015-08-31")
+_sc_check = subprocess.run([sys.executable, os.path.join(SCRIPTS, "prepare_case.py"),
+    "--seal-check", _mt_case], capture_output=True, text=True)
+check("P0-05 --seal-check（pre）检出一二批旧流程污染（答案与 verdict 同 commit）",
+      _sc_check.returncode == 1 and "隔离检查失败" in _sc_check.stdout, _sc_check.stdout[:200])
+_sc_audit = subprocess.run([sys.executable, os.path.join(SCRIPTS, "prepare_case.py"),
+    "--seal-check", _mt_case, "--audit"], capture_output=True, text=True)
+check("P0-05 --audit 模式不把 answer 文件存在当污染（只报 git 时序）",
+      "工作区存在答案文件" not in _sc_audit.stdout and "模式 audit" in _sc_audit.stdout, _sc_audit.stdout[:200])
+check("P0-05 别名反查：福特（ticker F）不做单字母子串搜索",
+      "F" not in PC._case_aliases("F_2005-06-30") and "福特" in PC._case_aliases("F_2005-06-30"))
+check("P0-05 别名反查：中石油目录名 → 中文别名",
+      "中石油" in PC._case_aliases("601857.SH_2007-11-05"))
+_iso = subprocess.run([sys.executable, os.path.join(SCRIPTS, "prepare_case.py"),
+    "--isolation-report"], capture_output=True, text=True)
+check("P0-05 --isolation-report 输出批次执行率且 legacy 批次不计入验收",
+      _iso.returncode == 0 and "legacy" in _iso.stdout, _iso.stdout[:200])
+# --- P0-08 规则版本快照 ---
+_snap_d = PC.snapshot_rules()
+check("P0-08 快照含 skill_commit / thresholds / missing 三段",
+      all(k in _snap_d for k in ("skill_commit", "thresholds", "missing")))
+check("P0-08 RULES_REGISTRY 全部取到（missing 为空，无静默 null）",
+      _snap_d["missing"] == [], str(_snap_d["missing"]))
+_th = _snap_d["thresholds"]
+check("P0-08 关键阈值不为 null：折现率/悲观门槛/MoS/排雷阈值",
+      _th.get("discount_rate_default") == 0.10 and _th.get("pessimistic_hurdle_default") == 0.0
+      and _th.get("mos_wide") == 0.25 and _th.get("forensic_thresholds", {}).get("TH_CASH_RATIO") == 0.25,
+      str({k: _th.get(k) for k in ("discount_rate_default", "pessimistic_hurdle_default", "mos_wide")}))
+import reverse_dcf as _RD08  # noqa: E402
+check("P0-08 快照值 == 引擎实际默认（argparse 引用模块常量，非各自硬编码）",
+      _th["discount_rate_default"] is _RD08.DEFAULT_DISCOUNT_RATE
+      and _th["index_hurdle_default"] == _RD08.DEFAULT_INDEX_HURDLE)
+# --- P0-06 时点校验 ---
+_tmpd6 = tempfile.mkdtemp()
+_case6 = os.path.join(_tmpd6, "backtest", "TEST_2024-12-31")
+os.makedirs(os.path.join(_case6, "data"))
+json.dump({"batch": 4, "replay_date": "2024-12-31"}, open(os.path.join(_case6, "meta.json"), "w"))
+_fin_fake = {"company": "Test", "currency": "CNY", "unit": "million",
+    "meta": {"schema_version": 0, "unit": "百万", "currency": "CNY", "data_vintage": "2024-04-30"},
+    "annual": [{"year": 2023, "revenue": 100, "net_income": 10, "ocf": 15, "publish_date": "2024-04-30",
+                "total_assets": 200, "total_equity": 80, "shares_diluted": 10},
+               {"year": 2024, "revenue": 110, "net_income": 11, "ocf": 16, "publish_date": "2025-04-30",
+                "total_assets": 210, "total_equity": 85, "shares_diluted": 10}]}
+_fin6_path = os.path.join(_case6, "data", "financials_test.json")
+def _run_vd6(d):
+    json.dump(d, open(_fin6_path, "w", encoding="utf-8"), ensure_ascii=False)
+    return subprocess.run([sys.executable, os.path.join(SCRIPTS, "validate_data.py"), _fin6_path],
+                          capture_output=True, text=True)
+_vd6 = _run_vd6(_fin_fake)
+check("P0-06 行级 publish_date > replay_date（vintage 本身合规）→ ERROR",
+      "[ERROR] 时点正确性（REQ-P0-06）：2024 行 publish_date 2025-04-30" in _vd6.stdout, _vd6.stdout[:300])
+check("P0-06 vintage 早于行级 publish_date 最大值 → 一致性 ERROR",
+      "早于行级 publish_date 最大值" in _vd6.stdout, _vd6.stdout[:300])
+import copy as _c6
+_f6b = _c6.deepcopy(_fin_fake)
+_f6b["meta"]["data_vintage"] = "2025-04-30"
+_f6b["meta"]["point_in_time_waiver"] = {"reason": "测试豁免", "affected_years": [2024]}
+_vd6b = _run_vd6(_f6b)
+check("P0-06 显式豁免 point_in_time_waiver → 降 WARN、要求报告披露",
+      not any("[ERROR] 时点正确性" in l for l in _vd6b.stdout.splitlines())
+      and "已豁免" in _vd6b.stdout, _vd6b.stdout[:300])
+_f6c = _c6.deepcopy(_fin_fake)
+_f6c["meta"]["data_vintage"] = "2025-04-30"
+_f6c["annual"][1]["restated_from"] = {"revenue": {"original": 105}}
+_vd6c = _run_vd6(_f6c)
+check("P0-06 restated_from 缺 reason → ERROR（不再只是 WARN）",
+      "缺 reason" in _vd6c.stdout and "[ERROR] 重述处理" in _vd6c.stdout, _vd6c.stdout[:300])
+_vd6d = subprocess.run([sys.executable, os.path.join(SCRIPTS, "validate_data.py"), _fin6_path,
+                        "--replay-date", "2026-01-01"], capture_output=True, text=True)
+check("P0-06 --replay-date 显式参数覆盖 meta.json",
+      "回放时点 2026-01-01" in _vd6d.stdout or "时点正确性" not in _vd6d.stdout, _vd6d.stdout[:200])
+check("P0-06 NFLX 历史案例：追溯豁免后通过入口校验（用户裁决：历史数据不动）",
+      subprocess.run([sys.executable, os.path.join(SCRIPTS, "validate_data.py"),
+                      os.path.join(ROOT, "backtest", "NFLX_2016-12-31", "data", "financials_NFLX_2016.json")],
+                     capture_output=True, text=True).returncode == 0)
+# --- P0-07 源裁决：阈值分级行为 + 3% 注入阻断 + 源 tier ---
+check("P0-07 三级阈值常量：命门 1%, 资产负债表 3%, 其他 5%",
       CCO.TOL == 0.01 and CCO.TOL_BALANCE_SHEET == 0.03 and CCO.TOL_OTHER == 0.05)
+check("P0-07 tol_for 分级：revenue→block / total_assets→warn / 其他→register",
+      CCO.tol_for("revenue", CCO.CORE_FIELDS)[1] == "block"
+      and CCO.tol_for("total_assets", CCO.CORE_FIELDS) == (0.03, "warn")
+      and CCO.tol_for("capex", CCO.CORE_FIELDS) == (0.05, "register"))
+check("P0-07 源 tier 推断：10-K→1 / 官网→2 / westock→3 / 研报→4 / 新浪转引→5",
+      [CCO.source_tier(s) for s in ("FY2015 10-K", "公司官网投资者关系", "westock 接口", "券商研报", "新浪转引")] == [1, 2, 3, 4, 5])
+import validate_data as _VD07  # noqa: E402
+check("P0-07 阈值单点定义：validate_data.TOL 即 crosscheck_official.TOL",
+      _VD07.TOL is CCO.TOL)
+_mt_fin_p = glob.glob(os.path.join(ROOT, "backtest", "600519.SH_2015-08-31", "data", "financials_*.json"))[0]
+_inj = json.load(open(_mt_fin_p, encoding="utf-8"))
+_cc_last = sorted(_inj["crosscheck"], key=lambda r: r["year"])[-1]
+_row = next(r for r in _inj["annual"] if r["year"] == _cc_last["year"])
+_cc_last["revenue"] = round(_row["revenue"] * 1.03, 2)          # 命门 3% → 阻断
+_cc_last["total_assets"] = round(_row["total_assets"] * 1.04, 2)  # 资产负债表 4% → 告警
+_inj_p = os.path.join(tempfile.mkdtemp(), "financials_inj.json")
+json.dump(_inj, open(_inj_p, "w", encoding="utf-8"), ensure_ascii=False)
+_cco = subprocess.run([sys.executable, os.path.join(SCRIPTS, "crosscheck_official.py"),
+                       "--financials", _inj_p, "--audit"], capture_output=True, text=True)
+check("P0-07 验收：注入 3% 命门差异 → --audit 模式非零退出 + 差异表 ⛔阻断",
+      _cco.returncode == 1 and "⛔阻断" in _cco.stdout and "revenue" in _cco.stdout, _cco.stdout[-400:])
+check("P0-07 同时注入 4% 资产负债表差异 → ⚠告警（不阻断级）",
+      "⚠告警" in _cco.stdout and "total_assets" in _cco.stdout, _cco.stdout[-400:])
+check("P0-07 差异表含裁决方向（以 tier 更高的源为准）",
+      "以 官方源为准（tier 1）" in _cco.stdout, _cco.stdout[-400:])
+_vd7 = subprocess.run([sys.executable, os.path.join(SCRIPTS, "validate_data.py"), _inj_p],
+                      capture_output=True, text=True)
+check("P0-07 validate_data 消费端同样阻断（REQ-P0-07 标签）",
+      _vd7.returncode != 0 and "双源核对(REQ-P0-07)" in _vd7.stdout, _vd7.stdout[:300])
+_inj["crosscheck_exempt"] = {"revenue": {"adopted_value": _row["revenue"], "adopted_source": "年报原文",
+    "rejected_value": _cc_last["revenue"], "rejected_source": "测试注入", "reason": "测试结构化豁免"}}
+json.dump(_inj, open(_inj_p, "w", encoding="utf-8"), ensure_ascii=False)
+_cco2 = subprocess.run([sys.executable, os.path.join(SCRIPTS, "crosscheck_official.py"),
+                        "--financials", _inj_p, "--audit", "--write"], capture_output=True, text=True)
+check("P0-07 五要素结构化豁免 → 阻断解除、差异表标已豁免",
+      _cco2.returncode == 0 and "已豁免" in _cco2.stdout, _cco2.stdout[-300:])
+_inj_w = json.load(open(_inj_p, encoding="utf-8"))
+check("P0-07 --write 将差异表落盘到 crosscheck_conflicts（供报告附录）",
+      len(_inj_w.get("crosscheck_conflicts") or []) == 2
+      and any(c["resolved"] for c in _inj_w["crosscheck_conflicts"]))
+check("P0-07 legacy 字符串豁免仍接受但提示迁移",
+      CCO.exempt_detail({"ocf": "旧格式理由"}, "ocf")[0] is True
+      and "legacy" in CCO.exempt_detail({"ocf": "旧格式理由"}, "ocf")[2][0])
+# --- P0-05/08 消费端：lint_verdict 交叉校验 + runner 排除 contaminated ---
+_tmp_case = os.path.join(ROOT, "backtest", "_TMP_TEST_2020-12-31")
+os.makedirs(_tmp_case, exist_ok=True)
+try:
+    json.dump({"batch": 4, "replay_date": "2020-12-31"}, open(os.path.join(_tmp_case, "meta.json"), "w"))
+    _v = {"final_verdict": "拒绝", "verdict_ordinal": 1, "gate1": {}, "gate2": {}, "codes": ["GATE1_FAIL"],
+          "codes_provenance": {"engine_derived": ["GATE1_FAIL"], "manually_recorded": []},
+          "frozen_before_diff": True, "frozen_at": "2026-09-11"}
+    open(os.path.join(_tmp_case, "diff.md"), "w").write("# test\n")
+    open(os.path.join(_tmp_case, "report.html"), "w").write("<html></html>")
+    _vp = os.path.join(_tmp_case, "verdict.json")
+    json.dump(_v, open(_vp, "w"), ensure_ascii=False)
+    _l1 = subprocess.run([sys.executable, os.path.join(SCRIPTS, "run_backtest_assertions.py"),
+                          "--lint-verdict", _vp], capture_output=True, text=True)
+    check("P0-08 lint：第四批 verdict 缺 rules_snapshot → 不通过",
+          _l1.returncode == 1 and "缺 rules_snapshot" in _l1.stdout, _l1.stdout[:300])
+    _snap_dirty = dict(_snap_d); _snap_dirty["dirty"] = True
+    _v["rules_snapshot"] = _snap_dirty
+    json.dump(_v, open(_vp, "w"), ensure_ascii=False)
+    _l2 = subprocess.run([sys.executable, os.path.join(SCRIPTS, "run_backtest_assertions.py"),
+                          "--lint-verdict", _vp], capture_output=True, text=True)
+    check("P0-08 lint：rules_snapshot.dirty=true → 拒绝（hash 不代表实际代码）",
+          _l2.returncode == 1 and "dirty=true" in _l2.stdout, _l2.stdout[:300])
+    # REVIEW-REQ-P0-08 §1 防复发：原版 `and "mos_wide" not in th` 括号绑定错位，快照只要
+    # reverse_dcf 可导入就必有 mos_wide，三项关键阈值非空校验恒不触发（实测
+    # thresholds={"mos_wide":0.25} 可原样放行）。快照在但内容不全必须拒绝。
+    _snap_bad = dict(_snap_d, dirty=False)
+    _snap_bad["thresholds"] = {"mos_wide": 0.25}
+    _v["rules_snapshot"] = _snap_bad
+    json.dump(_v, open(_vp, "w"), ensure_ascii=False)
+    _l2b = subprocess.run([sys.executable, os.path.join(SCRIPTS, "run_backtest_assertions.py"),
+                           "--lint-verdict", _vp], capture_output=True, text=True)
+    check("P0-08 lint：thresholds 只有 mos_wide（折现率/悲观门槛缺失）→ 拒绝（兼容键不得短路关键阈值）",
+          _l2b.returncode == 1
+          and "缺关键阈值 discount_rate_default" in _l2b.stdout
+          and "缺关键阈值 pessimistic_hurdle_default" in _l2b.stdout, _l2b.stdout[:300])
+    _snap_bad2 = dict(_snap_d, dirty=False)
+    _snap_bad2["thresholds"] = {"mos_wide": 0.25, "mos_requirement": {"wide": 0.4, "narrow": 0.25},
+                                "pessimistic_hurdle_default": 0.0}
+    _v["rules_snapshot"] = _snap_bad2
+    json.dump(_v, open(_vp, "w"), ensure_ascii=False)
+    _l2c = subprocess.run([sys.executable, os.path.join(SCRIPTS, "run_backtest_assertions.py"),
+                           "--lint-verdict", _vp], capture_output=True, text=True)
+    check("P0-08 lint：只缺 discount_rate_default（mos_wide 存在）→ 仍拒绝",
+          _l2c.returncode == 1 and "缺关键阈值 discount_rate_default" in _l2c.stdout, _l2c.stdout[:300])
+    _v["rules_snapshot"] = dict(_snap_d, dirty=False)
+    json.dump(_v, open(_vp, "w"), ensure_ascii=False)
+    open(os.path.join(_tmp_case, "answer.json"), "w").write("{}")
+    _l3 = subprocess.run([sys.executable, os.path.join(SCRIPTS, "run_backtest_assertions.py"),
+                          "--lint-verdict", _vp], capture_output=True, text=True)
+    check("P0-05 lint：seal-check 失败（工作区有 answer.json）且未标 contaminated → 不通过",
+          _l3.returncode == 1 and "未标 `contaminated: true`" in _l3.stdout, _l3.stdout[:400])
+    _v["contaminated"] = True
+    json.dump(_v, open(_vp, "w"), ensure_ascii=False)
+    _l4 = subprocess.run([sys.executable, os.path.join(SCRIPTS, "run_backtest_assertions.py"),
+                          "--lint-verdict", _vp], capture_output=True, text=True)
+    check("P0-05 lint：标了 contaminated 后 seal-check 失败不再阻塞",
+          _l4.returncode == 0, _l4.stdout[:300])
+    json.dump({"expected_verdict_set": [3, 4], "must_trigger": []},
+              open(os.path.join(_tmp_case, "answer.json"), "w"))
+    _case_obj = RBA.load_case(_tmp_case)
+    _res = RBA.check_case(_case_obj)
+    check("P0-05 runner：contaminated 案例三轨不计分、不产生回归红灯",
+          _res.get("contaminated") and _res["sample_role"] == "unscored"
+          and not _res["regressions"] and "不计分" in _res["verdict_track"], str(_res)[:300])
+    _fpfn = RBA.fp_fn_summary([r for r in [_res] if not r.get("contaminated")])
+    check("P0-05 runner：contaminated 不进 FP/FN 分母", _fpfn["fp_rate"] is None and _fpfn["fn_rate"] is None)
+    _res2 = RBA.check_case(RBA.load_case(os.path.join(ROOT, "backtest", "NFLX_2016-12-31")))
+    check("P0-08 runner：历史 verdict 无快照 → rules_version=unknown 披露",
+          str(_res2.get("rules_version", "")).startswith("unknown"))
+finally:
+    import shutil as _sh
+    _sh.rmtree(_tmp_case, ignore_errors=True)
+_asof = subprocess.run([sys.executable, os.path.join(SCRIPTS, "run_backtest_assertions.py"),
+                        "--as-of", "HEAD", "--case", "ZM_2021-10-31"], capture_output=True, text=True)
+check("P0-08 --as-of HEAD 在临时 worktree 重跑并自动清理",
+      "[as-of] 按 skill 版本" in _asof.stdout and "ZM_2021-10-31" in _asof.stdout
+      and "via-asof" not in subprocess.run(["git", "worktree", "list"], capture_output=True, text=True, cwd=ROOT).stdout,
+      _asof.stdout[:300] + _asof.stderr[:200])
 
 # ═══════════════════════════════════════════════════════════════════
 print("== 14.5 底稿 schema 强类型化行为测试（REQ-P0-03） ==")
@@ -2313,6 +2484,43 @@ if _fy_snap and _fy_fin:
           any("SNAPSHOT_FIN_PS" in e for e in _ce2), str(_ce2)[:200])
 else:
     check("福耀案快照/底稿文件存在（跨文件比对测试前置）", False, f"{_fy_snap} {_fy_fin}")
+# 三版审查修订（2026-09-11）：双源一致性 + 全行哨兵。
+# 缺口动因：迁移「只增不改」让顶层 unit/currency 与 meta 块并存，而计算端
+# （compute_metrics 市值换算）读顶层、校验端读 meta——分歧=校验照过、计算
+# 静默错位，OBS-600660-01 的新形态。实测注入分歧当时 0 错误 0 警告。
+_div_unit = _c145.deepcopy(_mt_fin)
+_div_unit["unit"] = "亿元"          # 计算端读这个做换算
+_e5, _ = SM.validate_full(_div_unit, "inject")
+check("顶层 unit=亿元 与 meta.unit=百万 量纲分歧 → ERROR（双源真相）",
+      any("量纲分歧" in e for e in _e5), str(_e5)[:200])
+_div_cur = _c145.deepcopy(_mt_fin)
+_div_cur["currency"] = "USD"
+_e6, _ = SM.validate_full(_div_cur, "inject")
+check("顶层 currency=USD 与 meta CNY 分歧 → ERROR",
+      any("`currency`" in e and "分歧" in e for e in _e6), str(_e6)[:200])
+_div_std = _c145.deepcopy(_mt_fin)
+_div_std["accounting_standard"] = "IFRS"
+_e7, _ = SM.validate_full(_div_std, "inject")
+check("顶层 accounting_standard 与 meta.standard 分歧 → ERROR",
+      any("accounting_standard" in e for e in _e7), str(_e7)[:200])
+check("同义写法放行：顶层 million ↔ meta 百万（乘数相等）不报分歧",
+      not any("分歧" in e for e in _e0), str(_e0)[:200])
+# 全行哨兵：单位声明错位影响所有行，只查最新行会漏「历史行数值错位」。
+# 教训：茅台 2006 年每股收入仅 ~5 元，×100=520 仍在界内——测试场景必须
+# 真正越界才证明覆盖，否则是假阴性测试。
+_row14 = _c145.deepcopy(_mt_fin)
+_rows_s = sorted(_row14["annual"], key=lambda r: r.get("year", 0))
+_rows_s[-2]["revenue"] = _rows_s[-2]["revenue"] * 100   # 非最新行 ×100
+_e8, _w8 = SM.validate_full(_row14, "inject")
+check("非最新行数值 ×100 越界被全行哨兵抓出（旧版只查最新行会漏）",
+      any("每股收入越界" in x and "最新越界" not in x.split("，")[0] for x in (_e8 + _w8)),
+      str((_e8 + _w8))[:200])
+_pa_path = os.path.join(ROOT, "cases", "pingan_china", "data",
+                        "financials_pingan_insurance.json")
+_pa_fin = json.load(open(_pa_path, encoding="utf-8"))
+_epa, _ = SM.validate_full(_pa_fin, _pa_path)
+check("平安 OBS-SCHEMA-01：12/12 年聚合为 1 条错误并定性「声明错位」",
+      len(_epa) == 1 and "12/12" in _epa[0] and "声明错位" in _epa[0], str(_epa)[:200])
 
 # ═══════════════════════════════════════════════════════════════════
 print("== 14.6 排雷算术化行为测试（REQ-P0-02） ==")
@@ -2366,6 +2574,56 @@ check("cash 别名 cash_and_short_term_investments 被 V4 识别",
       [c for c in FS.screen({"annual": [{"year": 2020, "cash_and_short_term_investments": 30,
                                           "total_debt": 30, "total_assets": 100}]})["clauses"]
        if c["id"] == "V4"][0]["status"] == "hit")
+# V4A 三重复合判据（2026-09-11 三版：一版固定 1.2% 只落了半句且从未在真实数据上运行过）
+check("康美 2017：V4A 首次在真实数据上命中（phase0_arithmetic 兜底取数，"
+      "收益率 0.84% < CNY2016 基准 1.5% 且 < 融资成本 4.86% 的一半）",
+      "P0_V4A_INTEREST_INVERSION" in _km["alert_codes"], str(_km["alert_codes"]))
+_v4a_km = [c for c in _km["clauses"] if c["id"] == "V4A"][0]
+check("V4A 命中详情含量化利差（融资成本与年利差损失）",
+      "融资成本" in _v4a_km["detail"] and "利差损失" in _v4a_km["detail"],
+      _v4a_km["detail"][:150])
+# 美股零利率防误杀：真现金收益率 0.4% ≥ USD 基准 0.25% → pass
+_usd = {"currency": "USD", "annual": [
+    {"year": 2012, "cash": 40, "total_debt": 40, "total_assets": 100},
+    {"year": 2013, "cash": 40, "total_debt": 40, "total_assets": 100,
+     "interest_income": 0.16, "interest_expense": 1.2}]}
+_ru = FS.screen(_usd)
+_v4a_usd = [c for c in _ru["clauses"] if c["id"] == "V4A"][0]
+check("美股零利率期真现金（0.4% ≥ USD 基准 0.25%）V4A 不误杀",
+      _v4a_usd["status"] == "pass" and "P0_V4A_INTEREST_INVERSION" not in _ru["alert_codes"],
+      _v4a_usd["detail"])
+# 合成正例：双高 + 0.5% 收益率 + 4% 融资成本 → 命中
+_hit2 = {"currency": "CNY", "annual": [
+    {"year": 2015, "cash": 40, "total_debt": 40, "total_assets": 100},
+    {"year": 2016, "cash": 40, "total_debt": 40, "total_assets": 100,
+     "interest_income": 0.2, "interest_expense": 1.6}]}
+check("合成正例：双高 ∧ 0.5% < 基准 1.5% ∧ < 融资成本 4% 一半 → V4A 命中",
+      "P0_V4A_INTEREST_INVERSION" in FS.screen(_hit2)["alert_codes"])
+# 形态不成立 → pass 无验证对象（验证器不独立猎雷）
+_nomorph = {"currency": "CNY", "annual": [
+    {"year": 2015, "cash": 10, "total_debt": 45, "total_assets": 100},
+    {"year": 2016, "cash": 10, "total_debt": 45, "total_assets": 100,
+     "interest_income": 0.02, "interest_expense": 1.6}]}
+check("双高形态未成立 → V4A pass（无验证对象，不独立排除）",
+      [c for c in FS.screen(_nomorph)["clauses"] if c["id"] == "V4A"][0]["status"] == "pass")
+# 币种未知 → insufficient_data 提示 --deposit-rate，不按常数误判
+_nocc = {"annual": _hit2["annual"]}
+_v4a_nocc = [c for c in FS.screen(_nocc)["clauses"] if c["id"] == "V4A"][0]
+check("币种未知且未指定基准 → insufficient_data（提示 --deposit-rate）而非 hit/pass",
+      _v4a_nocc["status"] == "insufficient_data" and "--deposit-rate" in _v4a_nocc.get("hint", ""),
+      _v4a_nocc.get("hint", ""))
+check("--deposit-rate 覆盖后复合判据可完成",
+      [c for c in FS.screen(_nocc, deposit_rate=0.015)["clauses"]
+       if c["id"] == "V4A"][0]["status"] == "hit")
+# 低于基准但缺利息支出 → insufficient（「远低于融资成本」未验证，veto 不半响）
+_noie = {"currency": "CNY", "annual": [
+    {"year": 2015, "cash": 40, "total_debt": 40, "total_assets": 100},
+    {"year": 2016, "cash": 40, "total_debt": 40, "total_assets": 100,
+     "interest_income": 0.2}]}
+_v4a_noie = [c for c in FS.screen(_noie)["clauses"] if c["id"] == "V4A"][0]
+check("低于存款基准但缺利息支出 → insufficient_data（veto 不半响）",
+      _v4a_noie["status"] == "insufficient_data" and "利息支出" in _v4a_noie.get("hint", ""),
+      _v4a_noie.get("hint", ""))
 
 # ═══════════════════════════════════════════════════════════════════
 print("== 15 脚本接入完整性（元测试） ==")

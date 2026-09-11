@@ -14,6 +14,12 @@ B 档协议 = 双会话 + 文件闸门：答案在 Step 3 verdict commit 之前*
       # 查看密封库状态（哪些案例已密封/已揭示）
   python3 scripts/prepare_case.py --seal-check backtest/<ticker>_<date>/
       # 进入 verdict 阶段前扫描该案例隔离是否完好（REQ-P0-05）
+  python3 scripts/prepare_case.py --seal-check backtest/<ticker>_<date>/ --audit
+      # 事后审计：只看 git 时序证据（answer 文件此时理应存在，不算污染）
+  python3 scripts/prepare_case.py --isolation-report
+      # 按批次输出隔离执行率（REQ-P0-05 验收指标）
+  python3 scripts/prepare_case.py --snapshot-rules
+      # 输出规则版本快照 JSON（REQ-P0-08，写入 verdict.json.rules_snapshot）
 
 密封格式：base64(json)。这不是加密——目的是：
   1. grep/glob 扫工作区时不会把答案明文带进执行上下文；
@@ -30,6 +36,7 @@ B 档协议 = 双会话 + 文件闸门：答案在 Step 3 verdict commit 之前*
 注意：第一/二批答案仍在 git 历史的 ANSWERS.md 明文中。执行第三批及之后的
 上下文**禁止用 git log / git show 回取任何批次答案**（PROMPT 第七节明文禁令）。
 """
+from __future__ import annotations
 
 import argparse
 import base64
@@ -189,64 +196,95 @@ def _status() -> int:
 
 # ── REQ-P0-05 隔离协议机器检查 ─────────────────────────────────────
 # 第二批 6 个案例中真正执行隔离的只有 1 例。靠自觉不行，靠机器。
-# 本函数在进入 verdict 阶段**前**运行，扫描三类污染：
-#   1. 工作区存在答案明文（answer.json / answer_source.md / ANSWERS.md 对应段）
-#   2. sealed_answers/*.enc 有解密痕迹（对应的 answer_source.md 已存在）
-#   3. git 历史中 answer 相关文件的首次 commit 早于 verdict.json 的首次 commit
+# 两种运行时机、两套检查项（审查发现：原版把"工作区有 answer 文件"当污染，
+# 于是 Step 4 之后对任何案例都必报污染，事后无法区分"当时真隔离了"与"没隔离"）：
+#   pre   verdict 落盘前（Step 2.5）：工作区不得有答案明文 + git 时序 + ANSWERS.md 明文
+#   audit 事后审计（收官/战绩统计）：只看 git 时序证据，不看工作区文件——
+#         answer 文件此时理应存在，存在本身不是污染
 # 任一命中输出 contaminated=True 并返回非零退出码。
 
 _ANSWER_FILES = ("answer.json", "answer_source.md", "diff.md")
-_ANSWER_PATTERNS_IN_ANSWERS_MD = None  # 惰性：需要时才读
 
 
-def _seal_check(case_dir: Path) -> int:
-    """在 verdict 落盘前检查隔离完好性。"""
+def _git_commit_times(path: str, diff_filter: str | None = None) -> list[int]:
+    """文件的提交时间戳列表（新→旧）。diff_filter='A' 只取新增提交。"""
+    args = ["log", "--format=%ct"]
+    if diff_filter:
+        args.append(f"--diff-filter={diff_filter}")
+    args += ["--", path]
+    out = _git(args).stdout.split()
+    return [int(x) for x in out if x.strip()]
+
+
+def _case_aliases(case_name: str) -> list[str]:
+    """目录名 → ANSWERS.md 可能使用的全部别名（反查 ALIAS_TO_CASE）+ ticker 本体。
+
+    原版直接用 ticker 子串搜 ANSWERS.md：福特 ticker 是 `F`，任何含 F 的行都命中
+    （假阳性）；中石油 ticker `601857.SH` 而 ANSWERS.md 写的是"中石油"（假阴性）。
+    """
+    aliases = [a for a, c in ALIAS_TO_CASE.items() if c == case_name]
+    ticker = case_name.split("_")[0]
+    if len(ticker) >= 4:  # 单字母/双字母 ticker 不做子串搜索，避免误命中
+        aliases.append(ticker)
+    return aliases
+
+
+def _seal_check(case_dir: Path, audit: bool = False) -> int:
+    """隔离完好性检查。audit=False 为 verdict 落盘前模式，True 为事后审计模式。"""
     if not case_dir.is_dir():
         print(f"❌ 案例目录不存在：{case_dir}")
         return 1
     name = case_dir.name
     issues = []
+    rel = lambda f: str((case_dir / f).relative_to(REPO_ROOT))  # noqa: E731
 
-    # ── 检查 1：工作区答案明文 ──
-    for f in _ANSWER_FILES:
-        if (case_dir / f).exists():
-            issues.append(f"工作区存在答案文件 {f}——verdict 落盘前不应出现")
+    # ── 检查 1（仅 pre 模式）：工作区答案明文 ──
+    # 密封库"已被揭示"的判据与本项完全相同（answer_source.md 存在），不再单列。
+    if not audit:
+        for f in _ANSWER_FILES:
+            if (case_dir / f).exists():
+                issues.append(f"工作区存在答案文件 {f}——verdict 落盘前不应出现")
 
-    # ── 检查 2：密封库对应答案已被揭示 ──
-    enc = SEALED_DIR / f"{name}.enc"
-    if enc.exists() and (case_dir / "answer_source.md").exists():
-        issues.append("密封答案已被揭示（answer_source.md 存在）——verdict 前不应揭示")
-
-    # ── 检查 3：git 历史中答案 commit 早于 verdict commit ──
-    verdict_path = str((case_dir / "verdict.json").relative_to(REPO_ROOT))
-    v_log = _git(["log", "--format=%H %ct", "--diff-filter=A", "--", verdict_path])
-    v_first_ts = None
-    if v_log.stdout.strip():
-        parts = v_log.stdout.strip().splitlines()[-1].split()
-        if len(parts) >= 2:
-            v_first_ts = int(parts[1])
+    # ── 检查 2：git 时序 ──
+    # 2a  verdict.json 首次提交 < 每个 answer 文件首次提交（先落盘结论再看答案）
+    # 2b  verdict.json **最后一次**提交 ≤ answer 文件首次提交——原版只比首次 commit，
+    #     "先落盘、看完答案再改 verdict 再提交一次"检不出来
+    # 2c  meta.json 首次提交 < verdict.json 首次提交（Step 1 先验冻结先于结论，
+    #     PROMPT 神华教训，此前无人机器检查）
+    v_adds = _git_commit_times(rel("verdict.json"), "A")
+    v_all = _git_commit_times(rel("verdict.json"))
+    v_first = v_adds[-1] if v_adds else None
+    v_last = v_all[0] if v_all else None
+    m_adds = _git_commit_times(rel("meta.json"), "A")
+    m_first = m_adds[-1] if m_adds else None
 
     for af in _ANSWER_FILES:
-        af_path = str((case_dir / af).relative_to(REPO_ROOT))
-        a_log = _git(["log", "--format=%H %ct", "--diff-filter=A", "--", af_path])
-        if a_log.stdout.strip():
-            a_parts = a_log.stdout.strip().splitlines()[-1].split()
-            if len(a_parts) >= 2:
-                a_first_ts = int(a_parts[1])
-                if v_first_ts is None or a_first_ts <= v_first_ts:
-                    issues.append(
-                        f"git 历史显示 {af} 首次提交（epoch {a_first_ts}）"
-                        f"不晚于 verdict.json 首次提交"
-                        f"（{'epoch ' + str(v_first_ts) if v_first_ts else '未提交'}）"
-                        f"——时序证据不支持隔离")
+        a_adds = _git_commit_times(rel(af), "A")
+        if not a_adds:
+            if audit and af in ("answer.json", "answer_source.md"):
+                issues.append(f"{af} 无 git 提交记录——时序证据不可验（audit 模式要求答案文件已提交）")
+            continue
+        a_first = a_adds[-1]
+        if v_first is None:
+            issues.append(f"{af} 已提交但 verdict.json 从未提交——时序证据不支持隔离")
+        elif a_first <= v_first:
+            issues.append(f"{af} 首次提交（epoch {a_first}）不晚于 verdict.json 首次提交"
+                          f"（epoch {v_first}）——先看答案后落盘，或同 commit 提交")
+        elif v_last is not None and v_last > a_first:
+            issues.append(f"verdict.json 在 {af} 首次提交（epoch {a_first}）之后仍被修改并提交"
+                          f"（epoch {v_last}）——结论在看到答案后被改动，隔离失效")
+    if v_first is not None and m_first is not None and m_first >= v_first:
+        # 同 commit 视为违规：先验冻结与结论落盘必须是两次提交（PROMPT Step 1/3）
+        issues.append(f"meta.json 首次提交（epoch {m_first}）不早于 verdict.json 首次提交"
+                      f"（epoch {v_first}）——先验冻结应先于结论落盘")
+    if audit and v_first is None:
+        issues.append("verdict.json 无 git 提交记录——无法审计时序")
 
-    # ── 检查 4：ANSWERS.md 是否仍含该案例明文答案 ──
+    # ── 检查 3：ANSWERS.md 密封批次段落是否仍含该案例明文 ──
     answers_md = REPO_ROOT / "backtest" / "ANSWERS.md"
     if answers_md.exists():
-        # 案例目录名含 ticker，在 ANSWERS.md 里搜索 ticker
-        ticker = name.split("_")[0]
         content = answers_md.read_text(encoding="utf-8")
-        # 只在第三/四/五批段落中搜索（一二批已执行，明文是历史遗留）
+        aliases = _case_aliases(name)
         for batch in SEALED_BATCHES:
             m = re.search(rf"^\*\*第{_BATCH_CN[batch]}批.*?\*\*\s*$", content, re.M)
             if not m:
@@ -255,68 +293,170 @@ def _seal_check(case_dir: Path) -> int:
             nxt = re.search(r"^(\*\*第.{1,3}批|---|# )", seg, re.M)
             if nxt:
                 seg = seg[:nxt.start()]
-            if ticker in seg:
-                issues.append(
-                    f"ANSWERS.md 第{batch}批段落仍含 {ticker} 明文答案——"
-                    f"应先 --seal 密封并从明文段落删除")
+            hit = [a for a in aliases if re.search(rf"^-\s+{re.escape(a)}\s+\d{{4}}-\d{{2}}", seg, re.M)]
+            if hit:
+                issues.append(f"ANSWERS.md 第{batch}批段落仍含 {hit[0]} 明文答案——"
+                              f"应先 --seal 密封并从明文段落删除")
                 break
 
+    mode = "audit（事后审计，只看 git 时序）" if audit else "pre（verdict 落盘前）"
     if issues:
-        print(f"⛔ 隔离检查失败（{name}）：")
+        print(f"⛔ 隔离检查失败（{name}，模式 {mode}）：")
         for iss in issues:
             print(f"   ❌ {iss}")
-        print(f"\n  verdict.json 须标注 `\"contaminated\": true`")
+        print("\n  verdict.json 须标注 `\"contaminated\": true`（lint-verdict 会交叉校验）")
         print("  contaminated 案例从战绩表排除（run_backtest_assertions 跳过判定）。")
         return 1
-    print(f"✅ 隔离检查通过（{name}）：工作区无答案明文、密封未揭示、git 时序正常")
+    print(f"✅ 隔离检查通过（{name}，模式 {mode}）")
     return 0
 
 
 # ── REQ-P0-08 规则版本钉死 ──────────────────────────────────────────
 # verdict.json 不记录当时的规则版本 → 历史战绩失去参照。
 # 本函数生成 rules_snapshot 字典，供 Step 3 写入 verdict.json。
+#
+# 阈值来源登记表：(快照键, 模块, 属性名)。审查发现原版用 getattr(..., None) 静默
+# 吞掉不存在的属性，折现率/悲观门槛在快照里记成 null 而无人察觉。现在：
+#   - 属性缺失 → 记入 `missing` 列表并在 stdout 警告，快照不再"看起来完整"
+#   - 覆盖面从 6 项扩到双闸门 + 排雷 + 情景门禁的全部模块级阈值
+RULES_REGISTRY = [
+    # 双闸门 / 估值
+    ("mos_requirement", "reverse_dcf", "MOAT_MOS_REQUIREMENT"),
+    ("discount_rate_default", "reverse_dcf", "DEFAULT_DISCOUNT_RATE"),
+    ("terminal_growth_default", "reverse_dcf", "DEFAULT_TERMINAL_GROWTH"),
+    ("terminal_growth_cap", "reverse_dcf", "DEFAULT_TERMINAL_GROWTH_CAP"),
+    ("min_spread", "reverse_dcf", "DEFAULT_MIN_SPREAD"),
+    ("hold_years_default", "reverse_dcf", "DEFAULT_HOLD_YEARS"),
+    ("index_hurdle_default", "reverse_dcf", "DEFAULT_INDEX_HURDLE"),
+    ("floor_hurdle_default", "reverse_dcf", "DEFAULT_FLOOR_HURDLE"),
+    ("pessimistic_hurdle_default", "reverse_dcf", "DEFAULT_PESSIMISTIC_HURDLE"),
+    ("loss_prob_hurdle_default", "reverse_dcf", "DEFAULT_LOSS_PROB_HURDLE"),
+    # 情景门禁
+    ("scen_dispersion_max", "check_scenarios", "DISPERSION_MAX"),
+    ("scen_s2b_tolerance", "check_scenarios", "S2B_TOLERANCE"),
+    ("scen_non_op_material", "check_scenarios", "NON_OP_MATERIAL"),
+    ("scen_value_trap_mos", "check_scenarios", "VALUE_TRAP_MOS"),
+    ("scen_value_trap_decline_years", "check_scenarios", "VALUE_TRAP_DECLINE_YEARS"),
+    # 排雷（forensic_screen 全部 TH_* 由下方动态收集）
+    ("forensic_veto_weight", "forensic_screen", "VETO_WEIGHT"),
+    ("forensic_redflag_weight", "forensic_screen", "REDFLAG_WEIGHT"),
+    # 数据门禁
+    ("crosscheck_tol_core", "crosscheck_official", "TOL"),
+    ("crosscheck_tol_balance_sheet", "crosscheck_official", "TOL_BALANCE_SHEET"),
+    ("crosscheck_tol_other", "crosscheck_official", "TOL_OTHER"),
+    ("spike_threshold", "validate_data", "SPIKE_THRESHOLD"),
+    # 回测计分
+    ("positive_ordinal", "run_backtest_assertions", "POSITIVE_ORDINAL"),
+    ("fp_rate_target", "run_backtest_assertions", "FP_RATE_TARGET"),
+    ("fn_rate_target", "run_backtest_assertions", "FN_RATE_TARGET"),
+]
+
 
 def snapshot_rules() -> dict:
     """返回当前 skill 的关键阈值快照与 git commit hash。
 
     用途：写入 verdict.json 的 `rules_snapshot`，让任何一次"系统改善了"
-    的声明都可按旧版本重跑验证。
+    的声明都可按旧版本重跑验证。`dirty=True` 时 commit hash 不代表实际运行
+    的代码，lint-verdict 会拒绝这样的 verdict。
     """
+    import importlib
     commit = _git(["rev-parse", "HEAD"])
     short = _git(["rev-parse", "--short", "HEAD"])
     dirty = bool(_git(["status", "--porcelain"]).stdout.strip())
 
-    # 从引擎模块动态取阈值（不硬编码数字，避免漂移）
-    thresholds = {}
-    try:
+    if str(REPO_ROOT / "scripts") not in sys.path:
         sys.path.insert(0, str(REPO_ROOT / "scripts"))
-        import reverse_dcf as _rd
-        thresholds["discount_rate_default"] = getattr(_rd, "DEFAULT_DISCOUNT_RATE", None)
-        thresholds["floor_hurdle_default"] = getattr(_rd, "DEFAULT_FLOOR_HURDLE", None)
-        thresholds["pessimistic_hurdle_default"] = getattr(_rd, "DEFAULT_PESSIMISTIC_HURDLE", None)
-        thresholds["loss_prob_hurdle_default"] = getattr(_rd, "DEFAULT_LOSS_PROB_HURDLE", None)
-        # 安全边际门槛
-        mos_w = _rd.moat_irr_hurdle("wide", 0.10, 5)
-        mos_n = _rd.moat_irr_hurdle("narrow", 0.10, 5)
-        thresholds["mos_wide"] = mos_w[0] if mos_w else None
-        thresholds["mos_narrow"] = mos_n[0] if mos_n else None
-    except Exception:
-        pass
-    try:
-        import forensic_screen as _fs
-        thresholds["forensic_veto_weight"] = _fs.VETO_WEIGHT
-        thresholds["forensic_redflag_weight"] = _fs.REDFLAG_WEIGHT
-        thresholds["th_cash_ratio"] = _fs.TH_CASH_RATIO
-        thresholds["th_debt_ratio"] = _fs.TH_DEBT_RATIO
-    except Exception:
-        pass
+    thresholds, missing, mods = {}, [], {}
+    for key, mod_name, attr in RULES_REGISTRY:
+        try:
+            mod = mods.get(mod_name) or importlib.import_module(mod_name)
+            mods[mod_name] = mod
+        except Exception as exc:  # noqa: BLE001
+            missing.append(f"{key}（模块 {mod_name} 导入失败：{exc}）")
+            continue
+        if not hasattr(mod, attr):
+            missing.append(f"{key}（{mod_name}.{attr} 不存在）")
+            continue
+        thresholds[key] = getattr(mod, attr)
+    # forensic_screen 的全部 TH_* 阈值：排雷 11 条的算术化参数，动态收集免得漏登记
+    fs = mods.get("forensic_screen")
+    if fs is not None:
+        thresholds["forensic_thresholds"] = {
+            k: getattr(fs, k) for k in sorted(dir(fs)) if k.startswith("TH_")}
+    # 派生：护城河反推 IRR 门槛（默认 r/H 下），便于人读；mos_wide/mos_narrow 为兼容旧键
+    rd = mods.get("reverse_dcf")
+    if rd is not None and hasattr(rd, "moat_irr_hurdle"):
+        mos = thresholds.get("mos_requirement") or {}
+        thresholds["mos_wide"], thresholds["mos_narrow"] = mos.get("wide"), mos.get("narrow")
+        try:
+            r, h = thresholds.get("discount_rate_default", 0.10), thresholds.get("hold_years_default", 5)
+            thresholds["irr_hurdle_derived"] = {
+                m: (rd.moat_irr_hurdle(m, r, h) or (None, None))[1] for m in ("wide", "narrow")}
+        except Exception:  # noqa: BLE001
+            pass
+    if missing:
+        print(f"⚠ 规则快照有 {len(missing)} 项阈值未取到（RULES_REGISTRY 与引擎不一致，须修）：",
+              file=sys.stderr)
+        for m in missing:
+            print(f"   - {m}", file=sys.stderr)
 
     return {
         "skill_commit": commit.stdout.strip(),
         "skill_commit_short": short.stdout.strip(),
         "dirty": dirty,
         "thresholds": thresholds,
+        "missing": missing,
     }
+
+
+def _isolation_report(min_batch: int = 3) -> int:
+    """REQ-P0-05 验收：按批次输出隔离执行率（audit 模式逐案例跑 git 时序检查）。"""
+    import io
+    import contextlib
+    rows = []
+    for cd in sorted((REPO_ROOT / "backtest").iterdir()):
+        if not cd.is_dir() or not (cd / "verdict.json").exists():
+            continue
+        meta = {}
+        if (cd / "meta.json").exists():
+            try:
+                meta = json.loads((cd / "meta.json").read_text(encoding="utf-8"))
+            except Exception:  # noqa: BLE001
+                meta = {}
+        try:
+            batch = int(meta.get("batch") or 0)
+        except (TypeError, ValueError):
+            batch = 0
+        buf = io.StringIO()
+        with contextlib.redirect_stdout(buf):
+            rc = _seal_check(cd, audit=True)
+        try:
+            v = json.loads((cd / "verdict.json").read_text(encoding="utf-8"))
+        except Exception:  # noqa: BLE001
+            v = {}
+        rows.append({"case": cd.name, "batch": batch, "isolated": rc == 0,
+                     "contaminated_flag": bool(v.get("contaminated")),
+                     "legacy": batch < min_batch})
+    by_batch: dict[int, list] = {}
+    for r in rows:
+        by_batch.setdefault(r["batch"], []).append(r)
+    print(f"{'批次':<6}{'案例数':<8}{'隔离通过':<10}{'执行率':<10}备注")
+    for b in sorted(by_batch):
+        rs = by_batch[b]
+        ok = sum(1 for r in rs if r["isolated"])
+        note = "legacy（旧流程，不计入验收）" if b < min_batch else ""
+        print(f"{b:<6}{len(rs):<8}{ok:<10}{ok / len(rs):<10.0%}{note}")
+    bad = [r for r in rows if not r["legacy"] and not r["isolated"] and not r["contaminated_flag"]]
+    if bad:
+        print("\n⛔ 以下案例隔离审计未通过且 verdict.json 未标 contaminated：")
+        for r in bad:
+            print(f"   - {r['case']}（第{r['batch']}批）")
+        return 1
+    scored = [r for r in rows if not r["legacy"]]
+    if scored:
+        print(f"\n第{min_batch}批起隔离执行率："
+              f"{sum(1 for r in scored if r['isolated'])}/{len(scored)}（机器可验，git 时序）")
+    return 0
 
 
 def main():
@@ -325,6 +465,10 @@ def main():
     ap.add_argument("--reveal", metavar="CASE_DIR", help="verdict 提交后揭示该案例答案")
     ap.add_argument("--seal-check", metavar="CASE_DIR", dest="seal_check",
                     help="verdict 落盘前扫描隔离完好性（REQ-P0-05）")
+    ap.add_argument("--audit", action="store_true",
+                    help="配合 --seal-check：事后审计模式，只看 git 时序、不把 answer 文件存在当污染")
+    ap.add_argument("--isolation-report", action="store_true", dest="isolation_report",
+                    help="按批次输出隔离执行率（REQ-P0-05 验收指标）")
     ap.add_argument("--snapshot-rules", action="store_true", dest="snapshot_rules",
                     help="输出当前规则版本快照 JSON（REQ-P0-08，写入 verdict.json）")
     ap.add_argument("--status", action="store_true", help="查看密封库状态")
@@ -334,7 +478,9 @@ def main():
     if args.reveal:
         sys.exit(_reveal(Path(args.reveal).resolve()))
     if args.seal_check:
-        sys.exit(_seal_check(Path(args.seal_check).resolve()))
+        sys.exit(_seal_check(Path(args.seal_check).resolve(), audit=args.audit))
+    if args.isolation_report:
+        sys.exit(_isolation_report())
     if args.snapshot_rules:
         print(json.dumps(snapshot_rules(), ensure_ascii=False, indent=2))
         sys.exit(0)

@@ -41,6 +41,25 @@ forensic_screen.py — Phase 0 排雷条款算术化（REQ-P0-02）
 `arithmetic_coverage`：人工条款没填不是底稿盲区，是执行者还没做作业，两者
 的补救路径完全不同。低覆盖率下的低分不构成"安全"证据。
 
+## V4A 利率倒挂的复合判据（三版）
+
+注册语义（alert_codes.py）是「< 同期存款基准 且 远低于融资成本」。一版只落了
+固定 1.2% 前半句、且取数只扫 annual 行——全库底稿无一有 interest_income 行
+字段，唯一一份利息收入数据（康美）躺在 phase0_arithmetic 证据链块里读不到，
+这条 veto 从未在真实数据上运行过。本版起：
+
+  ① 形态前提：与 V4 同阈值（双高）。同阈值设计保证 V4A 命中必伴随 V4 命中
+     ——它是存贷双高的「验证器」，把证据从「形态可疑」升级为「经济性反常」，
+     不独立排除任何公司；
+  ② 利息收益率 < 同期存款基准（币种 × 年份查 DEPOSIT_BENCHMARK，--deposit-rate
+     可覆盖；查不到落 insufficient_data 而非 hit——固定常数在低利率币种上会把
+     真现金判成假现金，美股零利率期真现金收益率 0.1%~0.5%）；
+  ③ 融资成本交叉验证：收益率 < 融资成本的一半（缺利息支出落 insufficient_data，
+     veto 不半响）。
+
+② 单独成立不 veto：公司全趴活期是懒，不是造假；② + ③ 同时成立只在一个
+世界里说得通——账上的现金是假的。
+
 ## 回放时点（--as-of）
 
 回测必须只用"当时能看到的"年报。底稿 annual 行若含 `publish_date`
@@ -52,6 +71,7 @@ forensic_screen.py — Phase 0 排雷条款算术化（REQ-P0-02）
     python3 scripts/forensic_screen.py <financials.json>
     python3 scripts/forensic_screen.py <financials.json> -o out.json
     python3 scripts/forensic_screen.py <financials.json> --as-of 2015-08-31
+    python3 scripts/forensic_screen.py <financials.json> --deposit-rate 0.015
     python3 scripts/forensic_screen.py <financials.json> --manual manual.json
         # manual.json 提供无法从底稿推出的人工核查结果（审计意见/质押/前科等）
 """
@@ -69,7 +89,20 @@ from schema_meta import _fin_type as is_financial_company  # noqa: E402
 # ── 阈值（全部取自 forensic-checklist.md，改动须同步该文档）──────────
 TH_CASH_RATIO = 0.25          # 货币资金/总资产
 TH_DEBT_RATIO = 0.25          # 有息负债/总资产
-TH_INTEREST_YIELD = 0.012     # 利息收入/平均货币资金 低于此值 = 利率倒挂
+TH_YIELD_VS_FINANCING = 0.5   # V4A：收益率须 < 融资成本的此倍数才算「远低于」
+# V4A 同期存款基准（一年期，近似值——判据是「显著低于」，粗粒度即可，不需要
+# 精确到 bp）。币种 × 年份段查表；查不到时用 --deposit-rate 显式指定，否则
+# V4A 落 insufficient_data 而不是按全球统一常数判 hit——固定常数在低利率币种
+# （USD 2010-2015 约 0.25%）上会把真现金判成假现金。改动须同步 forensic-checklist.md。
+DEPOSIT_BENCHMARK = {
+    "CNY": [(1990, 2014, 0.030), (2015, 2015, 0.020), (2016, 2019, 0.015),
+            (2020, 2024, 0.0145), (2025, 2031, 0.011)],
+    "USD": [(1990, 2015, 0.0025), (2016, 2021, 0.005), (2022, 2022, 0.020),
+            (2023, 2031, 0.045)],
+    "HKD": [(1990, 2022, 0.005), (2023, 2031, 0.035)],
+    "JPY": [(1990, 2023, 0.0015), (2024, 2031, 0.003)],
+    "EUR": [(1990, 2022, 0.002), (2023, 2031, 0.030)],
+}
 TH_NI_OVER_OCF = 1.5          # 净利润 > OCF 的倍数
 TH_NI_OVER_OCF_YEARS = 3      # 连续年数
 TH_AR_VS_REV = 1.5            # 应收增速/收入增速
@@ -108,6 +141,36 @@ def _growth(series):
         else:
             out.append(None)
     return out
+
+
+def _pa(data, name, year):
+    """phase0_arithmetic 证据链块兜底取值（形如 interest_income_2016 的年份键）。
+
+    该块是执行者刻意登记的结构化排雷证据链（报告 vnum/vchart 的事实源），
+    一版脚本只扫 annual 行导致全库唯一一份利息收入数据（康美）被无视、
+    V4A 从未在真实数据上运行过。annual 行优先，本块兜底，两者单位同源。
+    """
+    pa = (data or {}).get("phase0_arithmetic")
+    if isinstance(pa, dict):
+        v = pa.get(f"{name}_{year}")
+        if isinstance(v, (int, float)):
+            return float(v)
+    return None
+
+
+def _currency_of(data):
+    """币种：顶层 currency 优先，meta.currency（REQ-P0-03）兜底。"""
+    for cur in (data.get("currency"), (data.get("meta") or {}).get("currency")):
+        if isinstance(cur, str) and cur.strip():
+            return cur.strip().upper()
+    return None
+
+
+def _benchmark_rate(currency, year):
+    for lo, hi, rate in DEPOSIT_BENCHMARK.get(currency or "", []):
+        if lo <= year <= hi:
+            return rate
+    return None
 
 
 class Clause:
@@ -167,7 +230,7 @@ FIN_NOT_APPLICABLE = {
 # 每条都是纯算术：同一份底稿两个人跑出同一结论。无法算术化的（审计意见、
 # 造假前科、掏空迹象）走 --manual 人工输入，不在此处臆断。
 
-def c_deposit_loan_double_high(rows, manual):
+def c_deposit_loan_double_high(rows, manual, ctx):
     """V4 存贷双高：货币资金与有息负债同时 > 总资产 25%。康美原型。"""
     c = Clause("V4", "P0_V4_DEPOSIT_LOAN_DOUBLE_HIGH", "veto", "存贷双高")
     last = rows[-1]
@@ -186,28 +249,83 @@ def c_deposit_loan_double_high(rows, manual):
     return c.ok(f"{last['year']}：现金占比 {cr:.1%} / 有息负债占比 {dr:.1%}")
 
 
-def c_interest_inversion(rows, manual):
-    """V4A 利率倒挂：利息收入/平均货币资金 < 1.2%。假现金拿不出真利息。"""
+def c_interest_inversion(rows, manual, ctx):
+    """V4A 利率倒挂：双高形态下现金收益跑输存款基准且远低于融资成本。
+
+    三重复合判据（设计说明见文件头 docstring）：
+      ① 形态前提：与 V4 同阈值——命中必伴随 V4，不独立排除公司；
+      ② 收益率 < 同期存款基准（币种×年份查表，--deposit-rate 覆盖）；
+      ③ 收益率 < 融资成本一半（注册描述「远低于融资成本」的落码）。
+    任一环节数据缺失 → insufficient_data，veto 不半响。
+    """
     c = Clause("V4A", "P0_V4A_INTEREST_INVERSION", "veto", "利率倒挂")
     if len(rows) < 2:
         return c.na(["annual>=2"])
     last, prev = rows[-1], rows[-2]
+    y = last["year"]
+    data = ctx.get("data") or {}
+
+    # ① 形态前提（与 V4 同阈值：本条是存贷双高的验证器，形态不成立即无验证对象）
+    cash = _g(last, *CASH_FIELDS)
+    debt = _g(last, "total_debt", "interest_bearing_debt")
+    ta = _g(last, "total_assets")
+    miss = [n for n, v in (("cash", cash), ("total_debt", debt), ("total_assets", ta))
+            if v is None]
+    if miss or not ta:
+        return c.na(miss or ["total_assets>0"])
+    cr, dr = cash / ta, debt / ta
+    if not (cr > TH_CASH_RATIO and dr > TH_DEBT_RATIO):
+        return c.ok(f"{y}：双高形态未成立（现金占比 {cr:.1%} / 有息负债占比 {dr:.1%}），无验证对象")
+
+    # 利息收入与平均货币资金：annual 行优先，phase0_arithmetic 证据链块兜底
     ii = _g(last, "interest_income")
-    c1, c0 = _g(last, *CASH_FIELDS), _g(prev, *CASH_FIELDS)
-    if ii is None or c1 is None or c0 is None:
-        return c.na([n for n, v in (("interest_income", ii), ("cash", c1)) if v is None]
-                    or ["cash(前一年)"])
-    avg = (c1 + c0) / 2
-    if avg <= 0:
-        return c.na(["平均货币资金>0"])
-    y = ii / avg
-    if y < TH_INTEREST_YIELD:
-        return c.hit(f"{last['year']}：利息收入/平均货币资金 = {y:.2%} < "
-                     f"{TH_INTEREST_YIELD:.1%}——账上现金产不出应有利息，现金真实性存疑")
-    return c.ok(f"{last['year']}：利息收益率 {y:.2%}")
+    if ii is None:
+        ii = _pa(data, "interest_income", y)
+    c0 = _g(prev, *CASH_FIELDS)
+    avg = (cash + c0) / 2 if c0 is not None else _pa(data, "avg_cash", y)
+    if ii is None or avg is None or avg <= 0:
+        m = [n for n, v in (("interest_income", ii),) if v is None]
+        if avg is None or avg <= 0:
+            m.append("cash(前一年)" if c0 is None else "avg_cash>0")
+        return c.na(m, hint="双高形态已成立——须补利息收入与平均货币资金完成验证"
+                            "（可登记于 phase0_arithmetic.interest_income_<year>）")
+    yld = ii / avg
+
+    # ② 同期存款基准
+    bm = ctx.get("deposit_rate") or _benchmark_rate(_currency_of(data), y)
+    if bm is None:
+        ccy = _currency_of(data) or "币种未知"
+        return c.na(["deposit_rate"],
+                    hint=f"{ccy} {y} 无存款基准，用 --deposit-rate 指定后完成验证")
+    if yld >= bm:
+        return c.ok(f"{y}：利息收益率 {yld:.2%} ≥ 同期存款基准 {bm:.2%}"
+                    f"——现金在赚存款级利息，无倒挂")
+
+    # ③ 融资成本交叉验证：利息支出/平均有息负债（预计算值或现场算）
+    ie = _g(last, "interest_expense")
+    if ie is None:
+        ie = _pa(data, "interest_expense", y)
+    cost = _pa(data, "cost_of_debt", y)
+    if cost is None and ie is not None:
+        d0 = _g(prev, "total_debt", "interest_bearing_debt")
+        avg_d = (debt + d0) / 2 if d0 is not None else _pa(data, "avg_ibd", y)
+        if avg_d is not None and avg_d > 0:
+            cost = ie / avg_d
+    if cost is None:
+        return c.na(["interest_expense"],
+                    hint="收益率已低于存款基准，缺利息支出无法完成「远低于融资成本」验证"
+                         "（可登记 phase0_arithmetic.interest_expense_<year>）")
+    if yld >= TH_YIELD_VS_FINANCING * cost:
+        return c.ok(f"{y}：收益率 {yld:.2%} 低于基准 {bm:.2%}，但未低于融资成本 "
+                    f"{cost:.2%} 的一半——倒挂证据不完整，仅提示")
+    return c.hit(f"{y}：双高形态（现金占比 {cr:.1%} / 有息负债占比 {dr:.1%}）下"
+                 f"利息收益率仅 {yld:.2%}——低于存款基准 {bm:.2%}，更远低于融资成本 "
+                 f"{cost:.2%}（借钱付 {cost:.1%} 却让现金趴着只收 {yld:.1%}，"
+                 f"年利差损失约 {(cost - yld) * avg:.0f}）——经济性不自洽，"
+                 f"假现金拿不出真利息")
 
 
-def c_ocf_profit_divergence(rows, manual):
+def c_ocf_profit_divergence(rows, manual, ctx):
     """R1 净利润连续 3 年 > OCF 的 1.5 倍。"""
     c = Clause("R1", "P0_R1_OCF_PROFIT_DIVERGENCE", "redflag", "利润与经营现金流背离")
     recent = rows[-TH_NI_OVER_OCF_YEARS:]
@@ -228,7 +346,7 @@ def c_ocf_profit_divergence(rows, manual):
     return c.ok(f"背离年份 {bad or '无'}（未达连续 {TH_NI_OVER_OCF_YEARS} 年）")
 
 
-def c_receivables_surge(rows, manual):
+def c_receivables_surge(rows, manual, ctx):
     """R2 应收增速 > 收入增速 1.5 倍且连续 2 年。"""
     c = Clause("R2", "P0_R2_RECEIVABLES_SURGE", "redflag", "应收账款剪刀差")
     ar = [_g(r, "accounts_receivable", "receivables") for r in rows]
@@ -245,7 +363,7 @@ def c_receivables_surge(rows, manual):
     return c.ok(f"剪刀差年份 {bad or '无'}")
 
 
-def c_inventory_surge(rows, manual):
+def c_inventory_surge(rows, manual, ctx):
     """R5 存货增速远超收入增速。"""
     c = Clause("R5", "P0_R5_INVENTORY_SURGE", "redflag", "存货剪刀差")
     inv = [_g(r, "inventory", "inventories") for r in rows]
@@ -262,7 +380,7 @@ def c_inventory_surge(rows, manual):
     return c.ok(f"剪刀差年份 {bad or '无'}")
 
 
-def c_goodwill_heavy(rows, manual):
+def c_goodwill_heavy(rows, manual, ctx):
     """R6 商誉/净资产 > 30%。"""
     c = Clause("R6", "P0_R6_GOODWILL_HEAVY", "redflag", "商誉占比过高")
     last = rows[-1]
@@ -278,7 +396,7 @@ def c_goodwill_heavy(rows, manual):
     return c.ok(f"{last['year']}：商誉占净资产 {ratio:.1%}")
 
 
-def c_other_receivables(rows, manual):
+def c_other_receivables(rows, manual, ctx):
     """R7 其他应收款异常大额（资金体外循环通道）。"""
     c = Clause("R7", "P0_R7_OTHER_RECEIVABLES", "redflag", "其他应收款异常")
     last = rows[-1]
@@ -294,7 +412,7 @@ def c_other_receivables(rows, manual):
     return c.ok(f"{last['year']}：其他应收占比 {ratio:.1%}")
 
 
-def c_financing_vs_return(rows, manual):
+def c_financing_vs_return(rows, manual, ctx):
     """R11 累计融资 > 累计分红回购的 3 倍（抽血机器）。"""
     c = Clause("R11", "P0_R11_FINANCING_VS_RETURN", "redflag", "融资与回报失衡")
     fin = sum(x for x in (_g(r, "equity_raised", "financing_raised") for r in rows)
@@ -327,7 +445,7 @@ def c_financing_vs_return(rows, manual):
     return c.ok(f"融资/回报 = {ratio:.1f}")
 
 
-def c_nonrecurring(rows, manual):
+def c_nonrecurring(rows, manual, ctx):
     """R4 扣非净利占比 < 60%。"""
     c = Clause("R4", "P0_R4_NONRECURRING_PROP", "redflag", "非经常性损益撑利润")
     last = rows[-1]
@@ -344,7 +462,7 @@ def c_nonrecurring(rows, manual):
     return c.ok(f"{last['year']}：扣非占比 {ratio:.1%}")
 
 
-def c_short_debt_long_asset(rows, manual):
+def c_short_debt_long_asset(rows, manual, ctx):
     """R9 短债长投：短期借款占有息负债过半且长期资产占比高。"""
     c = Clause("R9", "P0_R9_SHORT_DEBT_LONG_ASSET", "redflag", "短债长投期限错配")
     last = rows[-1]
@@ -369,7 +487,7 @@ def c_short_debt_long_asset(rows, manual):
     return c.ok(f"短债占比 {sr:.1%}")
 
 
-def c_going_concern(rows, manual):
+def c_going_concern(rows, manual, ctx):
     """R21 持续经营存疑：净资产为负，或 OCF 连续 ≥2 年为负且现金不足覆盖。
 
     柯达 2011 原型。此前 Phase 0 对这一形态零覆盖——它不是造假，
@@ -469,7 +587,7 @@ def filter_as_of(rows, as_of):
     return kept, dropped
 
 
-def screen(data, manual=None, as_of=None):
+def screen(data, manual=None, as_of=None, deposit_rate=None):
     manual = manual or {}
     rows = sorted([r for r in (data.get("annual") or []) if isinstance(r, dict)],
                   key=lambda r: r.get("year", 0))
@@ -479,9 +597,10 @@ def screen(data, manual=None, as_of=None):
                          + (f"（--as-of {as_of} 剔除了 {dropped_years}）" if dropped_years else "")}
 
     is_fin = is_financial_company(data)
+    ctx = {"data": data, "deposit_rate": deposit_rate}
     clauses = []
     for f in ARITHMETIC_CLAUSES:
-        c = f(rows, manual)
+        c = f(rows, manual, ctx)
         if is_fin and c.cid in FIN_NOT_APPLICABLE:
             c.not_applicable(FIN_NOT_APPLICABLE[c.cid])
         clauses.append(c)
@@ -582,12 +701,18 @@ def main():
     ap.add_argument("--manual", help="人工核查结果 JSON（审计意见/质押/前科等）")
     ap.add_argument("--as-of", dest="as_of",
                     help="回放时点 YYYY-MM-DD：只用该日已发布的年报行（回测必填）")
+    ap.add_argument("--deposit-rate", dest="deposit_rate", type=float,
+                    help="V4A 同期存款基准利率（小数，如 0.015），覆盖币种×年份查表")
     ap.add_argument("-o", "--output", help="结果 JSON 输出路径")
     args = ap.parse_args()
 
+    if args.deposit_rate is not None and not (0 < args.deposit_rate < 0.5):
+        print("❌ --deposit-rate 须为 (0, 0.5) 内的小数（如 0.015 = 1.5%）")
+        sys.exit(2)
+
     data = json.load(open(args.input, encoding="utf-8"))
     manual = json.load(open(args.manual, encoding="utf-8")) if args.manual else {}
-    res = screen(data, manual, as_of=args.as_of)
+    res = screen(data, manual, as_of=args.as_of, deposit_rate=args.deposit_rate)
 
     if res.get("error"):
         print(f"❌ {res['error']}")

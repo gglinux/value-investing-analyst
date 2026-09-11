@@ -124,25 +124,28 @@ SKILL.md 只保留数据分级与降级协议的原则；**源能力矩阵、强
 
 同一科目在不同源之间不一致时，差异本身是信息（可能是口径差，也可能是公司修改过披露——后者是排雷线索）。规则：
 
-**源优先级**（由高到低）：
+**源优先级**（由高到低；`crosscheck[].source_tier` 可显式写下列 key，缺省时脚本按 source 文本关键词推断）：
 
-1. 监管官方原文（EDGAR XBRL / 巨潮年报 PDF / 披露易年报）
-2. 公司官网原文（IR 页年报/公告/数据下载）
-3. A 级接口数据（westock-data / ifind-finance-data）
-4. B 级二手数据（研报/Wind 截图）
-5. C 级兜底（web_search / 媒体报道）
+1. 监管官方原文（EDGAR XBRL / 巨潮年报 PDF / 披露易年报）——`edgar_xbrl` / `cninfo_pdf` / `hkex_pdf`
+2. 公司官网原文（IR 页年报/公告/数据下载）——`company_ir`
+3. A 级接口数据（westock-data / ifind-finance-data）——`westock` / `ifind`
+4. B 级二手数据（研报/Wind 截图）——`research_report` / `wind_screenshot`
+5. C 级兜底（web_search / 媒体报道）——`web_search` / `media`
 
-**差异阈值与处置**：
+**差异阈值与处置**（`crosscheck_official.tol_for()` 单点实现，`validate_data.py` 从它 import，不各自维护）：
 
 | 科目类型 | 阈值 | 处置 |
 |---|---|---|
-| **命门四科目**（revenue / net_income / ocf / shares_diluted） | >1% | **阻断**（`crosscheck_official.py` 退出码 1）。确认为口径差异时在 `crosscheck_exempt` 写明理由并在报告披露 |
-| 资产负债表科目（total_assets / total_equity / total_debt） | >3% | **告警**并登记差异表进报告附录 |
+| **命门科目**（revenue / net_income / ocf / shares_diluted，外加 cash / interest_bearing_debt / total_debt） | >1% | **阻断**（`crosscheck_official.py` 退出码 1，`validate_data.py` ERROR）。确认为口径差异时在 `crosscheck_exempt` 写五要素结构化豁免并在报告披露 |
+| 资产负债表科目（total_assets / total_equity / total_liabilities / goodwill / inventory / receivables 等） | >3% | **告警**并登记差异表进报告附录 |
 | 其他科目 | >5% | **登记**进差异表 |
 
+crosscheck 条目中登记的**任何**数值科目都参与分级比对，不只命门四科目；两种模式（EDGAR 自动 / `--audit` 人工转录）走同一裁决函数。
+
 **裁决动作**：
-- 发现差异后，必须以高优先级源的值为准更新底稿，并在 `crosscheck` 区块登记：`{year, field, adopted_value, adopted_source, rejected_value, rejected_source, reason}`。
-- 差异表（含已裁决与未裁决）出现在报告「数据附录」节。缺差异表的报告 `verify_report.py` 降级为 B 级核验。
+- 发现差异后，以 tier 更高的源为准更新底稿。豁免必须是结构化五要素：`"crosscheck_exempt": {"<field>": {"adopted_value", "adopted_source", "rejected_value", "rejected_source", "reason"}}`——纯字符串豁免仍被接受（legacy）但每次运行都会提示迁移。
+- 差异表（含已裁决与未裁决）由 `crosscheck_official.py --write` 落盘到底稿 `crosscheck_conflicts`（字段：year / field / annual_value / official_value / annual_tier / official_tier / diff_pct / severity / adopted_side / resolved / resolution）。
+- 报告「数据附录」节须列出差异表并带机器标记 `data-appendix="source-conflicts"`；底稿含非空 `crosscheck_conflicts`（或结构化豁免中有 `rejected_value`）而报告缺该标记时，`verify_report.py` 直接 FAIL。同理，含 `restated_from` 的底稿须带 `data-appendix="restatements"`，含 `meta.point_in_time_waiver` 的须带 `data-appendix="point-in-time-waiver"`（REQ-P0-06）。
 
 ## 十、新增数据源的接入清单
 

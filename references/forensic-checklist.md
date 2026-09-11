@@ -17,12 +17,13 @@ python3 scripts/forensic_screen.py <financials.json> --as-of 2015-08-31     # �
 - **`not_applicable`** 只给金融类（银行/保险/券商，按 `company_type`）的 V4/V4A/R1/R9：其资产负债表天然存贷两高、短借长贷是商业模式、OCF 由存贷款净增额主导，条款在定义上不成立。它**不进覆盖率分母**——无此题不是盲区。
 - 覆盖率拆两个口径：`arithmetic_coverage`（算术条款已检验 / 适用算术条款，补救 = 补底稿字段）与 `manual_pending`（人工条款未登记清单，补救 = 填 `--manual`）。排雷得分（`forensic_score`）必须与 `arithmetic_coverage` 一起读：低覆盖率下的低分不构成安全证据，下游 `p_tail`（REQ-P1-05）同时消费这两个值。
 - **R11 代理判据只提示不命中**：缺 `equity_raised` 时股本 >1.5 倍只落 `insufficient_data` 并在 `hints.R11` 给出人工核实方向——股本膨胀不区分 IPO/拆股/增发，一版把它当 hit 曾误杀 Zoom（IPO 前优先股转股）与苹果（1:7 拆股、回购全球第一）。
+- **V4A 是三重复合判据**（2026-09-11 三版）：① 双高形态（与 V4 同阈值）∧ ② 利息收益率 < 同期存款基准（币种×年份查 `DEPOSIT_BENCHMARK` 表，`--deposit-rate` 可覆盖）∧ ③ 收益率 < 融资成本一半（利息支出/平均有息负债）。同阈值设计使其命中必伴随 V4——它是**证据加强器**（把"形态可疑"升级为"经济性反常"），不独立排除任何公司。取数 annual 行优先、`phase0_arithmetic` 证据链块兜底（`interest_income_<year>`/`interest_expense_<year>`/`avg_cash_<year>`/`cost_of_debt_<year>`）。缺基准、缺利息收入或缺利息支出时落 `insufficient_data`，veto 不半响——固定 1.2% 常数已废弃（低利率币种会把真现金判成假现金）。
 - **`--as-of` 是回测时点纪律**：按 annual 行 `publish_date` 前缀日期过滤，无该字段按次年 4 月 30 日推断——宁少用一年，不偷看一年。
 
 | 状态 | 条款 | 说明 |
 |---|---|---|
 | ✅ 已机器化 | V4 存贷双高、V4A 利率倒挂、R1 利润现金流背离、R2 应收剪刀差、R5 存货剪刀差、R6 商誉占比、R7 其他应收、R9 短债长投、R11 融资回报失衡、R4 非经常损益、R21 持续经营存疑 | 纯算术，同底稿两人同结论 |
-| 🔶 需底稿补字段 | R2/R5/R6/R7/R4/R9/V4A | 现存底稿普遍缺 `accounts_receivable`/`inventory`/`goodwill`/`other_receivables`/`net_income_deducted`/`short_term_debt`/`interest_income`，补齐后自动生效 |
+| 🔶 需底稿补字段 | R2/R5/R6/R7/R4/R9/V4A | 现存底稿普遍缺 `accounts_receivable`/`inventory`/`goodwill`/`other_receivables`/`net_income_deducted`/`short_term_debt`，补齐后自动生效；V4A 所需利息收入/利息支出可登记于 `phase0_arithmetic` 证据链块（康美形态），annual 行补字段后同样自动生效 |
 | 👤 人工核查（`--manual`） | V1 审计意见、V2 造假前科、V3 质押、V5 审计师CFO更换、V6 掏空迹象 | 非财务数据，须查公告/监管/媒体后填入 manual JSON |
 | 👤 仅人工 | R3 毛利率异常、R8 在建工程、R10 减持、R12 改名蹭热点、R13 股权激励、R14 会计政策、R15-R17 披露质量、R18-R20 流动性、C1-C4 A股防割 | 需同行对比 / 公告文本 / 行情数据，暂不可纯算术化 |
 

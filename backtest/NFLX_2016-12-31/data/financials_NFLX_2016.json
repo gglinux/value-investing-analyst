@@ -9,7 +9,15 @@
     "data_vintage": "2017-01-27",
     "source_ref": "FY2015 10-K 原文（accession 0001065280-16-000047，filed 2016-01-28）：R2 利润表/R5 现金流量表/R6 资产负债表——与 companyfacts（同 accession 值）双源一致；d_and_a/capex 为方案 B 派生值不直接核对（组成项已逐项核对）",
     "field_overrides": {},
-    "migrated_by": "scripts/migrate_schema.py"
+    "migrated_by": "scripts/migrate_schema.py",
+    "point_in_time_waiver": {
+      "reason": "data_vintage 2017-01-27 与 2014 行 publish_date 2017-01-27 取自 FY2016 10-K（filed 2017-01-27）的可比列；2014 行各科目值与 FY2015 10-K（filed 2016-01-28）对照列一致（见 crosscheck[2014].source），系「文献时点晚于事实时点」的历史事实回取（PROMPT 第一节文献回取规则），非重述值；估值输入未使用 FY2016 数据（meta.json excluded_late_filings 已登记）。历史案例数据不改动，按 REQ-P0-06 例外标注。",
+      "affected_years": [
+        2014
+      ],
+      "registered_at": "2026-09-11",
+      "retroactive": true
+    }
   },
   "company": "Netflix, Inc.",
   "ticker": "NFLX",

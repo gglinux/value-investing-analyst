@@ -279,7 +279,9 @@ def main():
               f"schema_version 改为 {SCHEMA_VERSION_CURRENT}：")
         for p, m in partials[:40]:
             print(f"  缺 {m}  {os.path.relpath(p)}")
-    sys.exit(0)
+    # 退出码语义（三版审查修订）：存在未完成迁移或降档 → 1，全量完成 → 0。
+    # 此前无条件返回 0，作为收官门禁（CI/批次检查）调用时 21 份遗留也假通过。
+    sys.exit(1 if (stats["partial"] or stats["demoted"]) else 0)
 
 
 if __name__ == "__main__":

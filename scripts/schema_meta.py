@@ -264,6 +264,43 @@ def resolve_meta(data):
     return meta
 
 
+# ── 双源一致性（三版审查修订 2026-09-11）────────────────────────────
+# 迁移策略「只增不改」让顶层 unit/currency/accounting_standard 与 meta 块
+# 长期并存。问题在于消费者不同：计算端（compute_metrics 的市值换算、
+# validate_data 的口径注册表）读**顶层字段**，校验端（本模块）读 meta。
+# 两者分歧时校验照过、计算静默错位——这正是 OBS-600660-01「两份声明
+# 各自自洽、合起来才露馅」的新形态。矛盾比缺失更糟：缺失会触发补全
+# 流程，矛盾会被两个消费者各取所需。故不受档位调制，无条件 ERROR。
+def _norm_standard(v):
+    return str(v).strip().upper().replace("_", "-").replace(" ", "-")
+
+
+def top_meta_conflicts(data, meta):
+    """顶层头字段与 meta 块的量纲/口径矛盾清单（空列表=无冲突）。
+
+    同义写法放行：million ↔ 百万（乘数相等）、US GAAP ↔ US-GAAP；
+    自由文本无法判定乘数/准则时跳过（不猜）。只拦「能确证的分歧」。
+    """
+    out = []
+    tu, mu = data.get("unit"), meta.get("unit")
+    if isinstance(tu, str) and isinstance(mu, str):
+        tm, mm = UNIT_MULTIPLIER.get(tu.strip()), UNIT_MULTIPLIER.get(mu.strip())
+        if tm is not None and mm is not None and tm != mm:
+            out.append(f"顶层 `unit`={tu!r}（×{tm:g}）与 `meta.unit`={mu!r}（×{mm:g}）"
+                       f"量纲分歧（{max(tm, mm) / min(tm, mm):g} 倍）——计算端读顶层、"
+                       "校验端读 meta，两边各取所需即静默错位")
+    tc, mc = data.get("currency"), meta.get("currency")
+    if isinstance(tc, str) and isinstance(mc, str) and tc.strip().upper() != mc.strip().upper():
+        out.append(f"顶层 `currency`={tc!r} 与 `meta.currency`={mc!r} 分歧——"
+                   "快照币种链与计算端各取一侧")
+    ts, ms = data.get("accounting_standard"), meta.get("standard")
+    if isinstance(ts, str) and isinstance(ms, str):
+        nts, nms = _norm_standard(ts), _norm_standard(ms)
+        if nts in STANDARDS and nms in STANDARDS and nts != nms:
+            out.append(f"顶层 `accounting_standard`={ts!r} 与 `meta.standard`={ms!r} 分歧")
+    return out
+
+
 def unit_multiplier(data):
     """底稿单位的数值乘数；无法判定返回 None（下游据此拒绝换算而非猜测）。"""
     return UNIT_MULTIPLIER.get(resolve_meta(data).get("unit"))
@@ -302,6 +339,11 @@ def validate_meta(data, path=""):
         err = CHECKERS[field](v)
         if err:
             _emit("schema：" + err, is_core)
+
+    # 双源一致性：顶层头字段与 meta 块的矛盾（三版审查修订）。无条件 ERROR——
+    # 见 top_meta_conflicts 文档：矛盾比缺失更糟，且不受档位调制。
+    for msg in top_meta_conflicts(data, meta):
+        errors.append(tag + "schema：" + msg)
 
     # strict 档追加：source_ref 必须含定位锚点。「公司年报数据」能过基础校验，
     # 但它只声明「我看过」，不能让第二个人在 30 秒内翻到同一个数。
@@ -383,7 +425,6 @@ def check_unit_sanity(data, path=""):
         return warns
     last = rows[-1]
     rev, sh = last.get("revenue"), last.get("shares_diluted")
-    ni = last.get("net_income")
     meta = resolve_meta(data)
     money_mult = UNIT_MULTIPLIER.get(meta.get("unit"))
     # 股本单位：未声明时按「与金额同级」的历史约定推断（百万 ↔ 百万股），
@@ -391,32 +432,46 @@ def check_unit_sanity(data, path=""):
     shares_mult = SHARES_UNIT_MULTIPLIER.get(meta.get("shares_unit"))
     if shares_mult is None:
         shares_mult = money_mult
-
-    # 锚一：每股收入（金额单位 vs 股本单位的交叉校验），换算成「每股本币」再判。
-    # 上界按币种：CNY 最高的茅台约 140 元/股；USD 有 NVR/AutoZone 上千；JPY/KRW
-    # 面值天然大两到三个量级。BRK.A（约 17 万美元/股）类极端个案走显式 waiver，
-    # 不为它放宽全局上界——放宽到能容它，平安那种 5,801 元/股的错位就漏了。
+    cur = str(meta.get("currency") or "").upper()
+    hi = RPS_UPPER_BY_CURRENCY.get(cur, 1e4)
     waiver = (data.get("meta") or {}).get("unit_sanity_waiver")
-    if (all(isinstance(x, (int, float)) for x in (rev, sh)) and rev > 0 and sh > 0
-            and money_mult and shares_mult and not waiver):
-        rps = (rev * money_mult) / (sh * shares_mult)
-        cur = str(meta.get("currency") or "").upper()
-        hi = RPS_UPPER_BY_CURRENCY.get(cur, 1e4)
-        if not (0.1 <= rps <= hi):
-            warns.append(
-                f"{tag}量纲哨兵：最新年每股收入 = {rev:g}×{money_mult:g} / {sh:g}×{shares_mult:g}"
-                f" = {rps:.4g}（{cur or '?'}/股），落在 [0.1, {hi:g}] 之外——"
-                f"`revenue` 与 `shares_diluted` 的单位声明（unit={meta.get('unit')!r}, "
-                f"shares_unit={meta.get('shares_unit') or '未声明，按与金额同级推断'}）至少有一个错位；"
-                f"确为高价股请在 meta.unit_sanity_waiver 写明理由")
 
-    # 锚二：净利率（无量纲，对单位错位免疫；异常=同一底稿内字段单位不一致）
-    if all(isinstance(x, (int, float)) for x in (rev, ni)) and rev > 0:
-        margin = ni / rev
-        if not (-2.0 <= margin <= 1.0):
-            warns.append(
-                f"{tag}量纲哨兵：最新年净利率 = {ni:g}/{rev:g} = {margin:.1%}，"
-                f"超出 [-200%, 100%]——`net_income` 与 `revenue` 单位不一致")
+    # 锚一/锚二遍历全部年度行（三版审查修订 2026-09-11）：单位声明错位影响
+    # **所有行**，只查最新年会漏两件事——① 历史某行数值本身错位（多打一个零）；
+    # ② 系统性错位的定性证据：全部行越界 = 声明错（改 meta），个别行越界 =
+    # 该行录入错（改数值），处置方式不同。命中按锚聚合为一条，附年份范围。
+    bad_rps, bad_margin = [], []
+    for r in rows:
+        _rev, _sh, _ni = r.get("revenue"), r.get("shares_diluted"), r.get("net_income")
+        if (all(isinstance(x, (int, float)) for x in (_rev, _sh)) and _rev > 0 and _sh > 0
+                and money_mult and shares_mult and not waiver):
+            rps = (_rev * money_mult) / (_sh * shares_mult)
+            if not (0.1 <= rps <= hi):
+                bad_rps.append((r.get("year"), rps, _rev, _sh))
+        if all(isinstance(x, (int, float)) for x in (_rev, _ni)) and _rev > 0:
+            margin = _ni / _rev
+            if not (-2.0 <= margin <= 1.0):
+                bad_margin.append((r.get("year"), margin))
+    if bad_rps:
+        _ys = [str(y) for y, *_ in bad_rps]
+        span = _ys[0] if len(_ys) == 1 else f"{_ys[0]}–{_ys[-1]}（{len(_ys)}/{len(rows)} 年）"
+        y_l, rps_l, rev_l, sh_l = bad_rps[-1]
+        warns.append(
+            f"{tag}量纲哨兵：每股收入越界 {span}，最新越界 {y_l} 年 = "
+            f"{rev_l:g}×{money_mult:g} / {sh_l:g}×{shares_mult:g} = {rps_l:.4g}"
+            f"（{cur or '?'}/股，界 [0.1, {hi:g}]）——`revenue` 与 `shares_diluted` 的"
+            f"单位声明（unit={meta.get('unit')!r}, "
+            f"shares_unit={meta.get('shares_unit') or '未声明，按与金额同级推断'}）至少有一个错位"
+            f"（全部行越界=声明错位，个别行越界=该行录入错）；"
+            f"确为高价股请在 meta.unit_sanity_waiver 写明理由")
+    if bad_margin:
+        _ys = [str(y) for y, _ in bad_margin]
+        span = _ys[0] if len(_ys) == 1 else f"{_ys[0]}–{_ys[-1]}（{len(_ys)}/{len(rows)} 年）"
+        y_l, m_l = bad_margin[-1]
+        warns.append(
+            f"{tag}量纲哨兵：净利率越界 {span}，最新越界 {y_l} 年 = {m_l:.1%}"
+            f"（界 [-200%, 100%]）——`net_income` 与 `revenue` 单位不一致"
+            f"（个别行越界=该行录入错，全部行越界=同底稿内字段单位不一致）")
 
     # 锚三：单位声明与自报市值的一致性（若底稿登记了市值）
     mc = data.get("market_cap") or (data.get("meta") or {}).get("market_cap")

@@ -188,6 +188,16 @@ DEFAULT_FLOOR_HURDLE = 0.06
 # 亏损概率门槛：valuation-guide 第四步半「核心买入档追加下行约束：亏损概率 ≤ 30%」。
 # 此前只在文档、未落码（REQ-P0-04 审查发现）。
 DEFAULT_LOSS_PROB_HURDLE = 0.30
+# 以下四项此前只藏在 argparse default 里，prepare_case.snapshot_rules 用 getattr
+# 取不到、快照里记成 null（REQ-P0-08 审查发现）。提为模块常量、argparse 引用之，
+# 保证「快照记录的」与「引擎实际用的」是同一个数。
+DEFAULT_DISCOUNT_RATE = 0.10        # 折现率 r（forward-value / expected-return 共用）
+DEFAULT_PESSIMISTIC_HURDLE = 0.0    # 悲观情景年化门槛：最坏情况不亏本金
+DEFAULT_INDEX_HURDLE = 0.09         # 机会成本门槛（指数长期年化）
+DEFAULT_HOLD_YEARS = 5              # 持有期
+DEFAULT_TERMINAL_GROWTH = 0.025     # 永续增速
+DEFAULT_TERMINAL_GROWTH_CAP = 0.05  # 永续增速上限
+DEFAULT_MIN_SPREAD = 0.02           # r 与 g 最小间距
 
 
 def moat_irr_hurdle(moat, discount_rate, hold_years):
@@ -531,25 +541,25 @@ def main():
     p1 = sub.add_parser("implied-growth", help="反解现价隐含增速")
     p1.add_argument("--market-cap", type=float, required=True, help="当前市值（剔除净现金后更严谨：用 EV 减净债）")
     p1.add_argument("--base-oe", type=float, required=True, help="基期 Owner Earnings")
-    p1.add_argument("--discount-rate", type=float, default=0.10)
-    p1.add_argument("--terminal-growth", type=float, default=0.025)
+    p1.add_argument("--discount-rate", type=float, default=DEFAULT_DISCOUNT_RATE)
+    p1.add_argument("--terminal-growth", type=float, default=DEFAULT_TERMINAL_GROWTH)
     p1.add_argument("--years", type=int, default=10)
     p1.add_argument("--fade", action="store_true", help="增速线性衰减到永续增速")
     p1.add_argument("--deduct", type=float, default=0.0,
                     help="从市值中剔除的非经营资产（净现金/投资组合折价可回收值，"
                          "与 market-cap 同币种同单位）——反解的是经营业务隐含增速")
-    p1.add_argument("--terminal-growth-cap", type=float, default=0.05,
+    p1.add_argument("--terminal-growth-cap", type=float, default=DEFAULT_TERMINAL_GROWTH_CAP,
                     help="永续增速上限（默认 5%%，约当长期名义 GDP）。"
                          "超限即拒绝——永续快于经济增长在数学上不可持续")
-    p1.add_argument("--min-spread", type=float, default=0.02,
+    p1.add_argument("--min-spread", type=float, default=DEFAULT_MIN_SPREAD,
                     help="折现率与永续增速的最小安全间距（默认 2pct）。"
                          "Gordon 分母 (r-g) 趋零时价值爆炸，须挡在源头")
 
     p2 = sub.add_parser("forward-value", help="给定假设正向估值")
     p2.add_argument("--base-oe", type=float, required=True)
     p2.add_argument("--growth", type=float, required=True, help="预测期增速（fade 模式下为期初增速）")
-    p2.add_argument("--discount-rate", type=float, default=0.10)
-    p2.add_argument("--terminal-growth", type=float, default=0.025)
+    p2.add_argument("--discount-rate", type=float, default=DEFAULT_DISCOUNT_RATE)
+    p2.add_argument("--terminal-growth", type=float, default=DEFAULT_TERMINAL_GROWTH)
     p2.add_argument("--years", type=int, default=10)
     p2.add_argument("--shares", type=float, help="摊薄股本（百万股），提供则输出每股价值")
     p2.add_argument("--fade", action="store_true")
@@ -561,11 +571,11 @@ def main():
     p2.add_argument("--fx", type=float, default=1.0,
                     help="每股价值的币种换算系数（报告币→行情币），如 CNY→HKD 用 1.087。"
                          "默认 1.0 不换算")
-    p2.add_argument("--terminal-growth-cap", type=float, default=0.05,
+    p2.add_argument("--terminal-growth-cap", type=float, default=DEFAULT_TERMINAL_GROWTH_CAP,
                     help="永续增速上限（默认 5%%，约当长期名义 GDP）。"
                          "超限即拒绝——永续快于经济增长在数学上不可持续。"
                          "如确有理由须显式放宽并在报告论证")
-    p2.add_argument("--min-spread", type=float, default=0.02,
+    p2.add_argument("--min-spread", type=float, default=DEFAULT_MIN_SPREAD,
                     help="折现率与永续增速的最小安全间距（默认 2pct）。"
                          "r=10%%/g=9.99%% 会得出 6915× OE 的荒谬估值，故挡在源头")
     p2.add_argument("-o", "--output",
@@ -576,15 +586,15 @@ def main():
                         help="三情景转期望年化回报率（Phase 4.5 机会成本对照强制使用）")
     p3.add_argument("--price", type=float,
                     help="当前股价（market_snapshot 底稿）。用 --scenarios-file 时可省略")
-    p3.add_argument("--hold-years", type=int, default=5, help="持有期，默认 5 年")
+    p3.add_argument("--hold-years", type=int, default=DEFAULT_HOLD_YEARS, help=f"持有期，默认 {DEFAULT_HOLD_YEARS} 年")
     p3.add_argument("--scenarios",
                     help='三情景每股价值与概率，格式："悲观:105.12:0.3,基准:211.65:0.5,乐观:396.52:0.2"。'
                          '与 --scenarios-file 二选一，优先用后者（单一事实源）')
-    p3.add_argument("--index-hurdle", type=float, default=0.09,
+    p3.add_argument("--index-hurdle", type=float, default=DEFAULT_INDEX_HURDLE,
                     help="机会成本门槛（指数长期年化），默认 9%%。"
                          "必须 > --discount-rate，否则闸门二形同虚设（买在内在价值上"
                          "IRR 恒等于折现率，门槛低于折现率则任何不溢价的标的自动过闸）")
-    p3.add_argument("--discount-rate", type=float, default=0.10,
+    p3.add_argument("--discount-rate", type=float, default=DEFAULT_DISCOUNT_RATE,
                     help="三情景估值所用折现率 r（须与 forward-value 的 --discount-rate 一致）。"
                          "内在价值按 (1+r)^H 增值，这是期望 IRR 的理论下限")
     p3.add_argument("--moat", choices=["wide", "narrow", "none"],
@@ -599,7 +609,7 @@ def main():
                     help=f"不收敛下限的门槛（默认 {DEFAULT_FLOOR_HURDLE:.0%}，"
                          f"约当长期国债 + 2~3pct）。含义：即使市场永不重估，"
                          f"也要跑赢低风险替代")
-    p3.add_argument("--pessimistic-hurdle", type=float, default=0.0,
+    p3.add_argument("--pessimistic-hurdle", type=float, default=DEFAULT_PESSIMISTIC_HURDLE,
                     help="悲观情景年化门槛（默认 0%，即最坏情况不亏本金）。"
                          "前提是悲观值来自独立方法，见 check_scenarios.py")
     p3.add_argument("--loss-prob-hurdle", type=float, default=DEFAULT_LOSS_PROB_HURDLE,

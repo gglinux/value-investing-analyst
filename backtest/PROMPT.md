@@ -219,17 +219,21 @@ must_trigger 在密封时才写入）。
 **Step 2 — 完整跑一遍 skill**
 不走捷径、不简化、不跳 Phase。Phase 0 排雷 → 数据采集与双源核对 → 定量画像 → 五维定性 → 估值与安全边际 → 双闸门定档 → 三人独立评估 + 芒格红队。产出标准 HTML 报告并通过 `verify_report.py`。
 
-两条机器化纪律（第四批起强制）：① Phase 0 必须跑 `python3 scripts/forensic_screen.py <financials> --as-of <回放时点> -o data/forensic.json`，`--as-of` 保证只用当日已发布年报（`publish_date` 驱动），其输出的 `P0_*` 码原样进 `verdict.json.codes` 并标 `engine_derived`——人工登记的排雷命中若脚本未命中，须在 `diff.md` 说明是字段缺失（`insufficient_data`）还是条款未算术化；② 闸门二按 `reverse_dcf.py` 的 `gate2.pass`（四项参与判定）落 `GATE2_*` 码，护城河反推门槛 `GATE2_1_IRR_FAIL` 是诊断码、不构成闸门二不过的理由。
+两条机器化纪律（第三批起强制，即下一执行批次第四批起）：① Phase 0 必须跑 `python3 scripts/forensic_screen.py <financials> --as-of <回放时点> -o data/forensic.json`，`--as-of` 保证只用当日已发布年报（`publish_date` 驱动），其输出的 `P0_*` 码原样进 `verdict.json.codes` 并标 `engine_derived`——人工登记的排雷命中若脚本未命中，须在 `diff.md` 说明是字段缺失（`insufficient_data`）还是条款未算术化；② 闸门二按 `reverse_dcf.py` 的 `gate2.pass`（四项参与判定）落 `GATE2_*` 码，护城河反推门槛 `GATE2_1_IRR_FAIL` 是诊断码、不构成闸门二不过的理由。
 
-**Step 2.5 — 隔离检查（REQ-P0-05，第四批起强制）**
-verdict 落盘**前**运行 `python3 scripts/prepare_case.py --seal-check backtest/<case>/`。检查四项：① 工作区无答案明文（answer.json/answer_source.md/diff.md）；② 密封库对应答案未被揭示；③ git 时序正常（answer 相关文件首次 commit 不早于 verdict commit）；④ ANSWERS.md 第三/四/五批段落无该案例明文。任一命中 → verdict.json 打 `"contaminated": true`，从战绩表排除。
+**时点纪律（REQ-P0-06，第三批起强制）**：底稿 `meta.data_vintage` 与每行 `publish_date` 都不得晚于 `meta.json.replay_date`；`validate_data.py` 自动读同目录 `meta.json` 取回放时点做行级校验（不再靠路径名猜）。确属「文献时点晚于事实时点」的历史事实回取，在 `meta.point_in_time_waiver = {reason, affected_years}` 显式豁免并在报告数据附录带 `data-appendix="point-in-time-waiver"` 披露；用了重述值必须在该行 `restated_from = {<字段>: {original, reason}}` 登记原值与原因（两者缺一即 ERROR），报告附录带 `data-appendix="restatements"`。`data_vintage` 不得早于任何一行 `publish_date`（把 vintage 填成截断日、行级发布日留空的底稿会被一致性检查拦下）。
+
+**源冲突裁决（REQ-P0-07，第三批起强制）**：`crosscheck_official.py --audit`（A/港股）或 EDGAR 模式（美股）按三级阈值比对：命门 >1% 阻断、资产负债表 >3% 告警、其他 >5% 登记，以 tier 更高的源为准（tier 由 `crosscheck[].source_tier` 或 source 文本推断）。差异用 `--write` 落盘到底稿 `crosscheck_conflicts`，报告数据附录带 `data-appendix="source-conflicts"` 列出差异表（`verify_report.py` 校验）。豁免必须是五要素结构 `{adopted_value, adopted_source, rejected_value, rejected_source, reason}`。
+
+**Step 2.5 — 隔离检查（REQ-P0-05，第三批起强制）**
+verdict 落盘**前**运行 `python3 scripts/prepare_case.py --seal-check backtest/<case>/`。pre 模式检查三项：① 工作区无答案明文（answer.json/answer_source.md/diff.md）；② git 时序（meta.json 首次 commit < verdict.json 首次 commit < answer 文件首次 commit，且 verdict 在 answer 落地后不得再有修改提交）；③ ANSWERS.md 第三/四/五批段落无该案例明文（按别名反查，不按 ticker 子串）。任一命中 → verdict.json 打 `"contaminated": true`，runner 三轨不计分、从战绩表排除。`--lint-verdict` 会反向核对：seal-check 失败而未标 contaminated 即体检不过——`contaminated` 不再靠自觉。事后审计用 `--seal-check <case> --audit`（只看 git 时序，answer 文件此时理应存在）；批次执行率用 `--isolation-report`。
 
 **Step 3 — 落盘存档结论 + 时序存证**
 把以下内容写入 `verdict.json`：`final_verdict` 与 `verdict_ordinal`（档位序数）、闸门一/闸门二结果、`codes`（本次触发的全部告警代号，取自 `scripts/alert_codes.py` 注册表）、`codes_provenance`（区分 engine_derived 与 manually_recorded）、三情景每股价值、期望年化 IRR、`frozen_before_diff: true` 与 `frozen_at`。
 
-**REQ-P0-08 规则版本钉死（第四批起强制）**：verdict.json 须含 `rules_snapshot`（运行 `python3 scripts/prepare_case.py --snapshot-rules` 获取），包括 `skill_commit`（git hash）与 `thresholds`（安全边际门槛、折现率、排雷阈值等关键参数）。无此字段的历史案例视为"规则未知版本"，用当前规则重跑时须在 diff.md 声明。
+**REQ-P0-08 规则版本钉死（第三批起强制）**：verdict.json 须含 `rules_snapshot`（运行 `python3 scripts/prepare_case.py --snapshot-rules` 获取），包括 `skill_commit`（git hash）、`dirty`、`thresholds`（双闸门/情景门禁/排雷/数据门禁/计分的全部模块级阈值，由 `RULES_REGISTRY` 登记）与 `missing`（须为空）。**`dirty=true` 禁止落 verdict**——先提交规则改动再落盘，否则 hash 不代表实际运行的代码，`--lint-verdict` 会拒绝。无此字段的历史案例 runner 标 `rules_version=unknown`；verdict 记录的 commit 与当前 HEAD 不同时标 `drifted`，其 rerun 漂移须与 `python3 scripts/run_backtest_assertions.py --as-of <skill_commit> --case <case>`（临时 worktree 按旧版本重跑）对读，不得直接归为引擎回归。
 
-**落盘后、提交前先体检**：`python3 scripts/run_backtest_assertions.py --lint-verdict <case>/verdict.json`——校验 codes 全部在注册表内（第二批 Zoom 曾杜撰 2 个不存在的告警 ID）、`codes_provenance` 必填（缺失时漂移检测比对降级，第二批神华即缺）、必填字段与档位文案自洽。**体检通过才允许提交**。
+**落盘后、提交前先体检**：`python3 scripts/run_backtest_assertions.py --lint-verdict <case>/verdict.json`——校验 codes 全部在注册表内（第二批 Zoom 曾杜撰 2 个不存在的告警 ID）、`codes_provenance` 必填（缺失时漂移检测比对降级，第二批神华即缺）、必填字段与档位文案自洽；第三批起还校验 `rules_snapshot` 存在且 `dirty=false`（REQ-P0-08），并反向跑 seal-check 核对 `contaminated` 标注（REQ-P0-05）。**体检通过才允许提交**。
 
 **落盘后立即单独提交**：`git add <case>/verdict.json && git commit -m "verdict(<case>): 结论落盘，未读答案"`。git 历史即时序证据，机器可验、事后无法伪造——第一批只有 3/6 案例有自陈的 `frozen_before_diff` 字段，文件 mtime 又会被 git 检出覆盖，「先落盘再看答案」这条纪律没有任何可验证痕迹。**此步完成后才允许进入 Step 4。**
 

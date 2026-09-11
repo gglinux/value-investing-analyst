@@ -67,7 +67,7 @@ ALERTS = {
     "P0_V2_FRAUD_HISTORY": ("phase0_veto", "公司或实控人有财务造假处罚前科"),
     "P0_V3_PLEDGE_HIGH": ("phase0_veto", "实控人股权质押比例 > 70%"),
     "P0_V4_DEPOSIT_LOAN_DOUBLE_HIGH": ("phase0_veto", "存贷双高（货币资金与有息负债均 > 总资产 25%）且无合理解释"),
-    "P0_V4A_INTEREST_INVERSION": ("phase0_veto", "利率倒挂：利息收入/平均货币资金 < 1.2% 且远低于融资成本——存贷双高的加强验证器，假现金拿不出真利息"),
+    "P0_V4A_INTEREST_INVERSION": ("phase0_veto", "利率倒挂（存贷双高验证器）：双高形态下利息收益率 < 同期存款基准（币种×年份查表，--deposit-rate 可覆盖）且 < 融资成本一半——假现金拿不出真利息"),
     "P0_V5_AUDITOR_CFO_CHURN": ("phase0_veto", "3 年内更换审计师理由含糊，或 CFO 两年内离职 ≥2 人"),
     "P0_V6_CONTROLLER_TUNNELING": ("phase0_veto", "大股东掏空迹象：关联方资金占用/违规担保/不公允关联交易"),
 

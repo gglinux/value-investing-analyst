@@ -53,7 +53,12 @@ TOL = 0.01  # 与 validate_data.TOL 保持一致：1%
 TOL_BALANCE_SHEET = 0.03   # 资产负债表科目 >3% 告警
 TOL_OTHER = 0.05           # 其他科目 >5% 登记
 BALANCE_SHEET_FIELDS = {"total_assets", "total_equity", "total_debt",
-                        "total_liabilities", "non_current_assets"}
+                        "total_liabilities", "non_current_assets", "cash",
+                        "cash_and_equivalents", "interest_bearing_debt",
+                        "goodwill", "inventory", "receivables"}
+# 命门科目扩展：需求正文点名"货币资金、有息负债"也是命门（>1% 阻断）
+CORE_EXTRA_FIELDS = {"cash", "cash_and_equivalents", "interest_bearing_debt", "total_debt"}
+NON_VALUE_KEYS = {"year", "source", "source_tier", "note", "notes"}
 
 # 源优先级（1=最高）
 SOURCE_PRIORITY = {
@@ -63,6 +68,67 @@ SOURCE_PRIORITY = {
     "research_report": 4, "wind_screenshot": 4,           # B 级二手
     "web_search": 5, "media": 5,                          # C 级兜底
 }
+# 自由文本 source → tier 的关键词推断（crosscheck.source 是人写的描述，没有 tier 字段时用）
+_TIER_HINTS = [
+    (1, ("10-k", "10k", "20-f", "20f", "edgar", "xbrl", "companyfacts", "巨潮", "cninfo",
+         "披露易", "hkex", "年报", "年度报告", "审计报告", "annual report", "sec ", "决算短信",
+         "tanshin", "业绩公告", "季报", "半年报", "主要会计数据", "对比栏", "对照列", "官方原文",
+         "finalpage", "accession", "filed ")),
+    (2, ("官网", "投资者关系", "ir.", "investor", "股东信", "shareholder letter", "公告原文",
+         "fuyaogroup", "港版")),
+    (3, ("westock", "ifind", "wind", "choice", "东方财富", "接口", "api", "tushare", "行情终端")),
+    (4, ("研报", "券商", "research", "截图", "screenshot", "wind 截图")),
+    (5, ("搜索", "web", "媒体", "新闻", "media", "news", "百度", "google", "新浪", "转引")),
+]
+
+
+def source_tier(entry_or_text) -> int:
+    """crosscheck 条目（或 source 文本）→ 源优先级 tier。显式 `source_tier` 优先，
+    其次按关键词推断；推不出记 5（最低），逼执行者写清出处。"""
+    if isinstance(entry_or_text, dict):
+        st = entry_or_text.get("source_tier")
+        if st in SOURCE_PRIORITY:
+            return SOURCE_PRIORITY[st]
+        if isinstance(st, int) and 1 <= st <= 5:
+            return st
+        text = str(entry_or_text.get("source") or "")
+    else:
+        text = str(entry_or_text or "")
+    low = text.lower()
+    for tier, hints in _TIER_HINTS:
+        if any(h in low for h in hints):
+            return tier
+    return 5
+
+
+def tol_for(field: str, core_fields) -> tuple[float, str]:
+    """字段 → (容差, 严重度)。命门 >1% block；资产负债表 >3% warn；其他 >5% register。"""
+    if field in core_fields or field in CORE_EXTRA_FIELDS:
+        return TOL, "block"
+    if field in BALANCE_SHEET_FIELDS:
+        return TOL_BALANCE_SHEET, "warn"
+    return TOL_OTHER, "register"
+
+
+EXEMPT_REQUIRED_KEYS = ("adopted_value", "adopted_source", "rejected_value",
+                        "rejected_source", "reason")
+
+
+def exempt_detail(exempt: dict, field: str):
+    """crosscheck_exempt[field] → (是否有效豁免, 描述, 结构问题列表)。
+
+    结构化格式 {adopted_value, adopted_source, rejected_value, rejected_source, reason}
+    为 data-sourcing.md 第九节要求；纯字符串为 legacy 格式（接受但告警，逼迁移）。
+    """
+    e = (exempt or {}).get(field)
+    if not e:
+        return False, "", []
+    if isinstance(e, dict):
+        miss = [k for k in EXEMPT_REQUIRED_KEYS if e.get(k) in (None, "")]
+        desc = e.get("reason") or json.dumps(e, ensure_ascii=False)[:80]
+        return True, desc, ([f"crosscheck_exempt.{field} 缺 {miss}（结构化豁免五要素）"] if miss else [])
+    return True, str(e)[:120], [f"crosscheck_exempt.{field} 为 legacy 字符串格式——"
+                                 "请迁移为 {adopted_value, adopted_source, rejected_value, rejected_source, reason}"]
 
 # EDGAR XBRL 概念候选，与 extract_edgar_annual.py 同源（逐年独立回退）
 CONCEPTS = {
@@ -161,17 +227,62 @@ def main() -> int:
     fields = BANK_FIELDS if is_bank else CORE_FIELDS
     by_year = {r.get("year"): r for r in rows}
     target_years = sorted(by_year)[-args.years:]
-    cc = {r.get("year"): r for r in (data.get("crosscheck") or [])}
+    cc_raw = data.get("crosscheck") or []
+    cc_legacy = [c for c in cc_raw if not isinstance(c, dict)]
+    cc = {r.get("year"): r for r in cc_raw if isinstance(r, dict)}
     exempt = data.get("crosscheck_exempt") or {}
+    # 底稿 annual 的来源 tier（meta.source_ref 是人写的描述，按关键词推断）
+    annual_tier = source_tier((data.get("meta") or {}).get("source_ref") or data.get("source") or "")
 
     print("=" * 70)
     print(f"命门科目核对：{os.path.basename(args.financials)}"
           f"{'（银行口径）' if is_bank else ''}")
-    print(f"强制科目：{fields}    容差：{TOL:.0%}    核对年度：{target_years}")
+    print(f"强制科目：{fields}    容差：命门 {TOL:.0%} / 资产负债表 {TOL_BALANCE_SHEET:.0%} / 其他 {TOL_OTHER:.0%}"
+          f"    核对年度：{target_years}")
     print("=" * 70)
 
     errors, warns, auto = 0, 0, 0
     conflicts = []  # REQ-P0-07 差异表（含已裁决与未裁决）
+
+    def judge(y, f, dv, ov, src_text, src_tier, concept=None):
+        """统一裁决：返回 ('ok'|'exempt'|'conflict', severity)。副作用：打印、登记 conflicts。"""
+        nonlocal errors, warns, auto
+        tol, sev = tol_for(f, fields)
+        d = rel_diff(ov, dv)
+        tag = f"  [{concept}]" if concept else ""
+        if d is None:
+            print(f"  ❌ {y} {f:16} 底稿缺值，官方 {ov}")
+            errors += 1
+            return "conflict", "block"
+        if d <= tol:
+            print(f"  ✅ {y} {f:16} {dv} ≈ {ov} ({d:.2%}){tag}")
+            auto += 1
+            return "ok", sev
+        ok_ex, desc, problems = exempt_detail(exempt, f)
+        # 裁决方向：高优先级源为准。tier 相同或底稿更高时，仍以 crosscheck 侧（官方原文）为准——
+        # crosscheck 的语义就是"对官方源核对"，annual 侧 tier 只用于报告披露。
+        adopted_side = "crosscheck" if src_tier <= annual_tier else "annual"
+        row = {"year": y, "field": f, "annual_value": dv, "official_value": ov,
+               "annual_tier": annual_tier, "official_tier": src_tier,
+               "source": (concept or src_text or "")[:160], "diff_pct": round(d, 4),
+               "severity": sev, "adopted_side": adopted_side,
+               "resolved": ok_ex, "resolution": desc if ok_ex else None}
+        conflicts.append(row)
+        if ok_ex:
+            print(f"  ⚠️  {y} {f:16} 底稿 {dv} vs 官方 {ov} 偏差 {d:.1%}{tag}——已豁免（{desc[:60]}）")
+            warns += 1
+            for p in problems:
+                print(f"      ↳ {p}")
+                warns += 1
+            return "exempt", sev
+        icon = {"block": "❌", "warn": "⚠️ ", "register": "📝"}[sev]
+        print(f"  {icon} {y} {f:16} 底稿 {dv} vs 官方 {ov} 偏差 {d:.1%} > {tol:.0%}{tag}"
+              f"  → 以 {'官方源' if adopted_side == 'crosscheck' else '底稿源'}（tier {min(src_tier, annual_tier)}）为准")
+        if sev == "block":
+            errors += 1
+        else:
+            warns += 1
+        return "conflict", sev
 
     # ---- 模式一：EDGAR 自动取数比对（机器取数，不经人手转录）----
     if args.companyfacts and not args.audit:
@@ -191,44 +302,25 @@ def main() -> int:
                     warns += 1
                     continue
                 val, concept = ov
-                d = rel_diff(val, dv)
-                if d is None:
-                    print(f"  ❌ {y} {f:16} 底稿缺值，官方 {val:,.1f}")
-                    errors += 1
-                elif d > TOL and exempt.get(f):
-                    # 口径裁决豁免（与模式二同语义）：底稿口径系冻结裁决的派生
-                    # 口径（如美股 OE 口径调整、拆股全序列调整），非转录错误；
-                    # 官方原值须在底稿扩展字段留存，报告须披露豁免理由。
-                    print(f"  ⚠️  {y} {f:16} 底稿 {dv:,.1f} vs 官方 {val:,.1f} "
-                          f"偏差 {d:.1%}  [{concept}]——已豁免（{exempt[f]}）")
-                    warns += 1
-                elif d > TOL:
-                    print(f"  ❌ {y} {f:16} 底稿 {dv:,.1f} vs 官方 {val:,.1f} "
-                          f"偏差 {d:.1%}  [{concept}]")
-                    conflicts.append({"year": y, "field": f, "annual_value": dv,
-                                      "official_value": round(val, 2),
-                                      "source": concept, "diff_pct": round(d, 4),
-                                      "severity": "block" if f in CORE_FIELDS else "warn"})
-                    errors += 1
-                else:
-                    print(f"  ✅ {y} {f:16} {dv:,.1f} ≈ {val:,.1f} ({d:.2%})")
-                    auto += 1
-                    if args.write:
-                        cc.setdefault(y, {"year": y})
-                        cc[y][f] = round(val, 2)
-                        cc[y]["source"] = (
-                            f"[E:{os.path.basename(args.companyfacts)}] "
-                            f"EDGAR XBRL 自动核对")
+                st, _ = judge(y, f, dv, round(val, 2), "EDGAR XBRL", SOURCE_PRIORITY["edgar_xbrl"], concept)
+                if st == "ok" and args.write:
+                    cc.setdefault(y, {"year": y})
+                    cc[y][f] = round(val, 2)
+                    cc[y]["source"] = (
+                        f"[E:{os.path.basename(args.companyfacts)}] "
+                        f"EDGAR XBRL 自动核对")
+                    cc[y]["source_tier"] = "edgar_xbrl"
         if args.write and cc:
             data["crosscheck"] = [cc[k] for k in sorted(cc)]
-            json.dump(data, open(args.financials, "w", encoding="utf-8"),
-                      ensure_ascii=False, indent=2)
-            print(f"\n  → 已写回 crosscheck 区块（{len(cc)} 个年度）")
 
-    # ---- 模式二：完整性体检（A股/港股人工转录路径的守卫）----
+    # ---- 模式二：完整性体检 + 逐科目比对（A股/港股人工转录路径的守卫）----
     else:
-        print("\n[模式] crosscheck 完整性体检"
+        print("\n[模式] crosscheck 完整性体检 + 分级阈值比对"
               "（A股/港股无免鉴权官方结构化源，须人工转录）\n")
+        if cc_legacy:
+            print(f"  ❌ crosscheck 含 {len(cc_legacy)} 条非结构化（纯文本）条目——机器无法比对，"
+                  "请改为 {{year, source, <科目>: 值}} 结构（双汇 000895 legacy 形态）")
+            errors += 1
         if not cc:
             # 竞对公司免原文核对（与 validate_data 的 --skip-crosscheck 一致）：
             # 命门核对只强制主公司。误把竞对底稿当主公司体检会产生假警报。
@@ -247,40 +339,58 @@ def main() -> int:
                 print(f"  ❌ {y} 未登记核对")
                 errors += 1
                 continue
-            miss = [f for f in fields if entry.get(f) is None]
-            for f in miss:
-                if exempt.get(f):
-                    print(f"  ⚠️  {y} {f:16} 未核对，已豁免（{exempt[f]}）")
-                    warns += 1
-                else:
-                    print(f"  ❌ {y} {f:16} 强制科目缺官方值＝该科目未被核对")
-                    errors += 1
-            for f in fields:
-                ov, dv = entry.get(f), by_year[y].get(f)
-                if ov is None:
-                    continue
-                d = rel_diff(ov, dv)
-                if d is None or d > TOL:
-                    print(f"  ❌ {y} {f:16} 底稿 {dv} vs 官方 {ov} 不一致")
-                    errors += 1
-                else:
-                    print(f"  ✅ {y} {f:16} 一致（{d:.2%}）")
             src = str(entry.get("source") or "")
             if not src:
                 print(f"  ❌ {y} 缺 source 出处")
                 errors += 1
+            tier = source_tier(entry)
+            if tier >= 4:
+                print(f"  ⚠️  {y} source tier {tier}（B/C 级二手源）——命门核对应以监管原文/公司原文为准")
+                warns += 1
+            miss = [f for f in fields if entry.get(f) is None]
+            for f in miss:
+                ok_ex, desc, problems = exempt_detail(exempt, f)
+                if ok_ex:
+                    print(f"  ⚠️  {y} {f:16} 未核对，已豁免（{desc[:60]}）")
+                    warns += 1
+                    for p in problems:
+                        print(f"      ↳ {p}")
+                        warns += 1
+                else:
+                    print(f"  ❌ {y} {f:16} 强制科目缺官方值＝该科目未被核对")
+                    errors += 1
+            # 命门科目 + crosscheck 条目里登记的**任何其他数值科目**都进分级比对
+            # （原版只比命门四科目，资产负债表/其他阈值是死常量）
+            extra = [k for k, v in entry.items()
+                     if k not in NON_VALUE_KEYS and k not in fields and isinstance(v, (int, float))]
+            for f in fields + extra:
+                ov, dv = entry.get(f), by_year[y].get(f)
+                if ov is None:
+                    continue
+                judge(y, f, dv, ov, src, tier)
+
+    # ---- 差异表落盘（两模式共用；--write 时写回底稿 crosscheck_conflicts 供报告附录引用）----
+    if args.write:
+        data["crosscheck_conflicts"] = conflicts
+        json.dump(data, open(args.financials, "w", encoding="utf-8"),
+                  ensure_ascii=False, indent=2)
+        print(f"\n  → 已写回底稿：crosscheck {len(cc)} 个年度，crosscheck_conflicts {len(conflicts)} 条")
 
     print("\n" + "=" * 70)
     print(f"结果：{errors} 错误 / {warns} 警告"
-          + (f" / {auto} 项机器自动核对通过" if auto else ""))
+          + (f" / {auto} 项核对通过" if auto else ""))
     if conflicts:
-        print(f"\n差异表（REQ-P0-07，{len(conflicts)} 条冲突须裁决/豁免）：")
+        unresolved = [c for c in conflicts if not c["resolved"]]
+        print(f"\n差异表（REQ-P0-07，{len(conflicts)} 条，其中 {len(unresolved)} 条未裁决）：")
+        print(f"  {'年度':<6}{'科目':<18}{'底稿值':>14}{'官方值':>14}{'偏差':>8}  严重度  裁决")
         for c in conflicts:
-            sev = "⛔阻断" if c["severity"] == "block" else "⚠告警"
-            print(f"  [{sev}] {c['year']} {c['field']}: "
-                  f"底稿 {c['annual_value']} vs 官方 {c['official_value']} "
-                  f"({c['diff_pct']:.1%}) [{c.get('source','')}]")
-        print("  → 命门阻断项须以官方值为准更新底稿，或在 crosscheck_exempt 写理由。")
+            sev = {"block": "⛔阻断", "warn": "⚠告警", "register": "📝登记"}[c["severity"]]
+            res = f"已豁免：{c['resolution'][:40]}" if c["resolved"] else \
+                  f"以 {'官方' if c['adopted_side'] == 'crosscheck' else '底稿'}源为准（tier {min(c['annual_tier'], c['official_tier'])}）"
+            print(f"  {c['year']:<6}{c['field']:<18}{str(c['annual_value']):>14}{str(c['official_value']):>14}"
+                  f"{c['diff_pct']:>8.1%}  {sev}  {res}")
+        print("  → 阻断项须以高优先级源为准更新底稿，或在 crosscheck_exempt 写五要素结构化豁免；"
+              "差异表须出现在报告数据附录（verify_report 校验）。")
     if errors:
         print("命门科目核对未通过——禁止进入 Phase 2。"
               "确无法取得官方值时在底稿写 crosscheck_exempt 显式豁免并在报告披露。")

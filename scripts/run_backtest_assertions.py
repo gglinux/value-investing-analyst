@@ -60,6 +60,10 @@ ABSTAIN_ORDINAL = 2    # =2 观察等价格 = 弃权档
 FP_RATE_TARGET = 0.10
 FN_RATE_TARGET = 0.40
 
+# REQ-P0-05 / P0-08：隔离机器检查与规则版本快照从第几批起强制。
+# 执行顺序 1→2→4→3→5，故"下一执行批次"是第四批；第三批因排在第四批之后同样受约束。
+RULES_SNAPSHOT_MIN_BATCH = 3
+
 # 重跑引擎所需的逐案参数（三类键独立可选，改动它等于改动案例本身，须走案例
 # 修订而非脚本调参）：
 #   moat + iv_growth —— reverse_dcf expected-return 传参，**两键齐备才跑反推**。
@@ -227,6 +231,66 @@ def _git_first_commit_time(path):
     return int(lines[-1]) if lines else None  # 输出按新→旧排列，末行 = 最早提交
 
 
+_HEAD_CACHE = {}
+
+
+def _git_head():
+    if "head" not in _HEAD_CACHE:
+        r = subprocess.run(["git", "rev-parse", "HEAD"], capture_output=True, text=True, cwd=REPO)
+        _HEAD_CACHE["head"] = r.stdout.strip() if r.returncode == 0 else ""
+    return _HEAD_CACHE["head"]
+
+
+def run_as_of(commit, passthrough_args):
+    """REQ-P0-08 `--as-of <hash>`：按 verdict 记录的 skill 版本重跑本脚本。
+
+    实现不用 stash/checkout（会扰动工作区），用 `git worktree` 把目标版本检出到
+    临时目录，在该目录下以**当前工作区的 backtest/ 案例数据**跑 rerun：
+      1. worktree add /tmp/via-<hash> <hash>
+      2. 把当前 backtest/ 目录 symlink 进 worktree（案例数据不随版本变，规则随版本变）
+      3. 在 worktree 下执行 run_backtest_assertions.py <passthrough_args> --rerun
+      4. worktree remove
+    验收语义：「任一历史案例可按其记录的版本重跑并复现原档位」——档位由 verdict.json
+    冻结，这里复现的是**引擎代号集合**（engine_derived），rerun 漂移为空即复现成功。
+    """
+    import shutil
+    import tempfile
+    r = subprocess.run(["git", "rev-parse", "--verify", f"{commit}^{{commit}}"],
+                       capture_output=True, text=True, cwd=REPO)
+    if r.returncode != 0:
+        print(f"❌ --as-of：{commit} 不是有效 commit")
+        return 2
+    full = r.stdout.strip()
+    wt = os.path.join(tempfile.gettempdir(), f"via-asof-{full[:12]}")
+    if os.path.exists(wt):
+        subprocess.run(["git", "worktree", "remove", "--force", wt], capture_output=True, cwd=REPO)
+        shutil.rmtree(wt, ignore_errors=True)
+    add = subprocess.run(["git", "worktree", "add", "--detach", wt, full],
+                         capture_output=True, text=True, cwd=REPO)
+    if add.returncode != 0:
+        print(f"❌ --as-of：worktree 创建失败：{add.stderr.strip()[:200]}")
+        return 2
+    try:
+        # 案例数据用当前工作区的（版本化的是规则，不是案例）
+        wt_bt = os.path.join(wt, "backtest")
+        if os.path.isdir(wt_bt):
+            shutil.rmtree(wt_bt)
+        os.symlink(BACKTEST, wt_bt)
+        runner = os.path.join(wt, "scripts", "run_backtest_assertions.py")
+        if not os.path.exists(runner):
+            print(f"❌ --as-of：{full[:8]} 版本没有 run_backtest_assertions.py，无法按该版本重跑")
+            return 2
+        print(f"[as-of] 按 skill 版本 {full[:8]} 重跑（worktree {wt}）\n")
+        cmd = [_py(), runner] + passthrough_args
+        if "--rerun" not in cmd:
+            cmd.append("--rerun")
+        p = subprocess.run(cmd, cwd=wt)
+        return p.returncode
+    finally:
+        subprocess.run(["git", "worktree", "remove", "--force", wt], capture_output=True, cwd=REPO)
+        shutil.rmtree(wt, ignore_errors=True)
+
+
 def check_isolation_evidence(case, res):
     """PROMPT 第七节 B 档隔离协议的机器可验痕迹（第三批起硬校验）。
 
@@ -280,6 +344,39 @@ def check_case(case, do_rerun=False):
     fired = set(v.get("codes") or [])
     res = {"name": case["name"], "fired": sorted(fired), "failures": [], "notes": [],
            "known": [], "regressions": []}
+
+    # ---- REQ-P0-05：contaminated 案例不计分 ----
+    # 隔离失效的案例结论是"执行者记忆力"而非"系统能力"的度量，三轨全部不计。
+    # 仍做交付物检查（污染案例也要有完整档案），但不进 FP/FN 分母、不产生回归红灯。
+    if v.get("contaminated"):
+        res["contaminated"] = True
+        res["verdict_track"] = "不计分（contaminated：隔离失效）"
+        res["false_positive_track"] = "不计分（contaminated）"
+        res["false_positive"] = res["false_negative"] = False
+        res["sample_role"] = "unscored"
+        res["assert_hits"] = res["assert_misses"] = res["assert_false_fires"] = []
+        res["notes"].append("verdict.contaminated=true：隔离失效，三轨不计分，从战绩表排除（REQ-P0-05）")
+        check_deliverables(case, res)
+        _classify_failures(res, a, do_rerun)
+        return res
+
+    # ---- REQ-P0-08：规则版本漂移披露 ----
+    # verdict 记录的 skill_commit 与当前 HEAD 不同 → 今日引擎重跑 ≠ 当时结论，
+    # rerun 漂移须与规则漂移一起读（是规则变了还是引擎回归了）。
+    snap = v.get("rules_snapshot") or {}
+    res["skill_commit"] = (snap.get("skill_commit") or "")[:12] or None
+    if not snap:
+        res["rules_version"] = "unknown（verdict 无 rules_snapshot，历史批次）"
+    else:
+        head = _git_head()
+        if snap.get("skill_commit") == head:
+            res["rules_version"] = f"current（{head[:8]}）"
+        else:
+            res["rules_version"] = f"drifted（verdict {snap.get('skill_commit', '')[:8]} → HEAD {head[:8]}）"
+            if do_rerun:
+                res["notes"].append(f"规则版本漂移：verdict 落盘于 {snap.get('skill_commit', '')[:8]}，"
+                                    f"当前 HEAD {head[:8]}——rerun 漂移可能来自规则变更而非引擎回归，"
+                                    f"用 `--as-of {snap.get('skill_commit', '')[:8]}` 复现原档位")
 
     check_deliverables(case, res)
     check_isolation_evidence(case, res)
@@ -507,6 +604,7 @@ def lint_verdict(path):
     """
     v = json.load(open(path, encoding="utf-8"))
     problems = []
+    advisories = []  # 不阻塞、但要看见（历史批次的 P0-08 缺失等）
     fired = set(v.get("codes") or [])
     bad = unknown_codes(fired)
     if bad:
@@ -529,12 +627,71 @@ def lint_verdict(path):
     if ov and ov not in fv:
         problems.append(f"final_verdict『{fv}』与 verdict_ordinal={v.get('verdict_ordinal')}"
                         f"（{ov}）不自洽——复合表述也应包含档位词，如『拒绝（观察等价格）』")
+
+    # ---- REQ-P0-08 规则版本钉死（第四批起强制；批次由同目录 meta.json 判定）----
+    case_dir = os.path.dirname(os.path.abspath(path))
+    meta = {}
+    mp = os.path.join(case_dir, "meta.json")
+    if os.path.exists(mp):
+        try:
+            meta = json.load(open(mp, encoding="utf-8"))
+        except Exception:  # noqa: BLE001
+            meta = {}
+    try:
+        batch = int(meta.get("batch") or 0)
+    except (TypeError, ValueError):
+        batch = 0
+    enforce_new = batch >= RULES_SNAPSHOT_MIN_BATCH
+    snap = v.get("rules_snapshot")
+    if not snap:
+        (problems if enforce_new else advisories).append(
+            "缺 rules_snapshot（REQ-P0-08）：运行 `prepare_case.py --snapshot-rules` 并写入——"
+            "无版本快照的战绩无法区分『系统变好』与『规则变松』")
+    else:
+        if not snap.get("skill_commit"):
+            problems.append("rules_snapshot 缺 skill_commit（git hash）")
+        if snap.get("dirty"):
+            problems.append("rules_snapshot.dirty=true：落 verdict 时工作区有未提交改动，"
+                            "skill_commit 不代表实际运行的代码——先提交规则改动再落 verdict")
+        if snap.get("missing"):
+            problems.append(f"rules_snapshot.missing 非空 {snap['missing'][:3]}——"
+                            "RULES_REGISTRY 与引擎常量不一致，快照不完整")
+        th = snap.get("thresholds") or {}
+        # mos_wide 是 mos_requirement 的兼容旧键（prepare_case 派生写入），只能豁免
+        # MoS 一项，不能短路另两个关键阈值——原版 `and "mos_wide" not in th` 绑定
+        # 在整个循环上，而快照只要 reverse_dcf 可导入就必有 mos_wide，导致三项
+        # 非空校验恒不触发（REVIEW-REQ-P0-08 §1，实测 thresholds={"mos_wide":0.25}
+        # 可原样放行）。拆开：折现率/悲观门槛各自独立校验，MoS 二者取其一。
+        for k in ("discount_rate_default", "pessimistic_hurdle_default"):
+            if th.get(k) is None:
+                problems.append(f"rules_snapshot.thresholds 缺关键阈值 {k}")
+        if not (th.get("mos_requirement") or th.get("mos_wide")):
+            problems.append("rules_snapshot.thresholds 缺关键阈值 mos_requirement/mos_wide")
+
+    # ---- REQ-P0-05 隔离检查交叉校验（第四批起强制）----
+    # 执行者自觉写 contaminated 不可靠：这里用 seal-check 的 pre 模式（当前工作区不应有
+    # answer 文件）反向核对。seal-check 失败而 verdict 未标 contaminated → lint 不过。
+    if enforce_new:
+        r = subprocess.run([_py(), os.path.join(REPO, "scripts", "prepare_case.py"),
+                            "--seal-check", case_dir], capture_output=True, text=True, cwd=REPO)
+        if r.returncode != 0 and not v.get("contaminated"):
+            problems.append("prepare_case.py --seal-check 未通过但 verdict 未标 `contaminated: true`"
+                            f"（REQ-P0-05）：\n      " + "\n      ".join(
+                                l.strip() for l in r.stdout.splitlines() if l.strip().startswith("❌")))
+        elif r.returncode == 0 and v.get("contaminated"):
+            advisories.append("verdict 标了 contaminated 但 seal-check 通过——确认是否误标")
+
     if problems:
         print(f"❌ {path} 落盘体检未通过：")
         for p in problems:
             print(f"   - {p}")
+        for a in advisories:
+            print(f"   ⚠ {a}")
         return 1
-    print(f"✅ {path} 落盘体检通过（codes 注册表/provenance/必填字段/档位自洽）")
+    print(f"✅ {path} 落盘体检通过（codes 注册表/provenance/必填字段/档位自洽"
+          f"{'/规则快照/隔离交叉' if enforce_new else ''}）")
+    for a in advisories:
+        print(f"   ⚠ {a}")
     return 0
 
 
@@ -546,11 +703,17 @@ def main():
     ap.add_argument("--baseline", help="基线 JSON 路径：存在则比对，不存在则写入")
     ap.add_argument("--lint-verdict", metavar="VERDICT_JSON",
                     help="Step 3 落盘体检：只验 verdict.json（answer.json 尚不存在时用）")
+    ap.add_argument("--as-of", metavar="COMMIT", dest="as_of",
+                    help="REQ-P0-08：按指定 skill 版本（verdict.rules_snapshot.skill_commit）在临时 "
+                         "worktree 中重跑本脚本（自动附加 --rerun），复现当时的引擎代号集合")
     ap.add_argument("-o", "--output", help="结果 JSON 输出路径")
     args = ap.parse_args()
 
     if args.lint_verdict:
         sys.exit(lint_verdict(args.lint_verdict))
+    if args.as_of:
+        passthrough = [x for x in sys.argv[1:] if x not in ("--as-of", args.as_of)]
+        sys.exit(run_as_of(args.as_of, passthrough))
 
     cases = []
     for d in sorted(glob.glob(os.path.join(BACKTEST, "*") + os.sep)):
@@ -567,22 +730,33 @@ def main():
         print("没有可跑的案例（需同时存在 verdict.json 与 answer.json）")
         sys.exit(1)
 
-    results = [check_case(c, do_rerun=args.rerun) for c in cases]
+    results_all = [check_case(c, do_rerun=args.rerun) for c in cases]
+    # REQ-P0-05：contaminated 案例从战绩表排除——单独列示，不进任何分母
+    contaminated = [r for r in results_all if r.get("contaminated")]
+    results = [r for r in results_all if not r.get("contaminated")]
 
-    w = max(len(r["name"]) for r in results) + 2
-    print(f"{'案例':<{w}} {'档位轨':<34} {'告警轨':<26} {'假阳性轨':<12} 结果")
-    print("-" * (w + 88))
-    for r in results:
+    w = max(len(r["name"]) for r in results_all) + 2
+    print(f"{'案例':<{w}} {'档位轨':<34} {'告警轨':<26} {'假阳性轨':<12} {'规则版本':<10} 结果")
+    print("-" * (w + 100))
+    for r in results_all:
         at = f"命中{len(r.get('assert_hits', []))} 漏{len(r.get('assert_misses', []))} 误触发{len(r.get('assert_false_fires', []))}"
         fp = "假阳性" if r.get("false_positive") else "-"
-        if r["regressions"]:
+        rv = (r.get("rules_version") or "-").split("（")[0]
+        if r.get("contaminated"):
+            ok = "污染排除"
+        elif r["regressions"]:
             ok = "回归失败"
         elif r["known"]:
             ok = "已知失败"
         else:
             ok = "通过"
-        print(f"{r['name']:<{w}} {r.get('verdict_track', '-'):<34} {at:<26} {fp:<12} {ok}")
-    print("-" * (w + 88))
+        print(f"{r['name']:<{w}} {r.get('verdict_track', '-'):<34} {at:<26} {fp:<12} {rv:<10} {ok}")
+    print("-" * (w + 100))
+    if contaminated:
+        print(f"⛔ {len(contaminated)} 例 contaminated（隔离失效）已从战绩表排除：{[r['name'] for r in contaminated]}")
+    if not results:
+        print("全部案例均为 contaminated，无可计分案例")
+        sys.exit(1)
     clean = sum(1 for r in results if not r["failures"])
     known_only = sum(1 for r in results if r["known"] and not r["regressions"])
     regressed = [r for r in results if r["regressions"]]
@@ -604,7 +778,23 @@ def main():
     fpfn = fp_fn_summary(results)
     print_fp_fn_summary(fpfn)
 
-    for r in results:
+    # REQ-P0-08 规则版本汇总 / REQ-P0-05 隔离执行率（第 RULES_SNAPSHOT_MIN_BATCH 批起）
+    versions = {}
+    for r in results_all:
+        versions.setdefault((r.get("rules_version") or "unknown").split("（")[0], []).append(r["name"])
+    print("\n[规则版本] " + "；".join(f"{k}: {len(v)} 例" for k, v in sorted(versions.items())))
+    if versions.get("drifted"):
+        print("  规则已漂移的案例，其 rerun 漂移须与 `--as-of <commit>` 结果对读，不得直接归为引擎回归")
+    scored_iso = [c for c in cases if int(c["meta"].get("batch") or 0) >= RULES_SNAPSHOT_MIN_BATCH]
+    if scored_iso:
+        iso_ok = sum(1 for c in scored_iso
+                     if not any(f.startswith("隔离证据") for f in
+                                next(r for r in results_all if r["name"] == c["name"])["failures"])
+                     and not next(r for r in results_all if r["name"] == c["name"]).get("contaminated"))
+        print(f"[隔离执行率] 第{RULES_SNAPSHOT_MIN_BATCH}批起 {iso_ok}/{len(scored_iso)}"
+              f"（{iso_ok / len(scored_iso):.0%}，git 时序机器可验；详表 `prepare_case.py --isolation-report`）")
+
+    for r in results_all:
         if r["failures"] or r["notes"] or r.get("stale_known"):
             print(f"\n[{r['name']}]")
             for f in r["regressions"]:
@@ -619,8 +809,10 @@ def main():
             if r.get("assert_hits"):
                 print(f"  命中明细：{'; '.join(r['assert_hits'])}")
 
-    payload = {"results": results, "clean": clean, "known_only": known_only,
+    payload = {"results": results_all, "clean": clean, "known_only": known_only,
                "regressed": [r["name"] for r in regressed], "total": len(results),
+               "contaminated": [r["name"] for r in contaminated],
+               "rules_versions": versions,
                "fp_fn": fpfn}
     if args.output:
         json.dump(payload, open(args.output, "w", encoding="utf-8"),

@@ -470,6 +470,46 @@ def main():
             else:
                 print("提示：快照缺 52 周区间数值字段，触发价可达性仅检查声明存在性。")
 
+    # ---- 数据附录门禁（REQ-P0-07 源冲突差异表 / REQ-P0-06 重述与时点豁免披露）----
+    # data-sourcing.md 第九节承诺"缺差异表降 B 级"，此前 verify_report 无任何对应检查。
+    # 规则：底稿 financials_*.json 若含非空 crosscheck_conflicts、任一 annual 行含
+    # restated_from、或 meta.point_in_time_waiver，报告必须带对应机器标记：
+    #   data-appendix="source-conflicts" / "restatements" / "point-in-time-waiver"
+    # 缺标记 → FAIL（对完整报告）。标记形式不限元素，可挂在附录表格/段落上。
+    _appendix_tags = set(re.findall(r'data-appendix="([^"]+)"', html))
+    _need = {}
+    for _fp in sorted(glob.glob(os.path.join(args.data_dir, "financials_*.json"))):
+        if "peer" in os.path.basename(_fp):
+            continue
+        try:
+            with open(_fp, "r", encoding="utf-8") as f:
+                _fd = json.load(f)
+        except Exception:  # noqa: BLE001
+            continue
+        if _fd.get("crosscheck_conflicts"):
+            _need["source-conflicts"] = (f"底稿含 {len(_fd['crosscheck_conflicts'])} 条源冲突差异"
+                                         "（crosscheck_conflicts）")
+        _rs = [r.get("year") for r in (_fd.get("annual") or []) if r.get("restated_from")]
+        if _rs:
+            _need["restatements"] = f"底稿 {_rs} 行含重述值（restated_from）"
+        _pw = (_fd.get("meta") or {}).get("point_in_time_waiver")
+        if _pw:
+            if isinstance(_pw, dict) and _pw.get("retroactive"):
+                # 历史案例事后补登的豁免：报告已冻结，不改历史交付物，只提示
+                print(f"提示：{os.path.basename(_fp)} 含追溯登记的时点豁免（retroactive），"
+                      "历史报告不强制附录标记；新案例须带 data-appendix=\"point-in-time-waiver\"")
+            else:
+                _need["point-in-time-waiver"] = "底稿登记了时点豁免（meta.point_in_time_waiver）"
+        # 结构化豁免中的口径裁决也是"源冲突"，须进附录
+        _ex = _fd.get("crosscheck_exempt") or {}
+        if any(isinstance(v, dict) and v.get("rejected_value") is not None for v in _ex.values()):
+            _need.setdefault("source-conflicts", "底稿 crosscheck_exempt 含已裁决的源冲突")
+    for tag, why in _need.items():
+        if tag not in _appendix_tags:
+            failed.append(("report", f"appendix:{tag}",
+                           f"{why}，但报告缺数据附录标记 data-appendix=\"{tag}\"——"
+                           "差异表/重述原值/豁免理由必须出现在报告数据附录（REQ-P0-06/07）", ""))
+
     # ---- 文本完整性校验（乱码/损坏字符防护）----
     # 实证教训（腾讯/PDD 报告）：长文本生成偶发乱码段落，肉眼难查。
     # U+FFFD 替换符、CJK 正文中夹杂的连续拉丁扩展/西里尔等异常序列均视为损坏。
