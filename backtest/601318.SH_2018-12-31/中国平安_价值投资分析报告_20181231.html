@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>中国平安 价值投资分析报告（回放 2018-12-31）</title>
+<script src="https://cdn.jsdelivr.net/npm/echarts@5/dist/echarts.min.js"></script>
+<style>
+  :root {
+    --primary: #1a3a5c; --accent: #d97706; --bg: #f7f8fa; --card: #ffffff;
+    --text: #24292f; --muted: #6b7280; --green: #15803d; --red: #b91c1c; --border: #e5e7eb;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif; background: var(--bg); color: var(--text); line-height: 1.75; font-size: 15px; }
+  .container { max-width: 1080px; margin: 0 auto; padding: 24px 20px 80px; }
+  header.report-header { background: var(--primary); color: #fff; border-radius: 12px; padding: 40px 36px; margin-bottom: 28px; }
+  header.report-header h1 { font-size: 26px; font-weight: 700; }
+  header.report-header .meta { margin-top: 8px; opacity: .75; font-size: 13px; }
+  .verdict-banner { display: flex; align-items: center; gap: 24px; margin-top: 24px; background: rgba(255,255,255,.08); border-radius: 10px; padding: 20px 24px; }
+  .verdict-label { font-size: 34px; font-weight: 800; letter-spacing: 2px; }
+  .verdict-watch { color: #fbbf24; }
+  .verdict-score { font-size: 15px; opacity: .92; }
+  .snapshot-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 10px; margin-top: 16px; }
+  .snapshot-item { background: rgba(255,255,255,.08); border-radius: 8px; padding: 10px 14px; }
+  .snapshot-item .k { font-size: 12px; opacity: .65; }
+  .snapshot-item .v { font-size: 17px; font-weight: 700; margin-top: 2px; }
+  .snapshot-time { font-size: 11px; opacity: .55; margin-top: 8px; }
+  section { background: var(--card); border-radius: 12px; padding: 32px 36px; margin-bottom: 24px; border: 1px solid var(--border); }
+  h2 { font-size: 20px; color: var(--primary); padding-bottom: 10px; margin-bottom: 18px; border-bottom: 3px solid var(--accent); display: inline-block; }
+  h3 { font-size: 16px; color: var(--primary); margin: 22px 0 10px; }
+  p { margin-bottom: 12px; }
+  .chart { width: 100%; height: 400px; margin: 12px 0 4px; }
+  .chart-note { font-size: 12px; color: var(--muted); margin-bottom: 16px; }
+  table { width: 100%; border-collapse: collapse; margin: 14px 0; font-size: 14px; }
+  th { background: var(--primary); color: #fff; padding: 10px 12px; text-align: left; font-weight: 600; }
+  td { padding: 9px 12px; border-bottom: 1px solid var(--border); }
+  tr:nth-child(even) td { background: #fafbfc; }
+  .tag { display: inline-block; padding: 2px 10px; border-radius: 20px; font-size: 12px; font-weight: 600; }
+  .tag-green { background: #dcfce7; color: var(--green); }
+  .tag-amber { background: #fef3c7; color: #b45309; }
+  .tag-red { background: #fee2e2; color: var(--red); }
+  blockquote.persona { border-left: 4px solid var(--accent); background: #fffbf5; padding: 16px 20px; margin: 14px 0; border-radius: 0 8px 8px 0; font-size: 14px; }
+  blockquote.persona .persona-name { font-weight: 700; color: var(--primary); display: block; margin-bottom: 6px; }
+  .redteam { background: #1f2937; color: #e5e7eb; border-radius: 10px; padding: 24px 28px; margin: 16px 0; }
+  .redteam h3 { color: #fbbf24; margin-top: 0; }
+  .redteam li { margin-bottom: 8px; }
+  .checklist li { margin-bottom: 8px; }
+  .source-note { font-size: 12px; color: var(--muted); }
+  .verification-strength { font-size: 12px; line-height: 1.7; margin: 12px 0; padding: 10px 14px; border-left: 3px solid var(--border); background: rgba(127,127,127,.08); border-radius: 4px; color: #e5e7eb; }
+  .verification-strength[data-grade="A"] { border-left-color: #1D9E75; }
+  .verification-strength[data-grade="B"] { border-left-color: #BA7517; }
+  .verification-strength[data-grade="C"] { border-left-color: #E24B4A; }
+  .verification-strength .vs-meaning { color: rgba(255,255,255,.65); }
+  .decision-card { background: #fff; border: 1px solid var(--border); border-radius: 10px; padding: 18px 22px; margin: 14px 0; }
+  .falsify { background: #fef2f2; border: 1px solid #fecaca; border-radius: 10px; padding: 18px 22px; margin: 14px 0; }
+  footer.disclaimer { font-size: 12px; color: var(--muted); text-align: center; margin-top: 40px; padding-top: 20px; border-top: 1px solid var(--border); }
+  @media print { section { break-inside: avoid; } .chart { height: 360px; } }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <header class="report-header">
+    <h1>中国平安（601318.SH）价值投资分析报告</h1>
+    <div class="meta">历史回放案件 B3-14（第三批·保险专属管线与EV/NBV口径测试）｜ 信息截断：2018-12-31（最新年报 2017 年报 2018-03-20 披露，最新季报 2018 三季报 2018-10-29 披露，最新EV口径 2018 中报 2018-08-21 披露）｜ 保险专属管线（compute_metrics_insurance）首次实战 ｜ 现价：<span class="vnum" data-src="market_snapshot_601318_2018.json" data-path="price" data-fmt="num2">56.10</span> 元 ｜ 市值：<span class="vnum" data-src="market_snapshot_601318_2018.json" data-path="market_cap_yi" data-fmt="num1">10,255.2</span> 亿元</div>
+    <div class="verdict-banner">
+      <div class="verdict-label verdict-watch">观察等价格</div>
+      <div class="verdict-score">
+        <b>闸门一</b>：安全边际 <span class="vnum" data-src="scenario_audit.json" data-path="diagnostics.margin_of_safety_vs_base" data-fmt="pct1">4.9%</span> vs 要求 ≥<span class="vnum" data-src="fv_base.json" data-path="gate1_check.required_mos" data-fmt="pct0">40%</span>（护城河「窄」<span data-moat="narrow"></span>）→ <b style="color:#f87171">未达标 ✗</b><br>
+        <b>闸门二（三项全过才算通过）</b>：① 期望 IRR <span class="vnum" data-src="expected_return.json" data-path="expected_annualized_irr" data-fmt="pct2">11.63%</span> vs <span class="vnum" data-src="expected_return.json" data-path="gate2.consistency_expected_irr.hurdle" data-fmt="pct2">22.05%</span>（<i>自洽性校验，与闸门一同源</i>）✗
+        ② 不收敛下限 <span class="vnum" data-src="expected_return.json" data-path="gate2.no_convergence_floor.value" data-fmt="pct2">8.67%</span> vs <span class="vnum" data-src="expected_return.json" data-path="gate2.no_convergence_floor.hurdle" data-fmt="pct0">6%</span>（<i>独立：股息率+内在价值增速</i>）✓
+        ③ 悲观情景年化 <span class="vnum" data-src="expected_return.json" data-path="gate2.pessimistic_irr.value" data-fmt="pct2">1.97%</span> vs 0%（<i>独立：谷底 P/EV 0.75x 法推导，悲观也为正</i>）✓ → <b style="color:#f87171">未通过 ✗</b><br>
+        三位大师独立判断：巴菲特【观察等价格】｜ 段永平【观察等价格】｜ 李录【观察等价格】<br>
+        内在价值区间：<span class="vnum" data-src="scenarios.json" data-path="scenarios.0.value_per_share" data-fmt="num2">38.05</span> ~ <span class="vnum" data-src="scenarios.json" data-path="scenarios.2.value_per_share" data-fmt="num2">93.00</span> 元（基准 <span class="vnum" data-src="fv_base.json" data-path="outputs.intrinsic_value_per_share" data-fmt="num2">58.96</span> 元）｜ 悲观值为现价的 <span class="vnum" data-src="scenario_audit.json" data-path="diagnostics.bear_vs_price" data-fmt="pct1">67.8%</span> ｜ 5 年持有期情景口径亏损概率 <span class="vnum" data-src="expected_return.json" data-path="loss_probability" data-fmt="pct0">0%</span>（三情景累计收益全为正）
+      </div>
+    </div>
+    <div class="decision-card" style="background:rgba(255,255,255,.06);border-color:rgba(255,255,255,.15)">
+      <p style="margin:0 0 6px"><b>关键变量一句话</b>：① 寿险NBV增速——2018H1 仅 <span class="vnum" data-src="financials_601318_insurance.json" data-path="interim_latest.nbv_yoy" data-fmt="pct1">0.2%</span>，Q3 单季 <span class="vnum" data-src="financials_601318_insurance.json" data-path="q3_2018.nbv_yoy_q3_single" data-fmt="pct1">10.9%</span> 有拐点迹象但未确认（判断：动能断档待验证）；② 投资利差——2018H1 总投资收益率（年化）<span class="vnum" data-src="financials_601318_insurance.json" data-path="interim_latest.investment_return_h1_annualized" data-fmt="pct1">4.0%</span> vs 长期假设 <span class="vnum" data-src="financials_601318_insurance.json" data-path="annual.6.investment_assumption" data-fmt="pct1">5.0%</span>，利差 <span class="vnum" data-src="financials_601318_insurance.json" data-path="interim_latest.spread_vs_assumption" data-fmt="pct1">-1.0%</span>（判断：均值回归概率大、未证实）；③ 估值——P/EV <span class="vnum" data-src="market_snapshot_601318_2018.json" data-path="pev_2018h1" data-fmt="num2">1.11</span> 倍（2018H1 EV口径）处历史中低位非谷底（判断：合理定价，非深度低估）。<br>
+      <b>证伪条件（最关键两条）</b>：NBV 连续两季负增长或代理人产能再降逾一成 → 重估前移；利差连续两年为负 → EV 增长引擎降档、基准重算。<br>
+      <b>下次复查</b>：2018 年报披露（预计 2019-03，届时以全年 EV/NBV 重算管线）或触发价 <span class="vnum" data-src="trigger_reachability.json" data-path="trigger" data-fmt="num2">35.40</span> 元先到先看。</p>
+    </div>
+    <div class="snapshot-grid">
+      <div class="snapshot-item"><div class="k">现价（2018-12-28 收盘）</div><div class="v"><span class="vnum" data-src="market_snapshot_601318_2018.json" data-path="price" data-fmt="num2">56.10</span> 元</div></div>
+      <div class="snapshot-item"><div class="k">每股内含价值EVPS（2018H1）</div><div class="v"><span class="vnum" data-src="financials_601318_insurance.json" data-path="interim_latest.evps" data-fmt="num2">50.73</span> 元</div></div>
+      <div class="snapshot-item"><div class="k">P/EV（2018H1 / 2017年报）</div><div class="v"><span class="vnum" data-src="market_snapshot_601318_2018.json" data-path="pev_2018h1" data-fmt="num2">1.11</span> / <span class="vnum" data-src="market_snapshot_601318_2018.json" data-path="pev_2017_annual" data-fmt="num2">1.24</span> 倍</div></div>
+      <div class="snapshot-item"><div class="k">每股净资产（2018Q3）</div><div class="v"><span class="vnum" data-src="financials_601318_insurance.json" data-path="q3_2018.bvps" data-fmt="num2">28.88</span> 元（PB <span class="vnum" data-src="market_snapshot_601318_2018.json" data-path="pb_2018q3" data-fmt="num2">1.94</span> 倍）</div></div>
+      <div class="snapshot-item"><div class="k">股息率（FY2017 DPS）</div><div class="v"><span class="vnum" data-src="scenarios.json" data-path="dividend_yield" data-fmt="pct2">2.67%</span></div></div>
+      <div class="snapshot-item"><div class="k">52 周区间</div><div class="v"><span class="vnum" data-src="market_snapshot_601318_2018.json" data-path="low_52w" data-fmt="num2">54.33</span> ~ <span class="vnum" data-src="market_snapshot_601318_2018.json" data-path="high_52w" data-fmt="num2">81.28</span> 元</div></div>
+      <div class="snapshot-item"><div class="k">52 周位置</div><div class="v"><span class="vnum" data-src="market_snapshot_601318_2018.json" data-path="band_position_52w" data-fmt="pct1">6.6%</span>（低位）</div></div>
+    </div>
+    <div class="snapshot-time">快照来源：东方财富 push2his 不复权日线（2018 年最后交易日 2018-12-28 收盘 56.10 元，距 52 周低点仅 3.3%）；无风险利率 3.27%（2018-12-28 十年期国债中债估值）</div>
+    <div class="verification-strength" data-verification-strength="1"
+     data-grade="B"
+     data-reconciliation-coverage="1.0000"
+     data-crosscheck-level="partial"
+     data-window-years="7"
+     data-covers-full-cycle="false">
+      <b>核验强度 B</b>：三表勾稽覆盖率 100%（7/7 年，达标） ｜ 命门科目原文登记 部分（2015/2017 年报原文；2018 中报/三季报官方出处登记于 interim/q3 块，<u>未经原文机器逐字比对</u>） ｜ 数据窗口 7 年，含A股股灾与去杠杆（部分——保险业周期敏感类要求 15 年）<br>
+      <span class="vs-meaning">存在部分核验缺口：结论可用，但相关章节须显式降低置信度</span>
+    </div>
+  </header>
+
+  <section>
+    <h2>投资摘要：一张卡看懂本案</h2>
+    <p><b>一句话生意</b>：中国平安是把「卖保险收长期保费」做成了「收租+复利」的集团——代理人渠道把保障型保单卖成 38.5% 的新业务价值率，内含价值七年翻了 3.5 倍，产险承保盈利、银行资管协同分摊成本 [E:financials_601318_insurance.json][E:metrics_601318_2018_insurance.json]。</p>
+    <p><b>三大投资论点</b>：① 质地是A股保险最强档——寿险新业务价值率 <span class="vnum" data-src="financials_601318_insurance.json" data-path="interim_latest.nbv_margin" data-fmt="pct1">38.5%</span>（代理人渠道 48.1%）、产险承保盈利、ROEV <span class="vnum" data-src="metrics_601318_2018_insurance.json" data-path="valuation_inputs.latest_roev" data-fmt="pct1">26.7%</span> 的复利机器 [E:metrics_601318_2018_insurance.json]；② 价格回到合理偏下——P/EV 1.11 倍、距 52 周高点回撤 <span class="vnum" data-src="market_snapshot_601318_2018.json" data-path="drawdown_from_high" data-fmt="pct0">-31%</span>，市场定价已隐含「EV 增速降档+倍数永不修复」（反向推算现价隐含终期 P/EV 约 0.76 倍）[E:fv_base.json]；③ 悲观情景有底——谷底倍数法悲观值 38.05 元对应 5 年年化仍 +<span class="vnum" data-src="expected_return.json" data-path="gate2.pessimistic_irr.value" data-fmt="pct2">1.97%</span>，与招行案（悲观 −0.04%）相比下行保护更厚 [E:scenarios.json]。</p>
+    <p><b>三大风险</b>：① 负债端双杀——NBV 增速断档（H1 仅 +0.2%）与代理人产能 <b>-17.7%</b> 若延续两年，38.5% 的价值率结构瓦解 [E:financials_601318_insurance.json]；② 利差转负——总投资收益率 4.0% 低于 5.0% 精算假设，若长期持续 EV 增长引擎从 26.7% 的 ROEV 降档 [E:financials_601318_insurance.json]；③ EV 口径乐观偏差——偿二代下 EV 按回报 5.0%/贴现率 11% 的假设计量，市场对假设本身的不信任会把 1.1 倍 P/EV 变成事实上的 1.3 倍 [E:scenarios.json]。</p>
+    <p><b>信息局限声明</b>：① 半年报/季报口径不进管线（管线只读年报行）——2018H1 利差 −1.0pct 与产能下滑未触发任何机器警报，这是结构性盲区而非「无恙」；② EV 序列 2011-2014 为偿一代、2015 起偿二代口径（断口 −0.24%，对平安可忽略但跨口径增速含制度因素）[E:metrics_601318_2018_insurance.json]；③ 命门科目原文登记 <b>未经原文机器逐字比对</b>，且 7 年窗口未含 2008 金融危机，「历史最差」锚的强度受限（核验强度 B 的代价）[E:verification_strength.json]；④ 相对机构的信息差集中在精算假设层——贴现率 11%、回报 5.0% 的可实现性，机构有精算内参可交叉，个人投资者只能靠利差外推，本案在「EV 假设可信度」维度置信度降一档。</p>
+  </section>
+
+  <section>
+    <h2>商业模式：一鱼多吃的综合金融收租结构</h2>
+    <p>先把保险公司的会计语言翻译成大白话：保险集团的「净资产」不是账面那本账——寿险存量保单未来利润的现值被单独计量为<b>有效业务价值</b>，加上净资产调整值，就是<b>内含价值（EV）</b>——可以粗略理解为「清算价值 + 已签合同的剩余租金」。平安 2017 年末集团 EV <span class="vnum" data-src="metrics_601318_2018_insurance.json" data-path="chart_series.embedded_value.6" data-fmt="num0">825,173</span> 百万元（约 8,252 亿元），是每股净资产 20.98 元之外的第二本账 [E:metrics_601318_2018_insurance.json]。</p>
+    <p>这门生意的现金流结构是「先收钱、后赔付」：客户签 20 年期保障单，平安当期收保费、当期计提准备金，卖一张赚一张的新业务价值（NBV）。2017 年寿险及健康险 NBV <span class="vnum" data-src="metrics_601318_2018_insurance.json" data-path="valuation_inputs.latest_nbv" data-fmt="num0">67,357</span> 百万元（673.57 亿元），其中代理人渠道贡献的新业务价值率高达 48.1%——每收 100 元首年保费，锁住 48 元的未来利润 [E:financials_601318_insurance.json#interim_latest][E:metrics_601318_2018_insurance.json]。产险是另一条收租线：综合成本率 <span class="vnum" data-src="financials_601318_insurance.json" data-path="annual.6.combined_ratio_pnc" data-fmt="pct1">96.2%</span>（2017 年报口径）意味着承保本身微利，浮存金投资再赚一层。</p>
+    <p>综合金融是第三层收租：2018H1 有 30.8% 的个人客户持有两家以上子公司合同，客户黏性与获客成本优势被监管与同业反复验证过难以复制；集团 2017 年首次单列<b>营运利润</b>（剔除投资波动与一次性项目）<span class="vnum" data-src="financials_601318_insurance.json" data-path="annual.6.operating_profit" data-fmt="num0">94,708</span> 百万元，为分红提供比净利润更稳的锚 [E:financials_601318_insurance.json][E:qualitative_601318_2018.json]。科技板块（陆金所、医保科技等独角兽）是未上市叙事，<b>本案一律不入模</b>——三师一致认为市场 2017 年已把科技溢价计价过一轮，再入模是双重计算 [E:phase5_workpaper.json]。</p>
+  </section>
+
+  <section>
+    <h2>护城河：窄（偏宽）——A股保险最强质地，行业结构封顶 <span data-moat="narrow"></span></h2>
+    <p><b>真实存在的部分</b>：① 渠道——<span class="vnum" data-src="financials_601318_insurance.json" data-path="interim_latest.agents_wan" data-fmt="num1">139.9</span> 万代理人（2018H1，同比 +<span class="vnum" data-src="financials_601318_insurance.json" data-path="interim_latest.agents_yoy" data-fmt="pct1">5.5%</span>）队伍与 48.1% 的渠道价值率是二十余年组织能力的沉淀，同业挖不走 [E:financials_601318_insurance.json#interim_latest]；② 客户经营——30.8% 个人客户持有多家子公司合同（2018H1，较年初 +2.3pct），交叉销售把获客成本摊薄 [E:qualitative_601318_2018.json]；③ 承保纪律——产险 COR 持续优于行业并承保盈利，市占率 20.5% 且仍在提升 [E:qualitative_601318_2018.json]。</p>
+    <p><b>封顶的部分</b>：寿险产品没有专利、没有强网络效应，定价受精算与监管双约束（134 号文对所有同业一刀切）；互联网保险用低价冲击简单产品；利差损风险是全行业共业——这些都是行业属性而非公司缺陷，但决定了「宽护城河」的帽子戴不上 [E:qualitative_601318_2018.json]。2018 年还出现了一个渠道质量警报：代理人人均首年规模保费 7,984 元，较 2017 年下降 17.7%——量的壁垒还在，质的稀释已经开始 [E:financials_601318_insurance.json#q3_2018]。</p>
+    <p><b>裁决：窄（偏宽）</b>。这是A股保险中最接近「宽」的质地（NBV 率、COR、客户经营三重验证），但两道闸门的门槛直接挂在这个评级上：安全边际 ≥<span class="vnum" data-src="fv_base.json" data-path="gate1_check.required_mos" data-fmt="pct0">40%</span>、IRR 门槛由 40% 反推。本案安全边际 <span class="vnum" data-src="scenario_audit.json" data-path="diagnostics.margin_of_safety_vs_base" data-fmt="pct1">4.9%</span>——<b>反事实校验</b>：即便三师把评级抬到 wide（门槛 25%），4.9% 仍不过闸，护城河档位不是本案档位的决定者 [E:phase5_workpaper.json]。</p>
+  </section>
+
+  <section>
+    <h2>增长：EV 七年 3.5 倍与 2018 年的动能断档</h2>
+    <p>2011-2017 集团 EV 从 <span class="vnum" data-src="metrics_601318_2018_insurance.json" data-path="chart_series.embedded_value.0" data-fmt="num0">235,627</span> 百万元增至 <span class="vnum" data-src="metrics_601318_2018_insurance.json" data-path="chart_series.embedded_value.6" data-fmt="num0">825,173</span> 百万元，年复合 <span class="vnum" data-src="financials_601318_insurance.json" data-path="derived.ev_cagr_2011_2017" data-fmt="pct1">23.2%</span> [E:financials_601318_insurance.json]——这是保险复利的本体曲线。ROE <span class="vnum" data-src="metrics_601318_2018_insurance.json" data-path="valuation_inputs.latest_roe" data-fmt="pct1">20.7%</span>、ROEV <span class="vnum" data-src="metrics_601318_2018_insurance.json" data-path="valuation_inputs.latest_roev" data-fmt="pct1">26.7%</span>（2017）：ROEV 与 ROE 的差值就是「新增业务的再投资」，是判断寿险增长质量的核心对标 [E:metrics_601318_2018_insurance.json]。</p>
+    <div id="chart-ev" class="chart"></div>
+    <div class="chart-note">集团内含价值（亿元）2011-2017，七年 3.5 倍。2011-2014 为偿一代口径、2015 起偿二代（2015 回溯断口 −0.24%，对平安可忽略）；2015 年 10 转 10 后股本 18,280.24 百万股口径统一。来源：compute_metrics_insurance 输出 chart_series（A级）。</div>
+    <p><b>NBV 口径裁决</b>（本案核心测试点）：管线采用「寿险及健康险」口径（2015 起 38,420 → 50,805 → 67,357 百万元，增速 <span class="vnum" data-src="metrics_601318_2018_insurance.json" data-path="series.5.nbv_growth" data-fmt="pct1">32.2%</span> / <span class="vnum" data-src="metrics_601318_2018_insurance.json" data-path="series.6.nbv_growth" data-fmt="pct1">32.6%</span>）[E:metrics_601318_2018_insurance.json]；2014 及以前仅有寿险子公司旧口径 21,966 百万元，已隔离于 spike_notes，<b>不与新口径拼接成增长序列</b>——2016 年年报曾把 2015 年 NBV 重述上浮 24.6%，直接拼接会把 2016 年增速虚增 [E:financials_601318_insurance.json#spike_notes]。</p>
+    <p><b>断档信号</b>：2018H1 NBV 仅 +<span class="vnum" data-src="financials_601318_insurance.json" data-path="interim_latest.nbv_yoy" data-fmt="pct1">0.2%</span>（Q1 负增长、Q2 +9.9% 扭转），前三季 +<span class="vnum" data-src="financials_601318_insurance.json" data-path="q3_2018.nbv_yoy_9m" data-fmt="pct1">3.2%</span>、Q3 单季 +<span class="vnum" data-src="financials_601318_insurance.json" data-path="q3_2018.nbv_yoy_q3_single" data-fmt="pct1">10.9%</span> 有修复迹象 [E:financials_601318_insurance.json]。向前看（截断前信息集内可推导）：134 号文对 2019 开门红的压制要 2019Q1 才能验证，代理人红利（增员驱动）已见顶，产能驱动转型刚开始——<b>增速中枢从 30% 时代换挡到 10% 时代的概率大于重回 30%</b>。基准情景 EV 增长取前 5 年 11%、后 5 年 7%，终期收敛至名义 GDP+1pct [E:fv_base.json]。</p>
+  </section>
+
+  <section>
+    <h2>管理层：执行力一流，资本配置两处减分</h2>
+    <p><b>加分项</b>：分红轨迹是管理层诚实的最硬证据——DPS 从 2014 年 0.375 元到 2017 年 <span class="vnum" data-src="metrics_601318_2018_insurance.json" data-path="chart_series.dividend_per_share.6" data-fmt="num2">1.50</span> 元，分红率从 <span class="vnum" data-src="financials_601318_insurance.json" data-path="derived.payout_2016" data-fmt="pct1">22.0%</span>（2016）提到 <span class="vnum" data-src="financials_601318_insurance.json" data-path="derived.payout_2017" data-fmt="pct1">30.8%</span>（2017），且 2017 年起主动改用营运利润作分红锚（剔除投资波动），承诺与口径同时升级 [E:financials_601318_insurance.json][E:metrics_601318_2018_insurance.json]。三十年建起保险业最强代理人组织（139.9 万人），执行力无需论证。</p>
+    <p><b>减分项一：华夏幸福 137.7 亿元地产敞口</b>。2018 年 7 月披露的股权投资，对方资产负债率 81.1% 且收到上交所问询，资金链紧张是公开事实；对赌条款（业绩补偿）说明平安自己知道风险。占集团总资产仅 0.2%，量级不改生意本质，但「综合金融+生态」叙事下的资本配置纪律被红队点名——<b>137 亿之后还有多少个 137 亿</b>是不可验证的开放问题 [E:financials_601318_insurance.json#spike_notes][E:qualitative_601318_2018.json]。</p>
+    <p><b>减分项二：汇丰收购与科技叙事的边界</b>。2018 年成为汇丰第一大股东（约 7%+）耗资数百亿级，这是总部之外最大的一笔配置，其战略回报周期与保险主业无协同披露；科技独角兽估值（医保科技 88 亿美元等）反复出现在市值叙事中，但三师一致裁定<b>不入模</b>——未上市估值是叙事不是现金流，2017 年股价 +101% 已含科技溢价 [E:financials_601318_insurance.json#spike_notes][E:phase5_workpaper.json]。</p>
+  </section>
+
+  <section>
+    <h2>财务质量：利差首度转负，缓冲垫仍厚</h2>
+    <p><b>本案最重要的半年度信号</b>：2018H1 总投资收益率（年化）<span class="vnum" data-src="financials_601318_insurance.json" data-path="interim_latest.investment_return_h1_annualized" data-fmt="pct1">4.0%</span>（净 4.2%），低于 5.0% 长期精算假设——<b>利差 <span class="vnum" data-src="financials_601318_insurance.json" data-path="interim_latest.spread_vs_assumption" data-fmt="pct1">-1.0%</span>，2011 年以来首度转负</b> [E:financials_601318_insurance.json#interim_latest]。年报口径看，2011-2017 投资收益率在 2.9%-7.8% 区间波动，仅 2017 年（<span class="vnum" data-src="metrics_601318_2018_insurance.json" data-path="valuation_inputs.iy_spread_latest" data-fmt="pct1">1.0%</span> 利差）跑赢假设 [E:metrics_601318_2018_insurance.json]。这意味着 EV 计量中「5% 回报假设」的兑现压力是常态而非偶发。</p>
+    <div id="chart-invest" class="chart"></div>
+    <div class="chart-note">总投资收益率（%）2011-2017 年报口径 vs 5% 长期假设（横线）。七年里只有 2015（7.8%，牛市）与 2017（6.0%）明显跑赢；2018H1 年化 4.0% 为截断日最新值（半年报口径，不进管线序列）。来源：compute_metrics_insurance 输出 chart_series（A级）。</div>
+    <p><b>缓冲垫</b>：集团偿付能力充足率 <span class="vnum" data-src="metrics_601318_2018_insurance.json" data-path="chart_series.solvency_ratio.6" data-fmt="pct1">214.9%</span>（2017），2018H1 集团 217.3%、寿险 228.0% [E:financials_601318_insurance.json#interim_latest]，远高于 150% 监管红线，分红提升不以资本安全为代价。</p>
+    <div id="chart-solvency" class="chart"></div>
+    <div class="chart-note">集团偿付能力充足率（%）2011-2017。2013 年 174.4% 为窗口低点，2015 年偿二代切换后维持在 195%-215% 平台。来源：compute_metrics_insurance 输出 chart_series（A级）。</div>
+    <p><b>勾稽与置信度</b>：2016/2017 年负债与资产-权益恒等式偏差为 0，三表勾稽覆盖率 7/7 年 [E:financials_601318_insurance.json]。须降低置信度之处：核验强度 B 级——数据窗口 7 年未覆盖 2008 金融危机（保险业利差损与权益市场双杀年），「历史最差」锚未含全周期极端年；命门科目登记未经原文机器逐字比对 [E:verification_strength.json]。利润表的阶段性信号：Q3 单季归母净利 <span class="vnum" data-src="financials_601318_insurance.json" data-path="q3_2018.net_income_attr_q3_single" data-fmt="num0">21,302</span> 百万元、同比 <span class="vnum" data-src="financials_601318_insurance.json" data-path="q3_2018.net_income_yoy_q3_single" data-fmt="pct1">-6.9%</span>（9M 累计 +<span class="vnum" data-src="financials_601318_insurance.json" data-path="q3_2018.net_income_yoy_9m" data-fmt="pct1">19.7%</span>）——单季转负是投资端波动的直接投影 [E:financials_601318_insurance.json#q3_2018]。</p>
+  </section>
+
+  <section>
+    <h2>定量画像：每股口径复核与股息轨迹</h2>
+    <p><b>每股口径复核</b>：2015 年 10 转 10 除权后股本翻倍，历史 EVPS/BVPS 全部按现股本 18,280.24 百万股归一——归一后 2015 年 EVPS 30.24 元与第三方研究一致，2017 年 EVPS 45.14 元对 P/EV <span class="vnum" data-src="market_snapshot_601318_2018.json" data-path="pev_2017_annual" data-fmt="num2">1.24</span> 倍 [E:metrics_601318_2018_insurance.json]。总量 EV 七年 3.5 倍与每股口径 3.5 倍一致——期间无增发摊薄（2015 年定增与转债转股已含在 2015 年末股本内），<b>总量增长即股东复利，无每股稀释折扣</b>。</p>
+    <p><b>股息轨迹</b>：2011-2013 年无分红记录（管线 null），2014 年起 DPS 0.375 → 0.53 → 0.75 → <span class="vnum" data-src="financials_601318_insurance.json" data-path="annual.6.dividend_per_share" data-fmt="num2">1.50</span> 元，2018 日历年度实际派发约 1.82 元/股（含 30 周年特别股息 0.20 元的一次性成分）[E:financials_601318_insurance.json][E:market_snapshot_601318_2018.json]。当前股息率 <span class="vnum" data-src="scenarios.json" data-path="dividend_yield" data-fmt="pct2">2.67%</span>（annual_plan 口径，剔除特别股息）低于十年国债 <span class="vnum" data-src="market_snapshot_601318_2018.json" data-path="risk_free_10y" data-fmt="pct2">3.27%</span>——<b>单靠股息撑不起买入理由</b>，回报主体必须依赖 EV 增长兑现 [E:scenarios.json]。</p>
+  </section>
+
+  <section>
+    <h2>估值：EV 增长两阶段贴现 + P/EV 判定法</h2>
+    <p><b>方法</b>：保险方法树——EVPS 为第一性价值锚，主轨「EV 增长两阶段贴现 + 终期 P/EV」；Gordon 模型禁用（股息率 2.67% &lt; g 隐含条件时发散）；股息以现值单列叠加。基准参数：基期 EVPS <span class="vnum" data-src="fv_base.json" data-path="inputs.evps_base" data-fmt="num2">50.73</span> 元（2018H1 官方 EV 927,376 百万元 ÷ 18,280.24 百万股，截断日最新口径；2017 年报口径 EVPS 45.14 元对应 P/EV 1.24 倍，双口径登记），EV 增长前 5 年 11%、后 5 年 7%，终期 P/EV 1.0，贴现率 <span class="vnum" data-src="scenarios.json" data-path="discount_rate" data-fmt="pct1">10.2%</span>（十年国债 3.27% + 股权风险溢价 6.9%）[E:fv_base.json][E:market_snapshot_601318_2018.json]。</p>
+    <p><b>基准内在价值</b> = PV(股息) <span class="vnum" data-src="fv_base.json" data-path="outputs.pv_dividends_per_share" data-fmt="num2">13.65</span> + PV(终值) <span class="vnum" data-src="fv_base.json" data-path="outputs.pv_terminal_per_share" data-fmt="num2">45.31</span> = <span class="vnum" data-src="fv_base.json" data-path="outputs.intrinsic_value_per_share" data-fmt="num2">58.96</span> 元（取整 59.0），十年终期 EVPS <span class="vnum" data-src="fv_base.json" data-path="outputs.evps_year10" data-fmt="num1">119.9</span> 元，终值占比 <span class="vnum" data-src="fv_base.json" data-path="outputs.terminal_value_share" data-fmt="pct0">77%</span> [E:fv_base.json]。乐观情景（EV 增长 15%/9%、终期 P/EV 1.3 友邦式溢价锚）<span class="vnum" data-src="fv_bull.json" data-path="outputs.intrinsic_value_per_share" data-fmt="num2">93.13</span> 元、MoS <span class="vnum" data-src="fv_bull.json" data-path="outputs.mos" data-fmt="pct1">39.7%</span>——差 0.3pct 未过 40% 门槛，诚实登记不取整 [E:fv_bull.json]。悲观情景走独立路径（不走增长贴现）：谷底倍数 0.75 × EVPS 50.73 = <span class="vnum" data-src="scenarios.json" data-path="scenarios.0.value_per_share" data-fmt="num2">38.05</span> 元——0.75x 的锚是同业实证（2018 年 12 月 A 股上市险企 P/EV 区间 0.7-0.9x）与平安自身历史谷底（2014-06 不复权 38.10 元 ≈ 0.96-1.06x）之间的双杀折价，内嵌「假设可信度坍塌致 EV 本身下修 10-15%」的情景 [E:scenarios.json]。</p>
+    <div id="chart-scenarios" class="chart"></div>
+    <div class="chart-note">三情景每股价值 vs 现价 56.10 元（2018-12-28 收盘）与触发价 35.40 元。概率 25/50/25，概率加权期望价值 <span class="vnum" data-src="expected_return.json" data-path="expected_value_per_share" data-fmt="num2">62.26</span> 元。来源：scenarios.json chart 区块（经 check_scenarios 门禁）。</div>
+    <p><b>敏感性</b>：六组参数全部环绕现价——</p>
+    <table>
+      <tr><th>敏感性组</th><th>内在价值（元）</th><th>安全边际</th></tr>
+      <tr><td>EV 增长 13%/9%（乐观化增长）</td><td><span class="vnum" data-src="fv_base.json" data-path="sensitivity.ev_growth_13_9.iv" data-fmt="num1">68.0</span></td><td><span class="vnum" data-src="fv_base.json" data-path="sensitivity.ev_growth_13_9.mos" data-fmt="pct1">17.5%</span></td></tr>
+      <tr><td>EV 增长 10%/6%（悲观化增长）</td><td><span class="vnum" data-src="fv_base.json" data-path="sensitivity.ev_growth_10_6.iv" data-fmt="num1">55.0</span></td><td><span class="vnum" data-src="fv_base.json" data-path="sensitivity.ev_growth_10_6.mos" data-fmt="pct1">-2.0%</span></td></tr>
+      <tr><td>终期 P/EV 0.8（同业谷底化）</td><td><span class="vnum" data-src="fv_base.json" data-path="sensitivity.terminal_pev_0_8.iv" data-fmt="num1">54.5</span></td><td><span class="vnum" data-src="fv_base.json" data-path="sensitivity.terminal_pev_0_8.mos" data-fmt="pct1">-2.9%</span></td></tr>
+      <tr><td>终期 P/EV 1.2（中枢上沿）</td><td><span class="vnum" data-src="fv_base.json" data-path="sensitivity.terminal_pev_1_2.iv" data-fmt="num1">63.5</span></td><td><span class="vnum" data-src="fv_base.json" data-path="sensitivity.terminal_pev_1_2.mos" data-fmt="pct1">11.7%</span></td></tr>
+      <tr><td>贴现率 10%</td><td><span class="vnum" data-src="fv_base.json" data-path="sensitivity.r_10pct.iv" data-fmt="num1">60.6</span></td><td><span class="vnum" data-src="fv_base.json" data-path="sensitivity.r_10pct.mos" data-fmt="pct1">7.4%</span></td></tr>
+      <tr><td>贴现率 10.5%</td><td><span class="vnum" data-src="fv_base.json" data-path="sensitivity.r_105pct.iv" data-fmt="num1">56.9</span></td><td><span class="vnum" data-src="fv_base.json" data-path="sensitivity.r_105pct.mos" data-fmt="pct1">1.4%</span></td></tr>
+    </table>
+    <p>IV 区间 55.0-68.0 元全部环绕现价 56.10 元，MoS 极值 17.5% 仍远低于 40%——<b>Gate1 FAIL 对参数稳健</b>，这是「接近合理定价、非深度低估」的参数级证明 [E:fv_base.json]。<b>反向定价</b>：若维持 11%/7% 的增长路径，现价隐含终期 P/EV 约 0.76 倍——市场已把「EV 增速降档 + 估值倍数永不修复」计价在内；对 ROEV <span class="vnum" data-src="metrics_601318_2018_insurance.json" data-path="valuation_inputs.latest_roev" data-fmt="pct1">26.7%</span> 的复利机器，这个隐含假设偏苛刻但不算离谱 [E:fv_base.json][E:scenarios.json]。</p>
+  </section>
+
+  <section>
+    <h2>双闸门定档</h2>
+    <div class="decision-card">
+      <h3>闸门一：安全边际（窄护城河门槛 40%）</h3>
+      <p>MoS = 1 − 56.10/58.96 = <span class="vnum" data-src="scenario_audit.json" data-path="diagnostics.margin_of_safety_vs_base" data-fmt="pct1">4.9%</span> &lt; 40% → <b style="color:#b91c1c">FAIL</b> [E:scenario_audit.json]。触发价 = 58.96 × 0.6 ≈ <b data-trigger-price="35.40" data-trigger-band-pct="-70.2">35.40 元</b>，低于 52 周最低价 54.33 元约 34.8%、处于历史区间之外（52 周价格带分位 −70.2%，TRIGGER_OUT_OF_HISTORY [E:trigger_reachability.json]）——「等它」必须按罕见事件定价，其代价是踏空而非套牢。</p>
+      <h3>闸门二：三项独立检查（须全过）</h3>
+      <p>① 自洽性：期望 IRR <span class="vnum" data-src="expected_return.json" data-path="expected_annualized_irr" data-fmt="pct2">11.63%</span> vs 门槛 <span class="vnum" data-src="expected_return.json" data-path="gate2.consistency_expected_irr.hurdle" data-fmt="pct2">22.05%</span>（40% MoS 反推）→ <b style="color:#b91c1c">FAIL</b>——该项与闸门一同源，只作自洽性校验；② 不收敛下限：股息率 2.67% + 内在价值增速 6.0% = <span class="vnum" data-src="expected_return.json" data-path="gate2.no_convergence_floor.value" data-fmt="pct2">8.67%</span> ≥ 6% → <b style="color:#15803d">PASS</b>——即使市场永不重估，股息+EV 内生增长也给出正回报，价值陷阱特征不成立；③ 悲观年化 <span class="vnum" data-src="expected_return.json" data-path="gate2.pessimistic_irr.value" data-fmt="pct2">1.97%</span> ≥ 0 → <b style="color:#15803d">PASS</b>——悲观情景由谷底倍数法独立推导，5 年累计仍 +10.2% [E:expected_return.json]。与招行案（悲观 −0.04% 差 0.02 元不过零线）相比，本案悲观保护明显更厚；有效门槛仅因悲观拖累微降至 <span class="vnum" data-src="expected_return.json" data-path="gate2.effective_hurdle.effective_margin_of_safety_required" data-fmt="pct1">39.2%</span>（基准 IRR 需达 <span class="vnum" data-src="expected_return.json" data-path="gate2.effective_hurdle.base_irr_needed_to_clear" data-fmt="pct2">21.74%</span> 才能过①），三情景 IRR：悲观 <span class="vnum" data-src="expected_return.json" data-path="gate2.pessimistic_irr.value" data-fmt="pct2">1.97%</span> / 基准 <span class="vnum" data-src="expected_return.json" data-path="scenarios.1.annualized_irr" data-fmt="pct2">11.32%</span> / 乐观 <span class="vnum" data-src="expected_return.json" data-path="scenarios.2.annualized_irr" data-fmt="pct2">21.92%</span> [E:expected_return.json]。</p>
+      <p><b>档位裁决</b>：结论档位：<b>观察等价格</b>（序数 2）——两闸皆不过的诚实上限。期望 IRR <span class="vnum" data-src="expected_return.json" data-path="expected_annualized_irr" data-fmt="pct2">11.63%</span> 超指数门槛 <span class="vnum" data-src="expected_return.json" data-path="index_hurdle" data-fmt="pct0">9%</span>（超额 <span class="vnum" data-src="expected_return.json" data-path="excess_vs_index" data-fmt="pct1">2.6%</span>）——「及格偏上的投资」，但不是本系统的买入信号 [E:expected_return.json]。</p>
+    </div>
+  </section>
+
+  <section>
+    <h2>关键判断（Phase 4.5）：变量、分歧与机会成本</h2>
+    <h3>关键变量表</h3>
+    <table>
+      <tr><th>变量</th><th>当前判断</th><th>依据</th><th>为什么可知</th></tr>
+      <tr><td>NBV 增速拐点</td><td>断档中，Q3 单季 +10.9% 是信号不是证据</td><td>H1 +0.2%、Q3 +10.9%、产能 -17.7% 并存 [E:financials_601318_insurance.json]</td><td>月度保费公告+季报可逐季验证</td></tr>
+      <tr><td>投资利差</td><td>-1.0pct，均值回归概率大但未证实</td><td>H1 4.0% vs 假设 5.0%；长端利率 2018Q3 企稳 [E:financials_601318_insurance.json]</td><td>季报投资收益率+中债利率逐季跟踪</td></tr>
+      <tr><td>代理人产能</td><td>质变节点：-17.7% 若再降两年则渠道壁垒稀释</td><td>首年规模保费 7,984 元（中国经济网 2018-10-31）[E:qualitative_601318_2018.json]</td><td>年报/中报人均指标公开</td></tr>
+      <tr><td>EV 假设可信度</td><td>5.0% 回报假设偏乐观但未失真；利差为负是压力不是证伪</td><td>偿二代 EV 2015 回溯断口仅 -0.24%，假设从未大幅回摆 [E:metrics_601318_2018_insurance.json]</td><td>年报精算附注逐年披露，个人可读</td></tr>
+      <tr><td>长端利率</td><td>3.27% 低位企稳，利差改善的宏观前提</td><td>2018-12-28 中债估值 [E:market_snapshot_601318_2018.json]</td><td>公开市场数据</td></tr>
+    </table>
+    <h3>变异认知三问</h3>
+    <p><b>市场为什么给这个价</b>：2018 年全年 <span class="vnum" data-src="market_snapshot_601318_2018.json" data-path="drawdown_from_high" data-fmt="pct0">-31%</span> 的杀估值（高点 81.28 元）已经计价「NBV 断档 + 利差转负 + 134 号文」三重利空，P/EV 压到 <span class="vnum" data-src="market_snapshot_601318_2018.json" data-path="pev_2018h1" data-fmt="num2">1.11</span> 倍、隐含终期 P/EV 0.76 倍——情绪出清充分但未到恐慌（2014-06 曾有 0.96-1.06x）[E:market_snapshot_601318_2018.json][E:scenarios.json]。<b>我们的分歧</b>：系统按纪律给「观察等价格」，分歧不在事实在门槛——对 ROEV 26.7% 的复利机器，1.1x P/EV 在十年视角是可接受买区，40% 的窄护城河门槛本身对该资产偏严，这是体系的代价不是错误 [E:phase5_workpaper.json]。<b>认知优势来源</b>：卖方一致预期 2019E EPS 7.32 元（华泰 2018-12）隐含 +25% 净利增长，未对利差留余量；系统把半年度利差与产能数据置入关键变量而非增长假设——分歧可逐季验证 [E:qualitative_601318_2018.json]。</p>
+    <h3>双重机会成本</h3>
+    <table>
+      <tr><th>对照</th><th>量化</th><th>裁决</th></tr>
+      <tr><td>vs 指数（门槛 9%）</td><td>期望 IRR 11.63%，超额 <span class="vnum" data-src="expected_return.json" data-path="excess_vs_index" data-fmt="pct1">2.6%</span></td><td>及格偏上；但触发价大概率等不到，实际可实现回报介于基准 11.32% 与踏空之间</td></tr>
+      <tr><td>vs 用户最好持仓（质地拐点确认）</td><td>若 2019 NBV 拐点确认 + P/EV 修复至 1.4x ≈ 71 元（+27%）</td><td>观察档的机会成本是踏空——红队#4 登记的体系性代价，与 2014 招行案「错误拒绝」同构候选 [E:phase5_workpaper.json]</td></tr>
+    </table>
+  </section>
+
+  <section>
+    <h2>三位大师独立评估</h2>
+    <div id="chart-radar" class="chart" style="height:360px"></div>
+    <div class="chart-note">五维评分雷达（5 分制）：生意质量 / 成长性 / 管理层 / 价格安全垫 / 赔率与能力圈。三人共同的低分轴是「价格安全垫」（2.0-2.5）与「赔率」（触发价 out_of_history 压制）——这是闸门一 FAIL 的定性投影。</div>
+    <blockquote class="persona">
+      <span class="persona-name">巴菲特：观察等价格</span>
+      「ROEV 26.7% 的复利机器卖 1.1 倍 EV，生意本身无可挑剔——但保险公司的 EV 是假设的函数：5% 回报假设遇上 4% 的现实，利差已经转负。退潮时才知道谁在裸泳，平安不是裸泳者，但它的资产负债表里躺着 137 亿的地产对赌。我用 40% 折扣保护自己不被假设欺骗，现价只有 4.9%，不够。」[E:phase5_workpaper.json]
+    </blockquote>
+    <blockquote class="persona">
+      <span class="persona-name">段永平：观察等价格</span>
+      「生意没坏，坏的是节奏：NBV 没负增长，只是不增长了；代理人还是那支队伍，只是人均产能掉了 17.7%。本分地说，我不知道 2019 年开门红会怎样，也不知道 5% 的假设会不会兑现——不知道的东西不进估值。56 块买 50.73 的清算价值外加未来租金，不亏，但也谈不上占便宜。等市场把恐惧递到我手里。」[E:phase5_workpaper.json]
+    </blockquote>
+    <blockquote class="persona">
+      <span class="persona-name">李录：观察等价格</span>
+      「这是A股最透明的保险集团：2009 年起自愿披露 EV、2015 年接轨偿二代、2017 年单列营运利润——透明度是治理优势，但不是护城河。真正的考题是 1.1 倍 P/EV 对 26.7% ROEV 的错配能持续多久：市场在赌 EV 假设失真，我在等两个证据——利差回到正区间、产能环比企稳。证据出现前，56 元只是合理，不是便宜。」[E:phase5_workpaper.json]
+    </blockquote>
+    <h3>分歧与共识</h3>
+    <table>
+      <tr><th>问题</th><th>巴菲特</th><th>段永平</th><th>李录</th></tr>
+      <tr><td>护城河档位（决定 40% vs 25% 门槛）</td><td>窄：产品无定价权天花板，浮存金优势是行业性的</td><td>窄偏宽：代理人渠道体验是真差异，但体验≠定价权</td><td>窄：EV 透明度是治理优势不是护城河</td></tr>
+      <tr><td>Q3 NBV +10.9% 拐点可信度</td><td>单季不足以确认，134 号文影响要 2019Q1 验证</td><td>拐点不重要，代理人是好生意的一部分</td><td>产能 -17.7% 与 +10.9% 并存是信号矛盾，量的恢复掩盖质的下滑</td></tr>
+      <tr><td>华夏幸福 137.7 亿定性</td><td>去杠杆周期的系统性风险暴露，应计入悲观情景</td><td>占总资产 0.2%，量级不改生意本质；对赌说明平安知道风险</td><td>真正的问题是资本配置纪律——还有多少个 137 亿</td></tr>
+      <tr><td>科技独角兽估值入模吗</td><td>不入——叙事不是现金流</td><td>不入模但可作催化剂观察</td><td>市场已计价过（2017 年 +101%），再入模是双重计算</td></tr>
+    </table>
+    <p><b>共识</b>：① A股保险最强质地（NBV 率 38.5% + COR 承保盈利 + 30.8% 多子公司客户三重验证）；② P/EV 1.11x 是合理定价非深度低估，40% 安全边际不足，Gate1 FAIL 无分歧；③ 风险主轴是负债端减速与利差转负双杀，均为截断日前已披露事实；④ 档位观察等价格——三人都不接受「小仓位试探」，因为触发价 35.40 元低于 52 周低点，「等」的成本是踏空。采纳裁决：李录的 EV 假设可信度压力入红队#3、巴菲特的地产敞口定性入管理层减分、段永平的生意本质判断不改档位——三师一致观察等价格(2) [E:phase5_workpaper.json]。</p>
+  </section>
+
+  <section>
+    <div class="redteam">
+      <h3>芒格红队：四条亏钱路径的反演</h3>
+      <ul>
+        <li><b>路径一（severity 高）：利差持续为负，EV 增长引擎降档。</b>若总投资收益率长期 &lt;4.5%，EV 增长从 ROEV 26.7% 降档至约 15%，悲观情景 38.05 元不保守。回应：谷底倍数 0.75x 已内嵌 EV 重估折价 10-15%；2018Q3 长端利率企稳给 2019 年均值回归留了概率空间。[E:phase5_workpaper.json]</li>
+        <li><b>路径二（severity 高）：代理人产能坍塌传导。</b>-17.7% 若再持续两年，38.5% 的价值率结构瓦解，估值锚从 P/EV 滑向 PB（届时 1.94x PB 的资产负债表毫无吸引力）。回应：挂关键变量跟踪——产能连续两季再降逾一成即触发重估，不等触发价。[E:phase5_workpaper.json]</li>
+        <li><b>路径三（severity 中）：偿二代 EV 口径乐观偏差。</b>回报 5.0% + 贴现率 11% 的假设若失真，1.1x P/EV 实际是 1.3x P/EV(真实)。回应：平安 EV 假设历史上从未大幅回摆（训练知识级置信）；敏感性表终期 P/EV 0.8 档 IV 54.5 元仍环绕现价，结论不翻转。[E:phase5_workpaper.json]</li>
+        <li><b>路径四（severity 中高）：观察档的体系性代价。</b>若 2019 年 NBV 拐点确认 + 利率回升，P/EV 从 1.1 修复至 1.4 即 +27%，等 35.40 元等于踏空。回应：诚实的代价——这是双闸门体系对「质地好+边际弱+价格中性」组合的系统性保守，登记为已知失败模式候选（对照 2014 招行案错误拒绝形态），由 Step 4 答案比对裁决。[E:phase5_workpaper.json]</li>
+      </ul>
+    </div>
+  </section>
+
+  <section>
+    <h2>证伪条件、跟踪清单与持有体验</h2>
+    <div class="falsify" data-reeval-trigger="quarterly-tracking">
+      <h3>证伪条件（任一触发即重估档位）</h3>
+      <ul class="checklist">
+        <li><b>F1</b>：NBV 连续两季负增长，或代理人产能环比再降逾 10% → 渠道质量警报升级，触发价重估前移、悲观情景换锚（红队#2）。</li>
+        <li><b>F2</b>：利差连续两年为负（总投资收益率持续 &lt;5% 假设线）→ EV 增长引擎降档，基准 IV 全模型重算（红队#1）。</li>
+        <li><b>F3</b>：DPS 停止增长或分红率从 30.8% 显著回落 → 营运利润锚失真，不收敛下限（闸门二②）复核。</li>
+        <li><b>F4</b>：华夏幸福对赌兑付恶化或再现同量级地产配置 → 资本配置纪律问题升级为治理问题，管理层维度重评。</li>
+      </ul>
+      <h3>季度跟踪清单（quarterly-tracking）</h3>
+      <ul class="checklist">
+        <li>NBV 月度/季度增速与单季拐点证据（134 号文余波何时出清）</li>
+        <li>代理人人数与人均首年规模保费（产能 -17.7% 是见底还是中继）</li>
+        <li>总投资收益率 vs 5% 假设（利差回到正区间是重估的第一信号）</li>
+        <li>十年期国债收益率与长端利率企稳节奏</li>
+        <li>偿付能力充足率（分红提升是否侵蚀资本缓冲）</li>
+        <li>价格触发器：35.40 元——低于 52 周低点 54.33 元约 34.8%，历史区间之外，按罕见事件定价；加仓条件 = 触发价，或「NBV 连续两季双位数增长 + 产能环比企稳」的质地拐点（此时按新 EV 重算档位，不以旧锚补仓）</li>
+      </ul>
+    </div>
+    <h3>持有体验预演</h3>
+    <p>用截断前的历史回答「买入后会经历什么」：2007-10 历史高点买入者经历 2008 年富通减记 + 股灾，最大回撤超 <b>-80%</b>、六年未解套；2018 年当年买入者已体验从 81.28 元到 56.10 元的 <span class="vnum" data-src="market_snapshot_601318_2018.json" data-path="drawdown_from_high" data-fmt="pct0">-31%</span>（现价恰在 52 周带 <span class="vnum" data-src="market_snapshot_601318_2018.json" data-path="band_position_52w" data-fmt="pct1">6.6%</span> 分位收官）[E:market_snapshot_601318_2018.json][E:phase5_workpaper.json]。观察档的常态路径：56 元附近横盘 ±15% 等 NBV 拐点，下行路径 54.33 元以下浮亏 3-15%，上行路径 2019 开门红超预期则踏空。<b>跌 40% 敢不敢加仓</b>：触发价 35.40 元就是这道拷问的价格化答案——它要求市场把「利差损失持续 + NBV 负增长 + EV 假设失真」全部计价才可能出现，出现即按罕见事件执行；质地拐点确认则按新 EV 重算而非补旧仓 [E:phase5_workpaper.json]。</p>
+  </section>
+
+  <section>
+    <h2>附录：底稿、校验与术语</h2>
+    <h3>数据来源与等级（摘自 manifest.json）</h3>
+    <table>
+      <tr><th>底稿</th><th>来源</th><th>等级</th></tr>
+      <tr><td>financials_601318_insurance.json</td><td>2011-2017 年报 + 2018 中报/三季报官方披露摘录（巨潮），crosscheck 五期双源</td><td>A</td></tr>
+      <tr><td>market_snapshot_601318_2018.json</td><td>东方财富 push2his 不复权日线 + 中债收益率；52 周极值月度双确认</td><td>A</td></tr>
+      <tr><td>metrics_601318_2018_insurance.json</td><td>compute_metrics_insurance.py 输出（0 警报）</td><td>A</td></tr>
+      <tr><td>scenarios.json / scenario_audit.json</td><td>Phase 4 底稿 + check_scenarios.py 门禁（S1-S9 通过，0 警告；S2b 重算偏差 6.6e-05）</td><td>A</td></tr>
+      <tr><td>fv_base.json / fv_bull.json</td><td>EV 增长两阶段贴现模型（基准/乐观），IRR 铁律交叉一致</td><td>A</td></tr>
+      <tr><td>expected_return.json / trigger_reachability.json</td><td>reverse_dcf 引擎与触发可达性脚本输出</td><td>A</td></tr>
+      <tr><td>中债 10Y 国债 3.27%</td><td>2018-12-28 中债估值（训练知识级置信）</td><td>B</td></tr>
+      <tr><td>华泰一致预期 / 产能报道</td><td>2018-12-08 / 2018-10-31 媒体转述</td><td>B</td></tr>
+    </table>
+    <h3>校验结果摘要</h3>
+    <p>入口校验 validate_data 通过（错误 0 / 警告 7：OCF 未取得现金流量表原文显式豁免、2015 股本归一化口径豁免、2018 年报按截断纪律缺席并以 official_filing_missing 登记）；场景门禁 S1-S9 通过（0 警告）；保险管线 0 警报（半年报口径信号不可见为结构性盲区，已在 decision-log 登记）；三表勾稽覆盖率 7/7 年（2016/2017 恒等式偏差 0）；命门科目原文登记 2015/2017 年（2018 中报/三季报官方出处登记于 interim/q3 块）——<b>未经原文机器逐字比对</b>；核验强度 B 级；数字校验通过（109 项正文数字 + 7 组图表数组 + 12 个证据指针，verify_report.py 退出码 0）。</p>
+    <h3>术语速查表</h3>
+    <table>
+      <tr><th>术语</th><th>白话</th></tr>
+      <tr><td>内含价值 EV</td><td>净资产调整值 + 存量保单未来利润的现值——保险公司的「清算价值 + 已签合同的剩余租金」</td></tr>
+      <tr><td>新业务价值 NBV</td><td>当年新卖出的保单锁定的未来利润现值——卖一张赚一张的部分</td></tr>
+      <tr><td>P/EV</td><td>股价 ÷ 每股内含价值；1 倍 = 白送未来租金，&gt;1 倍 = 为增长付费</td></tr>
+      <tr><td>ROEV</td><td>内含价值回报率——存量业务一年内自己长出来的价值比例，保险复利的引擎转速</td></tr>
+      <tr><td>利差</td><td>实际投资收益率 − 精算假设回报率；为负 = 现实没跑赢自己给自己定的目标</td></tr>
+      <tr><td>偿二代</td><td>中国保险业第二代偿付能力监管体系（2015 年实施），对高质量业务释放资本、EV 计量更精细</td></tr>
+      <tr><td>营运利润</td><td>剔除投资波动与一次性项目后的利润——平安 2017 年起用之作分红锚</td></tr>
+      <tr><td>安全边际 MoS</td><td>1 − 现价 ÷ 内在价值，买入前的折价缓冲垫</td></tr>
+      <tr><td>IRR</td><td>年化内部收益率——把未来各情景收益折算成「每年赚百分之几」</td></tr>
+      <tr><td>触发价</td><td>基准内在价值 × 0.6（窄护城河 40% 折扣）——「等」的价格化答案</td></tr>
+    </table>
+  </section>
+
+  <footer class="disclaimer">
+    本报告为历史回放研究（案件 B3-14），信息截断于 2018-12-31：2018 年报（2019-02/03 披露）及此后一切信息均未使用；采集期间暴露的截断后信息（华夏幸福 2019-01 增持公告等）已登记于 manifest.information_cutoff.forbidden_data_encountered 且未回填任何估值输入。<br>
+    本报告由分析工具生成，仅供研究参考，不构成任何投资建议。市场有风险，投资需谨慎。
+  </footer>
+</div>
+
+<script>
+function initChart(id, option) {
+  var el = document.getElementById(id);
+  if (!el || typeof echarts === 'undefined') return;
+  var c = echarts.init(el); c.setOption(option);
+  window.addEventListener('resize', function(){ c.resize(); });
+}
+
+/* ---- 集团内含价值 ---- */
+initChart('chart-ev', {
+  tooltip: { trigger: 'axis' },
+  grid: { left: 70, right: 40, bottom: 40 },
+  xAxis: { type: 'category', data: [2011,2012,2013,2014,2015,2016,2017] },
+  yAxis: { type: 'value', name: '集团EV(亿元)', scale: true },
+  series: [
+    { name: '内含价值', type: 'line',
+      /*<!-- vchart src=metrics_601318_2018_insurance.json path=chart_series.embedded_value scale=0.01 -->*/
+      data: [2356.27,2858.74,3296.53,4588.12,5528.53,6377.03,8251.73],
+      lineStyle: { width: 3 }, itemStyle: { color: '#1a3a5c' },
+      symbolSize: 8, label: { show: true, fontSize: 11 } }
+  ]
+});
+
+/* ---- 总投资收益率 vs 假设 ---- */
+initChart('chart-invest', {
+  tooltip: { trigger: 'axis' },
+  legend: { data: ['总投资收益率%'] },
+  grid: { left: 60, right: 40, bottom: 40 },
+  xAxis: { type: 'category', data: [2011,2012,2013,2014,2015,2016,2017] },
+  yAxis: { type: 'value', name: '总投资收益率%', max: 9 },
+  series: [
+    { name: '总投资收益率%', type: 'bar',
+      /*<!-- vchart src=metrics_601318_2018_insurance.json path=chart_series.investment_return scale=100 -->*/
+      data: [4.0,2.9,5.1,5.1,7.8,5.3,6.0],
+      itemStyle: { color: '#d97706' },
+      markLine: { data: [{ yAxis: 5.0, name: '长期假设5%' }], lineStyle: { color: '#b91c1c' } } }
+  ]
+});
+
+/* ---- 偿付能力充足率 ---- */
+initChart('chart-solvency', {
+  tooltip: { trigger: 'axis' },
+  grid: { left: 60, right: 40, bottom: 40 },
+  xAxis: { type: 'category', data: [2011,2012,2013,2014,2015,2016,2017] },
+  yAxis: { type: 'value', name: '集团偿付能力%', min: 140 },
+  series: [
+    { name: '偿付能力充足率%', type: 'line',
+      /*<!-- vchart src=metrics_601318_2018_insurance.json path=chart_series.solvency_ratio scale=100 -->*/
+      data: [166.7,185.6,174.4,205.1,195.4,210.0,214.9],
+      lineStyle: { width: 3 }, itemStyle: { color: '#1a3a5c' },
+      markLine: { data: [{ yAxis: 150, name: '监管红线150%' }], lineStyle: { color: '#b91c1c' } } }
+  ]
+});
+
+/* ---- 三情景 ---- */
+initChart('chart-scenarios', {
+  tooltip: { trigger: 'axis' },
+  grid: { left: 60, right: 40, bottom: 40 },
+  xAxis: { type: 'category', data: ['悲观 25%','基准 50%','乐观 25%'] },
+  yAxis: { type: 'value', name: '每股价值(元)', max: 100 },
+  series: [
+    { name: '每股价值', type: 'bar',
+      /*<!-- vchart src=scenarios.json path=chart.values_per_share -->*/
+      data: [38.05,59.0,93.0],
+      itemStyle: { color: function(p){ return ['#94a3b8','#d97706','#15803d'][p.dataIndex]; } },
+      markLine: { data: [{ yAxis: 56.10, name: '现价' }, { yAxis: 35.40, name: '触发价' }] } }
+  ]
+});
+
+/* ---- 三师雷达 ---- */
+var RADAR_IND = [
+  { name: '生意质量', max: 5 }, { name: '成长性', max: 5 }, { name: '管理层', max: 5 },
+  { name: '价格安全垫', max: 5 }, { name: '赔率与能力圈', max: 5 }
+];
+initChart('chart-radar', {
+  tooltip: {},
+  legend: { data: ['巴菲特','段永平','李录'], bottom: 0 },
+  radar: { indicator: RADAR_IND, radius: '62%' },
+  series: [{
+    type: 'radar',
+    data: [
+      {/*<!-- vchart src=phase5_workpaper.json path=persona_scores.buffett -->*/ value: [4.5,3.5,4.5,2.0,3.0], name: '巴菲特', itemStyle: { color: '#1a3a5c' } },
+      {/*<!-- vchart src=phase5_workpaper.json path=persona_scores.duan -->*/ value: [4.5,3.5,4.0,2.5,3.0], name: '段永平', itemStyle: { color: '#d97706' } },
+      {/*<!-- vchart src=phase5_workpaper.json path=persona_scores.lilu -->*/ value: [4.0,3.0,4.5,2.0,3.0], name: '李录', itemStyle: { color: '#15803d' } }
+    ]
+  }]
+});
+</script>
+</body>
+</html>

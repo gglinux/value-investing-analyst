@@ -95,6 +95,12 @@ RERUN_PARAMS = {
     "ZM_2021-10-31": {"moat": "narrow", "iv_growth": "0.0",
                       "market_cap_million": 83948},
     "9984.T_2019-06-30": {"market_cap_million": 10886263},
+    # B3-16/B3-17 补登（批 3 闭环复盘发现：--rerun 模式下两案 GATE 族码
+    # 假性消失——反推未配置即被跳过）。值抄自各案 scenarios.json（单一
+    # 事实源）；两案均无 market_cap_million 键（原跑未传市值，metrics
+    # provenance.market_cap_million=null 为证）。
+    "META_2022-11-30": {"moat": "wide", "iv_growth": "0.06"},
+    "3333.HK_2020-06-30": {"moat": "none", "iv_growth": "0.0"},
 }
 
 
@@ -123,6 +129,25 @@ def rerun_engine(case):
     os.makedirs(tmp, exist_ok=True)
     try:
         fin = sorted(glob.glob(os.path.join(data, "financials_*.json")))
+        # 多 financials 文件案例（metrics 映射视图方案，B3-17 恒大先例）：
+        # 视图才是 compute_metrics 的合法输入（同字段双用途解耦——底稿勾稽
+        # 要求 total_equity=总权益，metrics 语义要求归母；capex=0 显式语义
+        # 亦只存在于视图）。glob 排序会选中底稿 → M 族码假性消失。
+        # 冻结 metrics 的 provenance.argv 记录了原跑输入，自读钉定（单文件
+        # 案例零行为变化；provenance 缺失/解析失败回退 glob 排序）。
+        if len(fin) > 1:
+            _fm = sorted(glob.glob(os.path.join(data, "metrics_*.json")))
+            if _fm:
+                try:
+                    _argv = (json.load(open(_fm[0], encoding="utf-8"))
+                             .get("provenance") or {}).get("argv") or []
+                    _names = {os.path.basename(a) for a in _argv
+                              if os.path.basename(a).startswith("financials_")}
+                    _pinned = [f for f in fin if os.path.basename(f) in _names]
+                    if _pinned:
+                        fin = _pinned
+                except Exception:
+                    pass
         if fin:
             # 金融类路由（第三批招行/平安）：通用管道对 bank/保险硬拒绝，
             # 按 company_type 分发到专属管道。银行/保险管道不产注册表告警码

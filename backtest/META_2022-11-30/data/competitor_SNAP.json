@@ -1,0 +1,92 @@
+{
+ "company": "Snap Inc.",
+ "ticker": "SNAP",
+ "currency": "USD",
+ "unit": "million",
+ "tax_rate": 0.21,
+ "annual": [
+  {
+   "year": 2016,
+   "revenue": 404.482,
+   "net_income": -514.643,
+   "ebit": -520.385,
+   "d_and_a": 29.115,
+   "capex": 66.441,
+   "ocf": -611.245,
+   "total_equity": 1518.914,
+   "total_debt": 0.0,
+   "cash": 987.3679999999999
+  },
+  {
+   "year": 2017,
+   "revenue": 824.949,
+   "net_income": -3445.066,
+   "ebit": -3485.576,
+   "d_and_a": 61.288,
+   "capex": 84.518,
+   "ocf": -734.667,
+   "total_equity": 2992.327,
+   "total_debt": 0.0,
+   "cash": 2043.0390000000002
+  },
+  {
+   "year": 2018,
+   "revenue": 1180.446,
+   "net_income": -1255.911,
+   "ebit": -1268.45,
+   "d_and_a": 91.648,
+   "capex": 120.242,
+   "ocf": -689.924,
+   "total_equity": 2310.999,
+   "total_debt": 0.0,
+   "cash": 1279.063
+  },
+  {
+   "year": 2019,
+   "revenue": 1715.534,
+   "net_income": -1033.66,
+   "ebit": -1103.328,
+   "d_and_a": 87.245,
+   "capex": 36.478,
+   "ocf": -304.958,
+   "total_equity": 2259.913,
+   "total_debt": 0.0,
+   "cash": 2112.8050000000003
+  },
+  {
+   "year": 2020,
+   "revenue": 2506.626,
+   "net_income": -944.839,
+   "ebit": -862.072,
+   "d_and_a": 86.744,
+   "capex": 57.832,
+   "ocf": -167.644,
+   "total_equity": 2329.976,
+   "total_debt": 0.0,
+   "cash": 2537.54
+  },
+  {
+   "year": 2021,
+   "revenue": 4117.048,
+   "net_income": -487.955,
+   "ebit": -702.069,
+   "d_and_a": 119.141,
+   "capex": 69.875,
+   "ocf": 292.88,
+   "total_equity": 3790.168,
+   "total_debt": 2253.087,
+   "cash": 3692.885
+  }
+ ],
+ "note": "竞对底稿（B3-16 定量画像对照用）：companyfacts 脚本化抽取 ≤2021 年度（截断日口径）；9M22 YTD 见 _ytd_9m22；shares_diluted 置 null（每股口径不对竞对使用）；equity/cash/mkt_sec 为各年 12-31 时点（filed 最新版）",
+ "_ytd_9m22": {
+  "rev_9m22": 3302.112,
+  "ni_9m22": -1141.193,
+  "oi_9m22": -1107.709,
+  "ocf_9m22": 59.323,
+  "capex_9m22": 82.381,
+  "rev_9m21": 2819.163,
+  "ni_9m21": -510.505
+ },
+ "_restatements": []
+}

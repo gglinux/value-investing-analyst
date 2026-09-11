@@ -1,0 +1,25 @@
+{
+  "company": "招商银行",
+  "ticker": "600036.SH",
+  "as_of": "2014-12-31",
+  "method": "两阶段PB-ROE现价回归（估值方法树银行行）",
+  "scenario": "乐观",
+  "inputs": {
+    "bvps_base": 11.97,
+    "roe_path_10y": [0.21, 0.21, 0.20, 0.20, 0.195, 0.19, 0.19, 0.19, 0.19, 0.19],
+    "roe_path_rationale": "信用周期温和：不良一年后见顶回落、信用成本0.6-0.8%、NIM受益负债端重定价企稳、中收双位数增长",
+    "payout": 0.30,
+    "discount_rate": 0.105,
+    "terminal_pb": 1.6,
+    "terminal_pb_rationale": "A股银行乐观分位（justified=(19%−4.5%)/(10.5%−4.5%)=2.4上限内取1.6，参照2012-2013年招行PB上沿）",
+    "years": 10
+  },
+  "outputs": {
+    "pv_dividends_per_share": 8.0,
+    "bvps_year10": 43.43,
+    "intrinsic_value_per_share": 32.97,
+    "price": 16.59,
+    "mos": 0.497
+  },
+  "note": "乐观情景MoS 49.7%≥40%可过闸门一，但其概率权重25%——期望回报按概率加权在expected_return.json计算"
+}

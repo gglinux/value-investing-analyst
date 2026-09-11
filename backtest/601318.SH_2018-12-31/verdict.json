@@ -1,0 +1,130 @@
+{
+  "case": "B3-14",
+  "company": "中国平安",
+  "ticker": "601318.SH",
+  "replay_date": "2018-12-31",
+  "information_cutoff_discipline": {
+    "cutoff": "2018-12-31",
+    "latest_annual": "2017年报（2018-03-20董事会审议/03-21巨潮披露）",
+    "latest_interim": "2018三季报（2018-10-29披露）；最新EV口径=2018中报（2018-08-21披露）",
+    "forbidden": "2018年报（2019-02/03披露）、2018年度业绩快报、2019年1月保费公告及此后一切信息",
+    "forbidden_data_encountered": "检索华夏幸福合作背景时WebSearch携带2019-01-31平安受让华夏幸福股份公告信息（42.03亿元、持股升至25.25%，截断日后事件）——已知悉零回填；训练后视（2019年初反弹、2020-21华夏幸福减值、寿险NBV腰斩）登记于meta.json未作输入；compute_metrics_insurance.py头部示例schema为同标的后截断数据（2025口径），同标的接触登记、示例数据未进任何输入",
+    "model_memory_forbidden_after": "2018-12-31"
+  },
+  "final_verdict": "观察等价格",
+  "verdict_ordinal": 2,
+  "prior_expectation_alignment": {
+    "prior": "观察等价格(2)（meta.json建框架，gate1/gate2不预判）",
+    "final": "观察等价格(2)",
+    "alignment": "序数一致；建架时仅按『质地强+价格中性+动能边际转弱』的定性分布预估档位，两道闸门数值在Phase 4才计算——先验与后验一致但非同一证据链"
+  },
+  "gate1": {
+    "pass": false,
+    "margin_of_safety": 0.0492,
+    "requirement": 0.40,
+    "moat": "narrow",
+    "intrinsic_value_base": 58.96,
+    "price": 56.10,
+    "trigger_price_a": 35.40,
+    "trigger_derivation": "基准内在价值 59.0（58.96 取整）× 0.6 = 35.40（窄护城河 40% 折扣）",
+    "counterfactual_note": "即便三师把护城河抬到 wide（门槛 25%），MoS 4.9% 仍不过闸——护城河档位不是本案档位决定者",
+    "trigger_reachability": {
+      "verdict": "TRIGGER_OUT_OF_HISTORY",
+      "band_position": null,
+      "low_52w": 54.33,
+      "high_52w": 81.28,
+      "below_low_gap": 0.348,
+      "band_position_display": -0.702,
+      "note": "触发价 35.40 低于 52 周最低 54.33（还差 34.8% 才到历史下限）——历史上没人用这个价格买到过，「等它」按罕见事件定价；与 B3-13 招行案 TRIGGER_REACHABLE（41.3% 分位）互为反向形态"
+    }
+  },
+  "gate2": {
+    "pass": false,
+    "item1": {
+      "name": "自洽性校验（期望IRR vs 护城河反推门槛）",
+      "value": 0.1163,
+      "hurdle": 0.2205,
+      "pass": false,
+      "independent": false,
+      "hurdle_derivation": "(1+0.102)×(1/(1-0.40))^(1/5)-1=22.05%；有效门槛（悲观拖累后）39.2%，基准IRR需达21.74%才过——差距1.6pct量级"
+    },
+    "item2": {
+      "name": "不收敛下限（股息率+内在价值增速）",
+      "value": 0.0867,
+      "components": {"dividend_yield": 0.0267, "dividend_yield_basis": "annual_plan（FY2017 DPS 1.50/现价；剔除30周年特别股息0.20一次性成分，日历年度实付1.82登记参考）", "intrinsic_value_growth": 0.06},
+      "hurdle": 0.06,
+      "pass": true,
+      "independent": true,
+      "note": "股息率2.67%<无风险3.27%——下限由EV内生增长6%贡献主体，回报全押增长兑现而非市场重估，价值陷阱定量特征不成立但依赖度偏高"
+    },
+    "item3": {
+      "name": "悲观情景年化（独立谷底倍数法）",
+      "value": 0.0197,
+      "hurdle": 0.0,
+      "pass": true,
+      "independent": true,
+      "marginality_note": "谷底倍数0.75×2018H1 EVPS 50.73=38.05元，5年累计+10.2%仍为正（S2b重算偏差6.6e-05）；0.75x内嵌『利差-1.0pct若持续→EV假设下修10-15%』双杀。与招行案（悲观-0.04%差0.02元不过零线）对照：本案下行保护明显更厚——保险EV第一性锚+偿付能力214.9%缓冲是结构原因"
+    }
+  },
+  "scenarios_value_per_share": {
+    "悲观": 38.05,
+    "基准": 59.0,
+    "乐观": 93.0,
+    "probabilities": [0.25, 0.5, 0.25],
+    "expected_value": 62.2625,
+    "scenario_irr": {"悲观": 0.0197, "基准": 0.1132, "乐观": 0.2192},
+    "loss_probability": 0.0,
+    "methods": {
+      "悲观": "pe_trough_multiple（谷底0.75x×2018H1 EVPS 50.73；同业锚2018-12 A股险企P/EV 0.7-0.9x + 平安历史锚2014-06不复权38.10元≈0.96-1.06x，双杀折价）",
+      "基准": "ev_growth_two_stage（EV增长11%/7%×5+5年 + 终期P/EV 1.0 + 股息PV 13.65元；终期EVPS 119.9元）",
+      "乐观": "ev_growth_two_stage（EV增长15%/9% + 终期P/EV 1.3友邦式溢价锚，对应1.83x P/EV≈2018-01情绪顶部区域）"
+    }
+  },
+  "expected_irr": 0.1163,
+  "moat_rating": "narrow",
+  "discount_rate": 0.102,
+  "codes": ["GATE1_FAIL", "GATE2_FAIL", "GATE2_1_IRR_FAIL", "TRIGGER_OUT_OF_HISTORY"],
+  "codes_provenance": {
+    "engine_derived": ["TRIGGER_OUT_OF_HISTORY"],
+    "manually_recorded": ["GATE1_FAIL", "GATE2_FAIL", "GATE2_1_IRR_FAIL"],
+    "note": "GATE族为脚本判定结果（fv_base.gate1_check/expected_return.gate2 pass字段）到注册表语义码的人工映射；TRIGGER_OUT_OF_HISTORY为trigger_reachability.py字面输出"
+  },
+  "codes_note": "①保险管线（compute_metrics_insurance）输出0警报，但两条结构性盲区以自由文本留痕（无注册码）：2018H1投资利差-1.0pct（实际4.0% vs 假设5.0%）与NBV增速断档（H1 +0.2%）均为半年报口径——管线只读年报行，年报口径2015-2017利差+2.8/+0.3/+1.0均值+1.37%≥0.5%不触发利差警报；NBV连续负增长警报在截断纪律下天然滞后一年（2018全年数据在2019年报才有）在回放点不可触发——两条均登记为管线缺口候选（diff.md/observations候选）。②通过项语义（GATE2_2_FLOOR_PASS/GATE2_3_BEAR_PASS无注册表等价物）在此留痕：不收敛下限8.67%≥6%通过、悲观年化+1.97%≥0通过。③净利CAGR类指标未采信年报行拼接（2018年无年报行，管线7行序列止于2017，无YTD污染——保险管线优于银行管线的结构性差异）。",
+  "frozen_before_diff": true,
+  "frozen_at": "2026-09-10T10:05:00Z",
+  "falsification_conditions": {
+    "F1": "NBV连续两季负增长，或代理人产能环比再降逾10% → 渠道质量警报升级，触发价重估前移、悲观情景换锚",
+    "F2": "利差连续两年为负（总投资收益率持续<5%假设线）→ EV增长引擎降档，基准IV全模型重算",
+    "F3": "DPS停止增长或分红率从30.8%显著回落 → 营运利润分红锚失真，闸门二②不收敛下限复核",
+    "F4": "华夏幸福对赌兑付恶化或再现同量级地产配置 → 资本配置纪律升级为治理问题，管理层维度重评"
+  },
+  "review_checkpoints": [
+    "2018年报（2019-02/03披露）：全年NBV/EV/总投资收益率——F2主证伪点，重算管线（该时点为复查触发而非回放输入）",
+    "价格触发器：35.40元（TRIGGER_OUT_OF_HISTORY，低于52周低点34.8%）——按罕见事件定价，出现即执行",
+    "质地拐点确认：NBV连续两季双位数增长+产能环比企稳 → 按新EV重算档位（不以旧锚补仓）",
+    "134号文余波出清节奏：2019Q1开门红数据验证NBV拐点信号（Q3单季+10.9%是否延续）"
+  ],
+  "persona_verdicts": {
+    "buffett": "观察等价格（ROEV 26.7%复利机器但EV是假设的函数，利差转负+137亿地产对赌，40%折扣保护不足）",
+    "duan": "观察等价格（生意没坏坏的是节奏；不知道的不进估值；56块买50.73清算价值外加未来租金不亏但谈不上占便宜）",
+    "lilu": "观察等价格（EV透明度是治理优势不是护城河；等利差回正+产能企稳两个证据，证据前56元只是合理不是便宜）",
+    "consensus": "三师一致观察等价格(2)；采纳李录EV假设可信度压力（入红队#3）+巴菲特地产敞口定性（入管理层减分）+段永平生意本质判断（不改档位）；科技独角兽三师一致不入模"
+  },
+  "key_judgments": {
+    "interim_blind_spot": "保险管线结构性发现（本案核心产出之一）：compute_metrics_insurance只读年报行——2018H1利差-1.0pct（2011年以来首度转负）与NBV+0.2%减速对管线不可见，年报口径均值化后利差警报（<0.5%）不触发；半年报/季报数据的人工置入是管线能力之外的关键判断",
+    "pev_dual_caliber": "P/EV双口径裁决：2017年报口径1.243x（EVPS 45.14）vs 2018H1口径1.106x（EVPS 50.73）——主用2018H1（截断日最新官方EV，与市场实践一致），2017年报口径登记备查；口径选择本身是保险管线稳健性测试的证据",
+    "gordon_forbidden": "保险方法树：EV增长两阶段贴现+终期P/EV判定法，Gordon禁用；股息单轨不支持买入（股息率2.67%<无风险3.27%，DPS高增长受payout 30.8%后提升空间约束）",
+    "reverse_pricing": "现价隐含终期P/EV≈0.76x（维持11%/7%路径与r=10.2%时）——市场已计价EV增速降档+倍数永不修复；对ROEV 26.7%偏苛刻但不离谱（对照招行案隐含永续ROE 11.46%同构反向定价）",
+    "sensitivity_robust": "六组敏感性IV 55.0-68.0全部环绕现价56.10，MoS极值17.5%仍远低于40%——Gate1 FAIL参数稳健，非模型噪声"
+  },
+  "verification": {
+    "validate_data": "pass（错误0/警告7：OCF现金流量表原文未得显式豁免+2015股本归一化豁免+2018年报按截断纪律official_filing_missing登记）",
+    "check_market_snapshot": "pass（52周极值月度序列双确认；market_cap复算修正10倍数量级错误——修正记录内嵌快照note）",
+    "check_scenarios": "pass（0警告，S1-S9全过；S2b悲观值重算偏差6.6e-05；S2e贴现率下限10%满足）",
+    "compute_metrics_insurance": "0警报（三表勾稽保险专属校验通过；两处盲区登记于codes_note）",
+    "reverse_dcf": "expected-return模式（保险口径：EV增长两阶段+终期P/EV，Gordon禁用）",
+    "trigger_reachability": "pass（TRIGGER_OUT_OF_HISTORY，低于52周低点34.8%）",
+    "verification_strength": "B级（V1勾稽100% full / V2原文登记partial——2015/2017官方原文，2018中报/三季报出处登记于interim/q3块 / V3窗口7<15年partial，覆盖2015股灾不含2008金融危机）",
+    "verify_report": "pass（128/128：正文数字109+图表数组7+证据指针12，exit 0）"
+  }
+}

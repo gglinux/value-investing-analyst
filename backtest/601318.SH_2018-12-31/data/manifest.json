@@ -1,0 +1,194 @@
+{
+ "company": "中国平安",
+ "ticker": "601318.SH",
+ "analysis_as_of": "2018-12-31",
+ "case": "B3-14（第三批backtest，compute_metrics_insurance EV/NBV口径稳健性测试+保险专属管线首次实战）",
+ "information_cutoff": {
+  "date": "2018-12-31",
+  "rules": [
+   "仅使用2018-12-31当日或之前公开发布的信息",
+   "最新年度报表=2017年报（2018-03-20董事会审议/03-21巨潮披露）；最新季报=2018三季报（2018-10-29披露）；最新半年度EV口径=2018中期报告（2018-08-21披露）",
+   "2018年年报（2019-02/03披露）及2018年度业绩快报、2019年1月保费公告等一切截断后信息禁止作为估值输入，仅可在Step 4答案比对时参考",
+   "不使用模型对2018年之后事件（2019年初A股反弹、NBV增速回升、华夏幸福后续、2020-2021年减值与NBV腰斩）的记忆作为输入"
+  ],
+  "forbidden_data_encountered": "①检索华夏幸福合作背景时，WebSearch结果携带2019-01-31平安受让华夏幸福股份的公告信息（42.03亿元、持股比例由19.56%升至25.25%）——该交易发生在截断日之后，已知悉但未写入任何底稿/估值/verdict输入（华夏幸福137.7亿敞口本身为截断前披露事实，正常使用）；②模型训练知识含2021年华夏幸福债务危机与平安计提减值、2020年后寿险NBV腰斩等后视信息——meta.json已登记训练后视清单，零回填；③compute_metrics_insurance.py脚本头部示例schema恰为本标的后截断数据（2025年口径），登记为同标的接触，示例数据未进入任何估值输入"
+ },
+ "filings_used": [
+  {
+   "file": "平安2017年年度报告摘要",
+   "publish": "2018-03-20董事会审议/2018-03-21巨潮披露（cninfo 1204495850.PDF）",
+   "use": "2017集团EV 825,173百万、寿险及健康险NBV 67,357百万、归母净利89,088百万、总投资收益率6.0%/净5.8%、长期投资回报假设5.0%、DPS 1.50元（中期0.50已派+末期1.00预案）、偿付能力214.9%、产险COR 96.2%——A级官方原文，crosscheck双源登记"
+  },
+  {
+   "file": "平安2018年中期报告摘要",
+   "publish": "2018-08-21披露（cninfo 1205314235.PDF）",
+   "use": "2018H1集团EV 927,376百万、EVPS 50.73元、NBV 38,757百万（+0.2%）、总投资收益率（年化）4.0%、归母净利58,095百万（+33.8%）、代理人139.9万（+5.5%）、NBV利润率38.5%——截断日最新官方EV口径，A级"
+  },
+  {
+   "file": "平安2018年第三季度报告",
+   "publish": "2018-10-29披露",
+   "use": "9M归母净利79,397百万（+19.7%）、Q3单季21,302百万（-6.9%）、9M NBV +3.2%/Q3单季+10.9%、BVPS 28.88元、代理人143.0万——A级"
+  },
+  {
+   "file": "2011-2016年历年年度报告（集团合并口径）",
+   "publish": "2012-03至2017-03逐年披露",
+   "use": "EV序列235,627/285,874/329,653/458,812/552,853（2015偿二代回溯）/637,703百万、NBV（2015起寿险及健康险口径）38,420/50,805百万、ROE/ROEV序列、总投资收益率序列、偿付能力序列、DPS序列0.375起、三表资产/负债/权益（2011-2015五年表）——A级"
+  },
+  {
+   "file": "东方财富push2his历史行情（fqt=0，klt=101）",
+   "publish": "2018-12-28收盘数据（2018年最后交易日）",
+   "use": "现价56.10元、52周高81.28（2018-01-23）/低54.33（2018-07-03）、月度收盘序列——A级市场数据，双确认登记"
+  },
+  {
+   "file": "中国债券信息网10年期国债收益率",
+   "publish": "2018-12-28中债估值",
+   "use": "无风险利率3.27%（S2e下限校验与P/EV比较基准，训练知识级V2置信，非CAPM主输入）——B级"
+  },
+  {
+   "file": "华泰证券研报报道（2018-12-08，证券媒体转述）",
+   "publish": "2018-12-08",
+   "use": "卖方一致预期2018-2020 EPS 5.85/7.32/9.13元、维持买入——仅作交叉参考，不作估值输入——B级"
+  },
+  {
+   "file": "中国经济网三季报报道（2018-10-31）",
+   "publish": "2018-10-31",
+   "use": "代理人首年规模保费7,984元、较2017年下降17.7%（产能下滑证据）——B级"
+  }
+ ],
+ "latest_quarter_checked": "2018三季报（2018-10-29披露）",
+ "data_sources": {
+  "price": "东方财富push2his fqt=0不复权日线（2018-12-28收盘56.10元，2018年最后交易日）；52周极值月度序列双确认",
+  "share_count": "2018三季报§2.4总股本18,280,241,410股（A股10,832,664,498+H股7,447,576,912），2018全年无股本变动",
+  "ev_nbv": "2011-2014年报EV为偿一代口径；2015起偿二代（2015回溯EV 551,514 vs 偿一代552,853，-0.24%断口，对平安可忽略）；NBV采用「寿险及健康险」口径（2015起），2014及以前子公司口径21,966百万隔离于spike_notes不进增长序列",
+  "caliber_note": "EVPS/BVPS统一按2015年10转10后股本18,280.24百万股归一（2015 EVPS 30.24与第三方研究交叉一致）"
+ },
+ "adversarial_check": "check_scenarios.py S1-S9通过（0警告，悲观值pe_trough_multiple机器重算偏差6.6e-05）；compute_metrics_insurance.py输出0警报（警报不可见项登记于decision-log：2018H1利差-1.0pct与NBV减速均在半年报口径，管线只读年报行，结构性盲区而非误报）；reverse_dcf引擎闸门二全项计算；trigger_reachability.py判定out_of_history；verification_strength.py B级",
+ "files": [
+  {
+   "file": "financials_601318_insurance.json",
+   "source": "历年定期报告官方披露摘录（2011-2017年报+2018中报+2018三季报）",
+   "grade": "A级",
+   "coverage": "2011-2017年报7行+interim_latest(2018H1)+q3_2018+spike_notes",
+   "verified": "crosscheck五期登记（2015/2017/2018官方原文年份）；2016/2017负债=资产-权益恒等式偏差0；derived区块（EV CAGR 23.23%/payout 22.0%→30.8%）为显示派生字段"
+  },
+  {
+   "file": "market_snapshot_601318_2018.json",
+   "source": "东方财富push2his不复权日线+中债收益率",
+   "grade": "A级",
+   "coverage": "2018-12-28快照+52周区间+2018日历实付股息",
+   "verified": "52周极值与月度收盘双确认；market_cap已复算修正（10,255,215,311,010→1,025,521,543,101，修正记录内嵌）"
+  },
+  {
+   "file": "metrics_601318_2018_insurance.json",
+   "source": "compute_metrics_insurance.py 输出",
+   "grade": "A级",
+   "coverage": "2011-2017年报7行（管线只读年报行）",
+   "verified": "脚本生成，0警报；chart_series为图表数据唯一来源"
+  },
+  {
+   "file": "qualitative_601318_2018.json",
+   "source": "Phase 3 五维定性分析底稿",
+   "grade": "A级",
+   "coverage": "五维+情绪+卖方一致预期",
+   "verified": "五维各有明确判断+证据指针"
+  },
+  {
+   "file": "scenarios.json",
+   "source": "Phase 4 三情景底稿（经check_scenarios.py门禁）",
+   "grade": "A级",
+   "coverage": "三情景+概率证据+反向定价注记",
+   "verified": "S1-S9通过0警告；悲观值谷底倍数0.75x重算一致；chart区块供vchart引用"
+  },
+  {
+   "file": "scenario_audit.json",
+   "source": "check_scenarios.py 输出",
+   "grade": "A级",
+   "coverage": "门禁诊断",
+   "verified": "脚本生成（S2b重算偏差6.6e-05、S2e贴现率下限10%校验、S4离散度）"
+  },
+  {
+   "file": "fv_base.json",
+   "source": "EV增长两阶段贴现+P/EV判定法（保险方法树）基准情景",
+   "grade": "A级",
+   "coverage": "基准估值+六组敏感性",
+   "verified": "手工模型与IRR铁律交叉一致（基准IRR 11.32%引擎复算同值）；Gate1检查内嵌"
+  },
+  {
+   "file": "fv_bull.json",
+   "source": "EV增长两阶段贴现乐观情景",
+   "grade": "A级",
+   "coverage": "乐观估值",
+   "verified": "MoS 39.7%（差0.3pct未过40%门槛，诚实登记）"
+  },
+  {
+   "file": "expected_return.json",
+   "source": "reverse_dcf.py expected-return 引擎输出",
+   "grade": "A级",
+   "coverage": "期望回报与闸门二三项",
+   "verified": "脚本生成（期望IRR 11.63%、不收敛下限8.67%、悲观年化+1.97%）"
+  },
+  {
+   "file": "trigger_reachability.json",
+   "source": "trigger_reachability.py 输出",
+   "grade": "A级",
+   "coverage": "触发价35.40元可达性",
+   "verified": "脚本生成（out_of_history，低于52周低点34.8%）"
+  },
+  {
+   "file": "verification_strength.json",
+   "source": "verification_strength.py --emit-html 输出",
+   "grade": "A级",
+   "coverage": "核验强度B级三指标",
+   "verified": "脚本生成；V2官方原文年份[2015,2017,2018]未经原文机器逐字比对（首屏已声明）"
+  },
+  {
+   "file": "phase5_workpaper.json",
+   "source": "Phase 5 投委会/红队/持有体验底稿",
+   "grade": "A级",
+   "coverage": "三师评分+分歧表+红队四路径+持有体验",
+   "verified": "三师分立推演与红队留痕"
+  },
+  {
+   "file": "workpapers/persona_buffett.md",
+   "source": "巴菲特视角独立评估",
+   "grade": "A级",
+   "coverage": "Phase 5",
+   "verified": "分立生成"
+  },
+  {
+   "file": "workpapers/persona_duan.md",
+   "source": "段永平视角独立评估",
+   "grade": "A级",
+   "coverage": "Phase 5",
+   "verified": "分立生成"
+  },
+  {
+   "file": "workpapers/persona_lilu.md",
+   "source": "李录视角独立评估",
+   "grade": "A级",
+   "coverage": "Phase 5",
+   "verified": "分立生成"
+  },
+  {
+   "file": "../meta.json",
+   "source": "Step 1 建档冻结（commit 2c97433）",
+   "grade": "A级",
+   "coverage": "先验/信息集/污染披露",
+   "verified": "先验观察等价格(2)与最终档位对齐（ordinal 2）"
+  },
+  {
+   "file": "../decision-log.json",
+   "source": "Phase 0-5 决策时间线+口径裁决+管线结构性发现",
+   "grade": "A级",
+   "coverage": "全阶段",
+   "verified": "与decision-log.md同步"
+  }
+ ],
+ "official_filing_missing": {
+  "years": [
+   2018,
+   2019
+  ],
+  "reason": "历史回放截断纪律：信息截断日2018-12-31，2018年报（2019-02/03披露）及以后全部年报按B3-14案件纪律禁用（meta.json已冻结），非公司延迟申报；底稿以2017年报为最新合法年报，2018年度数据仅使用截断前已披露的中报/三季报口径（interim_latest/q3_2018）"
+ }
+}

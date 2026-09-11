@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>中国恒大集团 (3333.HK) — 历史回放分析报告 2020-06-30</title>
+<script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+<style>
+body{font-family:"Noto Sans CJK SC","Microsoft YaHei",sans-serif;max-width:960px;margin:24px auto;padding:0 16px;color:#222;line-height:1.65}
+h1{font-size:22px;border-bottom:3px solid #4a6fa5;padding-bottom:8px}
+h2{font-size:18px;border-left:4px solid #4a6fa5;padding-left:10px;margin-top:32px}
+h3{font-size:15px;margin-top:22px}
+table{border-collapse:collapse;width:100%;margin:10px 0;font-size:13px}
+th,td{border:1px solid #bbb;padding:5px 8px;text-align:left}
+th{background:#eef2f8}
+.card{border:1px solid #ccc;border-radius:8px;padding:12px 16px;background:#fafcff}
+.gate-fail{color:#b03030;font-weight:bold}
+.gate-pass{color:#1d7a3e;font-weight:bold}
+.near-miss{color:#b8860b;font-weight:bold}
+.small{font-size:12px;color:#666}
+.ok{color:#1d7a3e}.bad{color:#b03030}
+.redflag{background:#fdf0f0;border-left:4px solid #b03030;padding:8px 12px;margin:8px 0}
+.verification-strength{border:1px solid #7a9e6c;border-radius:6px;padding:8px 12px;background:#f2f8ee;margin-top:10px;font-size:13px}
+.vs-meaning{color:#4a6a3a;font-size:12px}
+.bar-wrap{position:relative;height:26px;background:#eef2f8;border-radius:4px;margin:6px 0}
+.bar{position:absolute;height:26px;border-radius:4px;opacity:.85}
+</style>
+</head>
+<body>
+<h1>中国恒大集团 (3333.HK) — 历史回放分析报告</h1>
+<p class="small">回放时点 2020-06-30 ｜ 案例编号 B3-17（第三批·高杠杆表外负债/假阳性镜像测试：市场已定价 2-3 倍个体风险溢价，系统会被『5x PE 便宜货』幻觉诱惑还是被红旗吓退） ｜ 信息截断日 2020-06-30 ｜ <b>本报告仅使用 2020-06-30 及之前的公开信息</b>（三道红线 2020-08/FY2020 中报/2020-09+ 事件零输入）</p>
+
+<h2 style="margin-top:0">决策卡</h2>
+<div class="card" data-verdict="排除">
+<p style="font-size:16px"><b>结论：<span class="gate-fail">排除（档位 0）</span>——红旗 6/6 命中 Phase 0 默认排除线，双闸门独立支持：现价贴着基准内在价值上方（无折价），利润是纸面、现金是负的、分红是借的</b></p>
+<p>现价 <span class="vnum" data-src="market_snapshot.json" data-path="price.value" data-fmt="num2">20.00</span> HKD ｜ 市值 <span class="vnum" data-src="market_snapshot.json" data-path="market_cap.value" data-fmt="num0">264,864</span> 百万港元 ｜ 股本 <span class="vnum" data-src="market_snapshot.json" data-path="shares.value" data-fmt="num1">13,243.2</span> 百万股 ｜ 归母 PE <span class="vnum" data-src="market_snapshot.json" data-path="pe_ttm.value" data-fmt="num2">14.03</span>x（同行碧桂园 <span class="vnum" data-src="business_drivers.json" data-path="competitors_snapshot_20200630.country_garden.pe_attributable_est" data-fmt="num1">4.8</span>x/融创 <span class="vnum" data-src="business_drivers.json" data-path="competitors_snapshot_20200630.sunac.pe_attributable_est" data-fmt="num1">5.3</span>x——市场已定价 2-3 倍个体风险溢价） ｜ 归母 P/B <span class="vnum" data-src="market_snapshot.json" data-path="pb.value" data-fmt="num2">1.66</span>x ｜ 股息率 <span class="vnum" data-src="market_snapshot.json" data-path="dividend_yield_frac" data-fmt="pct1">3.6%</span>（可持续前瞻口径；幻觉股息见 M_DIVIDEND_ILLUSION） ｜ 52 周位置 <span class="vnum" data-src="market_snapshot.json" data-path="price_position_52w.frac" data-fmt="pct1">74.0%</span>（区间 <span class="vnum" data-src="market_snapshot.json" data-path="week52_after_ex_right.low_52w" data-fmt="num2">9.76</span>~<span class="vnum" data-src="market_snapshot.json" data-path="week52_after_ex_right.high_52w" data-fmt="num2">23.60</span>，自 3 月疫情底反弹 +104.9%）</p>
+<p>闸门一（安全边际，moat=none → 不给买入结论）：基准内在价值 <span class="vnum" data-src="scenarios.json" data-path="scenarios.1.value_per_share" data-fmt="num2">19.30</span> vs 现价 <span class="vnum" data-src="market_snapshot.json" data-path="price.value" data-fmt="num2">20.00</span> → MoS = <span class="gate-fail">1−20.00/19.30 = −3.6% ✗ FAIL</span>（无折价；烟蒂式清算路径亦不存在——PB 1.66x 非清算折价）</p>
+<p>闸门二（期望回报，三项<b>全败</b>）：①期望 IRR <span class="vnum" data-src="expected_return.json" data-path="expected_annualized_irr" data-fmt="pct2">1.95%</span> vs 恒生门槛 9% <span class="gate-fail">✗ 跑输 7.05pct</span>（moat=none 无反推门槛，GATE2_UNRATED）；②不收敛下限 <span class="vnum" data-src="expected_return.json" data-path="gate2.no_convergence_floor.value" data-fmt="pct2">3.57%</span>（股息 <span class="vnum" data-src="scenarios.json" data-path="dividend_yield" data-fmt="pct2">3.57%</span> + 内在价值增速 <span class="vnum" data-src="scenarios.json" data-path="intrinsic_value_growth" data-fmt="pct0">0%</span>）vs 门槛 6% <span class="gate-fail">✗ FAIL</span>；③悲观年化 <span class="vnum" data-src="expected_return.json" data-path="gate2.pessimistic_irr.value" data-fmt="pct2">-20.68%</span> vs ≥0 <span class="gate-fail">✗ FAIL</span>（悲观 3.90 由 pe_trough_multiple 独立法推导，5.0×eps 0.78 机器重算一致）——loss_probability <span class="vnum" data-src="expected_return.json" data-path="loss_probability" data-fmt="pct0">30%</span>、亏损情景平均跌幅 <span class="vnum" data-src="expected_return.json" data-path="expected_downside_given_loss" data-fmt="pct1">-68.6%</span></p>
+<p>关键变量：①<b>战投对赌 2021-01-31 大限</b>——回购 130,000 or 补偿 50% 股份的二元节点，可动用现金覆盖 1.15x 几乎耗尽；②<b>现金短债比 0.615</b>（受限后 0.403）——流动性命门；③<b>毛利率结转传导</b>——2020H1 均价 −17.3% 将在 2021-22 压毛利</p>
+<p>证伪条件（红旗解除，三者缺一不可）：对赌软着陆+现金短债比&gt;1 两报告期 ｜ OCF 连续两年&gt;归母×0.6 ｜ 加权利率回落 &lt;8%。复查时点：2020-08 中报（FY2020H1）与对赌大限前</p>
+<div class="verification-strength" data-verification-strength="1"
+     data-grade="B"
+     data-reconciliation-coverage="1.0000"
+     data-crosscheck-level="full"
+     data-window-years="5"
+     data-covers-full-cycle="false">
+  <b>核验强度 B</b>：三表勾稽覆盖率 100%（达标） ｜ 命门科目原文登记 达标（<u>未经原文机器逐字比对</u>） ｜ 数据窗口 5 年，含A股股灾与去杠杆、去杠杆与贸易战（部分）<br>
+  <span class="vs-meaning">存在部分核验缺口：结论可用，但相关章节须显式降低置信度。数据地基：HKEX 披露易年报 PDF 原文五年序列（损益三分法逐年精确勾稽）+ crosscheck_official 命门科目三年互证全部 0.00% 偏差；窗口 5 年未达 10 年要求（上市主体 2009 挂牌、更早序列非必需），2015/2018 压力年在窗</span>
+</div>
+<p style="margin-top:8px"><b>三人结论对照</b>：巴菲特——排除（分红幻觉是最警惕的信号，房地产不在能力圈）；段永平——排除（这家公司不挣钱，它只是流转钱）；李录——排除（存在的确定性被对赌大限威胁，逆向投资两前提均不成立）。<b>一句话生意</b>：用客户的钱（预收款）+供应商的钱（应付）+债权人的钱（借款 8.99%）盖房，规模是杠杆的函数，不是定价权的来源。<b>信息局限</b>：表外（合联营出表/供应链 ABS）只能从年报附注侧面估计，土储货值未逐笔核实——悲观情景对表外风险的覆盖是下限而非上限。</p>
+</div>
+
+<h2>一、信息集与防前视声明</h2>
+<table>
+<tr><th>信息</th><th>日期</th><th>截断裁决</th></tr>
+<tr><td>FY2019 年报（HKEX 披露易：收入 477,561 / 归母净利 17,280 / 借款 799,895 / 现金 228,767 / 归母权益 145,700，PwC 无保留意见+KAM 三项）</td><td>2020-04-28 刊发</td><td>✓ 进信息集（A级命门，全部 PDF 原文登记）</td></tr>
+<tr><td>FY2019 业绩公告 + 官方盈利预警（净利约 335 亿 −50%/核心 408 亿 −48%）</td><td>2020-03-31 / 2020-03-22</td><td>✓ 进信息集（A 级）</td></tr>
+<tr><td>月度销售简报 2020-01~06-24（1-6 月合约销售 3,153 亿 +11.9% / 回款 2,873 亿 +53.3% / 回款率 91.1% / 均价 −17.3%）</td><td>至 2020-06-24</td><td>✓ 进信息集（月频量价唯一高频源，A 级）</td></tr>
+<tr><td>战投对赌条款（130,000 回购或补偿 50% 股份、2021-01-31 大限、许家印个人连带）+2020-01 补充协议</td><td>2017 协议/2020-01</td><td>✓ 进信息集（A 级附注 24）；其结局为截断日后事实仅作可推演后果</td></tr>
+<tr><td>三道红线监管要求（剔除预收资产负债率/净负债率/现金短债比的监管阈值）</td><td>2020-08</td><td><span class="bad">✗ forbidden</span> 指标定义作分析语言可用、阈值标准不可用</td></tr>
+<tr><td>FY2020 中报（H1 现金流与偿债数据）/ 恒大物业招股书终稿</td><td>2020-08 末 / 2020-12</td><td><span class="bad">✗ forbidden</span> manifest excluded_late_filings 登记</td></tr>
+<tr><td>2020-09+ 一切事件（求救信/战投转普通股/恒大财富/美元债违约/清盘/退市）</td><td>截断日后</td><td><span class="bad">✗ forbidden</span> 训练记忆完整危机轨迹按污染协议显式登记并剔除</td></tr>
+</table>
+<p class="small">meta.json 在任何数据抓取之前冻结（先验档位 1=拒绝，含反先验登记：若现金短债比实测 &gt;1.2/净负债率 &lt;130%/永续基本出清则档位上调重估）；污染披露两重：(a) 训练语料含恒大完整危机轨迹（最重污染源，估值输入只取截断日前披露文件）；(b) 假阳性镜像测试的对称污染——危机叙事可能造成『过度唱衰』，防线=每条红旗挂截断日前 A 级 [E:] 指针 + 档位由管线机器读数唯一决定。</p>
+
+<h2>二、Phase 0 排雷（一票否决 0/6 + 红旗 6/6 → 默认排除线触发）</h2>
+<p><b>排雷五项结论：无一票否决项。</b>①审计意见：PwC 无保留意见（2009 年以来长期核数师，KAM 三项含战投对赌衍生负债——审计级别的风险确认）；②造假史：截断日前无监管处罚记录（对立面检索命中 Citron 2012/GMT 早期质疑——市场质疑非监管认定，且均为截断日前历史事实）；③质押：港股无强制披露，登记为披露缺口（反向：许家印个人为对赌承担连带责任=个人向公司注入信用）；④存贷双高：字面不触发（现金/总资产 10.4%），实质形态按红旗处理；⑤审计师/高管更换：无。<b>net_conclusion：通道干净，问题在结构不在欺诈 [E:adversarial_check.json]</b>。</p>
+<div class="redflag"><b>红旗 6/6（≥3 条 → SKILL.md Phase 0 默认排除；四项强反证逐一评估不成立）：</b>①利润不是现金——FY2019 净利 33,542 vs OCF −67,357，FY2017 OCF −150,973；②短债长投——流动借款 372,169 支撑开发存货 1,327,461（总资产 60.2%），72.3% 有息负债两年内到期，现金短债比 0.61 且受限现金占 34.4%；③抽血机器——战投 130,000+永续历史 1,300 亿量级，已核实两项合计 260,000 &gt;3× 上市以来累计分红估算；④（对赌 2021-01-31 二元节点）；⑤（利率上行——2019 均值 8.99%，2020-01 新发 11.5-12%）；⑥（少数股东异常——损益分得 48.5%/权益占 59.4%，债性印证）。<b>反证四项</b>：回款 +60.8% 系让价换量/降债承诺无年度路径佐证/PwC 无保留意见≠结构健康/物业分拆 2,938 亿定价为泡沫顶 B 级——均不改变红旗结构 [E:adversarial_check.json][E:financials_3333HK.json]。</div>
+
+<h2>三、定量画像（五年序列 + 口径革命）</h2>
+<p><b>归母口径革命（本案估值的根基）</b>：损益三分法逐年精确勾稽——2015: 17,340=10,460(归母)+5,088(永续)+1,792(NCI) … 2019: 33,542=17,280+0+16,262 [E:financials_3333HK.json]。<b>若沿用合并净利 33,542，PE 显示 4.6x『便宜』——分母虚增 1.94x 直接改写闸门一读数</b>；全面收益口径（含投资物业公平值收益）另立区块隔离。归母 PE 14.03x vs 碧桂园 4.8x/融创 5.3x：市场不是没发现风险，是已经定价了它。</p>
+
+<div id="chart-rev-margin" style="width:100%;height:330px;margin:8px 0"></div>
+<script>
+initChart('chart-rev-margin', {
+  tooltip: {trigger: "axis"},
+  grid: {left: 80, right: 60, bottom: 40, top: 40},
+  legend: {data: ["收入(百万RMB)","归母净利率%"], top: 0},
+  xAxis: {type: "category", data: ["2015","2016","2017","2018","2019"]},
+  yAxis: [
+    {type: "value", name: "百万RMB"},
+    {type: "value", name: "%", axisLabel: {formatter: "{value}%"}}
+  ],
+  series: [
+    // <!-- vchart src=metrics_3333HK.json path=chart_series.revenue -->
+    {name: "收入(百万RMB)", type: "bar", itemStyle: {color: "#1a3a5c"}, data: [133130.0,211444.0,311022.0,466196.0,477561.0]},
+    // <!-- vchart src=metrics_3333HK.json path=chart_series.net_margin -->
+    {name: "归母净利率%", type: "line", yAxisIndex: 1, itemStyle: {color: "#d97706"}, data: [0.07856981897393525,0.02407729706210628,0.0783610162625152,0.08020231833820968,0.03618385923473651]}
+  ]
+});
+</script>
+<p class="small">图 1（这张图说明什么）：收入五年 3.6x 的增长曲线下，归母净利率剧烈震荡（2.4%~8.0%），2019 的 3.6% 仅为全期均值 5.9% 的 0.61 倍——引擎判周期低位（NORM_CYCLE_TROUGH），但 2018 峰值是房价红利结转、2020H1 均价 −17.3% 将在 2021-22 结转，人工复核不采信引擎的 +64%~117% 正常化上调（引擎乐观偏差，与 B3-16 保守偏差互为镜像）。来源：FY2015-FY2019 年报原文，A 级。</p>
+
+<div id="chart-profit-split" style="width:100%;height:330px;margin:8px 0"></div>
+<script>
+initChart('chart-profit-split', {
+  tooltip: {trigger: "axis"},
+  grid: {left: 80, right: 40, bottom: 40, top: 40},
+  legend: {data: ["归母净利","永续持有人","少数股东NCI"], top: 0},
+  xAxis: {type: "category", data: ["2015","2016","2017","2018","2019"]},
+  yAxis: {type: "value", name: "百万RMB"},
+  series: [
+    // <!-- vchart src=financials_3333HK.json path=five_year_series_view.net_income_attributable -->
+    {name: "归母净利", type: "bar", stack: "p", itemStyle: {color: "#1a3a5c"}, data: [10460,5091,24372,37390,17280]},
+    // <!-- vchart src=financials_3333HK.json path=five_year_series_view.perpetual -->
+    {name: "永续持有人", type: "bar", stack: "p", itemStyle: {color: "#d97706"}, data: [5088,10646,0,0,0]},
+    // <!-- vchart src=financials_3333HK.json path=five_year_series_view.non_controlling -->
+    {name: "少数股东NCI", type: "bar", stack: "p", itemStyle: {color: "#999999"}, data: [1792,1880,12677,29157,16262]}
+  ]
+});
+</script>
+<p class="small">图 2（这张图说明什么）：『年度利润』的构成迁移清晰呈现三轮债务形态转换——2016 永续持有人分走 10,646（净利的 60%）→ 2017 战投入股（130,000）+永续赎回 → 2018-19 NCI 份额膨胀（2018 占 44%）。合并口径的『利润增长』里归母股东的份额被结构性侵蚀，这就是『含少数净利口径禁止用于安全边际』的原因。来源：五年財務概要 p.217 + 分部附注，A 级。</p>
+
+<div id="chart-leverage" style="width:100%;height:330px;margin:8px 0"></div>
+<script>
+initChart('chart-leverage', {
+  tooltip: {trigger: "axis"},
+  grid: {left: 80, right: 40, bottom: 40, top: 40},
+  legend: {data: ["有息负债","现金总额","归母权益"], top: 0},
+  xAxis: {type: "category", data: ["2015","2016","2017","2018","2019"]},
+  yAxis: {type: "value", name: "百万RMB"},
+  series: [
+    // <!-- vchart src=financials_3333HK.json path=five_year_series_view.borrowings -->
+    {name: "有息负债", type: "bar", itemStyle: {color: "#b03030"}, data: [296906,535070,732625,673142,799895]},
+    // <!-- vchart src=financials_3333HK.json path=five_year_series_view.cash_total -->
+    {name: "现金总额", type: "bar", itemStyle: {color: "#4a6fa5"}, data: [164020,304330,287722,204209,228767]},
+    // <!-- vchart src=financials_3333HK.json path=five_year_series_view.equity_owners -->
+    {name: "归母权益", type: "line", itemStyle: {color: "#d97706"}, data: [126743,157184,114772,132995,145700]}
+  ]
+});
+</script>
+<p class="small">图 3（这张图说明什么）：借款五年 2.7x（296,906→799,895）持续高于现金总额，2019 缺口扩大至 571,128（净负债）——『降负债』叙事与借款净增 ~108,163 的事实相反。现金总额里 78,711 受限（34.4%），可动用现金 150,056 对一年内到期 372,169 覆盖仅 0.403。来源：FY2019 年报资产负债表+借款附注 23，A 级。</p>
+
+<p><b>每股口径复核</b>：股本 <span class="vnum" data-src="metrics_3333HK.json" data-path="series.4.shares_diluted" data-fmt="num0">13,252</span> 百万股五年基本持平，但 NCI 权益占比升至 59.4%——归母股东的『每股价值增长』被结构侵蚀；BVPS <span class="vnum" data-src="metrics_3333HK.json" data-path="series.4.bvps" data-fmt="num2">10.99</span> RMB 对应现价 20 HKD（÷fx 1.0923≈18.3 RMB）溢价 66%——账面权益自身含 59.4% 非控股与永续历史，P/B 1.66x 的『账面』并非归母股东可变现价值。</p>
+
+<h2 data-moat="none">四、护城河：无（none）</h2>
+<p>同质化产品（住宅）+区域覆盖无壁垒（31 省在售项目 1,012 个的广度是杠杆的函数不是壁垒）+土地获取靠出价（成本端无优势）+政策敏感（预售证/限价/融资监管随时改写游戏规则）[E:business_drivers.json][E:scenarios.json][E:adversarial_check.json]。定价权三项硬测试全部不过：①限价政策直接封顶售价（政策敏感性的直接体现 [E:business_drivers.json]）；②产品无差异化溢价（同期同地段竞品价差可忽略 [E:market_snapshot.json]）；③成本端地价由招拍挂市场决定（高地价+限价的双重挤压，2019 毛利率 27.8% 已回落 8.4pct [E:financials_3333HK.json]）。<b>moat=none 的后果：闸门一不给买入结论（无论多便宜，除非烟蒂式清算价值明确），闸门二无反推门槛可设（GATE2_UNRATED）[E:scenarios.json]</b>。</p>
+
+<h2>五、增长：规模增长真实，内在价值增长存疑</h2>
+<p>2020 目标销售 6,500 亿（A 级公告）+1-6 月累计 <span class="vnum" data-src="business_drivers.json" data-path="monthly_2020.jan_jun22.sales_yi" data-fmt="num0">3,153</span> 亿（<span class="vnum" data-src="business_drivers.json" data-path="monthly_2020.jan_jun22.yoy" data-fmt="pct1">+11.9%</span>）——收入端增长可见 [E:business_drivers.json]。但增长的三重折扣：①燃料是借款（2019 净增 ~108,163 vs OCF −67,357 [E:financials_3333HK.json]）；②让价换量——1-6 月回款 <span class="vnum" data-src="business_drivers.json" data-path="monthly_2020.jan_jun22.collection_yi" data-fmt="num0">2,873</span> 亿（<span class="vnum" data-src="business_drivers.json" data-path="monthly_2020.jan_jun22.collection_yoy" data-fmt="pct1">+53.3%</span>）、回款率 <span class="vnum" data-src="business_drivers.json" data-path="monthly_2020.jan_jun22.collection_rate" data-fmt="pct1">91.1%</span> 创新高的同期是均价 −17.3% 的让价，量 +39.6%/价 −17.3% 的分解 [E:business_drivers.json] volume_price_decomposition；③每股口径被 NCI 侵蚀（少数股东损益占合并净利 48.5% [E:metrics_3333HK.json]）。iv-growth 判 0：杠杆驱动的增长不可外推为每股内在价值增长（scenarios.iv_growth_note [E:scenarios.json]）。</p>
+
+<h2>六、管理层与文化：分红幻觉 + 资本运作史（显著负面）</h2>
+<p><b>M_DIVIDEND_ILLUSION（引擎 ALERT）</b>：全期股东回报 <span class="vnum" data-src="metrics_3333HK.json" data-path="capital_allocation.cum_dividends" data-fmt="num0">14,802</span> vs 累计 FCF <span class="vnum" data-src="metrics_3333HK.json" data-path="capital_allocation.cum_fcf" data-fmt="num0">-163,581</span>（覆盖 <span class="vnum" data-src="metrics_3333HK.json" data-path="capital_allocation.fcf_cover_shareholder_return" data-fmt="num2">-11.05</span>x）——<b>分红的钱来自借款与预收款，『用你的钱给你分红』</b> [E:metrics_3333HK.json]。8.99% 利率借来的钱派 3.57% 股息，每一元分红都在破坏价值。<b>资本运作史</b>：2016 永续持有人分走净利 60% → 2017 战投 130,000（附带 2021-01-31 回购对赌+许家印个人连带+补偿 50% 股份）→ 永续赎回 → 借款 +197,555——债务形态三轮转换而非去杠杆 [E:financials_3333HK.json] balance_2019_detail.perpetual_history；对赌条款与个人连带为审计级确认（PwC KAM [E:adversarial_check.json]）。字面合规（无掏空认定/无造假处罚 [E:adversarial_check.json]）与股东利益一致是两回事。</p>
+
+<h2>七、财务质量与风险：五维最差</h2>
+<p>①OCF 三年两负（−150,973/+54,749/−67,357）vs 归母净利累计 +89,602——预售制可部分解释，但方向恶化（2019 双降）；②受限现金占 34.4%——『账上 2,288 亿』的幻觉折扣；③现金短债比 0.615（受限后 0.403）；④借款利率 8.99% 上行通道（2020-01 新发 11.5-12% + 优先票据公平值贴水 5%——市场定价收益率高于票面）；⑤少数股东损益 16,262 承载于剔除战投后仅 82,837 的权益上（19.6% ROE 异常）——NCI 债性印证。<b>可及性与摩擦</b>：港股通标的、股息税 20%（H 股）、HKD/CNY 汇率敞口（fx 0.9155 ±2% 不改变档位）、交易时区差。</p>
+
+<h2>八、估值：三情景 + 双闸门读数</h2>
+<p><b>方法选择</b>：不走净债全扣 DCF（合约负债 129,705 为经营性预收，净债全扣失真；且 FCF 为负无法直跑 DCF）→ 盈利口径 SOTP + 悲观情景独立法（S2 白名单）。归母核心 21,000 = 核心利润 40,820（A 级盈利预警）− NCI 应占 ~19,800（B 级推导）；质量折价 0.75 是红旗链的量化表达（OCF 三年 −163,581 vs 归母累计 +114,594 的背离）。</p>
+<div style="margin:12px 0">
+  <div class="bar-wrap"><div class="bar" style="left:0;width:19.5%;background:#b03030"></div><span style="position:absolute;left:20.2%;top:3px;font-size:12px">悲观 <span class="vnum" data-src="scenarios.json" data-path="scenarios.0.value_per_share" data-fmt="num2">3.90</span>（pe_trough 5.0×eps 0.78，−80.5%）</span></div>
+  <div class="bar-wrap"><div class="bar" style="left:0;width:96.5%;background:#1a3a5c"></div><span style="position:absolute;left:0;top:3px;color:#fff;font-size:12px;margin-left:4px">基准 <span class="vnum" data-src="scenarios.json" data-path="scenarios.1.value_per_share" data-fmt="num2">19.30</span>（SOTP，现价 −3.5%）</span></div>
+  <div class="bar-wrap"><div class="bar" style="left:0;width:100%;background:#4a6fa5;opacity:.55"></div><span style="position:absolute;left:0;top:3px;font-size:12px;margin-left:4px">乐观 <span class="vnum" data-src="scenarios.json" data-path="scenarios.2.value_per_share" data-fmt="num2">28.10</span>（SOTP 修复，+40.5% vs 现价）</span></div>
+</div>
+<p class="small">横条标尺：0~30 HKD。现价 20.00（竖直位置=基准值附近）；期望值 <span class="vnum" data-src="scenarios.json" data-path="expected_value_per_share" data-fmt="num2">16.44</span>（0.3/0.5/0.2 加权）——买在期望值上方 −17.7%。悲观/基准离散 0.20（S4 通过：下行独立非打折重复）。</p>
+<table>
+<tr><th>闸门二</th><th>读数</th><th>门槛</th><th>判定</th></tr>
+<tr><td>①自洽性（期望 IRR）</td><td><span class="vnum" data-src="expected_return.json" data-path="expected_annualized_irr" data-fmt="pct2">1.95%</span></td><td>moat=none 无反推门槛（与闸门一同源，非独立证据）</td><td><span class="bad">GATE2_UNRATED</span>；绝对对照：跑输恒生 9% 达 7.05pct</td></tr>
+<tr><td>②不收敛下限</td><td><span class="vnum" data-src="expected_return.json" data-path="gate2.no_convergence_floor.value" data-fmt="pct2">3.57%</span>（股息 3.57%+iv 0%）</td><td>6%</td><td><span class="bad">✗ FAIL</span>——回报全押『市场哪天承认我对』，且股息本身是幻觉（覆盖 −11.05x）</td></tr>
+<tr><td>③悲观年化</td><td><span class="vnum" data-src="expected_return.json" data-path="gate2.pessimistic_irr.value" data-fmt="pct2">-20.68%</span></td><td>≥0</td><td><span class="bad">✗ FAIL</span>——悲观由 pe_trough_multiple 独立推导（S2b 重算一致），对赌触发+再融资 13%++毛利 22% 三压力叠加</td></tr>
+</table>
+<p><b>敏感性提示</b>：若对赌以补偿 50% 股份结算（13,243→19,865 百万股），每股价值再降 1/3——未叠加进主值（scenarios S3 假设登记）。</p>
+
+<h2>九、关键判断（Phase 4.5）</h2>
+<table>
+<tr><th>关键变量</th><th>当前判断</th><th>依据</th><th>为什么可知</th></tr>
+<tr><td>战投对赌 2021-01-31 大限</td><td>二元节点：回购（可动用现金覆盖 1.15x→几乎耗尽）或补偿 50% 股份（稀释 1/3）</td><td>2017 协议 A 级条款+2020-01 补充协议 [E:financials_3333HK.json]</td><td>条款公开可知；结局二元不可控</td></tr>
+<tr><td>现金短债比 0.615</td><td>低于 1 安全线；受限后 0.403</td><td>FY2019 年报资产负债表 [E:financials_3333HK.json]</td><td>每期年报机器可复算</td></tr>
+<tr><td>毛利率结转传导</td><td>2020H1 均价 −17.3% 将在 2021-22 压毛利 27.8%→~22%</td><td>月度销售简报量价分解 [E:business_drivers.json]</td><td>会计结转滞后销售 1.5-2 年，价格已发生</td></tr>
+<tr><td>回款率 91.1%</td><td>多头最强证据，但回款≠去杠杆（借款仍净增），回款保的是刚兑链条不是股东回报</td><td>月度简报 [E:business_drivers.json]</td><td>月频可跟踪</td></tr>
+</table>
+<p><b>变异认知三问</b>：①市场为什么给这个价——归母 PE 14x vs 同行 5x：市场给『结构性风险未爆发』定价（PB 1.66x 归母 vs 同行 0.5-0.8x 量级），不是市场愚蠢；②我们的分歧——不在风险存在与否（市场已知），在风险兑现的时点与形态（对赌大限把尾部风险变成日历风险）；③认知优势来源——无。公众投资者在信息上对机构无优势，本案不提供认知优势，只提供纪律。</p>
+
+<h2>十、投委会评审（三师一致排除）</h2>
+<table>
+<tr><th>分歧点</th><th>巴菲特</th><th>段永平</th><th>李录</th></tr>
+<tr><td>回款率 91.1% 的定性权重</td><td>让价的函数——与 −17.3% 均价并排读是流动性自救</td><td>同意并加强：缺钱才需要 91% 回款率</td><td>中性偏正——回款保住了刚兑，但保刚兑≠创造股东价值</td></tr>
+<tr><td>正常化基期是否上调（engine 建议 28,405）</td><td>不上调——17,280 已是宽口径</td><td>不上调——杠杆堆出的均值没有外推价值</td><td>不上调但注明：2019 的 27.8% 与 2015-16 同值不同构</td></tr>
+<tr><td>红旗解除后档位是否重检</td><td>重检但不追——观察等价格封顶</td><td>重检，OCF 不转正免谈</td><td>重检，条件是 OCF 连续两年&gt;净利×0.6</td></tr>
+</table>
+<p><b>共识</b>：三师一致排除(0)，无人给任何五维维度 4+（质地 1.5-2.0/管理层 1.0-1.5/赔率全 1.0）。<b>红队五攻防</b>（摘要）：『销售强劲』→让价换量+回款保刚兑不保股东；『三重安全垫』→PB/股息/增长逐一穿透后无一是真的；『对赌大概率展期』→解除对赌不解锁其余五项红旗；『物业隐藏价值』→已计入基准 0.4 折，且期权与母公司信用负相关；『大而不能倒』→ex ante 无法区分『救助公司』与『救助股东』（phase5_workpaper.red_team_checks）。</p>
+
+<h2>十一、结论与行动：排除（档位 0）</h2>
+<p><b>持有体验预演</b>（情景推演，非后见）：买入 20.00 HKD——股息 3.57% 只兑付一期且被 cum_fcf −163,581 的幻觉警报压价；基准路径 5 年终值 31.08（年化 9.2%）依赖毛利止跌+对赌软着陆双前提；悲观路径年化 −20.7%（5 年 −68.6%）且股息对冲不了；全程的每一次『再等等』都在为杠杆结构付息（8.99%→11.5-12% 上行通道）。<b>持有体验评级：不可持有</b>（无护城河+二元催化剂+负 carry 组合）。『跌 40% 敢不敢加仓』——不敢：价格下跌不改变商业模式与红旗结构，PB 跌破 1x 亦然（falsification 三条件才是重检前提）。</p>
+<table>
+<tr><th>跟踪项</th><th>警戒线</th><th>频率</th></tr>
+<tr><td>对赌大限（2021-01-31）</td><td>回购触发=现金挤兑分支</td><td>事件</td></tr>
+<tr><td>现金短债比/受限现金占比</td><td>&lt;0.5 持续恶化</td><td>半年</td></tr>
+<tr><td>月度销售均价同比</td><td>−17.3% 之外的进一步恶化</td><td>月</td></tr>
+<tr><td>新发债利率</td><td>&gt;12% 持续</td><td>事件</td></tr>
+</table>
+<p class="small">用户初判对照：Phase 0 无外部用户（回放案例），先验=分析者自登记（拒绝 1）；终判排除 0 与先验同向、保守一档——偏差根因=先验推演未计入红旗排除线的档位效应（diff.md 观察A）。</p>
+
+<h2>十二、附录</h2>
+<table>
+<tr><th>来源</th><th>等级</th><th>说明</th></tr>
+<tr><td>FY2019 年报/业绩公告/盈利预警/月报表/月度销售简报/深深房重组公告/自愿公告（filings/ 11 份）</td><td>A</td><td>HKEX 披露易 PDF 原文，数字逐项登记 provenance</td></tr>
+<tr><td>同行估值（碧桂园/融创 PE）</td><td>B</td><td>收盘价 A 级东财日K；股本与归母为公开年报口径未逐笔核实</td></tr>
+<tr><td>fx 0.9155</td><td>B</td><td>2020H1 中间价区间取值，敏感性 ±2% 不改变档位</td></tr>
+</table>
+<p class="small"><b>入口校验（validate_data）</b>：错误 0/警告 3（publish_date 缺 1 年+信息时效 2,327 天+A1 豁免——回放截断纪律的口径性警告，manifest official_filing_missing 登记）。<b>数字校验</b>：crosscheck_official --audit 命门科目三年互证全部 0.00% 偏差；check_scenarios 通过（S9 两口径股息率分裂 287% 预期警告，sustainable_forward 主口径处置已登记）；check_business_drivers 通过 0 警告。<b>术语速查</b>：MoS=安全边际（1−现价/内在价值）；OCF=经营活动现金净额；FCF=自由现金流（OCF−资本开支，本案 capex 记 0——买地建安已在 OCF 内，FCF≡OCF 保守口径）；NCI=少数股东权益；SOTP=分部加总估值；S2b=悲观情景算术机器重算。<b>免责声明</b>：本报告为历史回放研究，仅使用 2020-06-30 前公开信息，不构成任何投资建议。</p>
+
+</body>
+</html>

@@ -1,0 +1,89 @@
+{
+  "company": "长江和记实业有限公司 / CK Hutchison Holdings",
+  "ticker": "0001.HK",
+  "price": 104.6,
+  "price_date": "2015-12-31",
+  "hold_years": 5,
+  "discount_rate": 0.1,
+  "discount_rate_note": "OBS-VAL-01 恒生全收益长期门槛 9% 被 check_scenarios S2e 硬下限 10% 覆盖（discount_rate_floor_basis 已在 scenarios.json 登记）",
+  "dividend_yield": 0.0134,
+  "dividend_yield_note": "sustainable_forward 口径：2015 中期 0.70×2 年化；未按 2015-05 长实分派前旧口径",
+  "scenarios": [
+    {
+      "name": "悲观",
+      "probability": 0.3,
+      "value_per_share": 17.64,
+      "method": "sotp_asset_floor（check_scenarios 白名单口径，_rc_components 机器重算一致）",
+      "irr_5y": -0.2996
+    },
+    {
+      "name": "基准",
+      "probability": 0.5,
+      "value_per_share": 46.46,
+      "method": "sotp（四项上市权益市值法+非上市锚+净债务调整 149,846）",
+      "irr_5y": -0.1498
+    },
+    {
+      "name": "乐观",
+      "probability": 0.2,
+      "value_per_share": 60.84,
+      "method": "sotp（屈臣氏以 2014 交易锚上浮+3 集团按 23% 欧元借款净债务透明近似上沿）",
+      "irr_5y": -0.1027
+    }
+  ],
+  "expected_value_per_share": 40.69,
+  "expected_total_return": -0.6111,
+  "expected_annualized_irr": -0.1721,
+  "expected_annualized_irr_basis": "on_expected_value_per_share (40.69/104.60)^(1/5)-1 = -17.21%（纯价格路径）；股息 +1.34pct 另计仍约 -15.9%",
+  "expected_total_return_basis": "on_expected_value_do_not_annualize_for_gate2",
+  "gate2_decision_field": "expected_annualized_irr",
+  "pessimistic_irr": -0.2996,
+  "pessimistic_value_per_share": 17.64,
+  "pessimistic_equity_wiped_out": false,
+  "has_non_positive_scenario": true,
+  "loss_probability": 1.0,
+  "loss_probability_note": "三情景 5 年价格路径 IRR 全负（-29.96%/-14.98%/-10.27%），任何情景现价买入都不收敛",
+  "index_hurdle": 0.09,
+  "index_hurdle_source": "OBS-VAL-01 港股接线规则：恒生指数全收益长期年化门槛 9%",
+  "beats_index": false,
+  "excess_vs_index": -0.2621,
+  "gate2": {
+    "moat": "narrow",
+    "consistency_expected_irr": {
+      "value": -0.1721,
+      "hurdle": 0.2183,
+      "pass": false,
+      "independent": true,
+      "hurdle_derivation": "(1+0.10)×(1/(1-0.40))^(1/5)-1 = 21.83%（折现率 10%=S2e 硬下限；窄护城河 40% 折扣反推）",
+      "basis": "期望值路径 IRR 与护城河反推门槛同源自洽校验"
+    },
+    "no_convergence_floor": {
+      "value": 0.0134,
+      "dividend_yield": 0.0134,
+      "intrinsic_value_growth": 0.0,
+      "hurdle": 0.0134,
+      "pass": true,
+      "basis": "verdict 冻结口径：S7b 语境 iv_growth=0，下限即股息本身。⚠ 与注册表 GATE2_2_FLOOR_FAIL 语义（股息率+IV增速 < 6% FAIL）存在门槛口径差异：若按标准 6% 门槛，1.34% < 6% 应 FAIL 并打 GATE2_2_FLOOR_FAIL 码——该码未入 verdict（已冻结），此差异在 diff.md 根因节登记为分析瑕疵；对档位无影响（Gate2 已因 item1 FAIL，口径差异只加固不改向）"
+    },
+    "pessimistic_irr": {
+      "value": -0.2996,
+      "hurdle": 0.0,
+      "pass": false,
+      "basis": "悲观情景 sotp_asset_floor 17.64 的 5 年路径 IRR 为深负——B3-14『悲观也为正』的下行保护形态在本案不存在"
+    },
+    "independent_checks": [
+      "no_convergence_floor",
+      "pessimistic_irr"
+    ],
+    "evaluable": true,
+    "pass": false,
+    "missing_inputs": []
+  },
+  "gate1_cross": {
+    "margin_of_safety": -1.251,
+    "requirement": 0.4,
+    "pass": false,
+    "cross_check_pb": "账面 NAV 114.10/股（含商誉牌照）×0.6 = 68.46 < 现价 104.60——去无形/含无形双口径殊途同归 FAIL",
+    "basis": "SOTP 基准 IV 46.46 vs 现价 104.60，现价对基准 NAV 溢价 125.1%（P/NAV 2.25x）"
+  }
+}

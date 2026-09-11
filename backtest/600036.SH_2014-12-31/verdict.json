@@ -1,0 +1,111 @@
+{
+  "case": "B3-13",
+  "company": "招商银行",
+  "ticker": "600036.SH",
+  "replay_date": "2014-12-31",
+  "information_cutoff_discipline": {
+    "cutoff": "2014-12-31",
+    "latest_annual": "2013年报（2014-03-28披露）",
+    "latest_interim": "2014三季报（2014-10-30披露）",
+    "forbidden": "2014年报（2015-03-19披露）",
+    "forbidden_data_encountered": "采集期间搜索优先股预案曾暴露2014年报片段（营收165,863/归母55,911/不良27,917/ROE 19.28%/DPS 0.67/BPS 12.47），已登记manifest.forbidden_data_encountered；全部估值数字在该搜索之前已用截断合法数据定稿，零回填",
+    "model_memory_forbidden_after": "2014-12-31"
+  },
+  "final_verdict": "观察等价格",
+  "verdict_ordinal": 2,
+  "gate1": {
+    "pass": false,
+    "margin_of_safety": 0.196,
+    "requirement": 0.40,
+    "moat": "narrow",
+    "intrinsic_value_base": 20.65,
+    "price": 16.59,
+    "trigger_price_a": 12.39,
+    "trigger_derivation": "基准内在价值20.65 × 0.6",
+    "trigger_reachability": {
+      "verdict": "TRIGGER_REACHABLE",
+      "band_position": 0.413,
+      "low_52w": 9.41,
+      "high_52w": 16.62,
+      "drop_needed_from_price": 0.253
+    }
+  },
+  "gate2": {
+    "pass": false,
+    "item1": {
+      "name": "自洽性校验（期望IRR vs 护城河反推门槛）",
+      "value": 0.1441,
+      "hurdle": 0.2239,
+      "pass": false,
+      "independent": false
+    },
+    "item2": {
+      "name": "不收敛下限（股息率+内在价值增速）",
+      "value": 0.0824,
+      "components": {"dividend_yield": 0.0374, "dividend_yield_basis": "ttm_paid", "intrinsic_value_growth": 0.045},
+      "hurdle": 0.06,
+      "pass": true,
+      "independent": true
+    },
+    "item3": {
+      "name": "悲观情景年化（独立pb_trough法）",
+      "value": -0.0004,
+      "hurdle": 0.0,
+      "pass": false,
+      "independent": true,
+      "marginality_note": "悲观10.05元 vs 通过线10.07元，差0.02元；曾核算trough_pb取0.845即可过线，保留实测值0.84（2014-03不复权最低价9.41/BPS 11.23），拒绝p-hack"
+    }
+  },
+  "scenarios_value_per_share": {
+    "悲观": 10.05,
+    "基准": 20.65,
+    "乐观": 32.97,
+    "probabilities": [0.25, 0.5, 0.25],
+    "expected_value": 21.08,
+    "methods": {"悲观": "pb_trough（0.84×11.97，S2d证据：不复权+最低点）", "基准": "pb_roe两阶段（分红折现+终期BVPS×终期PB）", "乐观": "pb_roe两阶段（ROE 21→19、终期PB 1.6）"}
+  },
+  "expected_irr": 0.1441,
+  "moat_rating": "narrow",
+  "discount_rate": 0.105,
+  "codes": ["GATE1_FAIL", "GATE2_FAIL", "GATE2_1_IRR_FAIL", "GATE2_3_BEAR_FAIL", "TRIGGER_REACHABLE"],
+  "codes_provenance": {
+    "engine_derived": ["TRIGGER_REACHABLE"],
+    "manually_recorded": ["GATE1_FAIL", "GATE2_FAIL", "GATE2_1_IRR_FAIL", "GATE2_3_BEAR_FAIL"],
+    "note": "GATE族为脚本判定结果（scenario_audit/expected_return/fv_base.json pass字段）到注册表语义码的人工映射；TRIGGER_REACHABLE为trigger_reachability.py字面输出"
+  },
+  "codes_note": "银行管线（compute_metrics_bank）的两条警报以自由文本输出、未经alert_codes注册，语义在此留痕：①信用成本处于上行期（9M14计提21,998 > 全期均值×1.3）——本案核心测试点，警报按设计触发，登记为引擎观察项（银行管线告警无注册码）；②权益乘数超20x（2004/2005/2009历史年，披露不修改）。SM-migration警报未触发：关注类1.24%<2%阈值，2011年以来首次加速回升未被捕捉，登记为管线缺口候选（详见diff.md）。net_income_cagr 0.3072因9M行混入失真，人工弃用改用bvps_cagr 14.67%。",
+  "frozen_before_diff": true,
+  "frozen_at": "2026-09-10T09:35:58Z",
+  "falsification_conditions": {
+    "F1": "不良率突破1.6%或关注类占比突破1.6%（向2%迁徙路径信号）→ 触发价重估前移，悲观情景换锚",
+    "F2": "2015年央行再次非对称降息 → NIM假设下修，基准IV重算",
+    "F3": "年度DPS下调或分红率跌破22% → 不收敛下限逼近6%红线，闸门二②复核",
+    "F4": "应收款项类投资（非标）继续+40%以上扩张 → 治理问题升级，重检管理层评级"
+  },
+  "review_checkpoints": [
+    "2015-03下旬年报：全年计提、不良率、关注类是否加速（F1主证伪点）",
+    "价格触发器：12.39元（52周带内41.3%分位，TRIGGER_REACHABLE）",
+    "加仓条件：股息率≥6%且关注类连续两季回落",
+    "利率市场化进度：存款利率放开节奏与活期占比变化"
+  ],
+  "persona_verdicts": {
+    "buffett": "观察等价格（窄护城河侵蚀中、信用成本超调警告）",
+    "duan": "观察等价格（不猜坏账深度，触发价兜底）",
+    "lilu": "观察等价格（隐含永续ROE 11.46%：便宜的不是价值是赔率）",
+    "consensus": "三师一致观察等价格；采纳李录周期调整（sustainable ROE 21.66%人工下调至19→13.5路径）+巴菲特超调警告"
+  },
+  "key_judgments": {
+    "sustainable_roe_override": "管线输出21.66%（后视镜均值）被否，人工采用19→13.5十年衰减路径（信用成本警报触发后的周期起点调整）——管线能力之外的人工判断，diff.md候选",
+    "reverse_pricing": "PB 1.386隐含永续ROE 11.46%：12月疯牛=市场叙事从'ROE→COE完全回归'升级为'收敛但存活'；基准路径终值13.5%比市场隐含乐观——便宜的是赔率不是价值",
+    "gordon_forbidden": "单阶段Gordon禁用（payout 30%时发散，招行实证误差+141%），银行口径用两阶段PB-ROE树"
+  },
+  "verification": {
+    "validate_data": "pass",
+    "check_market_snapshot": "pass（三角校验偏差0.00%）",
+    "check_scenarios": "pass（0警告，S1-S9全过）",
+    "reverse_dcf": "expected-return模式（银行口径：隐含永续ROE替代OE隐含增长）",
+    "trigger_reachability": "pass（TRIGGER_REACHABLE，41.3%分位）",
+    "verification_strength": "B级（V1勾稽100% full / V2原文登记partial / V3窗口11<15年）",
+    "verify_report": "pass（60/60，正文数字41+图表8+证据指针11，exit 0）"
+  }
+}

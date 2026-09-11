@@ -1,0 +1,30 @@
+{
+  "company": "中国平安",
+  "ticker": "601318.SH",
+  "as_of": "2018-12-31",
+  "method": "EV增长两阶段贴现 + P/EV判定法（估值方法树保险行）",
+  "scenario": "乐观",
+  "inputs": {
+    "evps_base": 50.73,
+    "ev_growth_path_10y": [0.15, 0.15, 0.15, 0.15, 0.15, 0.09, 0.09, 0.09, 0.09, 0.09],
+    "ev_growth_rationale": "负债端修复：2018Q3 NBV单季+10.9%拐点延续、代理人产能企稳回升、保障型产品占比提升（NBV利润率38.5%→40%+）；后5年9%（ROEV持续20%+行业渗透率再挖潜）",
+    "terminal_pev": 1.3,
+    "terminal_pev_rationale": "ROEV持续20%+的友邦式溢价锚（A+H两地市场对高ROEV保险集团的估值上沿）；1.3x低于2018-01市场泡沫期实际给出的1.8x",
+    "discount_rate": 0.102,
+    "dps_path": [1.72, 1.93, 2.16, 2.42, 2.71, 2.93, 3.16, 3.42, 3.69, 3.99],
+    "dps_rationale": "D1=1.72（中期0.62已派+末期1.10外推，payout提升+营运利润+23.3%轨迹延续）、前5年+12%、后5年+8%",
+    "years": 10
+  },
+  "outputs": {
+    "evps_year10": 157.1,
+    "pv_terminal_per_share": 77.2,
+    "pv_dividends_per_share": 15.93,
+    "intrinsic_value_per_share": 93.13,
+    "rounded_intrinsic_value": 93.0,
+    "price": 56.10,
+    "mos": 0.397,
+    "terminal_value_share": 0.829,
+    "pev_implied_at_iv": 1.835
+  },
+  "note": "乐观情景MoS 39.7%≈40%门槛但差0.3pct，概率权重25%——期望回报按概率加权在expected_return.json计算；乐观情景若成真对应P/EV 1.83x，即回到2018-01市场情绪顶部区域，这是乐观情景的叙事边界"
+}

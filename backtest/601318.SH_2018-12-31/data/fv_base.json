@@ -1,0 +1,55 @@
+{
+  "company": "中国平安",
+  "ticker": "601318.SH",
+  "as_of": "2018-12-31",
+  "method": "EV增长两阶段贴现 + P/EV判定法（估值方法树保险行；Gordon禁用）",
+  "scenario": "基准",
+  "inputs": {
+    "evps_base": 50.73,
+    "evps_source": "2018H1集团内含价值927,376百万 ÷ 总股本18,280.241百万股 = 50.73元（2018中期报告摘要2018-08-21披露，截断日最新官方EV；2017年报口径EVPS 45.14元对应P/EV 1.243x，双口径登记） [E:financials_601318_insurance.json][E:metrics_601318_2018_insurance.json]",
+    "ev_growth_path_10y": [0.11, 0.11, 0.11, 0.11, 0.11, 0.07, 0.07, 0.07, 0.07, 0.07],
+    "ev_growth_rationale": "前5年11%：2016-2017实际EV增长+15.3%/+29.4%、2018H1较年初+12.4%（年化约25%）大幅下修——①NBV增速断档（2018H1仅+0.2% vs 2016-2017 +32%）传导至EV生成 ②总投资收益率4.0%<假设5.0%利差-1.0pct ③134号文余波+代理人产能-17.7%；后5年7%：寿险渗透率红利递减、终期向名义GDP+1pct收敛。终期EVPS=50.73×1.11^5×1.07^5=119.9元 [E:metrics_601318_2018_insurance.json][E:qualitative_601318_2018.json]",
+    "terminal_pev": 1.0,
+    "terminal_pev_rationale": "A股保险长期P/EV中枢0.8-1.2（compute_metrics_insurance method_notes bourse=SH）取中值1.0；对终期ROEV约15%的成熟保险集团不溢价不折价",
+    "discount_rate": 0.102,
+    "discount_rate_rationale": "2018-12-28十年国债3.27%+股权风险溢价6.9%；满足S2e下限max(10%, rf+4pct)",
+    "dps_path": [1.60, 1.76, 1.94, 2.13, 2.34, 2.48, 2.63, 2.79, 2.95, 3.13],
+    "dps_rationale": "D1=1.60锚定2017归母营运利润947.08亿/股本=5.18元×payout 31%（2017年报payout 30.8%轨迹外推）；前5年+10%（payout继续提升+营运利润增长）、后5年+6%",
+    "years": 10
+  },
+  "outputs": {
+    "evps_year10": 119.9,
+    "pv_terminal_per_share": 45.31,
+    "pv_dividends_per_share": 13.65,
+    "intrinsic_value_per_share": 58.96,
+    "rounded_intrinsic_value": 59.0,
+    "price": 56.10,
+    "mos": 0.049,
+    "terminal_value_share": 0.768,
+    "pev_implied_at_iv": 1.163
+  },
+  "sensitivity": {
+    "ev_growth_13_9": {"iv": 68.0, "mos": 0.175},
+    "ev_growth_10_6": {"iv": 55.0, "mos": -0.020},
+    "terminal_pev_0_8": {"iv": 54.5, "mos": -0.029},
+    "terminal_pev_1_2": {"iv": 63.5, "mos": 0.117},
+    "r_10pct": {"iv": 60.6, "mos": 0.074},
+    "r_105pct": {"iv": 56.9, "mos": 0.014}
+  },
+  "sensitivity_note": "六组敏感性全部环绕现价56.10（IV区间55.0-68.0）——基准结论『P/EV≈1.1x对ROEV 26.7%的集团是接近合理定价、非深度低估』对参数稳健：无论EV路径取10-13%还是终期P/EV取0.8-1.2，MoS区间-2.9%~+17.5%均远低于40%门槛，Gate1 FAIL对参数不敏感",
+  "pev_judgment_track": {
+    "current_pev_2018h1": 1.106,
+    "current_pev_2017_annual": 1.243,
+    "a_share_insurance_range": "0.5-1.2（脚本参考区间）；2018-12上市险企A股实际0.7-0.9x，平安独享溢价",
+    "historical_trough": "2014-06约0.96-1.06x（不复权38.10元，偿一代口径）",
+    "judgment": "P/EV 1.106x处于历史区间中低位但非谷底；对ROEV 26.7%而言，1.1x意味着市场不给EV增长期权定价——与2014年招行案『现价隐含永续ROE 11.46%』同构的反向定价结构"
+  },
+  "dividend_track_note": "股息模型单轨不支持买入：股息率2.67%（annual_plan）<无风险3.27%，需依赖股息增长兑现（2016-2017 DPS +41.5%/+100%的高增长受payout提升驱动，30.8%后继续大幅提升空间有限）",
+  "gate1_check": {
+    "moat": "narrow",
+    "required_mos": 0.4,
+    "actual_mos": 0.049,
+    "pass": false
+  },
+  "note": "保险无FCF口径、EV为第一性价值锚：本模型是『EV增长+终期P/EV』结构，股息以PV叠加。反向DCF以『现价隐含终期P/EV』替代：56.10/50.73=1.106x，若维持前5年11%+后5年7%增长与r 10.2%，现价隐含终期P/EV≈0.76x——市场定价已隐含EV增速与估值倍数的双降"
+}

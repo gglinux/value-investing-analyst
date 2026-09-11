@@ -1,0 +1,416 @@
+{
+  "company": "中国恒大集团（3333.HK）",
+  "ticker": "3333.HK",
+  "currency": "CNY",
+  "unit": "million_cny",
+  "definitions": {
+    "NOPAT": "EBIT × (1 − 税率)；EBIT 缺失时用 归母净利润 + 利息费用×(1−税率) 近似，并在 warnings 中标注",
+    "InvestedCapital": "归母净资产 + 有息负债 − 货币资金（剔除超额现金的简化口径）",
+    "ROIC": "NOPAT ÷ 期初期末平均 InvestedCapital",
+    "ROIIC": "滚动3年：ΔNOPAT ÷ Δ平均InvestedCapital（增量资本回报率，衡量增长质量）",
+    "OwnerEarnings": "净利润 + 折旧摊销 − 维持性capex − 营运资本增加；维持性capex 缺失时兜底用近5年 D&A 均值近似（warnings 标注）",
+    "FCF": "经营现金流净额 − 资本开支",
+    "ROE": "归母净利润 ÷ 期初期末平均归母净资产",
+    "每股口径": "全部使用当年摊薄股本；CAGR 用期初/期末值几何年化",
+    "NormalizedEarnings": "正常化盈利 = 全期平均利润率 × 最新一期收入。用于消除周期位置对基期的扭曲；另给中位数口径（mid-cycle）作交叉验证。周期性判定见 normalization.cyclicality",
+    "周期位置": "最新一期利润率 ÷ 全期平均利润率。>1.25 判为周期高位（当期利润不可直接外推），<0.75 判为周期低位（当期利润低估长期能力）。这是**水平**维度，必须与 margin_trend 的**形状**维度合读",
+    "利润率形状检验": "margin_trend：利润率序列对时间的秩相关（单调性）+ 穿越全期均值次数（均值回复证据）+ 末端连续同侧年数（确认年数）。单向漂移（|rho|≥0.7 且穿越≤1）判结构性改善/恶化，穿越≥3 判周期波动。作用：防止把'利润率结构性改善'误判为'周期高位'而强制下调基期，以及把'结构性衰退'误判为'周期低谷'而向上正常化",
+    "Capex拆分": "维持性 vs 扩张性资本开支。底稿可给 maintenance_capex（披露口径）或 growth_capex（扩张性）；两者都给则 capex_split 输出确定性拆分。缺省时按收入增速启发式估算并标注 capex_split_basis",
+    "真实FCF区间": "fcf_true_range = [ocf−全部capex（悲观，视同全是保命钱）, ocf−维持性capex（乐观，扩张性是可裁量再投资）]。真实盈利含金量夹在此区间；扩张性占比高且 ROIIC 高 → 偏乐观端，维持性占比高 → 偏悲观端"
+  },
+  "series": [
+    {
+      "year": 2015,
+      "revenue": 133130.0,
+      "net_income": 10460.0,
+      "nopat": 24237.0,
+      "invested_capital": 259629.0,
+      "equity": 126743.0,
+      "roic": null,
+      "roe": null,
+      "gross_margin": null,
+      "net_margin": 0.07856981897393525,
+      "owner_earnings": null,
+      "capex_total": 0.0,
+      "maintenance_capex_used": 0.0,
+      "growth_capex_used": 0.0,
+      "capex_split_basis": "启发式估算（capex/收入比中位数，封顶D&A）",
+      "fcf": null,
+      "fcf_true_range": null,
+      "fcf_to_ni": null,
+      "ocf_to_ni": null,
+      "shares_diluted": null,
+      "rev_ps": null,
+      "eps": null,
+      "oe_ps": null,
+      "bvps": null,
+      "roiic_3y": null
+    },
+    {
+      "year": 2016,
+      "revenue": 211444.0,
+      "net_income": 5091.0,
+      "nopat": 36168.75,
+      "invested_capital": 387924.0,
+      "equity": 157184.0,
+      "roic": 0.11170900296964109,
+      "roe": 0.03586133055327602,
+      "gross_margin": null,
+      "net_margin": 0.02407729706210628,
+      "owner_earnings": null,
+      "capex_total": 0.0,
+      "maintenance_capex_used": 0.0,
+      "growth_capex_used": 0.0,
+      "capex_split_basis": "启发式估算（capex/收入比中位数，封顶D&A）",
+      "fcf": null,
+      "fcf_true_range": null,
+      "fcf_to_ni": null,
+      "ocf_to_ni": null,
+      "shares_diluted": null,
+      "rev_ps": null,
+      "eps": null,
+      "oe_ps": null,
+      "bvps": null,
+      "roiic_3y": null
+    },
+    {
+      "year": 2017,
+      "revenue": 311022.0,
+      "net_income": 24372.0,
+      "nopat": 63933.75,
+      "invested_capital": 559675.0,
+      "equity": 114772.0,
+      "roic": 0.13493840749093233,
+      "roe": 0.17923487622997838,
+      "gross_margin": null,
+      "net_margin": 0.0783610162625152,
+      "owner_earnings": null,
+      "capex_total": 0.0,
+      "maintenance_capex_used": 0.0,
+      "growth_capex_used": 0.0,
+      "capex_split_basis": "启发式估算（capex/收入比中位数，封顶D&A）",
+      "fcf": -150973.0,
+      "fcf_true_range": null,
+      "fcf_to_ni": -6.194526505826358,
+      "ocf_to_ni": -6.194526505826358,
+      "shares_diluted": 13580.0,
+      "rev_ps": 22.902945508100146,
+      "eps": 1.794698085419735,
+      "oe_ps": null,
+      "bvps": 8.451546391752577,
+      "roiic_3y": null
+    },
+    {
+      "year": 2018,
+      "revenue": 466196.0,
+      "net_income": 37390.0,
+      "nopat": 106060.5,
+      "invested_capital": 601928.0,
+      "equity": 132995.0,
+      "roic": 0.18261058210076936,
+      "roe": 0.3018158188943645,
+      "gross_margin": null,
+      "net_margin": 0.08020231833820968,
+      "owner_earnings": null,
+      "capex_total": 0.0,
+      "maintenance_capex_used": 0.0,
+      "growth_capex_used": 0.0,
+      "capex_split_basis": "启发式估算（capex/收入比中位数，封顶D&A）",
+      "fcf": 54749.0,
+      "fcf_true_range": null,
+      "fcf_to_ni": 1.4642685209949184,
+      "ocf_to_ni": 1.4642685209949184,
+      "shares_diluted": 13631.0,
+      "rev_ps": 34.201159122588216,
+      "eps": 2.743012251485584,
+      "oe_ps": null,
+      "bvps": 9.756804343041596,
+      "roiic_3y": 0.23904101385046406
+    },
+    {
+      "year": 2019,
+      "revenue": 477561.0,
+      "net_income": 17280.0,
+      "nopat": 71137.5,
+      "invested_capital": 716828.0,
+      "equity": 145700.0,
+      "roic": 0.1078857650695049,
+      "roe": 0.12400653043649869,
+      "gross_margin": null,
+      "net_margin": 0.03618385923473651,
+      "owner_earnings": null,
+      "capex_total": 0.0,
+      "maintenance_capex_used": 0.0,
+      "growth_capex_used": 0.0,
+      "capex_split_basis": "启发式估算（capex/收入比中位数，封顶D&A）",
+      "fcf": -67357.0,
+      "fcf_true_range": null,
+      "fcf_to_ni": -3.897974537037037,
+      "ocf_to_ni": -3.897974537037037,
+      "shares_diluted": 13252.0,
+      "rev_ps": 36.03690009055237,
+      "eps": 1.3039541201328102,
+      "oe_ps": null,
+      "bvps": 10.99456685783278,
+      "roiic_3y": 0.10631901709921436
+    }
+  ],
+  "summary": {
+    "period": "2015–2019（4 年）",
+    "cagr_total": {
+      "revenue": 0.3762211574705656,
+      "net_income": 0.13371270447591943,
+      "owner_earnings": null
+    },
+    "cagr_per_share": {
+      "rev_ps": null,
+      "eps": null,
+      "oe_ps": null,
+      "bvps": null
+    },
+    "share_count_change": null,
+    "roic_avg_5y": 0.1342859394077119,
+    "roic_min_max_5y": [
+      0.1078857650695049,
+      0.18261058210076936
+    ]
+  },
+  "normalization": {
+    "status": "ok",
+    "basis_period": "2015–2019（5 年利润率样本）",
+    "latest_revenue": 477561.0,
+    "net_margin_latest": 0.03618385923473651,
+    "net_margin_avg": 0.05947886197430058,
+    "net_margin_median": 0.0783610162625152,
+    "margin_ratio_latest_vs_avg": 0.6083482103334577,
+    "cyclicality": "周期低位",
+    "net_income_current": 17280.0,
+    "net_income_normalized": 28404.784803308958,
+    "net_income_mid_cycle": 37422.16528734302,
+    "oe_margin_avg": null,
+    "oe_current": null,
+    "oe_normalized": null,
+    "oe_mid_cycle": null,
+    "shares_diluted": 13252.0,
+    "margin_trend": {
+      "spearman_rho": 0.0,
+      "mean_crossings": 3,
+      "trailing_same_side_years": 1,
+      "trailing_side": "低于均值",
+      "pattern": "周期波动",
+      "confidence": "不适用",
+      "note": "利润率反复穿越均值，均值可作周期中枢，正常化判定成立",
+      "thresholds": {
+        "rho": 0.7,
+        "max_crossings": 1,
+        "min_confirm_years": 3
+      }
+    },
+    "position_distortion_hint": null,
+    "mean_distortion": {
+      "distorted": true,
+      "years": [
+        {
+          "year": 2016,
+          "reason": "净利同比 -51%（疑似减值/一次性损益/爆发年）"
+        },
+        {
+          "year": 2017,
+          "reason": "净利同比 +379%（疑似减值/一次性损益/爆发年）"
+        },
+        {
+          "year": 2018,
+          "reason": "净利同比 +53%（疑似减值/一次性损益/爆发年）"
+        },
+        {
+          "year": 2019,
+          "reason": "净利同比 -54%（疑似减值/一次性损益/爆发年）"
+        }
+      ],
+      "note": "序列含亏损年/剧烈波动年，全期平均利润率被结构性拉偏——normalized 口径偏离周期中枢，启用双轨基期"
+    },
+    "oe_normalized_vs_current": null,
+    "oe_to_ni_conversion_latest": null,
+    "oe_normalized_hybrid": null,
+    "oe_normalized_hybrid_vs_current": null,
+    "base_oe_recommended": null,
+    "base_oe_range": null,
+    "base_oe_recommended_basis": "当期（周期低位但正常化基期不可用，用当期+报告说明）"
+  },
+  "capital_allocation": {
+    "cum_ocf": -163581.0,
+    "cum_capex": 0.0,
+    "cum_dividends": 14802.0,
+    "cum_buyback": null,
+    "cum_equity_raised": null,
+    "dividends_basis": "dividends_paid",
+    "cum_shareholder_return": 14802.0,
+    "cum_fcf": -163581.0,
+    "fcf_cover_shareholder_return": -11.051276854479124,
+    "shareholder_return_funded_by_fcf": false
+  },
+  "owner_yield": null,
+  "chart_series": {
+    "years": [
+      2015,
+      2016,
+      2017,
+      2018,
+      2019
+    ],
+    "revenue": [
+      133130.0,
+      211444.0,
+      311022.0,
+      466196.0,
+      477561.0
+    ],
+    "net_income": [
+      10460.0,
+      5091.0,
+      24372.0,
+      37390.0,
+      17280.0
+    ],
+    "net_margin": [
+      0.07856981897393525,
+      0.02407729706210628,
+      0.0783610162625152,
+      0.08020231833820968,
+      0.03618385923473651
+    ],
+    "gross_margin": [
+      null,
+      null,
+      null,
+      null,
+      null
+    ],
+    "roe": [
+      null,
+      0.03586133055327602,
+      0.17923487622997838,
+      0.3018158188943645,
+      0.12400653043649869
+    ],
+    "roic": [
+      null,
+      0.11170900296964109,
+      0.13493840749093233,
+      0.18261058210076936,
+      0.1078857650695049
+    ],
+    "roiic_3y": [
+      null,
+      null,
+      null,
+      0.23904101385046406,
+      0.10631901709921436
+    ],
+    "owner_earnings": [
+      null,
+      null,
+      null,
+      null,
+      null
+    ],
+    "fcf": [
+      null,
+      null,
+      -150973.0,
+      54749.0,
+      -67357.0
+    ],
+    "fcf_low": [
+      null,
+      null,
+      -150973.0,
+      54749.0,
+      -67357.0
+    ],
+    "fcf_high": [
+      null,
+      null,
+      -150973.0,
+      54749.0,
+      -67357.0
+    ],
+    "eps": [
+      null,
+      null,
+      1.794698085419735,
+      2.743012251485584,
+      1.3039541201328102
+    ],
+    "oe_ps": [
+      null,
+      null,
+      null,
+      null,
+      null
+    ],
+    "bvps": [
+      null,
+      null,
+      8.451546391752577,
+      9.756804343041596,
+      10.99456685783278
+    ],
+    "shares_diluted": [
+      null,
+      null,
+      13580.0,
+      13631.0,
+      13252.0
+    ]
+  },
+  "alerts": [
+    "分红幻觉警报：全期股东回报（分红+回购）14,802 超过累计自由现金流 -163,581（覆盖 -11.05x < 1.0）——这份回报不是经营挣出来的，而是靠融资/举债/消耗存量现金维持。高股息率在此情形下是幻觉，对所有者的意义与自由现金流充沛公司的同等股息率完全不同，报告必须明确区分并质询可持续性",
+    "周期低位提示：最新净利率仅为全期均值的 0.61 倍，当期利润低估长期盈利能力，用当期基期会低估内在价值",
+    "利润率形状检验：周期波动（秩相关 +0.00、穿越均值 3 次、末端连续低于均值 1 年，置信度不适用）——利润率反复穿越均值，均值可作周期中枢，正常化判定成立"
+  ],
+  "alert_codes": [
+    "M_DIVIDEND_ILLUSION",
+    "NORM_CYCLE_TROUGH",
+    "NORM_MARGIN_SHAPE"
+  ],
+  "alerts_structured": [
+    {
+      "code": "M_DIVIDEND_ILLUSION",
+      "level": "ALERT",
+      "msg": "分红幻觉警报：全期股东回报（分红+回购）14,802 超过累计自由现金流 -163,581（覆盖 -11.05x < 1.0）——这份回报不是经营挣出来的，而是靠融资/举债/消耗存量现金维持。高股息率在此情形下是幻觉，对所有者的意义与自由现金流充沛公司的同等股息率完全不同，报告必须明确区分并质询可持续性"
+    },
+    {
+      "code": "NORM_CYCLE_TROUGH",
+      "level": "ALERT",
+      "msg": "周期低位提示：最新净利率仅为全期均值的 0.61 倍，当期利润低估长期盈利能力，用当期基期会低估内在价值"
+    },
+    {
+      "code": "NORM_MARGIN_SHAPE",
+      "level": "ALERT",
+      "msg": "利润率形状检验：周期波动（秩相关 +0.00、穿越均值 3 次、末端连续低于均值 1 年，置信度不适用）——利润率反复穿越均值，均值可作周期中枢，正常化判定成立"
+    }
+  ],
+  "exemptions": {
+    "fired": {},
+    "suppressed": []
+  },
+  "warnings": [
+    "2015: capex未披露拆分，按启发式估算（capex/收入比中位数，封顶D&A）估维持性 ≈0.0",
+    "2016: capex未披露拆分，按启发式估算（capex/收入比中位数，封顶D&A）估维持性 ≈0.0",
+    "2017: capex未披露拆分，按启发式估算（capex/收入比中位数，封顶D&A）估维持性 ≈0.0",
+    "2018: capex未披露拆分，按启发式估算（capex/收入比中位数，封顶D&A）估维持性 ≈0.0",
+    "2019: capex未披露拆分，按启发式估算（capex/收入比中位数，封顶D&A）估维持性 ≈0.0"
+  ],
+  "provenance": {
+    "argv": [
+      "scripts/compute_metrics.py",
+      "backtest/3333.HK_2020-06-30/data/financials_3333HK_metrics_view.json",
+      "-o",
+      "backtest/3333.HK_2020-06-30/data/metrics_3333HK.json"
+    ],
+    "market_cap_million": null,
+    "market_cap_internal_unit": null,
+    "snapshot": null
+  }
+}

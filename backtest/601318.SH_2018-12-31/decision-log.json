@@ -1,0 +1,40 @@
+{
+  "case": "B3-14",
+  "ticker": "601318.SH",
+  "as_of": "2018-12-31",
+  "pipeline": "compute_metrics_insurance（保险专属管线首次实盘）",
+  "phase0": {
+    "company_type": "保险集团",
+    "one_vote_veto": false,
+    "known_risks": ["华夏幸福137.7亿+业绩对赌（2018-07）", "陆金所P2P备案延期", "汇丰第一大股东（2018-11）", "134号文+代理人红利消退+资管新规"]
+  },
+  "phase1": {
+    "filings": "2011-2017年报（五年表+摘要+双源新闻稿）+2018H1+2018Q3",
+    "caliber_rulings": [
+      "EV：2011-2014偿一代/2015起偿二代，断点影响实测-0.24%极小",
+      "NBV：寿险及健康险口径（2015起），2014以前旧口径21,966隔离于spike_notes",
+      "EVPS/BVPS：10转10后182.8亿股可比折算，2015 EVPS 30.24与第三方研报交叉一致"
+    ],
+    "market": {"price": 56.10, "date": "2018-12-28", "low52w": 54.33, "high52w": 81.28, "shares": 18280241410},
+    "forbidden_data_encountered": "华夏幸福事件检索携带2019-01-31平安增持华夏幸福42.03亿（25.25%）与2021债务暴雷后续——已知悉未回填，估值输入在检索前已定稿"
+  },
+  "phase2": {
+    "alerts": 0,
+    "key_outputs": {"ev_cagr_2011_2017": 0.232, "roev_2017": 0.267, "roev_life_2017": 0.355, "spread_2017": 0.010, "pev_2017": 1.243, "pev_2018h1": 1.106},
+    "structural_gaps": [
+      "2018H1利差-1.0pct不在管线视野（管线只读年报行，近3年均值1.37%不触发利差警报）",
+      "2018 NBV减速（H1+0.2%）不在管线序列——截断纪律下管线天然滞后一年，NBV负增长警报不可能触发"
+    ]
+  },
+  "phase3": {"moat": "narrow（窄偏宽）", "growth": "中高但动能断档", "management": "可信偏高", "quality": "良好偏高但边际转弱", "sentiment": "极端悲观区+北上资金186亿背离"},
+  "phase4": {
+    "method": "EV增长两阶段+P/EV判定法（Gordon禁用）",
+    "iv": {"bear": 38.05, "base": 59.0, "bull": 93.0, "bear_method": "pe_trough_multiple 0.75x×2018H1 EVPS 50.73（S2b重算一致/S4离散度0.64）"},
+    "gate1": {"mos": 0.049, "required": 0.40, "pass": false, "trigger_price": 35.40},
+    "gate2": {"item1": [0.1163, 0.2205, false], "item2": [0.0867, 0.06, true], "item3": [0.0197, 0.0, true], "pass": false},
+    "trigger_reachability": "out_of_history（35.40 < 52周低点54.33，差34.8%）"
+  },
+  "phase45_key_variables": ["NBV/代理人产能拐点（连续两季双位数+产能企稳=质地拐点）", "利差回归（2019总投资收益率>5%则EV假设可信度修复）", "华夏幸福2018对赌≥114.15亿履约"],
+  "phase5": {"persona_verdicts": ["观察等价格", "观察等价格", "观察等价格"], "red_team_severity_high": ["利差持续为负EV引擎降档", "代理人产能坍塌传导"], "systemic_cost_registered": "红队#4：观察档机会成本——2019拐点确认则+27%踏空，与2014招行案错误拒绝同构的体系性保守候选"},
+  "prior_alignment": {"prior_ordinal": 2, "actual_ordinal": 2, "gate1_prior": null, "gate1_actual": false, "note": "档位与先验一致；gate1/gate2未预判"}
+}

@@ -1,0 +1,104 @@
+{
+  "price": 16.59,
+  "hold_years": 5,
+  "discount_rate": 0.105,
+  "dividend_yield": 0.0374,
+  "dividend_share_of_return": 0.3561904761904762,
+  "scenarios": [
+    {
+      "name": "悲观",
+      "probability": 0.25,
+      "value_per_share": 10.05,
+      "value_per_share_terminal": 16.556839997703282,
+      "value_is_non_positive": false,
+      "total_return": -0.0019987945929305084,
+      "annualized_irr": -0.00040007891681526075
+    },
+    {
+      "name": "基准",
+      "probability": 0.5,
+      "value_per_share": 20.65,
+      "value_per_share_terminal": 34.019775716673905,
+      "value_is_non_positive": false,
+      "total_return": 1.0506193922045752,
+      "annualized_irr": 0.15445500793158584
+    },
+    {
+      "name": "乐观",
+      "probability": 0.25,
+      "value_per_share": 32.97,
+      "value_per_share_terminal": 54.3163198730624,
+      "value_is_non_positive": false,
+      "total_return": 2.2740397753503556,
+      "annualized_irr": 0.26770087545291577
+    }
+  ],
+  "expected_value_per_share": 21.08,
+  "expected_value_per_share_terminal": 34.72817782602837,
+  "expected_total_return": 1.093319941291644,
+  "expected_annualized_irr": 0.14405270309981805,
+  "expected_annualized_irr_basis": "probability_weighted_of_per_scenario_irr",
+  "expected_total_return_basis": "on_expected_value_do_not_annualize_for_gate2",
+  "gate2_decision_field": "expected_annualized_irr",
+  "jensen_gap_vs_annualized_total": 0.01517065135183765,
+  "expected_annualized_irr_incl_div": 0.14405270309981805,
+  "pessimistic_irr": -0.00040007891681526075,
+  "pessimistic_value_per_share": 10.05,
+  "pessimistic_equity_wiped_out": false,
+  "has_non_positive_scenario": false,
+  "loss_probability": 0.25,
+  "expected_downside_given_loss": -0.0019987945929305084,
+  "probability_weighted_downside": -0.0004996986482326271,
+  "index_hurdle": 0.09,
+  "beats_index": true,
+  "excess_vs_index": 0.05405270309981805,
+  "hurdle_above_discount_rate": false,
+  "gate2": {
+    "moat": "narrow",
+    "consistency_expected_irr": {
+      "value": 0.14405270309981805,
+      "hurdle": 0.22386080928936058,
+      "hurdle_derivation": "由闸门一安全边际要求 40% 反推：(1+r)×(1/(1−MoS))^(1/H)−1",
+      "pass": false,
+      "basis": "自洽性校验，非独立证据——期望值口径下与闸门一互为单调函数，共享同一个 V0 与同一份模型误差。不达标而安全边际达标 ⇒ 情景离散度或概率赋值有问题"
+    },
+    "no_convergence_floor": {
+      "value": 0.0824,
+      "dividend_yield": 0.0374,
+      "intrinsic_value_growth": 0.045,
+      "hurdle": 0.06,
+      "pass": true,
+      "basis": "独立信息——完全不含 V0/P 比值。回答『折价永不收敛时我实际赚什么』：= 股息率 + 内在价值增速。安全边际很大而此值很低 = 回报全押在『市场哪天承认我对』，这是价值陷阱的定量特征"
+    },
+    "pessimistic_irr": {
+      "value": -0.00040007891681526075,
+      "hurdle": 0.0,
+      "pass": false,
+      "basis": "独立信息——回答『错了会怎样』。前提是悲观情景由独立方法推导（清算/PB底/历史最差年，见 check_scenarios.py S2）；若悲观值只是基准调低增速，本项退化为自洽性校验的换算"
+    },
+    "independent_checks": [
+      "no_convergence_floor",
+      "pessimistic_irr"
+    ],
+    "evaluable": true,
+    "pass": false,
+    "missing_inputs": [],
+    "effective_hurdle": {
+      "nominal_margin_of_safety_required": 0.4,
+      "base_scenario_irr": 0.15445500793158584,
+      "expected_irr_weighted": 0.14405270309981805,
+      "pessimistic_drag_pct": 0.010402304831767795,
+      "base_irr_needed_to_clear": 0.23426311412112838,
+      "effective_margin_of_safety_required": 0.4248612376791888,
+      "gap_vs_nominal_pct": 0.024861237679188797,
+      "basis": "闸门二①按概率加权，悲观情景以其权重拖累期望 IRR；使①刚好通过所需的折价率即有效门槛。名义门槛只反映闸门一（仅用基准情景），二者差额 = 情景离散度与概率赋值的代价"
+    },
+    "codes": [
+      "GATE2_FAIL",
+      "GATE2_1_IRR_FAIL",
+      "GATE2_3_BEAR_FAIL"
+    ]
+  },
+  "gate2_decision_note": "闸门二判定看 gate2.pass（三项全过）。beats_index 保留仅作机会成本对照展示，不再单独决定档位——它与安全边际同源",
+  "note": "IRR=(1+r)×(V0/P)^(1/H)−1：内在价值随时间以折现率增值，已隐含分红+留存增值全部股东回报，股息不再叠加（叠加即重复计算）；折现率 r=10.5% 是 IRR 的下限（P=V0 时 IRR=r），门槛须设在 r 之上才构成有效约束；下行指标（悲观 IRR/亏损概率/亏损跌幅）不可由安全边际单调推出，是闸门二独立信息来源"
+}

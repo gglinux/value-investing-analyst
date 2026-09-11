@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>Meta Platforms (META) — 历史回放分析报告 2022-11-30</title>
+<script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+<style>
+body{font-family:"Noto Sans CJK SC","Microsoft YaHei",sans-serif;max-width:960px;margin:24px auto;padding:0 16px;color:#222;line-height:1.65}
+h1{font-size:22px;border-bottom:3px solid #4a6fa5;padding-bottom:8px}
+h2{font-size:18px;border-left:4px solid #4a6fa5;padding-left:10px;margin-top:32px}
+h3{font-size:15px;margin-top:22px}
+table{border-collapse:collapse;width:100%;margin:10px 0;font-size:13px}
+th,td{border:1px solid #bbb;padding:5px 8px;text-align:left}
+th{background:#eef2f8}
+.card{border:1px solid #ccc;border-radius:8px;padding:12px 16px;background:#fafcff}
+.gate-fail{color:#b03030;font-weight:bold}
+.gate-pass{color:#1d7a3e;font-weight:bold}
+.near-miss{color:#b8860b;font-weight:bold}
+.small{font-size:12px;color:#666}
+.ok{color:#1d7a3e}.bad{color:#b03030}
+.verification-strength{border:1px solid #7a9e6c;border-radius:6px;padding:8px 12px;background:#f2f8ee;margin-top:10px;font-size:13px}
+.vs-meaning{color:#4a6a3a;font-size:12px}
+</style>
+</head>
+<body>
+<h1>Meta Platforms (META) — 历史回放分析报告</h1>
+<p class="small">回放时点 2022-11-30 ｜ 案例编号 B3-16（第三批·极端悲观情绪/假阴性专项：市场认定元宇宙烧毁公司，系统会不会被情绪带走而误拒） ｜ 信息截断日 2022-11-30 ｜ <b>本报告仅使用 2022-11-30 及之前的公开信息</b></p>
+
+<h2 style="margin-top:0">决策卡</h2>
+<div class="card" data-verdict="小仓位试探">
+<p><b>结论：小仓位试探（档位 3/4，仓位 2-4%）——双闸门通过但三项全近失：估值极端便宜方向支持，RL 十年不可知 + 管理层资本配置记录压制核心买入</b></p>
+<p>现价 <span class="vnum" data-src="market_snapshot_META_2022Q3.json" data-path="price.value" data-fmt="num2">118.10</span> USD ｜ 市值 <span class="vnum" data-src="market_snapshot_META_2022Q3.json" data-path="market_cap.value" data-fmt="num0">313,139</span> 百万美元 ｜ 股本（cover 口径）<span class="vnum" data-src="market_snapshot_META_2022Q3.json" data-path="shares_outstanding.value" data-fmt="num1">2,651.5</span> 百万股 ｜ PE-TTM <span class="vnum" data-src="market_snapshot_META_2022Q3.json" data-path="pe_ttm.value" data-fmt="num2">10.86</span>x（上市以来最低分位） ｜ P/B <span class="vnum" data-src="market_snapshot_META_2022Q3.json" data-path="pb.value" data-fmt="num2">2.52</span>x ｜ 股息 0（从未派息） ｜ 52 周位置 <span class="vnum" data-src="market_snapshot_META_2022Q3.json" data-path="price_position_52w.frac" data-fmt="pct1">11.3%</span>（区间 <span class="vnum" data-src="market_snapshot_META_2022Q3.json" data-path="week52_after_ex_right.low_52w" data-fmt="num2">88.09</span>~<span class="vnum" data-src="market_snapshot_META_2022Q3.json" data-path="week52_after_ex_right.high_52w" data-fmt="num2">352.71</span>，距高 −66.5%）</p>
+<p>闸门一（安全边际，wide 档要求 ≥25%）：基准内在价值 <span class="vnum" data-src="scenarios.json" data-path="scenarios.1.value_per_share" data-fmt="num2">199.14</span> → MoS = <span class="vnum" data-src="phase5_workpaper.json" data-path="adoption_ruling.vs_price.expected" data-fmt="raw">176.82</span> 锚定的期望值口径 + <span class="gate-pass">1−118.10/199.14 = 40.7% ✓ PASS</span>（悲观/基准离散 0.37 远离 S4 阈值）</p>
+<p>闸门二（期望回报，三项<b>全部近失通过</b>）：①期望 IRR <span class="vnum" data-src="expected_return.json" data-path="expected_annualized_irr" data-fmt="pct2">17.15%</span> vs wide 反推门槛 <span class="vnum" data-src="expected_return.json" data-path="gate2.consistency_expected_irr.hurdle" data-fmt="pct2">16.51%</span> <span class="near-miss">✓ 近失</span>；②不收敛下限 <span class="vnum" data-src="expected_return.json" data-path="gate2.no_convergence_floor.value" data-fmt="pct2">6.00%</span>（iv_growth 6% + 股息 0）vs 门槛 6% <span class="near-miss">✓ 恰达标</span>；③悲观年化 <span class="vnum" data-src="expected_return.json" data-path="gate2.pessimistic_irr.value" data-fmt="pct2">0.11%</span> vs ≥0 <span class="near-miss">✓ 近失</span>（名义保本、十年机会成本真实）——loss_probability <span class="vnum" data-src="expected_return.json" data-path="loss_probability" data-fmt="pct0">0%</span>，有效折价门槛 <span class="vnum" data-src="expected_return.json" data-path="gate2.effective_hurdle.effective_margin_of_safety_required" data-fmt="pct1">39.1%</span> vs 名义 25%（GATE_EFFECTIVE_HURDLE_GAP 已披露）</p>
+<p>三情景：悲观 <span class="vnum" data-src="scenarios.json" data-path="scenarios.0.value_per_share" data-fmt="num2">73.73</span>（PE 触底独立法，−37.6%）／基准 <span class="vnum" data-src="scenarios.json" data-path="scenarios.1.value_per_share" data-fmt="num2">199.14</span>（DCF fade）／乐观 <span class="vnum" data-src="scenarios.json" data-path="scenarios.2.value_per_share" data-fmt="num2">275.64</span> vs 现价 <span class="vnum" data-src="market_snapshot_META_2022Q3.json" data-path="price.value" data-fmt="num2">118.10</span>，概率 30/50/20，期望值 <span class="vnum" data-src="scenarios.json" data-path="expected_value_per_share" data-fmt="num2">176.82</span>（<span class="vnum" data-src="expected_return.json" data-path="expected_value_per_share" data-fmt="num2">176.82</span>，+49.7%）。市场定价隐含业主盈利 10 年 <span class="vnum" data-src="scenarios.json" data-path="implied_growth_cross.market_implied_oe_growth" data-fmt="pct1">-5.7%</span>/年——比系统悲观情景（零实质增长）更悲观，即"元宇宙烧毁公司"叙事的定量表达</p>
+<div class="verification-strength" data-verification-strength="1"
+     data-grade="A"
+     data-reconciliation-coverage="1.0000"
+     data-crosscheck-level="full"
+     data-window-years="10"
+     data-covers-full-cycle="true">
+  <b>核验强度 A</b>：三表勾稽覆盖率 <span class="vnum" data-src="verification_strength.json" data-path="reconciliation.coverage" data-fmt="pct0">100%</span>（10/10 年，达标） ｜ 命门科目原文登记 达标（<u>未经原文机器逐字比对</u>） ｜ 数据窗口 10 年，含系统性压力年（达标）<br>
+  <span class="vs-meaning">三项均达标：结论建立在完整勾稽 + 官方原文登记 + 覆盖完整周期的数据上。本案数据地基为 B3 系列最强档：SEC companyfacts XBRL 机器抽取 12/12 互证、分部数据 10-K R72/10-Q R70 原文转录、裁员 8-K EX-99.1 原文归档</span>
+</div>
+</div>
+
+<h2>一、信息集与防前视声明</h2>
+<table>
+<tr><th>信息</th><th>日期</th><th>截断裁决</th></tr>
+<tr><td>2022 Q3 10-Q（accn 0001326801-22-000108；9M 收入 84,444 / 净利 18,547 / 分部 FoA OI 31,983·RL −9,438 / cover 股本 2,651.5M）</td><td>filed 2022-10-27</td><td>✓ 进信息集（最新合法季报，34 天时效）</td></tr>
+<tr><td>2022 Q3 财报新闻稿（8-K EX-99.1，2022-10-26：DAP 2.93B +4%、MAP 3.71B +4%、headcount 87,314 +28%、Q4 收入指引 30-32.5B、RL 2023 亏损将显著扩大官方原文）</td><td>2022-10-26</td><td>✓ 进信息集（量价与指引主输入）</td></tr>
+<tr><td>裁员 8-K（accn 0001326801-22-000116，EX-99.1 扎克伯格全员信：裁员 &gt;11,000 人 ~13%、招聘冻结延至 2023Q1、"I got this wrong"）</td><td>2022-11-09</td><td>✓ 进信息集（管理层言行的 A 级原文）</td></tr>
+<tr><td>FY2021 10-K（accn 0001326801-22-000018；收入 117,929 / 净利 39,370 / 分部 R72 / EY 无保留意见 + ICFR 有效）</td><td>filed 2022-02-03</td><td>✓ 进信息集（最新年报）</td></tr>
+<tr><td>CFO 电话会 ATT 影响估计 ~10B 级（Q4 2021 财报电话会，多源交叉）</td><td>2022-02-02</td><td>✓ 进信息集（C 级检索双源，仅作定性证据不进估值公式）</td></tr>
+<tr><td>FY2022 10-K（含全年分部数据）</td><td>filed 2023-02-02</td><td><span class="bad">✗ forbidden</span> 未进任何底稿（manifest excluded_late_filings 登记）</td></tr>
+<tr><td>Q4 2022 财报 + 2023 费用指引细节 + "效率之年"表述</td><td>2023-02-01</td><td><span class="bad">✗ forbidden</span> 2023 费用指引仅用截断日内 Q3 新闻稿官方口径</td></tr>
+<tr><td>2022-11-30 后的一切股价走势、LLaMA、股息政策、TikTok 禁令演化</td><td>截断日后</td><td><span class="bad">✗ forbidden</span> 训练记忆中的完整轨迹已按污染协议显式登记并剔除</td></tr>
+</table>
+<p class="small">meta.json 在任何数据抓取之前冻结（先验档位 3，gate1/gate2 不预判）；污染披露两重：(a) 训练语料含 Meta 2022-11-30 后完整轨迹（最重污染源，估值输入只取截断日前披露文件）；(b) 任务书明示案例 16 属"该买"类别（结构性污染，先验独立推演 + 档位由管线双闸门唯一决定）。10Y 美债 2022-11 月均 3.89%（FRED GS10 + FedPrimeRate 双源）。</p>
+
+<h2>二、Phase 0 排雷（对立检索 + 监管/审计核查）</h2>
+<p>对立检索五项（全部仅登记 ≤2022-11-30 公开事实，A/B+ 级）：①<b>反垄断 FTC v. Meta</b>：2020-12 起诉（寻求剥离 Instagram/WhatsApp）→ 2021-06 初次起诉被驳回 → 2022-01-11 进入 discovery，无判决无和解——定性"长期尾部"（10 年量级诉讼、拆分救济法律门槛极高）；②<b>隐私监管</b>：Cambridge Analytica FTC $5B（史上最大隐私罚款 + 20 年合规令）与 SEC $100M 均 2019-07 已结已付；20 年合规令使新违规面临个人认证责任；③<b>集体诉讼</b>：Illinois BIPA $650M 已结、CA 隐私集体诉讼 $725M 和解 2022-08 披露（合计 ~$1.4B 已知成本）、德州生物识别 2022-02-15 起诉未决——呈"周期性税负"形态，单项相对 $313B 市值不致命；④<b>欧盟数据传输</b>：爱尔兰 DPC 草案决定（2022-07-06）违反 GDPR、EDPB 升级、截断日最终决定未公布——二元尾部风险按定性情景处理；⑤<b>审计意见</b>：EY 自 2007 年任审计师，FY2021 无保留意见 + ICFR 404(b) 有效——会计质量通道干净 [E:manifest.json]。</p>
+<p><b>net_conclusion：排雷未发现"会计造假/审计红灯/资本链断裂"类致命项</b>——现金+证券 41.8B、净现金 31.9B、审计干净。风险集中于监管尾部（FTC 拆分主张/DPC 停传）、ATT 结构性收入损伤（CFO 官方口径 ~10B/年）、RL 无限亏损承诺——均按定性情景处理不做单点折价 [E:manifest.json][E:financials_META_2022Q3.json]。</p>
+
+<h2>三、定量画像（十年序列 + 2022 重创年 + 竞对基线）</h2>
+<p><b>十年概览</b>（SEC XBRL 机器抽取，2012-2021 全序列 + 9M22）：收入 2012 <span class="vnum" data-src="financials_META_2022Q3.json" data-path="annual.0.revenue" data-fmt="num0">5,089</span> → 2021 <span class="vnum" data-src="financials_META_2022Q3.json" data-path="annual.9.revenue" data-fmt="num0">117,929</span> 百万美元，总量 CAGR <span class="vnum" data-src="metrics_META_2022Q3.json" data-path="summary.cagr_total.revenue" data-fmt="pct1">41.8%</span>（每股 <span class="vnum" data-src="metrics_META_2022Q3.json" data-path="summary.cagr_per_share.rev_ps" data-fmt="pct1">37.5%</span>——差额即稀释：股本期间膨胀 <span class="vnum" data-src="metrics_META_2022Q3.json" data-path="summary.share_count_change" data-fmt="num2">1.32</span>x，M_SHARE_INFLATION 已触发）；净利 2020 <span class="vnum" data-src="financials_META_2022Q3.json" data-path="annual.8.net_income" data-fmt="num0">29,146</span> → 2021 <span class="vnum" data-src="financials_META_2022Q3.json" data-path="annual.9.net_income" data-fmt="num0">39,370</span>；OCF 2021 <span class="vnum" data-src="financials_META_2022Q3.json" data-path="annual.9.ocf" data-fmt="num0">57,683</span> = 净利 1.47x——利润是真现金 [E:financials_META_2022Q3.json][E:metrics_META_2022Q3.json]。</p>
+
+<div id="chart-rev-ni" style="width:100%;height:340px;margin:8px 0"></div>
+<script>
+function initChart(id, option){ echarts.init(document.getElementById(id)).setOption(option); }
+initChart('chart-rev-ni', {
+  tooltip: {trigger: "axis"},
+  grid: {left: 70, right: 60, bottom: 40, top: 40},
+  xAxis: {type: "category", data: ["2012","2013","2014","2015","2016","2017","2018","2019","2020","2021"]},
+  yAxis: [
+    {type: "value", name: "百万$"},
+    {type: "value", name: "%", max: 45, axisLabel: {formatter: "{value}%"}}
+  ],
+  legend: {data: ["收入(百万$)","净利率%"], top: 0},
+  series: [
+    {name: "收入(百万$)", type: "bar",
+    <!-- vchart src=metrics_META_2022Q3.json path=chart_series.revenue -->
+    data: [5089, 7872, 12466, 17928, 27638, 40653, 55838, 70697, 85965, 117929], itemStyle: {color: "#4a6fa5"}},
+    {name: "净利率%", type: "line", yAxisIndex: 1,
+    <!-- vchart src=metrics_META_2022Q3.json path=chart_series.net_margin scale=100 -->
+    data: [1.0, 19.1, 23.6, 20.6, 37.0, 39.2, 39.6, 26.1, 33.9, 33.4], itemStyle: {color: "#c07830"}}
+  ]
+});
+</script>
+<p class="small">收入十年 23 倍；净利率 2019 年回调（26.1%，隐私与安全投入 + FTC $5B 计提）后 2020-2021 回升至 33-34%——利润率序列穿越均值 3 次，compute_metrics 判型"周期波动"（margin_ratio <span class="vnum" data-src="metrics_META_2022Q3.json" data-path="normalization.margin_ratio_latest_vs_avg" data-fmt="num2">1.22</span>：2021 的 33.4% vs 全期均值 <span class="vnum" data-src="metrics_META_2022Q3.json" data-path="normalization.net_margin_avg" data-fmt="pct1">27.3%</span>）——NORM_MARGIN_SHAPE 观察级告警：2021 利润不可直接作基期 [E:metrics_META_2022Q3.json]</p>
+
+<div id="chart-fcf-shares" style="width:100%;height:340px;margin:8px 0"></div>
+<script>
+initChart('chart-fcf-shares', {
+  tooltip: {trigger: "axis"},
+  grid: {left: 70, right: 60, bottom: 40, top: 40},
+  xAxis: {type: "category", data: ["2012","2013","2014","2015","2016","2017","2018","2019","2020","2021"]},
+  yAxis: [
+    {type: "value", name: "百万$"},
+    {type: "value", name: "百万股", min: 2000}
+  ],
+  legend: {data: ["FCF(百万$)","摊薄股本(百万股)"], top: 0},
+  series: [
+    {name: "FCF(百万$)", type: "bar",
+    <!-- vchart src=metrics_META_2022Q3.json path=chart_series.fcf -->
+    data: [377, 2860, 5495, 7797, 11617, 17483, 15359, 21212, 23632, 39116], itemStyle: {color: "#1d7a3e"}},
+    {name: "摊薄股本(百万股)", type: "line", yAxisIndex: 1,
+    <!-- vchart src=metrics_META_2022Q3.json path=chart_series.shares_diluted -->
+    data: [2166, 2517, 2664, 2853, 2925, 2956, 2921, 2876, 2888, 2859], itemStyle: {color: "#b03030"}}
+  ]
+});
+</script>
+<p class="small">FCF 2021 达 39,116；股本 2017 年见顶后转为净缩减（SBC 稀释被回购 2017 起 69,866 累计覆盖）——但 2012→2021 净膨胀 1.32x 的稀释警报仍成立；累计 FCF <span class="vnum" data-src="metrics_META_2022Q3.json" data-path="capital_allocation.cum_fcf" data-fmt="num0">144,948</span> 覆盖股东回报（回购 <span class="vnum" data-src="metrics_META_2022Q3.json" data-path="capital_allocation.cum_buyback" data-fmt="num0">69,866</span>）<span class="vnum" data-src="metrics_META_2022Q3.json" data-path="capital_allocation.fcf_cover_shareholder_return" data-fmt="num2">2.07</span>x [E:metrics_META_2022Q3.json]</p>
+
+<p><b>2022 重创年（9M 实际）</b>：收入 <span class="vnum" data-src="financials_META_2022Q3.json" data-path="quarters.revenue.6.val" data-fmt="num0">27,715</span>（Q3 单季，yoy −4.5%；9M −0.2%、恒汇 +5%）；Q3 净利 <span class="vnum" data-src="financials_META_2022Q3.json" data-path="quarters.net_income.6.val" data-fmt="num0">4,395</span>（2021Q3 9,193 的 47.8%）；分部：FoA 9M OI <span class="vnum" data-src="financials_META_2022Q3.json" data-path="segments.nine_months.0.operating_income" data-fmt="num0">31,983</span>（OPM 38.5%，2021 全年 49.2%）vs RL 9M 亏损 <span class="vnum" data-src="financials_META_2022Q3.json" data-path="segments.nine_months.1.operating_income" data-fmt="num0">-9,438</span>（收入仅 <span class="vnum" data-src="financials_META_2022Q3.json" data-path="segments.nine_months.1.revenue" data-fmt="num0">1,433</span>）——集团利润的恶化 = FoA 利润率下行 + RL 亏损扩大两力叠加 [E:financials_META_2022Q3.json][E:filings/10Q_20220930_R70_segment.html]。</p>
+
+<p><b>量价分解（本案核心读数）</b>：Facebook DAU 2016 <span class="vnum" data-src="business_drivers_META.json" data-path="drivers.0.volume" data-fmt="num0">1,230</span> → 2021 <span class="vnum" data-src="business_drivers_META.json" data-path="drivers.5.volume" data-fmt="num0">1,930</span> 百万（六份 Q4 8-K EX-99.1 官方原文逐项登记）；Family DAP 2022-09 <span class="vnum" data-src="business_drivers_META.json" data-path="drivers.6.volume" data-fmt="num0">2,930</span> 百万（+<span class="vnum" data-src="financials_META_2022Q3.json" data-path="users.DAP_yoy_pct" data-fmt="num0">4</span>%）——<b>量还在增长</b>。价格侧（收入÷DAU 派生）：2016 年 <span class="vnum" data-src="business_drivers_META.json" data-path="drivers.0.price" data-fmt="num2">22.47</span> → 2021 年 <span class="vnum" data-src="business_drivers_META.json" data-path="drivers.5.price" data-fmt="num2">61.10</span>/人·年，其中 2021 +<span class="vnum" data-src="business_drivers_META.json" data-path="unit_economics.series.2021" data-fmt="pct1">30.8%</span> 为竞价市场过热峰值（2020 已减速至 +9.7%）；2022Q3 官方口径<b>单价 −18% 而曝光 +17%</b>（量增价跌）——<b>2022 收入下滑 100% 由价格侧贡献</b>：汇率约 7pct（Q4 指引口径）+ ATT 约 10B/年（CFO 官方 2022-02-02 估计）+ TikTok 分流为剩余项 [E:business_drivers_META.json]。ARPP 代理 2022Q3 <span class="vnum" data-src="business_drivers_META.json" data-path="arpp_proxy_compare.2022Q3" data-fmt="num2">9.46</span> vs 2021Q3 <span class="vnum" data-src="business_drivers_META.json" data-path="arpp_proxy_compare.2021Q3" data-fmt="num2">10.31</span>（<span class="vnum" data-src="business_drivers_META.json" data-path="arpp_proxy_compare.yoy" data-fmt="pct1">-8.2%</span>）——即便在最悲观读数下单用户季度变现仍处绝对高位 [E:business_drivers_META.json]。</p>
+
+<p><b>竞对基线</b>（companyfacts 同口径 A 级抽取）：ROIC 5y 均值 META <span class="vnum" data-src="competitors_baseline.json" data-path="comparison.META.roic_5y_avg" data-fmt="pct1">46.2%</span> vs GOOGL <span class="vnum" data-src="competitors_baseline.json" data-path="comparison.GOOGL.roic_5y_avg" data-fmt="pct1">38.2%</span>（SNAP/PINS 负利期 n.m.）；2021 净利率 META 33.4% 全场最高（GOOGL <span class="vnum" data-src="competitors_baseline.json" data-path="comparison.GOOGL.net_margin_2021" data-fmt="pct1">29.5%</span>）；9M22 攻守分化：GOOGL 收入 +<span class="vnum" data-src="competitors_baseline.json" data-path="comparison.GOOGL.rev_9m22_yoy" data-fmt="pct1">13.4%</span>（搜索韧性、ATT 暴露小）vs META −0.2%——META 的重创在广告定价侧而非需求侧；SNAP 六年全亏 9M22 亏损扩大 124%、PINS 2021 首利 12.3% 后 9M22 转亏——<b>2022 是社交广告行业的压力测试，META 的绝对盈利水平依然是同业之冠</b> [E:competitors_baseline.json]。</p>
+
+<p><b>资产负债表</b>：现金+等价物 <span class="vnum" data-src="financials_META_2022Q3.json" data-path="balance_2022Q3_0930.CashAndCashEquivalentsAtCarryingValue" data-fmt="num0">14,308</span> + 有价证券 <span class="vnum" data-src="financials_META_2022Q3.json" data-path="balance_2022Q3_0930.MarketableSecuritiesCurrent" data-fmt="num0">27,468</span> − 长期债 <span class="vnum" data-src="financials_META_2022Q3.json" data-path="balance_2022Q3_0930.LongTermDebtNoncurrent" data-fmt="num0">9,922</span> = <b>净现金 31,854</b>（占市值 10.2%）；股东权益 <span class="vnum" data-src="financials_META_2022Q3.json" data-path="balance_2022Q3_0930.StockholdersEquity" data-fmt="num0">124,094</span>——无杠杆风险 [E:financials_META_2022Q3.json]。</p>
+
+<h2>四、五维定性（护城河裁决是本案定档关键输入）</h2>
+<h3>4.1 商业模式</h3>
+<p>「用户免费 + 广告主付费」双边模式：FoA（FB/IG/WA/Messenger 四层矩阵）9M22 收入 <span class="vnum" data-src="financials_META_2022Q3.json" data-path="segments.nine_months.0.revenue" data-fmt="num0">83,011</span> 占集团 98.3%，其中广告 <span class="vnum" data-src="financials_META_2022Q3.json" data-path="segments.advertising_revenue.2022_9M" data-fmt="num0">82,387</span>（97.6%）——几乎全部利润由一台广告引擎产生，收入源高度集中是结构性特征 [E:financials_META_2022Q3.json]。效果广告按转化计费、ROI 对广告主可直接度量——预算粘性高于品牌广告，衰退期最后被砍、复苏期最先回补（基准情景"价格修复"假说的商业模式基础）[E:consensus.json]。钱从谁口袋来：全球广告主的获客预算池——宏观衰退期可缩减（周期敞口真实存在）。10 年存续判断：人类注意力 + 商家获客是持久需求，变数在份额而非需求——量（DAP +4%）证明用户资产未失守，失守的是价 [E:business_drivers_META.json][E:phase5_workpaper.json]。</p>
+<h3 data-moat="wide" data-moat-trend="damaged">4.2 护城河（wide——闸门一门槛 25% 的挂靠档，带损伤证据）</h3>
+<p>五源评估：<b>网络效应</b>（用户-内容-广告主三边网络，DAP 29.3 亿为全球最大单一家族网络）与<b>转换成本</b>（社交关系链——朋友/家人/群组都在，个人迁移成本极高）为强；<b>规模</b>（29.3 亿 DAP / 37.1 亿 MAP + 广告系统数据反馈环）强；<b>成本优势</b>（规模摊薄 AI 基础设施）中强；<b>无形资产</b>（全球品牌但不直接收溢价）弱 [E:phase5_workpaper.json]。定量印证：ROIC 5y 均值 <span class="vnum" data-src="competitors_baseline.json" data-path="comparison.META.roic_5y_avg" data-fmt="pct1">46.2%</span>（区间 40.3~49.4%）为同业之冠，FoA 9M22 OPM 38.5% 即便重创年仍为竞对最高 [E:metrics_META_2022Q3.json][E:competitors_baseline.json]。</p>
+<p><b>损伤证据（必须正视）</b>：①ATT（2021-04 实施）切断第三方数据追踪→定向精度下降→定价权受损，CFO 官方估计 2022 年影响 ~10B；②TikTok 抢时长与预算：Q3 广告曝光 +17% 而单价 −18%——广告主议价力上升的直接证据；③对苹果生态的单向依赖：一家上游决策即可造成 ~10B/年损失，护城河存在外部可击点 [E:business_drivers_META.json][E:manifest.json]。<b>裁决：wide（有损伤），降级条件已写明——DAP 停止增长或 FoA OPM 跌破 25% 则降 narrow（两条 currently 均未触发：+4% / 38.5%）</b>。ATT 损伤的是"定价权"而非"网络效应"——用户没走 [E:phase5_workpaper.json][E:scenarios.json]。</p>
+<h3>4.3 增长空间</h3>
+<p>量：FB DAU 增速 2017 +13.8% → 2021 +4.9% → DAP 2022 +4%——全球网民渗透接近饱和，量的增长系统性放缓 [E:business_drivers_META.json]。价：2017~2021 价格变化 +29.2%/+26.5%/+16.0%/+9.7%/+30.8%——2021 为竞价过热峰值，2022Q3 官方单价 −18% [E:business_drivers_META.json]。历史增速（41.8% CAGR）由量价双引擎驱动、双引擎均已降档，不可外推 [E:metrics_META_2022Q3.json]。增长选项：Reels（TikTok 对位、货币化差距收敛中）+ WhatsApp 商业化（未启动）+ RL（收入 <span class="vnum" data-src="financials_META_2022Q3.json" data-path="segments.nine_months.1.revenue" data-fmt="num0">1,433</span> vs 亏损 <span class="vnum" data-src="financials_META_2022Q3.json" data-path="segments.nine_months.1.operating_income" data-fmt="num0">-9,438</span>，十年投入期）[E:financials_META_2022Q3.json]。市场隐含读数：reverse DCF 反推市场定价隐含业主盈利 10 年 <span class="vnum" data-src="scenarios.json" data-path="implied_growth_cross.market_implied_oe_growth" data-fmt="pct1">-5.7%</span>/年——比系统悲观情景（零实质增长）更悲观 [E:scenarios.json]。基准情景不给"重新加速"：OE 修复到 27,500 后 8%→3% fade——这是"修复"而非"增长"的情景 [E:phase5_workpaper.json]。</p>
+<h3>4.4 管理层与治理</h3>
+<p>控制权：扎克伯格持 B 股 <span class="vnum" data-src="financials_META_2022Q3.json" data-path="shares_cover_20221021.class_b_m" data-fmt="num1">402.9</span> 百万（10:1 投票权）绝对控制——良性独裁与任性的边界全凭其本人 [E:financials_META_2022Q3.json]。<b>言行比对（减分项）</b>：2021 headcount +28% 至 <span class="vnum" data-src="financials_META_2022Q3.json" data-path="users.headcount_20220930" data-fmt="num0">87,314</span>——Covid 红利期把周期性收入当结构性收入扩张；<b>言行比对（加分项）</b>：2022-11-09 裁员 &gt;11,000 人（13%）+ 招聘冻结延至 2023Q1，公告原文"我错了"（I got this wrong）公开承认错误——科技巨头公开认错罕见，资源重新集中于 AI 发现引擎/广告与商业平台 [E:filings/8K_20221109_ex991_layoff.htm]。诚实度：ATT 影响主动量化披露（~10B）而非掩盖；Q3 新闻稿官方原文承认 RL 2023 亏损将显著扩大 [E:consensus.json]。资本配置：2021 回购 44,193（≈市值 7.1%）+ 9M22 21,093（6.7%），累计 FCF 覆盖股东回报 2.07x；无股息——回购是唯一股东回报通道 [E:metrics_META_2022Q3.json]。最大争议项：RL 押注——2021 亏 10,193 → 9M22 亏 9,438，官方承诺 2023 继续显著扩大且电话会拒绝缩减，与股东利益的冲突无制衡机制 [E:consensus.json][E:financials_META_2022Q3.json]。</p>
+<h3>4.5 财务质量</h3>
+<p>利润是真现金：OCF/NI 2019 1.96x / 2020 1.33x / 2021 1.47x——预收广告费模式、无应收泡沫 [E:financials_META_2022Q3.json]。FCF 覆盖股东回报 <span class="vnum" data-src="metrics_META_2022Q3.json" data-path="capital_allocation.fcf_cover_shareholder_return" data-fmt="num2">2.07</span>x；净现金 31,854（占市值 10.2%）——资产负债表无杠杆风险 [E:metrics_META_2022Q3.json][E:financials_META_2022Q3.json]。审计干净：EY 自 2007 年任审计师、FY2021 无保留意见 + ICFR 有效 [E:manifest.json]。ROIC 5y 均值 <span class="vnum" data-src="metrics_META_2022Q3.json" data-path="summary.roic_avg_5y" data-fmt="pct1">46.2%</span>——capex 翻倍压力下仍冠绝同业 [E:metrics_META_2022Q3.json]。隐忧两条：①capex 军备竞赛 9M22 <span class="vnum" data-src="financials_META_2022Q3.json" data-path="annual.9.capex" data-fmt="num0">18,567</span>（2021 全年）→ 9M22 已 22,388（+68% yoy，AI/数据中心），FCF 9M 13,576（−48%）；②SBC 9M22 8,984（占收入 10.6%）——股本膨胀 1.32x 的机制，M_DILUTION/M_SHARE_INFLATION 已触发 [E:financials_META_2022Q3.json][E:metrics_META_2022Q3.json]。2022Q3 单季恶化是真实的：NI 4,395、集团 OPM 20.4%——不能因质地好否认 [E:financials_META_2022Q3.json]。</p>
+
+<h2>五、估值与安全边际（Phase 4）</h2>
+<h3>5.1 估值通道</h3>
+<p>业主盈利 DCF 为主通道 + PE 触底独立法构造悲观情景。基期纪律：2021 净利率 33.4% 为周期波动上沿（margin_ratio 1.22），禁止直接外推——基准基期用正常化口径：2022 外推 NI 25,350（9M 实际 18,547 + Q4 指引中值收入 31,250、费用指引 85-87B 隐含 OI 8,150、税率 16%）+ 效率修复 ~3,150（裁员 13% 信中自述"爬两倍效率坡" + 2023 费用增幅收敛）= 28,500——比 2021 实际 39,370 低 27.6%，结构性折扣已内含 ATT 永久化部分 [E:scenarios.json][E:financials_META_2022Q3.json][E:consensus.json]。OE = 28,500 + D&A 7,000 − 维持 capex 8,000 = 27,500；r=10%（S2e 下限）、10 年、fade 至 3% 永续、终值占比 54%&lt;60%；净现金 31,854 加回（÷股本 2,651.5 = 12.01/股）[E:scenarios.json]。</p>
+<h3>5.2 三情景（r=<span class="vnum" data-src="scenarios.json" data-path="discount_rate" data-fmt="pct1">10.0%</span>、H=<span class="vnum" data-src="scenarios.json" data-path="hold_years" data-fmt="raw">5</span> 年）</h3>
+<table>
+<tr><th>情景</th><th>每股价值</th><th>方法与关键假设</th><th>概率</th></tr>
+<tr><td>悲观</td><td><span class="vnum" data-src="scenarios.json" data-path="scenarios.0.value_per_share" data-fmt="num2">73.73</span>（−37.6%）</td><td><b>pe_trough_multiple 独立法</b>（S2 拒绝 DCF 同源）：悲观 NI 23,000（2022 外推 25,350×0.9）× 极端 PE 8.5x（现价 PE-TTM 10.86 已为上市最低分位，再压 22% 模拟"衰退确认+RL 失控"双杀）= 195,500 ÷ 2,651.5 = 73.73，<b>净现金 31,854 不加回</b>（机器重算口径更保守）[E:scenarios.json]</td><td><span class="vnum" data-src="scenarios.json" data-path="scenarios.0.probability" data-fmt="pct0">30%</span></td></tr>
+<tr><td>基准</td><td><span class="vnum" data-src="scenarios.json" data-path="scenarios.1.value_per_share" data-fmt="num2">199.14</span>（+68.6%）</td><td>DCF fade：OE 27,500、期初 g=8% 线性衰减至 3%、r=10%、10 年 + 净现金 12.01/股 [E:scenarios.json]</td><td><span class="vnum" data-src="scenarios.json" data-path="scenarios.1.probability" data-fmt="pct0">50%</span></td></tr>
+<tr><td>乐观</td><td><span class="vnum" data-src="scenarios.json" data-path="scenarios.2.value_per_share" data-fmt="num2">275.64</span>（+133.4%）</td><td>DCF fade：OE 33,000（FoA 年化 OI ~42B×0.84 − RL 收敛至 −2B）、g=12% 衰减至 3% [E:scenarios.json]</td><td><span class="vnum" data-src="scenarios.json" data-path="scenarios.2.probability" data-fmt="pct0">20%</span></td></tr>
+</table>
+<p class="small">概率证据：悲观 30% 对应"ATT 永久化 + RL 亏损固化 + 市场定价无增长成熟公司 + 回购收缩"全部同时发生（每项截断日前均真实可见）；期望值 <span class="vnum" data-src="scenarios.json" data-path="expected_value_per_share" data-fmt="num2">176.82</span> = 现价 +49.7%；no_real_downside_check 诚实披露：悲观 73.73 &lt; 现价——真实下行存在，保护层是"悲观盈利 23,000 仍为正 + PE 触底 + 净现金不参与倍数"的三重保守 [E:scenarios.json]。check_scenarios 门禁通过（S2 方法独立性/S2b 重算容差/S4 离散/S5 折价/S7b 证据链全过）。</p>
+<h3>5.3 安全边际结论</h3>
+<p>MoS（vs 基准 199.14）= 1−118.10/199.14 = <b>40.7% vs wide 档要求 ≥25% —— <span class="gate-pass">PASS</span></b>；vs 期望值 176.82 = +49.7%。交叉验证：市场定价隐含业主盈利 10 年 <span class="vnum" data-src="scenarios.json" data-path="implied_growth_cross.market_implied_oe_growth" data-fmt="pct1">-5.7%</span>/年 vs 系统基准 +8%——期望值路径建立在"市场错了 13.7 个百分点"的判断上，该判断的可验证事实链（量 +4%、FoA OPM 38.5%、净现金 31.8B、9M22 恒汇 +5%）写进收敛节 [E:scenarios.json][E:expected_return.json]。52 周位置 11.3% 分位 + PE-TTM 10.86 上市最低分位——情绪定价的位置证据与基本面读数同向 [E:market_snapshot_META_2022Q3.json]。</p>
+
+<h2>六、双闸门与档位（Phase 4 定档）</h2>
+<table>
+<tr><th>闸门</th><th>项</th><th>值</th><th>门槛</th><th>判定</th></tr>
+<tr><td>闸门一</td><td>MoS（vs 基准 199.14，wide 档）</td><td>40.7%</td><td>≥25%</td><td class="ok">✓ PASS（余量 15.7pct）</td></tr>
+<tr><td rowspan="3">闸门二</td><td>①期望 IRR（概率加权）</td><td><span class="vnum" data-src="expected_return.json" data-path="expected_annualized_irr" data-fmt="pct2">17.15%</span></td><td><span class="vnum" data-src="expected_return.json" data-path="gate2.consistency_expected_irr.hurdle" data-fmt="pct2">16.51%</span>（(1.10×(1/0.75)^(1/5))−1，wide 反推）</td><td class="ok">✓ 近失（余量 0.64pct）</td></tr>
+<tr><td>②不收敛下限（股息+iv_growth）</td><td><span class="vnum" data-src="expected_return.json" data-path="gate2.no_convergence_floor.value" data-fmt="pct2">6.00%</span>（0 + 6%）</td><td>6%</td><td class="ok">✓ 恰达标</td></tr>
+<tr><td>③悲观情景年化</td><td><span class="vnum" data-src="expected_return.json" data-path="gate2.pessimistic_irr.value" data-fmt="pct2">0.11%</span></td><td>≥0</td><td class="ok">✓ 近失（名义保本）</td></tr>
+</table>
+<p><b>档位判定：小仓位试探（3/4，先验一致）</b>——adoption_ruling：双闸门通过支持正面档位；但①②③全部近失（有效折价门槛 <span class="vnum" data-src="expected_return.json" data-path="gate2.effective_hurdle.effective_margin_of_safety_required" data-fmt="pct1">39.1%</span> vs 名义 25%——悲观离散的代价）+ RL 十年不可知 + 管理层资本配置记录（2021 失控在先）共同阻止核心买入。<b>假阴性专项读数：系统未被情绪带走（未降档至观察等价格——市场隐含 −5.7% 的叙事没有吞噬 40.7% 的安全边际），亦未在情绪极值处过度兴奋（未升档至核心买入——三项近失即纪律的证据）</b>[E:expected_return.json][E:phase5_workpaper.json]。机会成本对照：期望 IRR 17.15% vs 指数门槛 <span class="vnum" data-src="expected_return.json" data-path="index_hurdle" data-fmt="pct1">9.0%</span>（+8.2pct）vs 10Y 美债 3.89%（+13.3pct）[E:expected_return.json]。</p>
+
+<h2>七、关键判断收敛（Phase 4.5）</h2>
+<p>三师与红队核心收敛点：①<b>质地不是分歧</b>——网络效应、现金创造、资本回报三师评分 3.5~4.5，无人低于 3.5；②<b>分歧在损伤永久性</b>——ATT/RL 权重以概率分布表达（30/50/20）而非点估计强行裁决；③<b>市场隐含 −5.7%/年 vs 系统基准 +8% 的分歧本质</b>：不是"生意好不好"而是"损伤是否永久"——可验证事实链（DAP +4%、FoA OPM 38.5%、恒汇 +5%、净现金 31.8B）不支持永久衰退定价，但市场可能知道我们不知道的东西，30% 悲观概率即对该风险的定价 [E:phase5_workpaper.json][E:scenarios.json]。</p>
+<p>关键变量与证伪条件：①<b>价格侧修复节奏</b>——若 2023 单价继续 −15% 以上且量同步失守 → 基准情景失效滑向悲观；②<b>RL 亏损纪律</b>——若 RL 年亏损突破 20B 或加倍押注 → 净现金消耗加速估值锚下移；③<b>回购持续性</b>——iv_growth 6% 的构成是 OE fade 终点 3.5-4% + 净股本缩减 2-3%/年，若 FCF 修复失败迫使回购停摆 → 不收敛下限跌破 6% 门槛 Gate2② 翻红 [E:phase5_workpaper.json][E:scenarios.json]。机会成本：10Y 3.89% 下"什么都不做"十年复利 46%——悲观情景 0.11%/年跑输国债，这是真实代价 [E:expected_return.json]。</p>
+
+<h2>八、三位大师独立评估 + 红队（Phase 5）</h2>
+<p>评分（五维=质地/成长/管理层/价格/赔率，5 分制）：</p>
+<div id="chart-persona-bar" style="width:100%;height:340px;margin:8px 0"></div>
+<script>
+initChart('chart-persona-bar', {
+  tooltip: {trigger: "axis"},
+  grid: {left: 50, right: 30, bottom: 40, top: 40},
+  xAxis: {type: "category", data: ["质地","成长","管理层","价格","赔率"]},
+  yAxis: {type: "value", max: 5},
+  legend: {data: ["巴菲特", "段永平", "李录"], top: 0},
+  series: [
+    {name: "巴菲特", type: "bar",
+    <!-- vchart src=phase5_workpaper.json path=persona_scores.buffett -->
+    data: [3.5, 2.5, 2.5, 4.5, 4.0], itemStyle: {color: "#4a6fa5"}},
+    {name: "段永平", type: "bar",
+    <!-- vchart src=phase5_workpaper.json path=persona_scores.duan -->
+    data: [4.5, 2.5, 3.0, 4.5, 4.0], itemStyle: {color: "#1d7a3e"}},
+    {name: "李录", type: "bar",
+    <!-- vchart src=phase5_workpaper.json path=persona_scores.lilu -->
+    data: [4.0, 3.0, 3.0, 4.5, 4.0], itemStyle: {color: "#c07830"}}
+  ]
+});
+</script>
+<p class="small">三师价格一致 4.5（10.9x PE + 40.7% 折价）；成长一致压低（2.5-3.0：量饱和 + RL 黑洞）；无人给任一维 5 分——RL 与 ATT 悬而未决压制所有满分 [E:phase5_workpaper.json]</p>
+<table>
+<tr><th>大师</th><th>结论</th><th>核心逻辑</th></tr>
+<tr><td>巴菲特</td><td>小仓位试探（置信度中高）</td><td>"我买的是『网络还在』的事实，不是『网络永存』的想象"——29.3 亿 DAP +4% 显示注意力迁移尚未发生；钱是真的（OCF/NI 1.47x、净现金 31.9B），问题是谁决定它的去向（B 股独裁 + RL 无制衡）；"I got this wrong" 是罕见加分（公开认错的 CEO 比不承认的少犯下一次）；10.9x PE 对 ROIC 46% 的现金机器是市场在为"永久衰退"定价；但"一个十年期的希望不是资产"——我无法为元宇宙定价 [E:phase5_workpaper.json]</td></tr>
+<tr><td>段永平</td><td>小仓位试探（置信度高）</td><td>"广告是全世界最好的商业模式之一，这家公司是效果广告全球定价基准"——DAP +4% 是最重要的单一数据：用户没有离开，离开的是单价，单价由宏观和竞争决定；本分不是不犯错，是承认错了马上改——裁 13% 是真动作不是姿态；9.4B 亏损对年赚 39B 的公司烧得起，裁员信把资源集中在"AI 发现引擎+广告"说明他知道主业在哪；RL 是把仓位"从小变小"的原因 [E:phase5_workpaper.json]</td></tr>
+<tr><td>李录</td><td>小仓位试探（置信度中）</td><td>"存在的确定性"与"盈利的确定性"要分开定价——十年后人们依然在 FB/IG/WA 上社交的概率很高，但广告份额的概率分布宽；RL 是十年 DCF 口径下的负资产：基准不给价值，成功是免费期权、失败已计入悲观；B 股 10:1 让公众股东对资本配置零话语权——好经理人是资产，坏决定无刹车；观察 RL 与单价两个变量每季证伪 [E:phase5_workpaper.json]</td></tr>
+</table>
+<p><b>分歧表</b>（三师×三题）：①ATT 是周期还是结构性——巴菲特倾向结构性（对苹果生态单向依赖不可逆）/ 段永平部分可逆（预算回补 + AI 定向修复）/ 李录中性（按"部分永久"定价：基准 NI 28.5B 而非 39.4B 已吸收结构性折扣）；②RL 是愿景投资还是价值毁灭——巴菲特"价值毁灭典型：资本配置无制衡"/ 段永平"烧得起的任性"/ 李录"DCF 口径负资产"；③管理层纠错可信度——"认错加分但 2021 错误本身证明机制失效"/"本分自省 + 真动作"/"观察两季费用指引兑现再评分" [E:phase5_workpaper.json]。</p>
+<p><b>芒格红队五攻防</b>（全文见 phase5_workpaper.json）：①"市场集体定价错误？thousands of professionals 在卖"→ 反向 DCF 给出市场定量主张 −5.7%/年，对照 DAP +4%/OPM 38.5%/净现金 31.8B 事实链不相容——但悲观 −37.6% 与 30% 概率就是对"市场可能对"的定价，故档位 3 非 4；②"基准自相矛盾：2023 费用指引 96-101B 比 2022 还高，NI 怎么恢复到 28.5B？"→ 费用指引已含 RL 扩大亏损（官方口径），收入端恒汇 +5% 在增长，修复靠裁员年化 3-4B 节约而非收入奇迹，修复失败由悲观 73.73 + 30% 兜底；③"TikTok 抢时长，量 +4% 是滞后指标"→ 真实风险已三重处理（悲观 30% 含该假设/降级条件明写 DAP 停增→narrow/拒绝用想象中的 2023 数据替代已披露数据——那是另一条红线）；④"FTC 拆分若胜诉护城河归零"→ 程序事实（2022-01-11 才进 discovery、10 年量级、法律门槛极高）+ 小仓位敞口可承受——核心买入则不可；⑤"股本 1.32x 膨胀吃掉每股 IV"→ M_DILUTION/M_SHARE_INFLATION 已触发显性披露，iv_growth 6% 已扣 SBC 稀释 1.5-2%/年，悲观情景回购收缩已登记 [E:phase5_workpaper.json]。</p>
+
+<h2>九、持有体验预演 + 跟踪清单</h2>
+<p><b>持有体验预演</b>：以 118.10 买入持有 5 年——①无股息，全部回报依赖价值收敛与回购；②基准路径 5 年终值 <span class="vnum" data-src="expected_return.json" data-path="scenarios.1.value_per_share_terminal" data-fmt="num2">320.72</span>（年化 <span class="vnum" data-src="expected_return.json" data-path="scenarios.1.annualized_irr" data-fmt="pct1">22.1%</span>），双引擎=单价修复+净股本缩减；③悲观路径 5 年终值 <span class="vnum" data-src="expected_return.json" data-path="scenarios.0.value_per_share_terminal" data-fmt="num2">118.74</span>（年化 <span class="vnum" data-src="expected_return.json" data-path="scenarios.0.annualized_irr" data-fmt="pct2">0.11%</span>）= 名义保本、真实机会成本为十年国债利息；④回撤体验：买入点已在 52 周高点 −66.5% 处，但悲观情景显示仍可再跌 −37.6%（至 73.73）——买在恐慌中段意味着下行可能先于修复到来，小仓位的意义正是穿越该回撤而不被迫卖出；⑤机制保障：不收敛下限 6.00% 恰达标——即便市场永不承认估值，持有者仍以每股内在价值 6%/年的速度复利（前提：回购持续）[E:expected_return.json][E:phase5_workpaper.json]。</p>
+<p><b>跟踪清单（每季证伪）</b>：①单价读数（官方 yoy vs 指引）——连续两季 −15% 以上 → 基准失效；②DAP 增速——停止增长 → 护城河降 narrow 重估；③RL 经营亏损绝对额——突破 20B/年 → 估值锚下移；④回购执行额——FCF 修复前停摆 → Gate2② 翻红；⑤FTC 案 discovery 进展与 DPC 最终决定（2022-07 草案后的落地）；⑥2023 费用指引兑现度（96-101B vs 实际）——管理层纠错可信度的季考 [E:phase5_workpaper.json][E:consensus.json]。</p>
+
+<h2>十、数据引用附录（全部 publish_date ≤ 截断日）</h2>
+<table>
+<tr><th>来源</th><th>日期</th><th>用途</th></tr>
+<tr><td>2022 Q3 10-Q（SEC EDGAR，accn 0001326801-22-000108，R1 cover + R70 分部）</td><td>filed 2022-10-27</td><td>9M 科目全套+分部 FoA/RL+cover 股本 2,651,548,674（A 2,248.7M + B 402.9M）</td></tr>
+<tr><td>2022 Q3 财报新闻稿（8-K EX-99.1）</td><td>2022-10-26</td><td>DAP 2.93B/MAP 3.71B/headcount 87,314/Q4 指引 30-32.5B/2023 费用指引 96-101B/RL 2023 亏损显著扩大官方原文</td></tr>
+<tr><td>裁员 8-K（accn 0001326801-22-000116，EX-99.1 全员信原文）</td><td>2022-11-09</td><td>裁员 &gt;11,000 人 ~13% + "I got this wrong" + 资源集中方向（A 级原文）</td></tr>
+<tr><td>FY2021 10-K（accn 0001326801-22-000018，R72 分部 + 审计条款）</td><td>filed 2022-02-03</td><td>年度序列 2019-2021+分部重列口径+EY 无保留意见/ICFR</td></tr>
+<tr><td>SEC companyfacts XBRL（companyfacts_META_2022-11-30.json + GOOGL/SNAP/PINS）</td><td>抓取自 EDGAR（facts 值均产生自 ≤ 截断日 filing）</td><td>2012-2021 十年序列机器抽取+竞对同口径（tag fallback：ASC 606 前收入 us-gaap:Revenues；2022-2025 filing 产生的 raw facts 值绝不入档）</td></tr>
+<tr><td>六份 Q4 财报新闻稿 8-K EX-99.1（accn 逐项登记于 business_drivers provenance）</td><td>2017-02~2022-02 各年</td><td>FB DAU/Family DAP 六年量价序列（A 级官方原文）</td></tr>
+<tr><td>东财 105.META 日K/月K（fqt=0，WebFetch 服务端通道）</td><td>2022-11-30 快照（2026-09-10 抓取）</td><td>收盘 118.10+52 周区间 88.09~352.71（三角校验 +0.00%）</td></tr>
+<tr><td>FRED GS10 + FedPrimeRate</td><td>2022-11 月均</td><td>10Y 美债 3.89% 双源</td></tr>
+<tr><td>Reuters/Refinitiv IBES + FT 引 S&P Capital IQ + Benzinga（C 级）</td><td>2022-10-27~11-15 窗口</td><td>Q3/Q4 一致预期 + 大行 PT 谱系 $100-260（仅市场预期对照，不进估值公式）[E:consensus.json]</td></tr>
+<tr><td>FTC/SEC/爱尔兰 DPC/德州法院公开记录（对立检索）</td><td>各事件 ≤2022-11-30 状态</td><td>Phase 0 排雷五项 [E:manifest.json]</td></tr>
+</table>
+<p class="small">引擎告警码（compute_metrics 自动）：M_DILUTION（收入总量 CAGR 41.8% vs 每股 37.5%）、M_SHARE_INFLATION（股本 1.32x）、NORM_MARGIN_SHAPE（利润率周期波动判型）——均已在正文对应章节显性消化。validate_data 0 错 2 警（信息时效/2022 年报缺失——均已按回放协议登记豁免）；crosscheck 12/12；check_scenarios/check_business_drivers/check_market_snapshot 全绿。<b>verify_report 数字校验通过（正文数字 91 项 + 图表数组 7 组 + 证据指针 12 个，110/110，2026-09-10）。</b>系统观察记录见 backtest/observations.md。</p>
+</body>
+</html>

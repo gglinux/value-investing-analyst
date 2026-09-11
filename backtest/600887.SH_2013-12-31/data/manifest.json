@@ -1,0 +1,76 @@
+{
+  "case": "600887.SH_2013-12-31",
+  "data_sources": {
+    "price": "腾讯行情 web.ifzq.gtimg.cn 日K/月K fqt=0 不复权（2013-12-31 收盘 39.08；52 周极值 21.90/52.24 月度序列核对）——东财 push2his 沙箱不可达（HTTP 000），登记改源；B3-16 answer 价格复核同源先例",
+    "share_count": "2013Q3 末实收资本 2,042,914,022 股（三季报合并资产负债表 A 级直读；构成勾稽：2012 末 1,598,645,500 + 定增 272,212,500 + 股权激励行权 172,056,022 = 2,042,914,022 精确闭合，三季报 L239 原文行权价 6.49 元；初稿反推 2,043,160,000 B+ 级已升级弃用）",
+    "financials_primary": "上交所/巨潮年报 PDF：2012 年报（600887_2012_n.pdf / 巨潮 62439793）、2008 年报（巨潮 52003545）、2010 年报摘要、2013 三季报（600887_2013_3.pdf）",
+    "financing_events": "非公开发行发行结果公告（中国证券报 2013-01-12，A 级）",
+    "segments": "2012 年报分产品表（银河证券研报逐项转录引公司公告，A 级引述）",
+    "caliber_note": "2006 年取 2008 年报追溯可比口径（新准则 325.15 vs 旧准则 145.47，双源登记）；total_liabilities 为 ta−te 口径（NCI 差额并入，equity_note 声明）；capex 2011/2012 为投资活动现金流量净额（A 级科目）、2008-2010 为腾讯 FCF 反推（B 级，spike 登记）"
+  },
+  "official_filing_missing": {
+    "years": [
+      2013,
+      2014
+    ],
+    "reason": "历史回放截断纪律：信息截断日 2013-12-31，2013 年报（2014-04-30 发布）及以后全部年报禁用（meta.json 冻结）；底稿以 2012 年报为最新合法年报，2013 年度数据仅使用 9M13 三季报口径（2013-10-30 披露）"
+  },
+  "latest_quarter_checked": {
+    "period": "2013Q3（9M13 累计）",
+    "publish_date": "2013-10-30",
+    "verified": "三季报全文核对：收入 365.71 亿（+11.13%）/归母 25.16 亿（+84.12%）/扣非 17.18 亿（+55.86%）/OCF 52.55 亿（+98.34%）/净资产 154.27 亿（+110.33%）/总资产 315.44 亿——A1 信息时效警告的核对答复：9M13 与年报间隙（2013Q4）无预披露义务事件，A 股无 Q4 指引惯例，业绩快报最早 2014-02（截断日后禁用）"
+  },
+  "adversarial_check": {
+    "keywords": [
+      "三聚氰胺",
+      "反垄断",
+      "质押",
+      "摊薄",
+      "非经常性损益",
+      "食品安全",
+      "标准无保留意见"
+    ],
+    "files": [
+      "data/adversarial_check.json"
+    ],
+    "grade": "A/B 混合（排雷五项 A 级引原文；RF2/RF6 结构判断）"
+  },
+  "files": [
+    {
+      "file": "financials_600887.json",
+      "grade": "A（主表 A 级；capex 2008-2010 B 级衍生已登记）"
+    },
+    {
+      "file": "market_snapshot_600887_2013.json",
+      "grade": "A（腾讯行情+三季报股本）"
+    },
+    {
+      "file": "business_drivers_600887.json",
+      "grade": "A/B（分部 A 级引述；奶荒成本链 B 级）"
+    },
+    {
+      "file": "adversarial_check.json",
+      "grade": "A/B 混合"
+    },
+    {
+      "file": "metrics_600887.json",
+      "grade": "A（compute_metrics 引擎产物，底稿全部 A/B 级输入）"
+    },
+    {
+      "file": "scenarios_600887.json",
+      "grade": "A（估值输入全部 A/B 级：管理层预算/量价分解/三季报净现金；check_scenarios EXIT=0）"
+    },
+    {
+      "file": "expected_return_600887.json",
+      "grade": "A（reverse_dcf expected-return 引擎产物）"
+    },
+    {
+      "file": "scenario_audit.json",
+      "grade": "A（check_scenarios 产物）"
+    },
+    {
+      "file": "verification_strength.json",
+      "grade": "A（verification_strength.py 机器产物：B 级，窗口 5 年<10 缺口已登记）"
+    }
+  ]
+}

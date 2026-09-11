@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>长和 (0001.HK) — 历史回放分析报告 2015-12-31</title>
+<script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+<style>
+body{font-family:"Noto Sans CJK SC","Microsoft YaHei",sans-serif;max-width:960px;margin:24px auto;padding:0 16px;color:#222;line-height:1.65}
+h1{font-size:22px;border-bottom:3px solid #4a6fa5;padding-bottom:8px}
+h2{font-size:18px;border-left:4px solid #4a6fa5;padding-left:10px;margin-top:32px}
+h3{font-size:15px;margin-top:22px}
+table{border-collapse:collapse;width:100%;margin:10px 0;font-size:13px}
+th,td{border:1px solid #bbb;padding:5px 8px;text-align:left}
+th{background:#eef2f8}
+.card{border:1px solid #ccc;border-radius:8px;padding:12px 16px;background:#fafcff}
+.gate-fail{color:#b03030;font-weight:bold}
+.gate-pass{color:#1d7a3e;font-weight:bold}
+.small{font-size:12px;color:#666}
+.ok{color:#1d7a3e}.bad{color:#b03030}
+</style>
+</head>
+<body>
+<h1>长和 (0001.HK) — 历史回放分析报告</h1>
+<p class="small">回放时点 2015-12-31 ｜ 案例编号 B3-15（第三批·多币种多业务集团 SOTP 稳健性测试） ｜ 信息截断日 2015-12-31</p>
+
+<h2 style="margin-top:0">决策卡</h2>
+<div class="card">
+<p><b>结论：观察等价格（档位 2/4）——现价不买，市价回到去无形基准 NAV（<span class="vnum" data-src="fv_base_sotp.json" data-path="sotp_base_per_share" data-fmt="num2">46.46</span> 港元）附近且分部锚未失效时重开评估</b></p>
+<p>现价 <span class="vnum" data-src="market_snapshot_0001_2015.json" data-path="price_close" data-fmt="num2">104.60</span> HKD ｜ 市值 <span class="vnum" data-src="market_snapshot_0001_2015.json" data-path="market_cap_yi_hkd" data-fmt="num1">4,037.2</span> 亿港元 ｜ 流通股 <span class="vnum" data-src="market_snapshot_0001_2015.json" data-path="total_shares_million" data-fmt="num1">3,859.7</span> 百万股 ｜ P/B <span class="vnum" data-src="market_snapshot_0001_2015.json" data-path="per_share_book.pb" data-fmt="num3">0.917</span>x（账面每股 <span class="vnum" data-src="market_snapshot_0001_2015.json" data-path="per_share_book.nav_per_share" data-fmt="num2">114.10</span>，含商誉/牌照/品牌无形） ｜ 股息率 <span class="vnum" data-src="scenarios.json" data-path="dividend_yield" data-fmt="pct2">1.34%</span> ｜ 恒指 <span class="vnum" data-src="market_snapshot_0001_2015.json" data-path="hsi_close_20151231" data-fmt="num1">21,914.4</span></p>
+<p>闸门一（安全边际，narrow 档要求 ≥40%）：基准内在价值（SOTP 去无形）<span class="vnum" data-src="fv_base_sotp.json" data-path="sotp_base_per_share" data-fmt="num2">46.46</span> → MoS = <span class="vnum" data-src="scenario_audit.json" data-path="diagnostics.margin_of_safety_vs_base" data-fmt="pct1">-125.1%</span> <span class="gate-fail">✗ 深度负值</span>去无形/含无形双口径殊途同归 FAIL</b>。市价对 NAV 溢价 <span class="vnum" data-src="fv_base_sotp.json" data-path="vs_price.premium_pct" data-fmt="num1">125.2</span>%（P/NAV <span class="vnum" data-src="fv_base_sotp.json" data-path="vs_price.p_over_nav_base" data-fmt="num2">2.25</span>x）。P/B 口径交叉验证：账面 NAV 114.10×0.6=68.46 仍低于现价——<b>去无形/含无形双口径殊途同归 FAIL</b>。触发价 <span class="vnum" data-src="trigger_reachability.json" data-path="trigger" data-fmt="num2">27.88</span>（52 周低 <span class="vnum" data-src="trigger_reachability.json" data-path="low_52w" data-fmt="num2">97.50</span> 之下 71.4%，TRIGGER_OUT_OF_HISTORY）</p>
+<p>闸门二（期望回报）：①期望 IRR <span class="vnum" data-src="expected_return.json" data-path="expected_annualized_irr" data-fmt="pct2">-17.21%</span> vs <span class="vnum" data-src="expected_return.json" data-path="gate2.consistency_expected_irr.hurdle" data-fmt="pct2">21.83%</span>（narrow 档反推）<span class="gate-fail">✗</span>；②不收敛下限 <span class="vnum" data-src="expected_return.json" data-path="gate2.no_convergence_floor.value" data-fmt="pct2">1.34%</span>（仅股息，iv_growth=0）对 Gate2 深度 FAIL 无救赎；③三情景 5 年路径 IRR 全负（悲观 <span class="vnum" data-src="expected_return.json" data-path="gate2.pessimistic_irr.value" data-fmt="pct2">-29.96%</span>）——loss_probability <span class="vnum" data-src="expected_return.json" data-path="loss_probability" data-fmt="pct0">100%</span> → <span class="gate-fail">闸门二整体不过</span></p>
+<p>三情景（SOTP）：悲观 <span class="vnum" data-src="scenarios.json" data-path="scenarios.0.value_per_share" data-fmt="num2">17.64</span> ／ 基准 <span class="vnum" data-src="scenarios.json" data-path="scenarios.1.value_per_share" data-fmt="num2">46.46</span> ／ 乐观 <span class="vnum" data-src="scenarios.json" data-path="scenarios.2.value_per_share" data-fmt="num2">60.84</span> vs 现价 <span class="vnum" data-src="market_snapshot_0001_2015.json" data-path="price_close" data-fmt="num2">104.60</span>——<b>连乐观情景都低于现价 41.8%</b>，期望值 <span class="vnum" data-src="expected_return.json" data-path="expected_value_per_share" data-fmt="num2">40.69</span>（−61.1%）</p>
+<div class="verification-strength" data-verification-strength="1"
+     data-grade="C"
+     data-reconciliation-coverage="0.3333"
+     data-crosscheck-level="full"
+     data-window-years="3"
+     data-covers-full-cycle="false">
+  <b>核验强度 C</b>：三表勾稽覆盖率 <span class="vnum" data-src="verification_strength.json" data-path="reconciliation.coverage" data-fmt="pct0">33%</span>（2013/2014 和黄旧实体豁免登记） ｜ 命门科目原文登记 full（<u>未经原文机器逐字比对</u>） ｜ 数据窗口 3 年（要求 10 年，不达标）<br>
+  <span class="vs-meaning">核验强度不足：结论的数据地基有明确缺口，档位判定须从严并在首屏说明。本案缺口说明：2015-05 长和重组（长实地产分派）造成集团口径序列断裂——重组后集团报表仅 2015 中报一份，2013/2014 为和黄旧实体口径仅作规模参照；估值通道为 SOTP（上市持仓市值法+交易锚），不依赖盈利序列与三表勾稽，档位由资产锚与价格的缺口（2.25x 溢价）驱动，对口径断裂稳健。SOTP 自身的五项摆动源已度量化登记（第五节），NAV 区间 1,270~2,350 亿内档位不变</span>
+</div>
+</div>
+
+<h2>一、信息集与防前视声明</h2>
+<table>
+<tr><th>信息</th><th>日期</th><th>截断裁决</th></tr>
+<tr><td>长和 2015 中报（管理层备考：假设重组 2015-01-01 生效，集团口径唯一一份报表）</td><td>2015-07-23 发布</td><td>✓ 进信息集（主输入）</td></tr>
+<tr><td>长建集团 2015 中报（净负债 10,113 百万，A 级）</td><td>2015-08 发布</td><td>✓ 进信息集</td></tr>
+<tr><td>屈臣氏 24.95% 股权售予淡马锡（对价 440 亿隐含估值）</td><td>2014-03 交易</td><td>✓ 进信息集（非上市分部唯一交易锚，B 级时点 21 个月陈旧已登记）</td></tr>
+<tr><td>赫斯基 C$14.31 收盘价（SEC 委托书 EX-99.2 官方两处引用+Fok 持股算术自洽）</td><td>文件 2016-04 发布，引用值为 2015-12-31 市场事实</td><td>✓ 进信息集（价格锚=截断日市场事实；文件发布日在截断日后的裁定已登记）</td></tr>
+<tr><td>HPH Trust US$0.53（2015 年报 8.3% 分布率锚）</td><td>年报披露 2016 年，口径为截断日事实</td><td>✓ 进信息集（同上裁定）</td></tr>
+<tr><td>2015 年报（集团全年数据）</td><td>2016-03 披露</td><td><span class="bad">✗ forbidden</span> 未进任何底稿</td></tr>
+<tr><td>3 集团 O2 出售给李嘉诚系外买家（Telefónica）之裁决</td><td>2016-03 后</td><td><span class="bad">✗ forbidden</span> 悲观/乐观按截断日未决状态建模（合并重提作为 F2 证伪条件登记）</td></tr>
+<tr><td>电能实业与长建的合并完成</td><td>2016</td><td><span class="bad">✗ forbidden</span> 截断日仅含要约进行中状态</td></tr>
+</table>
+<p class="small">meta.json 在任何数据抓取之前冻结（先验档位 2，gate1/gate2 不预判）；训练语料中"长和 2016 后股价路径/集团进一步重组/欧洲电讯资产处置结果"均属后见之明，全部剔除。三处 forbidden_data_encountered 已在 manifest 登记（information_cutoff 节）。</p>
+
+<h2>二、Phase 0 排雷（对立检索 + 监管/审计核查）</h2>
+<p>对立检索的正面观点（本案必须正视的对手盘）：市场按 P/B 0.917x 定价长和"折价"——重组后股价 165.10→118.00（长实地产 1:1 分派除权）+9 月除净 0.70 后，市场上存在"李氏重组释放价值、NAV 折价即将收敛"的买方叙事。系统裁决：P/B 折价是对<b>含无形账面</b>的折价，而 SOTP 去无形口径显示市价是<b>溢价</b>——两个口径的分叉本身就是本案核心测试点（登记于 fv_base_sotp.json 口径分歧条目）。审计核查：2015 中报为未经审核 interim 数据（A-级），净债务自洽（现金 173,855−借贷 336,314=−162,459 ✓）、三表勾稽自洽（1,079,536=522,438+557,098 ✓）[E:financials_0001_2015.json]。关联交易排雷四项：①家族信托 TDT3 与集团平行持股赫斯基（29.32% vs 40.19%）；②屈臣氏 24.95% 售予淡马锡（交易对价即本底稿锚）；③和电香港与集团电讯资产的同业竞争安排；④重组对价中长实地产分派的估值合理性——四项均已在底稿登记 [E:fv_base_sotp.json]。</p>
+
+<h2>三、定量画像（口径断裂下的有限窗口）</h2>
+<p><b>口径断裂声明</b>（本案数据层的核心事实）：2015-05-27 长实地产 1:1 分派除权（165.10→118.00）完成后，"长和"作为多币种多业务集团只有一份报表——2015 中报备考（假设重组 2015-01-01 生效）。2013/2014 行为和黄旧实体原口径（经审核业绩摘要对比列），仅作规模参照非估值输入 [E:financials_0001_2015.json]。</p>
+<table>
+<tr><th>行</th><th>收入（百万港元）</th><th>EBITDA</th><th>应占溢利</th><th>经常性溢利</th></tr>
+<tr><td>2013FY 和黄原口径</td><td><span class="vnum" data-src="financials_0001_2015.json" data-path="annual.0.revenue" data-fmt="num0">412,933</span></td><td><span class="vnum" data-src="financials_0001_2015.json" data-path="annual.0.ebitda" data-fmt="num0">95,647</span></td><td><span class="vnum" data-src="financials_0001_2015.json" data-path="annual.0.net_income" data-fmt="num0">31,112</span></td><td><span class="vnum" data-src="financials_0001_2015.json" data-path="annual.0.net_income_recurring" data-fmt="num0">31,028</span></td></tr>
+<tr><td>2014FY 和黄原口径</td><td><span class="vnum" data-src="financials_0001_2015.json" data-path="annual.1.revenue" data-fmt="num0">421,472</span></td><td><span class="vnum" data-src="financials_0001_2015.json" data-path="annual.1.ebitda" data-fmt="num0">98,873</span></td><td><span class="vnum" data-src="financials_0001_2015.json" data-path="annual.1.net_income" data-fmt="num0">67,156</span></td><td><span class="vnum" data-src="financials_0001_2015.json" data-path="annual.1.net_income_recurring" data-fmt="num0">32,008</span></td></tr>
+<tr><td>2015H1 备考（新集团唯一报表）</td><td><span class="vnum" data-src="financials_0001_2015.json" data-path="annual.2.revenue" data-fmt="num0">197,019</span></td><td><span class="vnum" data-src="financials_0001_2015.json" data-path="annual.2.ebitda" data-fmt="num0">46,165</span></td><td><span class="vnum" data-src="financials_0001_2015.json" data-path="annual.2.net_income" data-fmt="num0">14,456</span></td><td><span class="vnum" data-src="financials_0001_2015.json" data-path="annual.2.net_income_recurring" data-fmt="num0">14,938</span></td></tr>
+</table>
+<p class="small">2014 应占溢利 67,156 含出售投资等一次性项；经常性口径 32,008 与 2013 的 31,028 平稳。法定口径 2015H1 另有长实地产分派一次性收益 80,381 不计入估值基期 [E:financials_0001_2015.json]。</p>
+<!-- vchart src=financials_0001_2015.json path=annual.2.segment_ebitda_h1_series.values -->
+<div id="c_seg_ebitda" style="width:100%;height:320px;margin:8px 0"></div>
+<script>
+(function(){
+var c = echarts.init(document.getElementById("c_seg_ebitda"));
+c.setOption({
+  series: [{type: "bar", data: [6048, 6683, 12366, 4644, 7778, 1506, 411, 1688], itemStyle: {color: "#4a6fa5"}}],
+  title: {text: "2015H1 分部 EBITDA（百万港元，备考口径）", left: "center", textStyle: {fontSize: 14}},
+  tooltip: {trigger: "axis"},
+  grid: {left: 90, right: 30, bottom: 80},
+  xAxis: {type: "category", data: ["港口及相关服务","零售","基建","赫斯基能源","欧洲3集团","和记电讯香港","和记电讯亚洲","财务及投资与其他"], axisLabel: {rotate: 30, fontSize: 10}},
+  yAxis: {type: "value", name: "百万港元"}
+});
+})();
+</script>
+<p class="small">基建（含长建并表）与零售（屈臣氏）是 EBITDA 两大支柱；赫斯基 H1 EBITDA 4,644 因油价与加元贬值同比大降 [E:financials_0001_2015.json][E:market_snapshot_0001_2015.json]</p>
+<!-- vchart src=financials_0001_2015.json path=annual.2.segment_assets_total_series.values -->
+<div id="c_seg_assets" style="width:100%;height:320px;margin:8px 0"></div>
+<script>
+(function(){
+var c = echarts.init(document.getElementById("c_seg_assets"));
+c.setOption({
+  series: [{type: "bar", data: [99825, 211450, 308036, 60682, 144740, 26410, 2026, 218795], itemStyle: {color: "#7a5fa5"}}],
+  title: {text: "2015H1 分部资产（百万港元）", left: "center", textStyle: {fontSize: 14}},
+  tooltip: {trigger: "axis"},
+  grid: {left: 90, right: 30, bottom: 80},
+  xAxis: {type: "category", data: ["港口及相关服务","零售","基建","赫斯基能源","欧洲3集团","和记电讯香港","和记电讯亚洲","财务及投资与其他"], axisLabel: {rotate: 30, fontSize: 10}},
+  yAxis: {type: "value", name: "百万港元"}
+});
+})();
+</script>
+<p class="small">分部资产合计 1,079,536 与总资产勾稽一致（含调节项目 7,572）；<b>分部负债不披露（HKFRS 8 选择性披露）</b>——SOTP 分部净债务不透明的官方实证，失控五项之首 [E:financials_0001_2015.json][E:fv_base_sotp.json]</p>
+<p>汇率折算三项实证（多币种集团测试点）：呈报货币港元，赫斯基以 CAD 计价（USDCAD <span class="vnum" data-src="market_snapshot_0001_2015.json" data-path="fx_snapshot_20151231.USDCAD" data-fmt="num4">1.3840</span> → CADHKD <span class="vnum" data-src="market_snapshot_0001_2015.json" data-path="fx_snapshot_20151231.CADHKD" data-fmt="num4">5.6000</span>）、HPH Trust 以 USD 计价（USDHKD <span class="vnum" data-src="market_snapshot_0001_2015.json" data-path="fx_snapshot_20151231.USDHKD" data-fmt="num4">7.7508</span>）、3 集团以 EUR/GBP 计价——2015 年加元贬值使赫斯基应占 EBITDA/EBIT 换算港元同比 −43%/−80%，3 集团收益当地货币 +16% vs 港元呈报 +23%（欧元贬值反噬），汇率对 SOTP 摆动的贡献已登记 [E:fv_base_sotp.json][E:market_snapshot_0001_2015.json]。</p>
+
+<h2>四、五维定性（护城河裁决是本案定档关键输入）</h2>
+<h3>4.1 商业模式</h3>
+<p>五大主业组合：港口及相关服务（全球布局+HPH Trust 30.07% 证券化）、零售（屈臣氏，长和持 75.05%、全球健康美容零售规模居前）、基建（经长建 75.67% 持有，含电能 33.37% 及海外公用事业）、能源（赫斯基 40.19%）、电讯（3 集团欧洲+和记电讯香港 66.09%+和电亚洲）。集团本质是"家族治理的多币种收租组合+资本配置平台"——价值由各分部独立价值加总决定，这正是 SOTP 是唯一合法估值通道的结构性原因 [E:financials_0001_2015.json][E:fv_base_sotp.json][E:market_snapshot_0001_2015.json]。</p>
+<h3 data-moat="narrow" data-moat-trend="stable">4.2 护城河（narrow——闸门一门槛 40% 的挂靠档）</h3>
+<p>真实存在的部分：①港口网络的地理位置垄断性（不可复制的深水泊位与全球节点）；②屈臣氏的规模经济（亚洲+欧洲 12,000+ 门店的采购与租金议价）；③基建资产的特许经营与受监管回报属性（长建 UK/AUS 公用事业组合）——三者均经过行业周期验证 [E:financials_0001_2015.json][E:fv_base_sotp.json]。</p>
+<p>侵蚀与限制：①集团层面资本配置受家族治理约束（见 4.4），分部价值向股东传导存在治理楔子——市场对控股集团长期给予折价而非溢价；②赫斯基能源无独立护城河（油价Beta+资本密集）；③3 集团在欧洲电讯市场为挑战者地位（资本开支黑洞，截断日 O2 合并未决）；④港币资产与全球资产再投资回报的不确定性。<b>裁决：narrow</b>——分部各有局部优势，但集团层面没有把分部价值转化为股东超额回报的结构性机制 [E:fv_base_sotp.json][E:phase5_workpaper.json]。</p>
+<h3>4.3 增长空间</h3>
+<p>NAV 口径 iv_growth 保守取 0（S7b 语境：基建与零售的内生增长被 3 集团资本开支与赫斯基油价下行对冲；重组协同无实证先登记为 F4 证伪条件）。增长期权在截断日有三条未决路径：O2 合并裁决、电能合并要约、屈臣氏后续证券化——全部按未决状态建模不预支收益 [E:scenarios.json][E:fv_base_sotp.json][E:financials_0001_2015.json]。</p>
+<h3>4.4 管理层与治理</h3>
+<p>能力与治理分开打分：能力 A（半个世纪的港口/零售/基建全球布局，屈臣氏淡马锡交易与长实地产分派的执行能力证明）；治理 C（家族信托 TDT3 与集团平行持股赫斯基 29.32%/40.19%——集团股东与家族股东的利益不完全重合；关联交易网络密度高；重组对价的公允性依赖控股股东自我交易程序）。"能力+治理楔子"组合正是市场对集团 NAV 长期给予折价而不是溢价的微观基础 [E:fv_base_sotp.json][E:phase5_workpaper.json][E:market_snapshot_0001_2015.json]。</p>
+<h3>4.5 财务质量与风险深查</h3>
+<p>合并净债务 <span class="vnum" data-src="financials_0001_2015.json" data-path="annual.2.net_debt" data-fmt="num0">162,459</span> 百万港元（借贷 336,314 vs 现金 173,855），约 3.5× 2015H1 年化 EBITDA——杠杆集中于非上市分部（长建/和电香港的净债务按市值法剔除后 149,846 落在港口/零售/3 集团/财投）。风险深查三结论：①分部负债不披露使分部净债务归属为估计（SOTP 失控源①）；②3 集团净债务 70,000 为透明近似（合并借贷 23% 欧元借款推算，B-级）；③多币种敞口双向（CAD/EUR 贬值已实证侵蚀换算收益）[E:financials_0001_2015.json][E:fv_base_sotp.json][E:verification_strength.json]。</p>
+
+<h2>五、估值与安全边际（Phase 4）</h2>
+<h3>5.1 估值通道裁决：SOTP 为唯一合法通道</h3>
+<p>引擎标准通道（OE/DCF）在本案不可用：集团口径序列断裂（仅 2015H1 一份新口径报表）使 owner earnings 基期无从建立；且控股集团的市场价值由分部资产加总决定而非合并盈利贴现。SOTP+分部锚是唯一与"股东实际拥有什么"同构的通道 [E:fv_base_sotp.json][E:financials_0001_2015.json]。</p>
+<h3>5.2 SOTP 三情景（r=<span class="vnum" data-src="scenarios.json" data-path="discount_rate" data-fmt="pct1">10.0%</span>、H=5 年、股本 <span class="vnum" data-src="fv_base_sotp.json" data-path="shares_m" data-fmt="num1">3,859.7</span> 百万股）</h3>
+<table>
+<tr><th>项</th><th>基准（sotp）</th><th>金额逻辑</th></tr>
+<tr><td>上市四项权益（市值法）</td><td><span class="vnum" data-src="fv_base_sotp.json" data-path="listed_equity_subtotal_m" data-fmt="num1">188,559.4</span></td><td>长建 75.67%（136,850）+ 赫斯基 40.19%（32,382）+ HPH Trust 30.07%（10,760）+ 和电香港 66.09%（8,567）——全部 A 级市场锚 [E:fv_base_sotp.json][E:market_snapshot_0001_2015.json]</td></tr>
+<tr><td>非上市分部</td><td><span class="vnum" data-src="fv_base_sotp.json" data-path="non_listed_subtotal_m" data-fmt="num1">140,593.5</span></td><td>屈臣氏 132,814（2014-03 淡马锡交易锚，OBS-VAL-01 交易锚档）+ 3 集团 7,780（EBITDA 5.0x−净债务近似，B-）+ 港口非上市/财投/和电亚洲 0（无锚归零纪律）</td></tr>
+<tr><td>净债务调整</td><td>−<span class="vnum" data-src="fv_base_sotp.json" data-path="net_debt_adjustment.adjusted_net_debt_m" data-fmt="num0">149,846</span></td><td>合并净债务 <span class="vnum" data-src="fv_base_sotp.json" data-path="net_debt_adjustment.consolidated_net_debt_m" data-fmt="num0">162,459</span> − 长建 10,113（A 级）− 和电香港 2,500（B 级）——市值法覆盖的并表上市实体防双计 [E:fv_base_sotp.json]</td></tr>
+<tr><td>SOTP 基准值 / 每股</td><td><span class="vnum" data-src="fv_base_sotp.json" data-path="sotp_base_value_m" data-fmt="num1">179,306.9</span> / <span class="vnum" data-src="fv_base_sotp.json" data-path="sotp_base_per_share" data-fmt="num2">46.46</span></td><td>防双计三层：电能经长建不单列；长建/和电香港净债务剔除；赫斯基/HPH 联营权益法本不在合并净债务</td></tr>
+</table>
+<p class="small">三情景：悲观 <span class="vnum" data-src="scenarios.json" data-path="scenarios.0.value_per_share" data-fmt="num2">17.64</span>（sotp_asset_floor：上市四项×0.8+屈臣氏锚×0.6+非上市归零+合并净债务全额不剔除——S2b 机器重算偏差 0.012%）／基准 <span class="vnum" data-src="scenarios.json" data-path="scenarios.1.value_per_share" data-fmt="num2">46.46</span>／乐观 <span class="vnum" data-src="scenarios.json" data-path="scenarios.2.value_per_share" data-fmt="num2">60.84</span>（3 集团 EV 6.0x+港口非上市 20,000+财投 10,000）。概率 30/50/20，期望值 <span class="vnum" data-src="scenarios.json" data-path="expected_value_per_share" data-fmt="num2">40.69</span> [E:scenarios.json][E:scenario_audit.json]。</p>
+<h3>5.3 OBS-VAL-01 接线规则首战 + SOTP 失控五项度量化</h3>
+<p><b>OBS-VAL-01 两项接线规则</b>：①SOTP 折价/赋值必须挂依据——市场锚优先→交易锚次之→EBITDA 倍数（区间登记）→无锚归零，四层全部应用（上市四项市场锚/屈臣氏淡马锡锚/3 集团倍数/港口财投归零）；②港股门槛——恒生全收益长期年化 9% 为 index_hurdle（被 check_scenarios S2e 硬下限折现率 10% 覆盖，已登记 basis）[E:fv_base_sotp.json][E:expected_return.json]。</p>
+<p><b>SOTP 失控五项摆动源（本案测试点核心，全部度量化）</b>：①分部负债不披露→分部净债务归属为估计；②3 集团净债务 70,000 透明近似（23% 欧元借款推算）；③屈臣氏锚 21 个月陈旧；④含/不含无形口径差 ~2,500 亿（账面 NAV 114.10/股 vs 去无形 46.46/股）；⑤上市锚年内波动（赫斯基 −50%）。五项合计使 NAV 区间 1,270~2,350 亿（1.85 倍摆幅）——但即使乐观上界 235,000 百万（60.84/股）仍低于现价 41.8%，<b>档位在区间内不变，失控只影响精度叙事不影响方向</b> [E:fv_base_sotp.json][E:scenario_audit.json]。</p>
+<h3>5.4 安全边际结论</h3>
+<p>MoS（vs 基准）= <span class="vnum" data-src="scenario_audit.json" data-path="diagnostics.margin_of_safety_vs_base" data-fmt="pct1">-125.1%</span> vs ≥40%（narrow 档）<span class="gate-fail">✗</span>；P/B 口径交叉：账面 114.10×0.6=68.46 &lt; 现价 <span class="vnum" data-src="market_snapshot_0001_2015.json" data-path="price_close" data-fmt="num2">104.60</span> 同样 ✗——<b>现价没有任何口径下的安全边际，问题是"溢价"而非"折价"</b>。烟蒂式例外不适用（悲观 17.64 = 现价 0.17×，且集团清算须经治理程序）。触发价 27.88 = 基准×0.6（窄护城河 40% 折扣），52 周区间 [<span class="vnum" data-src="trigger_reachability.json" data-path="low_52w" data-fmt="num2">97.50</span>, <span class="vnum" data-src="trigger_reachability.json" data-path="high_52w" data-fmt="num2">124.70</span>]（除权后可比口径）之下 71.4% [E:trigger_reachability.json][E:market_snapshot_0001_2015.json]。</p>
+
+<h2>六、双闸门与档位（Phase 4 定档）</h2>
+<table>
+<tr><th>闸门</th><th>项</th><th>值</th><th>门槛</th><th>判定</th></tr>
+<tr><td rowspan="3">闸门一</td><td>MoS（vs SOTP 基准 46.46）</td><td><span class="vnum" data-src="scenario_audit.json" data-path="diagnostics.margin_of_safety_vs_base" data-fmt="pct1">-125.1%</span></td><td>≥40%（narrow 档）</td><td class="bad">✗（深度负值）</td></tr>
+<tr><td>MoS（P/B 口径交叉）</td><td>账面 NAV 114.10×0.6=68.46 &lt; 104.60</td><td>同上</td><td class="bad">✗（双口径同败）</td></tr>
+<tr><td>触发价可达性</td><td>27.88 vs 52 周低 97.50</td><td>—</td><td class="bad">TRIGGER_OUT_OF_HISTORY（−71.4%）</td></tr>
+<tr><td rowspan="3">闸门二</td><td>①期望 IRR</td><td><span class="vnum" data-src="expected_return.json" data-path="gate2.consistency_expected_irr.value" data-fmt="pct2">-17.21%</span></td><td><span class="vnum" data-src="expected_return.json" data-path="gate2.consistency_expected_irr.hurdle" data-fmt="pct2">21.83%</span>（(1.10×(1/0.6)^(1/5))−1，narrow 反推）</td><td class="bad">✗</td></tr>
+<tr><td>②不收敛下限</td><td><span class="vnum" data-src="expected_return.json" data-path="gate2.no_convergence_floor.value" data-fmt="pct2">1.34%</span>（股息，iv_growth=0）</td><td>verdict 冻结口径</td><td class="ok">✓（但无救赎作用）</td></tr>
+<tr><td>③悲观年化</td><td><span class="vnum" data-src="expected_return.json" data-path="gate2.pessimistic_irr.value" data-fmt="pct2">-29.96%</span></td><td>≥0</td><td class="bad">✗（loss_probability 100%）</td></tr>
+</table>
+<p><b>档位判定：观察等价格（2/4）</b>——adoption_ruling：Gate1 质地 PASS（偏弱）——资产真实（上市四项+淡马锡锚是硬锚），价格等得到（SOTP 区间 17.64~60.84 内任何低于 60 的价格都开始有边际）；Gate2 价格 FAIL（深度）——期望值路径 −17.21%/年，三情景全负。两者合成：排除(1)（资产不是假的）与买入档（期望回报深度为负）同时排除，落观察等价格。index_hurdle 检验：期望 IRR 跑输恒生门槛 <span class="vnum" data-src="expected_return.json" data-path="index_hurdle" data-fmt="pct1">9.0%</span> 达 26.2pct——机会成本缺口即"等"的保险费 [E:expected_return.json][E:phase5_workpaper.json]。</p>
+
+<h2>七、关键判断收敛（Phase 4.5）</h2>
+<p>三师与红队核心收敛点：①资产真实性不是问题——上市四项是交易所价格（A 级），屈臣氏有真金白银的交易锚（淡马锡 440 亿对价），悲观 17.64 与基准 46.46 的差距反映的是分部清算折价而非资产存疑；②市价与去无形 NAV 的 2.25x 缺口不是"市场错"——账面 NAV 114.10 含商誉/牌照/品牌 ~2,500 亿，去无形口径下市场定价其实<b>公平偏贵</b>；③SOTP 五项摆动源（1.85 倍 NAV 摆幅）足以让任何"精确低估"叙事失真，但 104.60 vs 60.84（乐观上界）的缺口大过全部摆动——结论对参数稳健；④股息 1.34% 提供不了等待成本的下限保护；⑤档位 2 的例外条款一致指向市价回到基准 NAV 附近且分部锚未失效（pre-mortem 约束）[E:phase5_workpaper.json][E:fv_base_sotp.json]。</p>
+
+<h2>八、三位大师独立评估 + 红队（Phase 5）</h2>
+<table>
+<tr><th>大师</th><th>结论</th><th>一句话理由</th></tr>
+<tr><td>巴菲特</td><td>观察等价格</td><td>"我用 40 美分买 1 美元，不付 2.25 美元买 1 美元——即便那 1 美元是真的"——能力圈 3.0（分部生意均可理解，但组合定价复杂）</td></tr>
+<tr><td>段永平</td><td>观察等价格</td><td>"生意都是好生意，加在一起就成了看不懂的价钱；买股票买公司，可这公司的价值取决于你信谁的报表口径"——评分 2.5</td></tr>
+<tr><td>李录</td><td>观察等价格</td><td>"SOTP 五项失控源每一项我都能给出两个方向的答案，唯一给不出的是现价低于内在价值的证据"——理解最深（2.5）仍拒绝现价</td></tr>
+</table>
+<p><b>红队三攻防</b>（全文见 data/phase5_workpaper.json）：①P/B 0.917x 的"账面折价"是否被去无形口径冤枉？→ 商誉/牌照/品牌的现金获得能力已内含于分部盈利锚（屈臣氏交易锚/3 集团 EBITDA 倍数），再按账面入模即双重计算——交叉口径同败是结构性的；②重组协同是否值得给溢价？→ 截断日无协同量化披露，按 F4 证伪条件登记不预支；③合并重提（长建+电能）若完成是否改变 NAV？→ 改变构成不改变加总，且按未决状态建模 [E:phase5_workpaper.json]。</p>
+
+<h2>九、持有体验预演 + 跟踪清单</h2>
+<p><b>持有体验预演</b>：现价买入即入深度溢价区——三情景全负意味着任何情景 5 年路径都不收敛；股息 1.34% 无现金流缓冲；波动由分部锚（赫斯基油价、3 集团电讯竞局、屈臣氏零售寒冬）与家族治理事件双驱动。<b>跟踪清单</b>：①市价 vs 去无形基准 NAV 46.46（回到 1.0x P/NAV 附近=重开评估）；②O2 合并裁决（改变 3 集团价值形态）；③电能合并要约进展；④赫斯基资本开支与油价；⑤屈臣氏同店销售与后续证券化。证伪条件 F1-F4 与重入开关见 phase5_workpaper.json [E:phase5_workpaper.json][E:scenarios.json]。</p>
+
+<h2>十、数据引用附录（全部 publish_date）</h2>
+<table>
+<tr><th>来源</th><th>日期</th><th>用途</th></tr>
+<tr><td>长和 2015 中报（HKEX PDF，管理层备考）</td><td>2015-07-23</td><td>2015H1 全套科目+分部 EBITDA/资产+股本 3,859,678,500+净债务 162,459</td></tr>
+<tr><td>长建集团 2015 中报</td><td>2015-08</td><td>长建净负债 10,113（A 级）</td></tr>
+<tr><td>和黄 2014 经审核业绩摘要（hkexnews）</td><td>2015-02-26</td><td>2013/2014FY 规模参照行（旧实体口径）</td></tr>
+<tr><td>赫斯基 SEC 委托书（EX-99.2）</td><td>2016-04 发布，引用 2015-12-31 市场事实</td><td>C$14.31 收盘价双处引用+股本 1,005,451,854</td></tr>
+<tr><td>HPH Trust 2015 年报（SGX）</td><td>2016 年发布，口径为截断日事实</td><td>US$0.53+8.3% 分布率锚+8,711,101,022 units</td></tr>
+<tr><td>淡马锡-屈臣氏交易公告</td><td>2014-03</td><td>屈臣氏 132,813.5 百万交易锚（21 个月陈旧已登记）</td></tr>
+<tr><td>东财行情（116.00001/01038/00215 日线 fqt=0）+Xe+Bank of Canada</td><td>2015-12-31 快照</td><td>长和/长建/和电香港收盘+赫斯基/HPH 折算+汇率三角</td></tr>
+<tr><td>东财月K/分红 API（事后 Step 4 专用）</td><td>2026-09-10 抓取</td><td>事后回报与除净日勘误——<b>不属于回放信息集</b></td></tr>
+</table>
+<p class="small">数据质量分级 A-：SOTP 全部锚为 A/A- 级（市场价/官方文件），核验强度 C 来自窗口与勾稽覆盖（口径断裂已豁免登记）——SOTP 通道对两者均不敏感。系统观察记录见 backtest/observations.md。<b>verify_report 数字校验通过（正文 63 项 + 图表数组 2 组 + 证据指针 9 个，2026-09-10）。</b></p>
+</body>
+</html>

@@ -1,0 +1,44 @@
+{
+ "case": "META_2022-11-30",
+ "tier": "C（第三方一致预期整理——仅用于市场预期对照，不作为估值输入；估值链全部使用 A 级 XBRL 事实）",
+ "as_of": "2022-10-27 Q3 财报后至 2022-11-30 截断日窗口",
+ "sources": [
+  {"source": "Reuters/Refinitiv IBES", "used_for": "Q3 一致预期/Q4 一致预期", "level": "C"},
+  {"source": "FT 引 S&P Capital IQ", "used_for": "Q3 净利预期交叉", "level": "C"},
+  {"source": "Benzinga/Investing.com 大行动作汇编", "used_for": "目标价谱系", "level": "C"},
+  {"source": "Meta Q3 2022 官方新闻稿（CFO Outlook）", "used_for": "Q4 指引/2023 费用指引", "level": "A（官方指引非预期）"}
+ ],
+ "consensus_points": {
+  "q3_2022_rev_est_musd": 27380,
+  "q3_2022_rev_actual_musd": 27714,
+  "q3_2022_eps_est_usd": 1.89,
+  "q3_2022_eps_actual_usd": 1.64,
+  "q4_2022_rev_est_musd": 32200,
+  "q4_2022_company_guidance_musd": [30000, 32500],
+  "fy2022_expense_guidance_musd": [85000, 87000],
+  "fy2023_expense_guidance_musd": [96000, 101000],
+  "rl_2023_outlook_official": "Reality Labs operating losses in 2023 will grow significantly year-over-year（Q3 新闻稿官方原文）",
+  "headcount_2023_official": "2023 年底 headcount 约与 2022Q3 持平（Q3 新闻稿官方原文）"
+ },
+ "price_target_spectrum_cutoff_window": {
+  "note": "截断日窗口（2022-10-27~2022-11-15）大行目标价动作——样本非全市场，仅登记可见谱系",
+  "entries": [
+   {"firm": "Morgan Stanley", "date": "2022-11-14", "pt": 100, "rating": "Equal-weight"},
+   {"firm": "Rosenblatt", "date": "2022-11-10", "pt": 104, "rating": "Neutral"},
+   {"firm": "Oppenheimer", "date": "2022-11-14", "pt": 145, "rating": "Outperform"},
+   {"firm": "Morgan Stanley", "date": "2022-10-27", "pt": 105, "rating": "Equal-weight（Q3 财报后）"},
+   {"firm": "MKM Partners", "date": "2022-10-27", "pt": 140, "rating": "Buy"},
+   {"firm": "Goldman Sachs", "date": "2022-10-27", "pt": 165, "rating": "Buy"},
+   {"firm": "Stifel", "date": "2022-10-27", "pt": 185, "rating": "Buy"},
+   {"firm": "Deutsche Bank", "date": "2022-10-27", "pt": 125, "rating": "Buy"},
+   {"firm": "Tigress Financial", "date": "2022-11-02", "pt": 260, "rating": "Strong Buy（自 $466 砍至 $220 后 11-14 上调至 $260）"}
+  ],
+  "range": [100, 260],
+  "observation": "目标价谱系极宽（$100-260，2.6x 离散度）——连 Strong Buy 方向的分析师都把目标价砍半以上；市场对'广告收入是否永久性损伤'分歧极大。现价 118.10 隐含处在这条谱系中枢偏下。"
+ },
+ "cross_check_vs_system": {
+  "note": "系统不使用一致预期作为输入；此处仅记录'市场预期当时在哪里'供 Step 4 对照",
+  "fy2022_revenue_implied_from_guidance_musd": [114444, 116944],
+  "fy2022_revenue_implied_calc": "9M22 实际 84,444 + Q4 指引 30,000~32,500 = 114,444~116,944（±1% 内与官方全年口径一致性待 Step 4 对照）"
+ }
+}

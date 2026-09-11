@@ -1,0 +1,66 @@
+{
+  "company": "長江和記實業",
+  "ticker": "0001.HK",
+  "currency": "HKD",
+  "price": 104.60,
+  "price_source": "market_snapshot_0001_2015.json（2015-12-31 收盘，A 级）",
+  "moat": "narrow",
+  "moat_note": "多业务集团：基建/港口/零售/电信各自有区域护城河（长建受监管资产、屈臣氏规模），但集团层面为控股结构+多币种敞口，无统一经济护城河——narrow",
+  "discount_rate": 0.10,
+  "discount_rate_basis": "OBS-VAL-01 港股门槛规则：恒生全收益序列取不到 → 沿用缺省 9%；但 S2e 硬下限 10% 单向生效不可放松 → 取 10.0%",
+  "discount_rate_floor_basis": "check_scenarios S2e 硬下限（恒生全收益门槛 9% 因序列不可得被下限覆盖，已登记 meta.json 港股专项）",
+  "hold_years": 5,
+  "dividend_yield": 0.0134,
+  "dividend_yield_basis": "sustainable_forward",
+  "dividend_yield_basis_note": "2015 中期股息 0.70×2 年化 1.40/104.60=1.34%；TTM 口径因重组序列断裂（2015-05 付和黄旧末期息）不可用——OBS-600660-03 口径纪律",
+  "intrinsic_value_growth": 0.00,
+  "iv_growth_note": "集团备考经常性溢利 +46% 但含重组增量（Eversholt 并表等），且多币种贬值拖累呈报口径——保守取 0，不挂正增长证据",
+  "default_probabilities": {"悲观": 0.3, "基准": 0.5, "乐观": 0.2},
+  "scenarios": [
+    {
+      "name": "悲观",
+      "value_per_share": 17.64,
+      "probability": 0.3,
+      "method": "sotp_asset_floor",
+      "method_note": "分部资产底价：上市四项市值×0.8（变现折价）+ 屈臣氏交易锚×0.6（零售寒冬+锚时点陈旧）+ 3集团/港口非上市/财投归零 + 合并净债务全额扣减（不剔除长建/和电香港——悲观假设市值折扣不足以覆盖并表杠杆）[E:fv_base_sotp.json]",
+      "method_inputs": {
+        "shares_m": 3859.6785,
+        "components": [
+          {"item": "长建 75.67% 市值", "amount_m": 136850.1, "haircut": 0.8},
+          {"item": "赫斯基 40.19% 市值", "amount_m": 32382.3, "haircut": 0.8},
+          {"item": "HPH Trust 30.07% 市值", "amount_m": 10759.9, "haircut": 0.8},
+          {"item": "和电香港 66.09% 市值", "amount_m": 8567.1, "haircut": 0.8},
+          {"item": "屈臣氏 75.05% 交易锚", "amount_m": 132813.5, "haircut": 0.6},
+          {"item": "3集团/港口非上市/财投/和电亚洲", "amount_m": 0, "haircut": 0.0},
+          {"item": "合并净债务（全额，不剔除）", "amount_m": -162459, "haircut": 1.0}
+        ]
+      },
+      "recompute": "109,480+25,906+8,608+6,854+79,688+0−162,459 = 68,077 百万 → /3,859.6785 = 17.64",
+      "stressed_assumptions": ["listed_stake_liquidity_haircut_20pct", "ws_anchor_haircut_40pct", "non_listed_segments_zero", "net_debt_full_no_deduction"],
+      "probability_evidence": "[E:meta.json] 先验观察等价格；悲观概率不偏离缺省"
+    },
+    {
+      "name": "基准",
+      "value_per_share": 46.46,
+      "probability": 0.5,
+      "method": "sotp",
+      "method_note": "上市四项市场锚 A 级 + 屈臣氏淡马锡锚 + 3集团 EBITDA 5.0x−欧元借款近似净债务 + 港口非上市/财投归零 − 净债务调整 149,846（剔除长建 10,113 A 级+和电香港 2,500 B 级）[E:fv_base_sotp.json]",
+      "stressed_assumptions": [],
+      "probability_evidence": "[E:meta.json] 缺省概率"
+    },
+    {
+      "name": "乐观",
+      "value_per_share": 60.84,
+      "probability": 0.2,
+      "method": "sotp",
+      "method_note": "全部非上市分部给乐观值：3集团 EV 6.0x−净债务 60,000=33,300；港口非上市 20,000（Trust 外 EBITDA 7,474×4×0.67）；财投 10,000；屈臣氏锚不打折；净债务调整同基准 [E:fv_base_sotp.json 失控登记]",
+      "stressed_assumptions": [],
+      "probability_evidence": "[E:meta.json] 缺省概率"
+    }
+  ],
+  "no_real_downside_check": "悲观 17.64 << 现价 104.60——存在真实下行（−83%），无需 no_real_downside_ack",
+  "expected_value_per_share": 40.69,
+  "expected_value_calc": "0.3×17.64 + 0.5×46.46 + 0.2×60.84 = 5.29+23.23+12.17 = 40.69 —— 期望值低于现价 61.1%",
+  "value_trap": null,
+  "test_point_note": "本案为反向案例方向：市价大幅高于全部情景 NAV 上限（乐观 60.84 仍较现价低 41.8%）——SOTP 全口径下无安全边际，估值层方向为不买入；闸门判定留待 verdict 与官方答案比对（重组题材/控股溢价的市场定价 vs 内在价值纪律）"
+}

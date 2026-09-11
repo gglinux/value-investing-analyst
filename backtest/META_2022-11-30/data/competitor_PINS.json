@@ -1,0 +1,80 @@
+{
+ "company": "Pinterest Inc.",
+ "ticker": "PINS",
+ "currency": "USD",
+ "unit": "million",
+ "tax_rate": 0.21,
+ "annual": [
+  {
+   "year": 2017,
+   "revenue": 472.852,
+   "net_income": -130.044,
+   "ebit": -137.934,
+   "d_and_a": 16.135,
+   "capex": null,
+   "ocf": -102.913,
+   "total_equity": -546.464,
+   "total_debt": 0.0,
+   "cash": 71.468
+  },
+  {
+   "year": 2018,
+   "revenue": 755.932,
+   "net_income": -62.974,
+   "ebit": -74.721,
+   "d_and_a": 20.859,
+   "capex": null,
+   "ocf": -60.369,
+   "total_equity": -594.563,
+   "total_debt": 0.0,
+   "cash": 627.813
+  },
+  {
+   "year": 2019,
+   "revenue": 1142.761,
+   "net_income": -1361.371,
+   "ebit": -1388.866,
+   "d_and_a": 27.791,
+   "capex": null,
+   "ocf": 0.657,
+   "total_equity": 2023.705,
+   "total_debt": 0.0,
+   "cash": 1713.3450000000003
+  },
+  {
+   "year": 2020,
+   "revenue": 1692.658,
+   "net_income": -128.323,
+   "ebit": -142.504,
+   "d_and_a": 36.988,
+   "capex": null,
+   "ocf": 28.826,
+   "total_equity": 2242.371,
+   "total_debt": 0.0,
+   "cash": 1760.306
+  },
+  {
+   "year": 2021,
+   "revenue": 2578.027,
+   "net_income": 316.438,
+   "ebit": 326.187,
+   "d_and_a": 27.5,
+   "capex": null,
+   "ocf": 752.907,
+   "total_equity": 3038.743,
+   "total_debt": 0.0,
+   "cash": 2480.1180000000004
+  }
+ ],
+ "note": "竞对底稿（B3-16 定量画像对照用）：companyfacts 脚本化抽取 ≤2021 年度（截断日口径）；9M22 YTD 见 _ytd_9m22；shares_diluted 置 null（每股口径不对竞对使用）；equity/cash/mkt_sec 为各年 12-31 时点（filed 最新版）",
+ "_ytd_9m22": {
+  "rev_9m22": 1925.365,
+  "ni_9m22": -113.538,
+  "oi_9m22": -107.545,
+  "ocf_9m22": 410.912,
+  "capex_9m22": null,
+  "rev_9m21": 1731.372,
+  "ni_9m21": 141.739
+ },
+ "_restatements": []
+}

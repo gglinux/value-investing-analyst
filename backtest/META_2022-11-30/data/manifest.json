@@ -1,0 +1,211 @@
+{
+ "case": "META_2022-11-30",
+ "generated_at": "2026-09-10",
+ "data_sources": [
+  {
+   "source": "SEC EDGAR companyfacts XBRL",
+   "version": "2026-09-10 抓取",
+   "used_for": [
+    "三表年度序列 2012-2021",
+    "季度序列 2021Q1-2022Q3",
+    "机器核对 crosscheck"
+   ],
+   "level": "A"
+  },
+  {
+   "source": "SEC EDGAR R-files（FilingSummary → R70/R72/R1）",
+   "version": "accn 0001326801-22-000018 / 0001326801-22-000108",
+   "used_for": [
+    "分部数据 FoA/RL",
+    "cover 股本 A+B"
+   ],
+   "level": "A"
+  },
+  {
+   "source": "SEC EDGAR 8-K EX-99.1",
+   "version": "accn 0001326801-22-000116（2022-11-09）",
+   "used_for": [
+    "裁员公告全文/管理层资本配置自认"
+   ],
+   "level": "A"
+  },
+  {
+   "source": "Meta IR 财报新闻稿（PRNewswire 转载）",
+   "version": "2022-10-26",
+   "used_for": [
+    "DAP/MAP/headcount/恒汇收入/SBC/回购/资本开支口径"
+   ],
+   "level": "B+（与 XBRL 逐项互证一致）"
+  },
+  {
+   "source": "东财行情 105.META（WebFetch 服务端通道）",
+   "version": "2026-09-10 抓取",
+   "used_for": [
+    "2022-11-30 收盘价 118.10",
+    "52 周高低（月K klt=103）"
+   ],
+   "level": "A-（历史时点行情）"
+  }
+ ],
+ "official_filing_missing": {
+  "years": [
+   2022
+  ],
+  "reason": "回放信息截断日 2022-11-30：FY2022 年报尚未发布（实际 filed 2023-02-02，晚于截断日禁用）。2022 年度数据以 9M22 10-Q（filed 2022-10-27）为最新合法口径，估值用 9M 实际+保守外推，不以任何形式充当年报。"
+ },
+ "adversarial_check": {
+  "status": "done（2026-09-10 Phase 0 WebSearch 四路对立面检索完成，仅登记 ≤2022-11-30 公开事实）",
+  "forensic_findings": [
+   {
+    "item": "反垄断：FTC v. Meta Platforms（D.D.C.）",
+    "timeline_cutoff": "2020-12-08 FTC+46 州起诉（寻求剥离 Instagram/WhatsApp）→ 2021-06-28 初次起诉被驳回（法律不充分）→ 2021-08-19 修正起诉 → 2022-01-11 法院驳回 Meta 撤案动议，案件进入 discovery；并行州案（NY AG 领衔）2021-06-28 因 laches 被驳回且不得再诉",
+    "status_at_cutoff": "无判决、无和解金额；尾部风险=若 FTC 胜诉或诉中不利披露可致 Instagram/WhatsApp 剥离主张重提。评估：10 年量级诉讼、拆分救济法律门槛极高，定性为'长期尾部'而非'近期可量化'。",
+    "level": "A（法院记录/官方）"
+   },
+   {
+    "item": "隐私监管：Cambridge Analytica 系列",
+    "timeline_cutoff": "2019-07 FTC 和解令：$5B 罚款（史上最大隐私罚款）+20 年合规令（董事会独立隐私委员会/季度认证）；2019-07 SEC $100M 和解；2018-07 英国 ICO £500K（当时法定上限）",
+    "status_at_cutoff": "已结、已计提、已支付——无新增敞口；但 20 年合规令使任何新隐私违规面临轻则民事重则刑事的个人认证责任。",
+    "level": "A（FTC/SEC 官方）"
+   },
+   {
+    "item": "集体诉讼与州检察长",
+    "timeline_cutoff": "① Illinois BIPA 人脸识别 $650M 集体和解 2021-02-26 最终批准，2022-05 起付款（费用已实现）；② Cambridge Analytica 消费者隐私集体诉讼 $725M 和解 2022-08 披露（截断日前已知，Q3 10-Q Legal Proceedings 披露范畴）；③ 德州总检察长 2022-02-15 起诉生物识别违规（CUBI 每违规 $25K 法定金，官方称寻求数十亿美元）；④ 华盛顿特区 AG 反垄断并行诉讼进行中",
+    "status_at_cutoff": "①②为已知可量化成本（合计 ~$1.4B，均不设 admit-fault 条款）；③未决、量级上限高但每违规基数取证难度大；④与 FTC 案同性质。评估：隐私诉讼已呈'周期性税负'形态，单案 $0.5-1B 量级、相对 $313B 市值单项不致命。",
+    "level": "B+（法院文件+主流媒体交叉）"
+   },
+   {
+    "item": "欧盟数据传输（Schrems II 后续）",
+    "timeline_cutoff": "2022-07-06 爱尔兰 DPC 草案决定：Meta EU→US 数据传输违反 GDPR Art.46(1)、应暂停；CSAs 分歧提交 EDPB Art.65 裁决，EDPB 裁定更严厉措施；截断日最终决定未公布。Meta 2022-09/10 官方渠道警告若强制停传或被迫暂停欧洲 Facebook 服务；EU-US 新数据框架 2022-03 原则达成、Meta 表述其或于停传期限前生效",
+    "status_at_cutoff": "悬置高压状态——二元尾部风险（停传=欧盟服务中断 vs 新框架如期落地）。评估：Q3 10-Q Risk Factors 已正式披露；作为定性风险计入悲观情景，不做点估计。",
+    "level": "A（DPC 程序文件+Meta 官方表态）"
+   },
+   {
+    "item": "审计意见",
+    "timeline_cutoff": "EY 自 2007 年任审计师；FY2021 10-K（filed 2022-02-02）EY 无保留意见 + ICFR 404(b) 有效证明勾选；FY2022 年报（filed 2023-02-02）在截断日后禁用",
+    "status_at_cutoff": "无保留意见、无 going concern、无内控重大缺陷披露——会计质量通道干净。",
+    "level": "A（SEC 官方封面+审计条款）"
+   }
+  ],
+  "net_conclusion": "排雷未发现'会计造假/审计红灯/资本链断裂'类致命项——公司现金+证券 $41.8B、净现金 $31.9B、审计干净。风险集中于：①监管尾部（FTC 拆分主张/DPC 停传/德州生物识别）②ATT 结构性收入损伤（CFO 官方口径 2022 影响 ~$10B，2022-02-02 Q4 2021 电话会，多源交叉）③RL 无限亏损承诺。均按定性情景处理，不做单点折价。"
+ },
+ "latest_quarter_checked": {
+  "latest_quarter": "2022Q3（10-Q filed 2022-10-27，截断日前 34 天）",
+  "conclusion": "截断日距最新季报 34 天 < 100 天时效线；期间重大事件已覆盖：2022-11-09 裁员 8-K（本案例信息集内）、2022-11 公布 Quest Pro 发售（10-25）。无未消化的剧变。"
+ },
+ "files": [
+  {
+   "file": "meta.json",
+   "source": "Step 1 建档冻结（commit f53407a，先验 ordinal 3）",
+   "grade": "A级（先验自陈，结构化登记）",
+   "coverage": "先验档位/信息集/污染披露",
+   "verified": "先验早于全部估值计算；git 时序证据"
+  },
+  {
+   "file": "financials_META_2022Q3.json",
+   "source": "SEC companyfacts XBRL（accn 0001326801-22-000108 等）+ 2021 10-K R72/2022Q3 10-Q R70 分部附注原文 + Q3 2022 新闻稿",
+   "grade": "A 级（XBRL 机器抽取+分部原文转录）",
+   "coverage": "2012-2021 年度序列+9M22+分部 FoA/RL+用户量+季度序列+资产负债",
+   "verified": "crosscheck 2019-2021 三年 XBRL 互证 12/12；spike_notes 15 条；tag_fallback 登记（ASC 606 前收入 tag 切换）"
+  },
+  {
+   "file": "market_snapshot_META_2022Q3.json",
+   "source": "东财 105.META fqt=0 日K/月K（WebFetch 服务端通道）",
+   "grade": "A- 级（收盘价 A、52 周区间月K 口径）",
+   "coverage": "2022-11-30 收盘 118.10+52 周区间 88.09~352.71+股本 cover 口径",
+   "verified": "市值三角校验 +0.00%（price×shares vs market_cap）"
+  },
+  {
+   "file": "consensus.json",
+   "source": "Reuters/Refinitiv IBES+FT 引 S&P Capital IQ+Benzinga 大行汇编（C 级）+Meta Q3 官方新闻稿指引（A 级）",
+   "grade": "C 级（预期对照专用，不进估值公式）",
+   "coverage": "Q3 预期 vs 实际/Q4 指引/2023 费用指引/大行 PT 谱系 $100-260",
+   "verified": "仅作市场预期定位；FY2022 指引隐含 114,444~116,944 与 9M 实际勾稽"
+  },
+  {
+   "file": "competitor_GOOGL.json",
+   "source": "SEC companyfacts XBRL 机器抽取（脚本 /tmp/b316/build_competitors.py，多 tag fallback+重述 filed 最晚者胜出）",
+   "grade": "A 级（XBRL）",
+   "coverage": "≤2021 年度+9M22 YTD",
+   "verified": "2017 OI 重述冲突（26,146 vs 26,178）取 filed 最晚并登记"
+  },
+  {
+   "file": "competitor_SNAP.json",
+   "source": "SEC companyfacts XBRL 机器抽取",
+   "grade": "A 级（XBRL）",
+   "coverage": "≤2021 年度+9M22 YTD",
+   "verified": "六年全亏序列完整"
+  },
+  {
+   "file": "competitor_PINS.json",
+   "source": "SEC companyfacts XBRL 机器抽取",
+   "grade": "A 级（XBRL）",
+   "coverage": "≤2021 年度+9M22 YTD",
+   "verified": "2021 首利/2022 转亏轨迹完整"
+  },
+  {
+   "file": "competitors_baseline.json",
+   "source": "四司对比表派生自上四底稿",
+   "grade": "A 级（派生，输入全 A）",
+   "coverage": "ROIC/增速/盈利质量/资本回报对比+key_reads 五条",
+   "verified": "ROIC caveat：SNAP/PINS 负利期 n.m. 已登记"
+  },
+  {
+   "file": "business_drivers_META.json",
+   "source": "六份 Q4 财报新闻稿 8-K EX-99.1（accn 逐项登记）+Q3 2022 新闻稿",
+   "grade": "A 级（量全官方；价为派生序列）",
+   "coverage": "2016-2022 量价序列+价格变化率+量价读数四条",
+   "verified": "2022 行 price 为代理口径已注明；官方单价 −18%/曝光 +17% 为新闻稿原文"
+  },
+  {
+   "file": "scenarios.json",
+   "source": "Phase 4 三情景底稿（check_scenarios.py 门禁 EXIT=0）",
+   "grade": "A 级（方法与算术全登记）",
+   "coverage": "悲观 73.73（pe_trough 独立法）/基准 199.14（DCF fade）/乐观 275.64+概率 30/50/20+期望 176.82",
+   "verified": "S2 悲观方法独立性/S2b 重算容差 2% 内/S4 离散/S5 折价/S7b iv-growth 证据全过"
+  },
+  {
+   "file": "expected_return.json",
+   "source": "scripts/reverse_dcf.py expected-return 全参数输出（--scenarios-file --index-hurdle 0.09 --discount-rate 0.10 --moat wide --iv-growth 0.06）",
+   "grade": "A 级（工具生成）",
+   "coverage": "Gate2 三项判定+期望 IRR 17.15%+有效门槛披露+loss_probability 0",
+   "verified": "verdict gate2 冻结数字的数据投影"
+  },
+  {
+   "file": "verification_strength.json",
+   "source": "scripts/verification_strength.py（--financials+--manifest）",
+   "grade": "工具生成",
+   "coverage": "V1 勾稽 100% full/V2 原文登记 full/V3 窗口 10 年 full",
+   "verified": "grade A——HTML 首屏强制披露"
+  },
+  {
+   "file": "phase5_workpaper.json",
+   "source": "Phase 3/4.5/5 底稿（五维定性+收敛+三师评分+分歧表+红队+adoption_ruling）",
+   "grade": "A 级（分析过程稿）",
+   "coverage": "五维结论+三人独立评估+芒格红队",
+   "verified": "与 verdict persona 结论一致（落盘后补登记）"
+  },
+  {
+   "file": "filings/*",
+   "source": "SEC EDGAR 原文归档（10-K R72 分部/10-Q R1 cover+R70 分部/8-K 2022-11-09 裁员 EX-99.1/companyfacts）",
+   "grade": "A 级（原文）",
+   "coverage": "分部附注/股本 cover/裁员公告原文/XBRL 全量 facts",
+   "verified": "引用行号登记于各底稿 provenance"
+  },
+  {
+   "file": "metrics_META_2022Q3.json",
+   "source": "scripts/compute_metrics.py（2012-2021 年度序列+chart_series）",
+   "grade": "A 级（工具生成，输入全 A）",
+   "coverage": "ROIC/roe/FCF/owner_earnings/稀释/CAGR+capex 拆分启发式+chart_series 数组",
+   "verified": "告警码 M_DILUTION/M_SHARE_INFLATION/NORM_MARGIN_SHAPE；capex 维持性拆分为启发式已登记（估值用真实 FCF 区间修正）"
+  },
+  {
+   "file": "manifest.json",
+   "source": "Phase 0 排雷对立检索五项（adversarial_check）+ 数据源登记 + files 清单",
+   "grade": "A/B+ 级（五项排雷逐条定级）",
+   "coverage": "FTC 反垄断/隐私监管/集体诉讼/欧盟数据传输/审计意见（全部 ≤2022-11-30 事实）",
+   "verified": "net_conclusion：无致命项，风险集中于监管尾部+ATT+RL"
+  }
+ ],
+ "reconciliation_coverage_note": "V1 勾稽覆盖率 100%（10/10 年三表勾稽，verification_strength A）；[E:] 指针文件名与 files[].file 一一对应（verify_report 校验口径）"
+}
