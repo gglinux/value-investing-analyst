@@ -34,6 +34,8 @@
 | `MOAT_*` | 护城河评级连续化门禁与披露 | `reverse_dcf.py expected-return --moat-score` 自动（BASIS_MISSING/WORD_MISMATCH 为硬拒绝） |
 | `DR_*` | 折现率分层证据传导门禁 | `reverse_dcf.py expected-return`（discount_rate_derivation 块）自动，全为硬拒绝 |
 | `PROB_*` | 情景概率证据传导门禁与敏感性 | `reverse_dcf.py expected-return`（probability_derivation 块）自动（INVALID/MISMATCH/OUT_OF_RANGE 硬拒绝；TIER_FLIP 为敏感性警示） |
+| `TAIL_*` | 尾部风险单列门禁与披露 | `reverse_dcf.py expected-return`（tail_risk_derivation 块）自动（UNANCHORED 硬拒绝；DRAG_MATERIALIZES 为披露警示） |
+| `BASERATE_*` | 行业基率锚定（乐观情景天花板） | `check_scenarios.py S10` 自动（INDUSTRY_UNKNOWN/ABOVE_P80 拦截；P80_OVERRIDE 为放行披露） |
 
 `P0_*` 合计 6+20+4 = 30 项，与福耀案「0/6+0/20+0/4 = 0/30 误杀」口径一致。
 
@@ -320,6 +322,31 @@ ALERTS = {
     "PROB_SENSITIVITY_TIER_FLIP": (
         "prob", "悲观权重 ±10pp 即可在敏感性表中移动档位——结论对概率假设敏感，"
         "本案最该花研究精力的判断就是三情景概率（REQ-P1-04 验收条款）"),
+    # ── REQ-P1-05 尾部风险单列与基率锚定（2026-09-12）──
+    # tail 层：尾部概率是期望 IRR 的第四项，纯映射不可采用偏离（防自欺底线）
+    "TAIL_DERIVATION_UNANCHORED": (
+        "tail", "tail_risk_derivation 结构非法（缺 rationale_ref [E:] / "
+        "forensic_score 非法 / arithmetic_coverage 越界 / governance 非白名单"
+        " / loss_tail 不在 [-1,0)）——尾部风险必须以独立项进期望值公式，"
+        "裸参数或挤进悲观增速折扣都是低估（REQ-P1-05）"),
+    "TAIL_DRAG_MATERIALIZES": (
+        "tail", "p_tail 把期望 IRR 拉低 ≥2pct——尾部风险已实质改变结论，"
+        "报告必须并列披露含尾部/剔尾部两个口径及其传导链"
+        "（TAIL_IRR_DRAG_DISCLOSE 披露线）"),
+    # baserate 层：乐观情景的天花板——没有它，上限就是分析师的想象力
+    "BASERATE_INDUSTRY_UNKNOWN": (
+        "baserate", "scenarios.json 的 industry 不在行业增速基率表白名单"
+        "（references/base-rates.md，INDUSTRY_GROWTH_BASE_RATES）——白名单"
+        "防自造行业档，新行业先登记基率再使用（与护城河/行业档词表同源纪律）"),
+    "BASERATE_OPTIMISTIC_ABOVE_P80": (
+        "baserate", "乐观情景 growth_assumption 超过行业基率 80 分位且无 "
+        "Phase 4.5 变异认知支撑（optimistic_growth_support 须挂 [E:]）——"
+        "『20 年 20% 增速』的公司历史上不到 1%，乐观情景增速的天花板是基率"
+        "不是想象力（REQ-P1-05 验收条款：check_scenarios.py S10 拦截）"),
+    "BASERATE_OPTIMISTIC_P80_OVERRIDE": (
+        "baserate", "乐观情景增速超基率 80 分位，但已挂 Phase 4.5 变异认知"
+        "[E:] 支撑——放行但强制披露：本案结论依赖『本行业历史分布不适用』"
+        "的判断，红队质询的第一靶点就是它"),
 }
 
 

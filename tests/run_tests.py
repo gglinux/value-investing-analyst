@@ -3672,6 +3672,240 @@ check("I PROMPT 已写入证据传导纪律段（第四批起强制）",
       and "PROB_SENSITIVITY_TIER_FLIP" in _prompt104)
 
 # ═══════════════════════════════════════════════════════════════════
+print("== 14.11 REQ-P1-05 尾部风险单列与基率锚定 ==")
+import copy as _copy105
+import tempfile as _tf105
+import reverse_dcf as _rd105  # noqa: E402
+import check_scenarios as _cs105  # noqa: E402
+from alert_codes import unknown_codes as _uc105  # noqa: E402
+
+# A. p_tail 映射数学（锚 0→1%/5→10%/20→30%；治理 ±；双地板）
+_m = _rd105.map_tail_probability(0, 1.0, "good")
+check("A 尾部映射：score0/good/满覆盖 → 1%（黑天鹅基率地板）",
+      abs(_m["p_tail"] - 0.01) < 1e-12 and "black_swan_floor" in _m["floors_applied"])
+_m = _rd105.map_tail_probability(2, 1.0, "normal")
+check("A 尾部映射：score2（通过上限 2 红旗）→ 4.6% 分段线性",
+      abs(_m["p_tail"] - 0.046) < 1e-12)
+_m = _rd105.map_tail_probability(10, 1.0, "normal")
+check("A 尾部映射：score10（单 veto）→ 10%+5/15×20%≈16.7%",
+      abs(_m["p_tail"] - (0.10 + 5.0 / 15.0 * 0.20)) < 1e-12)
+_m = _rd105.map_tail_probability(21, 0.364, "poor")
+check("A 尾部映射：score21>20 顶锚 30% + 治理 poor 3pp → 33%（康美实测形态）",
+      abs(_m["p_tail"] - 0.33) < 1e-12 and not _m["floors_applied"])
+_m = _rd105.map_tail_probability(0, 0.3, "good")
+check("A 尾部映射：算术覆盖率 30%<50% 低分≠安全 → 覆盖率地板 5%",
+      abs(_m["p_tail"] - 0.05) < 1e-12 and "coverage_floor" in _m["floors_applied"])
+_g_lo = _rd105.map_tail_probability(8, 0.9, "good")["p_tail"]
+_g_md = _rd105.map_tail_probability(8, 0.9, "normal")["p_tail"]
+_g_hi = _rd105.map_tail_probability(8, 0.9, "poor")["p_tail"]
+check("A 尾部映射：治理方向 poor > normal > good（保守不对称）",
+      _g_hi > _g_md > _g_lo)
+for _bad in ((-1, 1.0, "normal"), (0, 1.0, "godlike"), (0, 1.5, "normal")):
+    try:
+        _rd105.map_tail_probability(*_bad)
+        check(f"A 尾部映射：非法输入 {_bad} 硬拒绝", False)
+    except SystemExit:
+        check(f"A 尾部映射：非法输入 {_bad} 硬拒绝", True)
+
+# B. expected_return 尾部集成（公式 (1−p)Σp·IRR + p·loss_tail）
+_scen105 = [{"name": "悲观", "value_per_share": 18.84, "probability": 0.3},
+            {"name": "基准", "value_per_share": 30.0, "probability": 0.5},
+            {"name": "乐观", "value_per_share": 42.0, "probability": 0.2}]
+_kw105 = {"index_hurdle": 0.13, "dividend_yield": 0.009,
+          "discount_rate": 0.10, "moat": "narrow", "iv_growth": 0.06}
+_r_legacy = _rd105.expected_return(22.36, _scen105, 5, **_kw105)
+check("B legacy：无 tail 块零新增键",
+      "tail_risk" not in _r_legacy and "expected_annualized_irr_ex_tail"
+      not in _r_legacy)
+_tail105 = {"forensic_score": 21, "arithmetic_coverage": 0.364,
+            "governance": "poor", "loss_tail": -1.0,
+            "rationale_ref": "康美排雷实测 [E:km_forensic.json]"}
+_r_tail = _rd105.expected_return(22.36, _scen105, 5, tail_derivation=_tail105,
+                                 **_kw105)
+_ex = _r_tail["tail_risk"]["expected_annualized_irr_ex_tail"]
+check("B 剔尾部 IRR = legacy IRR（同一三情景口径）",
+      abs(_ex - _r_legacy["expected_annualized_irr"]) < 1e-12)
+check("B 含尾部 IRR = 0.67×ex + 0.33×(−1)（公式手算锚）",
+      abs(_r_tail["expected_annualized_irr"]
+          - (0.67 * _ex - 0.33)) < 1e-9)
+check("B 亏损概率并入：0% → 33%（尾部态按定义是亏损态）",
+      abs(_r_legacy["loss_probability"] - 0.0) < 1e-12
+      and abs(_r_tail["loss_probability"] - 0.33) < 1e-9)
+check("B 闸门二④ 用尾部口径重判（33% > 30% 上限 → GATE2_4_LOSS_PROB_FAIL）",
+      _r_tail["gate2"]["loss_probability"]["pass"] is False
+      and "GATE2_4_LOSS_PROB_FAIL" in _r_tail["gate2"]["codes"])
+check("B 闸门二①' 用尾部口径重判（负 IRR < r → GATE2_1B_IRR_BELOW_R）",
+      _r_tail["gate2"]["expected_irr_floor"]["pass"] is False)
+check("B 尾部拖累 ≥2pct 触发披露码 TAIL_DRAG_MATERIALIZES",
+      "TAIL_DRAG_MATERIALIZES" in _r_tail["gate2"]["codes"])
+check("B 传导链可审计（≥2 步：得分锚 + 治理修正）",
+      len(_r_tail["tail_risk"]["transmission_chain"]) >= 2)
+
+# C. 引擎硬拒（结构非法子例）
+for _fld, _fix in (("rationale_ref", "无证据指针"),
+                   ("loss_tail", 0.0), ("loss_tail", -2.0),
+                   ("governance", "godlike")):
+    _bad105 = dict(_tail105)
+    if _fld == "rationale_ref":
+        _bad105[_fld] = _fix
+    else:
+        _bad105[_fld] = _fix
+    try:
+        _rd105.expected_return(22.36, _scen105, 5, tail_derivation=_bad105,
+                               **_kw105)
+        check(f"C 硬拒：{_fld}={_fix!r}", False)
+    except SystemExit:
+        check(f"C 硬拒：{_fld}={_fix!r}", True)
+try:
+    _rd105.expected_return(22.36, _scen105, 5,
+                           tail_derivation={"governance": "poor"},
+                           **_kw105)
+    check("C 硬拒：缺 forensic_score（None 非法）", False)
+except SystemExit:
+    check("C 硬拒：缺 forensic_score（None 非法）", True)
+
+# D. 康美端到端（反事实演示：真实排雷得分 21 → 期望 IRR 15.2%→−22.8%）
+_km_demo = os.path.join(ROOT, "backtest", "600518.SH_2017-12-31", "data",
+                        "tail_demo_REQ-P1-05.json")
+_km_out = os.path.join(ROOT, "backtest", "600518.SH_2017-12-31", "data",
+                       "tail_expected_return_REQ-P1-05.json")
+check("D 康美演示底稿与引擎输出均已归档",
+      os.path.exists(_km_demo) and os.path.exists(_km_out))
+_km = json.load(open(_km_out, encoding="utf-8"))
+check("D 康美：p_tail 33%（score 21 顶锚 + poor 治理）",
+      abs(_km["tail_risk"]["p_tail"] - 0.33) < 1e-9)
+check("D 康美：账面三情景全正回报的世界观被尾部翻转为深负"
+      "（15.17% → −22.83%，『不错买』数学形态）",
+      abs(_km["tail_risk"]["expected_annualized_irr_ex_tail"] - 0.1517) < 5e-4
+      and abs(_km["expected_annualized_irr"] - (-0.2283)) < 5e-4
+      and _km["tail_risk"]["loss_probability_ex_tail"] == 0.0
+      and abs(_km["loss_probability"] - 0.33) < 1e-9)
+_d, _e, _w, _i = _cs105.check(_km_demo)
+check("D 康美演示底稿过全门禁（S10/S11 零错误——验收条款的机器载体）",
+      not any(m.startswith(("S10", "S11")) for m in _e + _w))
+
+# E. S10 乐观情景增速基率上限（check_scenarios 拦截——验收条款）
+_sh_base = json.load(open(os.path.join(
+    ROOT, "backtest", "601088.SH_2015-12-31", "data", "scenarios.json"),
+    encoding="utf-8"))
+_d, _e, _w, _i = _cs105.check(os.path.join(
+    ROOT, "backtest", "601088.SH_2015-12-31", "data", "scenarios.json"))
+check("E legacy：神华冻结底稿零新增 S10/S11 消息（基线不动）",
+      not any(m.startswith(("S10", "S11")) for m in _e + _w))
+_d, _e, _w, _i = _cs105.check(os.path.join(
+    ROOT, "backtest", "601088.SH_2015-12-31", "data",
+    "baserate_pass_REQ-P1-05.json"))
+check("E pass：industry=coal_energy + 乐观 growth 2.5% ≤ p80 8% → 零 S10 消息",
+      not any(m.startswith("S10") for m in _e + _w))
+_d, _e, _w, _i = _cs105.check(os.path.join(
+    ROOT, "backtest", "601088.SH_2015-12-31", "data",
+    "baserate_intercept_REQ-P1-05.json"))
+_codes_e, _ = _cs105.derive_codes(_e, _w, _i)
+check("E 拦截：乐观 growth 15% > p80 8% 且无支撑 → S10 错误 + 码",
+      any(m.startswith("S10") for m in _e)
+      and "BASERATE_OPTIMISTIC_ABOVE_P80" in _codes_e)
+_tmp105 = _tf105.mkdtemp(prefix="req_p1_05_")
+def _mk_sh(growth, industry="coal_energy", support=None):
+    t = _copy105.deepcopy(_sh_base)
+    t["industry"] = industry
+    if growth is not None:
+        t["scenarios"][2]["growth_assumption"] = growth
+    if support is not None:
+        t["scenarios"][2]["optimistic_growth_support"] = support
+    p = os.path.join(_tmp105, "s.json")
+    json.dump(t, open(p, "w", encoding="utf-8"), ensure_ascii=False)
+    return p
+_d, _e, _w, _i = _cs105.check(_mk_sh(0.15, support="渗透率天花板 [E:x]"))
+_codes_e, _ = _cs105.derive_codes(_e, _w, _i)
+check("E 放行披露：超限但挂 Phase 4.5 [E:] 支撑 → 仅 warning + OVERRIDE 码",
+      not any(m.startswith("S10 ") for m in _e)
+      and any(m.startswith("S10-OVR") for m in _w)
+      and "BASERATE_OPTIMISTIC_P80_OVERRIDE" in _codes_e)
+_d, _e, _w, _i = _cs105.check(_mk_sh(0.025, industry="interstellar_mining"))
+_codes_e, _ = _cs105.derive_codes(_e, _w, _i)
+check("E 白名单：未注册行业 → S10-IND + BASERATE_INDUSTRY_UNKNOWN",
+      any(m.startswith("S10-IND") for m in _e)
+      and "BASERATE_INDUSTRY_UNKNOWN" in _codes_e)
+_d, _e, _w, _i = _cs105.check(_mk_sh(0.15, industry=None))
+check("E 缺行业：有 growth_assumption 无 industry → S10-IND 错误",
+      any(m.startswith("S10-IND") for m in _e))
+_codes_e, _ = _cs105.derive_codes(
+    ["S10 乐观情景增速 15.0% 超过行业基率 80 分位 8.0% 且无支撑",
+     "S10-IND industry `x` 不在白名单",
+     "S10-OVR 已挂支撑放行披露", "S11 结构非法", "S1 缺必填字段 x"], [], {})
+check("E 前缀映射：S10-IND/S10-OVR/S10/S11 不被 S1 前缀吞掉",
+      _codes_e == ["BASERATE_INDUSTRY_UNKNOWN", "BASERATE_OPTIMISTIC_ABOVE_P80",
+                   "BASERATE_OPTIMISTIC_P80_OVERRIDE", "S1_SCHEMA",
+                   "TAIL_DERIVATION_UNANCHORED"])
+
+# F. S11 尾部块结构校验（正反）
+_t_ok = _copy105.deepcopy(_sh_base)
+_t_ok["tail_risk_derivation"] = {"forensic_score": 21,
+                                 "arithmetic_coverage": 0.364,
+                                 "governance": "poor", "loss_tail": -1.0,
+                                 "rationale_ref": "x [E:y]"}
+_p = os.path.join(_tmp105, "t_ok.json")
+json.dump(_t_ok, open(_p, "w", encoding="utf-8"), ensure_ascii=False)
+_d, _e, _w, _i = _cs105.check(_p)
+check("F S11：合法尾部块零错误", not any(m.startswith("S11") for m in _e))
+for _fld, _bad_v in (("rationale_ref", "no evidence"), ("forensic_score", -1),
+                     ("governance", "godlike"), ("loss_tail", 0.5),
+                     ("arithmetic_coverage", 1.5)):
+    _t_bad = _copy105.deepcopy(_t_ok)
+    _t_bad["tail_risk_derivation"][_fld] = _bad_v
+    _p = os.path.join(_tmp105, "t_bad.json")
+    json.dump(_t_bad, open(_p, "w", encoding="utf-8"), ensure_ascii=False)
+    _d, _e, _w, _i = _cs105.check(_p)
+    check(f"F S11：{_fld}={_bad_v!r} 被拦截", any(m.startswith("S11") for m in _e))
+shutil.rmtree(_tmp105, ignore_errors=True)
+
+# G. 注册、快照、基率表覆盖（验收条款）与文档接线
+check("G 五码全部注册（TAIL_*×2 + BASERATE_*×3）",
+      not _uc105(["TAIL_DERIVATION_UNANCHORED", "TAIL_DRAG_MATERIALIZES",
+                  "BASERATE_INDUSTRY_UNKNOWN", "BASERATE_OPTIMISTIC_ABOVE_P80",
+                  "BASERATE_OPTIMISTIC_P80_OVERRIDE"]))
+import prepare_case as _pc105  # noqa: E402
+_snap105 = _pc105.snapshot_rules()["thresholds"]
+check("G prepare_case 快照注册三常量（tail 锚/治理修正/行业基率表）",
+      {"tail_p_anchors", "governance_tail_adj",
+       "industry_growth_base_rates"} <= set(_snap105))
+# 验收条款：基率表覆盖回测案例涉及的全部行业（12 案 → 12 行业键）
+_CASE_INDUSTRIES = {
+    "000895.SZ_2019-06-30": "food_processing",      # 双汇
+    "000898.SZ_2015-12-31": "steel",                # 鞍钢
+    "600518.SH_2017-12-31": "pharma",               # 康美
+    "600519.SH_2015-08-31": "liquor_premium",       # 茅台
+    "600660.SH_2018-12-31": "auto_parts",           # 福耀
+    "601088.SH_2015-12-31": "coal_energy",          # 神华
+    "601919.SH_2021-07-31": "shipping",             # 中远海控
+    "9984.T_2019-06-30": "holding_investment",     # 软银
+    "AAPL_2016-04-30": "consumer_electronics",      # 苹果
+    "EK_2011-06-30": "imaging_legacy",              # 柯达
+    "NFLX_2016-12-31": "streaming_media",           # Netflix
+    "ZM_2021-10-31": "saas_communications",         # Zoom
+}
+check("G 验收：基率表覆盖 12 案全部行业（含康美——虽被排除仍需可登记）",
+      set(_CASE_INDUSTRIES.values()) <= set(
+          _rd105.INDUSTRY_GROWTH_BASE_RATES))
+check("G 基率表结构：每行 {p50, p80} 且 p80 ≥ p50",
+      all(_v["p80"] >= _v["p50"]
+          for _v in _rd105.INDUSTRY_GROWTH_BASE_RATES.values()))
+_docs105 = (open(os.path.join(ROOT, "references", "base-rates.md"),
+                 encoding="utf-8").read()
+            + open(os.path.join(ROOT, "references", "valuation-guide.md"),
+                   encoding="utf-8").read()
+            + open(os.path.join(ROOT, "SKILL.md"), encoding="utf-8").read())
+check("G 文档接线：base-rates.md 存在且 valuation-guide/SKILL 已引用",
+      os.path.exists(os.path.join(ROOT, "references", "base-rates.md"))
+      and "REQ-P1-05" in _docs105 and "map_tail_probability" in _docs105
+      and "tail_risk_derivation" in _docs105)
+_prompt105 = open(os.path.join(ROOT, "backtest", "PROMPT.md"),
+                  encoding="utf-8").read()
+check("G PROMPT 已写入尾部风险纪律段（第四批起强制）",
+      "REQ-P1-05" in _prompt105 and "tail_risk_derivation" in _prompt105
+      and "BASERATE_OPTIMISTIC_ABOVE_P80" in _prompt105)
+
+# ═══════════════════════════════════════════════════════════════════
 print("== 15 脚本接入完整性（元测试） ==")
 # 教训：阶段二写了 check_market_snapshot.py、跑通了、验证它能逮住海控存量错误，
 # 但**忘了在 SKILL.md 里引用它**——脚本存在 ≠ agent 会执行。SKILL.md 是 agent

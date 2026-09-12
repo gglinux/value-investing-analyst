@@ -366,6 +366,43 @@ PROB_DEVIATION_FREE = 0.02            # 采用值偏离映射 ≤2pp 免论证
 PROB_DEVIATION_MAX = 0.10             # 偏离 >10pp 即使有论证也硬拒
 PROB_SENSITIVITY_SHIFT = 0.10         # 验收要求的 ±10pp 敏感性摆幅
 
+# ── REQ-P1-05 尾部风险单列与基率锚定（2026-09-12）──────────────────
+# p_tail 锚点（排雷得分 → 尾部概率，分段线性）：
+#   得分 0  → 1%   （通过排雷的干净公司：欺诈/监管突变/黑天鹅的年化基率地板
+#                   ——好治理也降不到 0，未知未知必须计价）
+#   得分 5  → 10%  （红旗带：≥3 红旗本应排除，这里是"边缘通过"世界观）
+#   得分 20 → 30%  （双 veto 级别 = Phase 0 排除世界：康美 2017 形态
+#                   ——存贷双高 + 利率倒挂双 veto，事前看归零概率三成）
+# 锚点是校准值而非统计断言：定位"把 -5% 增速折扣换成独立归零项"的量级，
+# 逼尾部风险进数字而不是挤进悲观情景的增速里（REQ-P1-05 需求原文）。
+TAIL_P_ANCHORS = {0: 0.01, 5: 0.10, 20: 0.30}
+GOVERNANCE_TAIL_ADJ = {"good": -0.005, "normal": 0.0, "poor": 0.03}
+TAIL_P_FLOOR = 0.01                   # 黑天鹅基率地板：好治理不打穿
+TAIL_P_CAP = 0.50                     # 映射域上界（双 veto + 恶治理也到不了）
+TAIL_COVERAGE_MIN = 0.50              # forensic_screen 约定：算术覆盖率低于此，
+TAIL_COVERAGE_FLOOR = 0.05            # 低分不构成安全证据 → p_tail 至少 5%
+TAIL_IRR_DRAG_DISCLOSE = 0.02         # p_tail 拉低期望 IRR ≥2pct 触发披露码
+# 行业收入增速基率（长期 10 年窗口 CAGR 横截面分位；乐观情景增速 > p80 须
+# Phase 4.5 变异认知 [E:] 支撑，由 check_scenarios.py S10 拦截）。校准锚：
+# p50 ≈ 行业长期名义收入中枢（名义 GDP ~4~5% ± 行业趋势），p80 ≈ 周期上行/
+# 高增长带门限，相对排序按 Damodaran 行业数据集校准（用途是拦"20 年 20%"
+# 级别的想象力，不追求分位精确定位）。白名单纪律：新行业先登记再使用。
+INDUSTRY_GROWTH_BASE_RATES = {
+    "food_processing":      {"p50": 0.03,  "p80": 0.07},   # 双汇：必选消费≈名义GDP
+    "steel":                {"p50": 0.02,  "p80": 0.08},   # 鞍钢：量平、价周期波动
+    "pharma":               {"p50": 0.05,  "p80": 0.12},   # 康美：医药（含中药）
+    "liquor_premium":       {"p50": 0.08,  "p80": 0.15},   # 茅台：高端白酒量价
+    "auto_parts":           {"p50": 0.04,  "p80": 0.10},   # 福耀：≈全球汽车产量+1
+    "coal_energy":          {"p50": 0.02,  "p80": 0.08},   # 神华：煤炭+电力
+    "shipping":             {"p50": 0.03,  "p80": 0.12},   # 中远海控：运价振幅
+    "holding_investment":   {"p50": 0.05,  "p80": 0.12},   # 软银：控股投资净值
+    "consumer_electronics": {"p50": 0.06,  "p80": 0.15},   # 苹果：硬件+平台
+    "imaging_legacy":       {"p50": -0.05, "p80": 0.03},   # 柯达：结构性衰退
+    "streaming_media":      {"p50": 0.15,  "p80": 0.30},   # Netflix：内容订阅
+    "saas_communications":  {"p50": 0.15,  "p80": 0.30},   # Zoom：视频通信
+}
+
+
 
 def stratified_discount_rate(industry_tier, rf_10y=None):
     """折现率分层（REQ-P1-04）：r = max(10%, Rf+4pct) + 行业溢价。
@@ -477,6 +514,90 @@ def map_scenario_probabilities(moat_score, variant_perception="neutral",
                 f"采用值偏离映射 ≤{PROB_DEVIATION_FREE:.0%} 免论证；"
                 f"≤{PROB_DEVIATION_MAX:.0%} 须 [E:] 论证；超限硬拒"),
         },
+    }
+
+
+def map_tail_probability(forensic_score, arithmetic_coverage=None,
+                         governance="normal"):
+    """尾部概率映射（REQ-P1-05）：排雷得分 × 治理 → p_tail。
+
+    输入来自 Phase 0 排雷脚本（forensic_screen.py）的输出：
+      forensic_score      veto×10 + redflag×1 加权命中数
+      arithmetic_coverage 算术条款覆盖率（下游须知：低覆盖率下的低分
+                          不构成安全证据——forensic_screen.downstream_note
+                          的机器兑现：覆盖率 <50% 时 p_tail 至少 5%）
+      governance          治理评分词表 good/normal/poor（须挂 [E:] 依据）
+
+    与 map_scenario_probabilities 的关键差异：p_tail **纯映射、不可采用偏离**。
+    三情景概率是"分析判断"（允许带论证偏离映射），尾部概率是"防自欺底线"
+    ——允许分析师把 p_tail 调低，等于允许把"公司可能归零"论证没（与红队
+    下界保守不对称同理）。治理修正只许变差变差的方向有限：good 也打不穿
+    黑天鹅基率地板 1%。
+
+    返回 dict：p_tail / chain（每步说明）/ anchors / floors_applied。
+    """
+    if not isinstance(forensic_score, (int, float)) or forensic_score < 0:
+        raise SystemExit(
+            f"错误：tail_risk_derivation.forensic_score `{forensic_score}` "
+            "须为 ≥0 的数值（forensic_screen.py 输出，注册码 "
+            "TAIL_DERIVATION_UNANCHORED）")
+    if governance not in GOVERNANCE_TAIL_ADJ:
+        raise SystemExit(
+            f"错误：governance `{governance}` 非法，应为 "
+            f"{sorted(GOVERNANCE_TAIL_ADJ)}（治理评分词表，注册码 "
+            "TAIL_DERIVATION_UNANCHORED）——与护城河/行业档白名单同源纪律")
+    cov = 1.0 if arithmetic_coverage is None else float(arithmetic_coverage)
+    if not (0.0 <= cov <= 1.0):
+        raise SystemExit(
+            f"错误：arithmetic_coverage `{arithmetic_coverage}` 须在 [0,1]"
+            "（forensic_screen.py 输出，注册码 TAIL_DERIVATION_UNANCHORED）")
+
+    score = float(forensic_score)
+    chain = []
+    # 分段线性（锚 0→1%、5→10%、20→30%；>20 段外取顶锚）
+    if score >= 20.0:
+        p = TAIL_P_ANCHORS[20]
+    elif score >= 5.0:
+        p = (TAIL_P_ANCHORS[5]
+             + (score - 5.0) / 15.0 * (TAIL_P_ANCHORS[20] - TAIL_P_ANCHORS[5]))
+    else:
+        p = (TAIL_P_ANCHORS[0]
+             + score / 5.0 * (TAIL_P_ANCHORS[5] - TAIL_P_ANCHORS[0]))
+    chain.append((f"排雷得分 {score:g} 分段线性（锚 0→1%/5→10%/20→30%）",
+                  {"p_tail": p}))
+    # 治理修正（poor +3pp / good −0.5pp；地板见下）
+    adj = GOVERNANCE_TAIL_ADJ[governance]
+    if adj:
+        p += adj
+        chain.append((f"治理评分 {governance}（{'+' if adj > 0 else ''}{adj:.1%}）",
+                      {"p_tail": p}))
+    floors = []
+    # 地板 1%：黑天鹅基率，好治理不打穿
+    if p < TAIL_P_FLOOR:
+        p = TAIL_P_FLOOR
+        floors.append("black_swan_floor")
+        chain.append((f"黑天鹅基率地板 {TAIL_P_FLOOR:.0%}（好治理不构成免疫）",
+                      {"p_tail": p}))
+    # 覆盖率地板：低覆盖率下的低分不是安全证据
+    if cov < TAIL_COVERAGE_MIN and p < TAIL_COVERAGE_FLOOR:
+        p = TAIL_COVERAGE_FLOOR
+        floors.append("coverage_floor")
+        chain.append((f"算术覆盖率 {cov:.0%} < {TAIL_COVERAGE_MIN:.0%}——"
+                      f"低覆盖率低分≠安全，p_tail 抬至 {TAIL_COVERAGE_FLOOR:.0%}",
+                      {"p_tail": p}))
+    # 上界（防御性：映射域内不可达）
+    if p > TAIL_P_CAP:
+        p = TAIL_P_CAP
+        floors.append("cap")
+    return {
+        "p_tail": p,
+        "chain": chain,
+        "forensic_score": score,
+        "arithmetic_coverage": cov,
+        "governance": governance,
+        "floors_applied": floors,
+        "anchors": {"0": "1%（干净通过：欺诈/黑天鹅年化基率）",
+                    "5": "10%（红旗带）", "20": "30%（双 veto＝Phase 0 排除世界）"},
     }
 
 
@@ -815,6 +936,7 @@ def expected_return(price, scenarios, hold_years, index_hurdle=0.09,
                     moat=None, iv_growth=None,
                     moat_score=None, moat_score_basis=None, moat_sources=None,
                     prob_derivation=None, dr_derivation=None,
+                    tail_derivation=None,
                     floor_hurdle=None, pessimistic_hurdle=0.0,
                     loss_prob_hurdle=DEFAULT_LOSS_PROB_HURDLE):
     """期望回报率引擎：把三情景估值转成"这笔钱年化几个点"。
@@ -1008,6 +1130,62 @@ def expected_return(price, scenarios, hold_years, index_hurdle=0.09,
         if pess_v > 0 else -1.0
     div_share = (dividend_yield / discount_rate) if discount_rate > 0 else None
 
+    # ── REQ-P1-05 尾部风险单列（opt-in；无块走 legacy 路径零新增键）──
+    # 期望 IRR 的正确公式（需求原文）：
+    #   E[IRR] = (1 − p_tail) × Σ pᵢ·IRRᵢ + p_tail × loss_tail
+    # 旧口径把"公司归零"挤进悲观情景的增速折扣——既把悲观情景压得不合理地
+    # 低，又远远低估真正的归零风险。p_tail 纯映射不可采用偏离（防自欺底线），
+    # 闸门二 ①' 与 ④ 相应用尾部口径重判。
+    tail_block = None
+    if tail_derivation is not None:
+        if not isinstance(tail_derivation, dict):
+            raise SystemExit("错误：tail_risk_derivation 须为对象（注册码 "
+                             "TAIL_DERIVATION_UNANCHORED）")
+        _tr_rat = tail_derivation.get("rationale_ref") or ""
+        if "[E:" not in _tr_rat:
+            raise SystemExit(
+                "错误：tail_risk_derivation.rationale_ref 必填且须含 [E:] 证据"
+                "指针（注册码 TAIL_DERIVATION_UNANCHORED）——尾部概率直接决定"
+                "期望 IRR 的第四项，裸参数与裸概率同罪")
+        _loss_tail = tail_derivation.get("loss_tail", -1.0)
+        if not (isinstance(_loss_tail, (int, float))
+                and -1.0 <= _loss_tail < 0.0):
+            raise SystemExit(
+                f"错误：loss_tail `{_loss_tail}` 须为 [-1, 0) 的年化 IRR"
+                "（-1=股权归零；注册码 TAIL_DERIVATION_UNANCHORED）")
+        mapped_tail = map_tail_probability(
+            tail_derivation.get("forensic_score"),
+            tail_derivation.get("arithmetic_coverage"),
+            tail_derivation.get("governance", "normal"))
+        p_tail = mapped_tail["p_tail"]
+        exp_irr_ex_tail = exp_irr
+        loss_prob_ex_tail = loss_prob
+        # 尾部态按定义是亏损态（loss_tail < 0），亏损概率同口径并入
+        exp_irr = (1.0 - p_tail) * exp_irr + p_tail * _loss_tail
+        loss_prob = (1.0 - p_tail) * loss_prob + p_tail
+        tail_block = {
+            "p_tail": p_tail,
+            "loss_tail": _loss_tail,
+            "forensic_score": mapped_tail["forensic_score"],
+            "arithmetic_coverage": mapped_tail["arithmetic_coverage"],
+            "governance": mapped_tail["governance"],
+            "rationale_ref": _tr_rat,
+            "transmission_chain": mapped_tail["chain"],
+            "floors_applied": mapped_tail["floors_applied"],
+            "expected_annualized_irr_ex_tail": exp_irr_ex_tail,
+            "irr_drag_from_tail": exp_irr_ex_tail - exp_irr,
+            "loss_probability_ex_tail": loss_prob_ex_tail,
+            "formula": "(1−p_tail)×Σpᵢ·IRRᵢ + p_tail×loss_tail",
+            "no_adoption_note": "p_tail 纯映射、不可采用偏离——允许把『公司可能"
+                                "归零』论证没等于允许自欺（与红队下界保守不对称"
+                                "同理）；治理 good 也打不穿黑天鹅基率地板 1%",
+            "mandated_by": "REQ-P1-05（尾部风险单列）",
+        }
+        tail_drag_disclose = (
+            tail_block["irr_drag_from_tail"] >= TAIL_IRR_DRAG_DISCLOSE)
+    else:
+        tail_drag_disclose = False
+
     # ---- 闸门二三项（v2.15）----
     # ── REQ-P1-03 护城河得分通道（连续化，2026-09-11）──
     # 得分是门槛的直接输入：先校验（区间 / [E:] 依据 / 词一致性），再把闸门一
@@ -1146,6 +1324,9 @@ def expected_return(price, scenarios, hold_years, index_hurdle=0.09,
         codes.append("GATE2_3_BEAR_FAIL")
     if gate2["loss_probability"]["pass"] is False:
         codes.append("GATE2_4_LOSS_PROB_FAIL")
+    # REQ-P1-05：p_tail 拉低期望 IRR ≥2pct——尾部已实质改变结论，必须披露
+    if tail_drag_disclose:
+        codes.append("TAIL_DRAG_MATERIALIZES")
     # ---- 名义门槛 vs 有效门槛（纯诊断披露，不改任何 pass/fail 判定）----
     # 一版文案称「使①刚好通过所需的折价率即有效门槛」。REQ-P0-04 后①不参与判定，
     # 这个数不再约束任何东西——保留是因为它量化了**情景离散度的代价**：
@@ -1330,6 +1511,11 @@ def expected_return(price, scenarios, hold_years, index_hurdle=0.09,
             _loss_s = sum(p for nm, p in (("悲观", _pp), ("基准", _pb),
                                           ("乐观", _po))
                           if _by_name[nm]["total_return"] < 0)
+            # REQ-P1-05：尾部块在场时敏感性同口径并入（隔离概率通道、
+            # 尾部恒定——摆动的是悲观权重，不是尾部世界观）
+            if tail_block is not None:
+                _irr_s = (1.0 - p_tail) * _irr_s + p_tail * _loss_tail
+                _loss_s = (1.0 - p_tail) * _loss_s + p_tail
             _g2_checks = {
                 "expected_irr_floor": _irr_s >= discount_rate,
                 "no_convergence_floor": gate2["no_convergence_floor"]["pass"],
@@ -1443,6 +1629,13 @@ def expected_return(price, scenarios, hold_years, index_hurdle=0.09,
             "mandated_by": "REQ-P1-04 验收条款（概率 ±10pp 对档位的影响）",
         }
         result["probability_derivation"] = prob_derivation_block
+    # REQ-P1-05：尾部风险块 opt-in——legacy 路径不出现这些键
+    if tail_block is not None:
+        result["tail_risk"] = tail_block
+        result["expected_annualized_irr_ex_tail"] = \
+            tail_block["expected_annualized_irr_ex_tail"]
+        result["loss_probability_ex_tail"] = \
+            tail_block["loss_probability_ex_tail"]
     return result
 
 
@@ -1668,6 +1861,7 @@ def main():
         moat_score = args.moat_score
         moat_score_basis, moat_sources = args.moat_score_basis, None
         prob_derivation, dr_derivation = None, None   # REQ-P1-04 证据传导块
+        tail_derivation = None                        # REQ-P1-05 尾部风险块
         if args.moat_sources:
             moat_sources = [s.strip() for s in args.moat_sources.split(",")
                             if s.strip()]
@@ -1693,6 +1887,9 @@ def main():
             # REQ-P1-04：证据传导两块同样以 scenarios.json 为单一事实源
             prob_derivation = sd.get("probability_derivation")
             dr_derivation = sd.get("discount_rate_derivation")
+            # REQ-P1-05：尾部风险块同源（forensic_score/arithmetic_coverage
+            # 来自 forensic_screen.py 输出；p_tail 纯映射，无 CLI 手抄通道）
+            tail_derivation = sd.get("tail_risk_derivation")
             print(f"口径取自 {args.scenarios_file}（已过 check_scenarios 门禁）\n")
         else:
             if args.price is None:
@@ -1714,6 +1911,7 @@ def main():
                               moat_sources=moat_sources,
                               prob_derivation=prob_derivation,
                               dr_derivation=dr_derivation,
+                              tail_derivation=tail_derivation,
                               floor_hurdle=args.floor_hurdle,
                               pessimistic_hurdle=args.pessimistic_hurdle,
                               loss_prob_hurdle=args.loss_prob_hurdle)
@@ -1744,6 +1942,26 @@ def main():
         print(f"亏损概率            : {res['loss_probability']:.0%}")
         if res["expected_downside_given_loss"] is not None:
             print(f"亏损情景平均跌幅    : {res['expected_downside_given_loss']:.1%}")
+        # ---- REQ-P1-05 尾部风险单列 ----
+        tr = res.get("tail_risk")
+        if tr:
+            print(f"\n--- 尾部风险单列（REQ-P1-05）---")
+            print(f"p_tail              : {tr['p_tail']:.1%}"
+                  f"（排雷得分 {tr['forensic_score']:g}、算术覆盖率 "
+                  f"{tr['arithmetic_coverage']:.0%}、治理 {tr['governance']}）")
+            print(f"尾部态年化 IRR      : {tr['loss_tail']:.1%}"
+                  f"（公式 (1−p_tail)×Σpᵢ·IRRᵢ + p_tail×loss_tail）")
+            print(f"期望 IRR（含尾部）  : {res['expected_annualized_irr']:.2%}"
+                  f"  ← 闸门二判定口径")
+            print(f"期望 IRR（剔尾部）  : "
+                  f"{tr['expected_annualized_irr_ex_tail']:.2%}"
+                  f"（尾部拖累 {tr['irr_drag_from_tail']:.2%}）")
+            print(f"亏损概率（剔尾部）  : {tr['loss_probability_ex_tail']:.0%}"
+                  f" → 含尾部 {res['loss_probability']:.0%}")
+            for step, vals in tr["transmission_chain"]:
+                _pv = vals.get("p_tail")
+                print(f"  · {step} → p_tail {_pv:.1%}" if _pv is not None
+                      else f"  · {step}")
         print(f"\n机会成本门槛（指数）: {res['index_hurdle']:.1%}")
         if not res["hurdle_above_discount_rate"] and not res["gate2"]["moat"]:
             print(f"⚠️  警告：门槛 {res['index_hurdle']:.1%} ≤ 折现率 "

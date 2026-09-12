@@ -345,7 +345,7 @@
 - 验收：基率表覆盖回测案例涉及的全部行业；违反基率上限的情景被 `check_scenarios.py` 拦截。
 - 涉及文件：`references/valuation-guide.md`、`references/base-rates.md`（新）、`scripts/reverse_dcf.py`、`scripts/check_scenarios.py`
 - 依赖：REQ-P0-02
-- 状态：todo
+- 状态：done（as-built：期望 IRR 公式第四项 `(1−p_tail)×Σpᵢ·IRRᵢ + p_tail×loss_tail` 落码，p_tail 由 `map_tail_probability` 纯映射（排雷得分分段线性锚 0→1%/5→10%/20→30% + 治理修正 poor +3pp/good −0.5pp + 黑天鹅地板 1% + 覆盖率地板 5%——**不可采用偏离**，允许把"公司可能归零"论证没=允许自欺）；闸门二①'④按尾部口径重判，拖累 ≥2pct 触发 TAIL_DRAG_MATERIALIZES；康美反事实演示（真实排雷 score 21/覆盖率 36.4%/poor → p_tail 33%，账面三情景全正回报 15.2% → −22.8%、亏损概率 0→33%、闸门二不过）；行业基率表 INDUSTRY_GROWTH_BASE_RATES 覆盖 12 案全部行业（p50/p80，Damodaran 相对排序校准）；check_scenarios S10 拦截乐观增速超 p80（无 [E:] 支撑硬拒、有支撑放行披露）+ S11 尾部块结构校验；五码 TAIL_*/BASERATE_*；base-rates.md 统一三张基率表参考；references 等量压缩（余 78 字节）；legacy 无块零新增键、12 案基线不动；tests 14.11 段 45 项、套件 744 全绿、基线一致）
 
 ### REQ-P1-06 无标签滚动回测轨
 - 来源：A3、C
@@ -607,3 +607,4 @@
 | 2026-09-11 | v1.5 | REQ-P1-02 持仓型控股 SOTP 通道落码：reverse_dcf `sotp` 模式（持仓表六要素+经营业务−母公司净债 ×(1−控股折价) + 现价隐含控股折价反解 + 折价基率带四档）+ compute_metrics `sotp_screen`（经营性 OE / look-through 分列 + 双向失真识别 M_OWNER_YIELD_CONSOLIDATION_DISTORTION，OBS-2019-06-01 候选方向落码）；软银验收锚每股 6,630≈原案 6,633、隐含折价 53% 一致、经营性 OE 990,011 与 look-through 2,051,422 分列；腾讯经营+投资双轮分列（持仓 16% 不越权）；六+1 告警码 + 五处接线；tests 14.8 段 46 项、套件 604 全绿、基线一致；状态 todo → doing（新案例锚待批次执行） |
 | 2026-09-11 | v1.6 | REQ-P1-03 护城河评级连续化落码：moat-framework 第二节半三组件评分（A 超额回报/B 源硬度/C 定标与趋势，0~100）+ reverse_dcf 平滑 MoS 门槛（35→50%/65→40%/100→25%，分带边界连续、带内 ≥ legacy 常数）+ 边界带（±5 分）自动双档报告（MOAT_BOUNDARY_BAND_DUAL）+ 裸分数/词≠投影硬拒绝 + S1b 校验 + legacy 词路径字节兼容；神华验收锚 60 分双档报告（65 分侧触发价 14.42=归档 legacy 值，连续性锚实证）、12 案边界 ε 穿越 maxΔ=1（legacy 对照复现神华 2→4 跳 2 档）；tests 14.9 段 45 项、套件 649 全绿、基线一致；状态 todo → doing（第四批首个带得分案例实测后 done） |
 | 2026-09-11 | v1.7 | REQ-P1-04 折现率与概率证据传导落码：分层折现率（r = max(10%, 10Y+4pct) + 行业溢价六档，分层只向上）+ 概率映射公式（分段线性锚 35/65/100 + 变异认知 ±5pp + 红队悲观概率 max() 下界保守不对称）+ 偏离区间门禁（≤2pp 免论 / 2~10pp [E:] / >10pp 硬拒）+ ±10pp 敏感性表与翻档码 + DR 一致性门禁 + floor 门槛分市场（CN 6%/HK 5%/US 5%/JP 3%，P0-04③ 移交项）+ S7c 校验与 S7 豁免链 + 七码；神华期望 IRR 16.60% 传导演示、AAPL 校准、门禁拦截演示；references 体积等量压缩（余 92 字节）；legacy 无 derivation 块零新增键、12 案基线不动；tests 14.10 段 50 项、套件 699 全绿、基线一致；状态 todo → done |
+| 2026-09-12 | v1.8 | REQ-P1-05 尾部风险单列与基率锚定落码：期望 IRR 第四项 p_tail×loss_tail（map_tail_probability 纯映射：得分锚 0/5/20→1%/10%/30% + 治理修正 + 双地板，不可采用偏离）+ 行业增速基率表覆盖 12 案行业 + S10 乐观超 p80 拦截（[E:] 支撑放行披露）+ S11 尾部块校验 + 五码；康美反事实演示 15.2%→−22.8%（真实排雷 score 21）；base-rates.md 三表统一参考；references 等量压缩；tests 14.11 段 45 项、套件 744 全绿、基线一致；状态 todo → done |

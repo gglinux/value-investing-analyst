@@ -94,11 +94,11 @@ python3 scripts/reverse_dcf.py growth --market-cap <市值> --current-revenue <�
   --mature-state-basis "<[E:]>" --arrival-prob-basis "<[E:]>" -o data/growth_value.json
 ```
 
-- **反向求解**：本通道的反向 DCF = 现价隐含到达概率。`implied p ≥100%`（`GROWTH_PRICE_IMPLIES_CERTAIN_ARRIVAL`）即连必然到达都解释不了现价——透支。`implied p ≥ 2×基率锚`（`GROWTH_IMPLIED_VS_BASERATE_GAP`）即市场对到达的定价远超历史达成比例——分歧显式化。
-- **终局倍数 vs Gordon**：两口径都会输出；分歧 >30% 报告必须双口径并列（市场倍数含质量溢价，Gordon 是纪律下限），所选口径须论证。
-- **档位上限恒为小仓位试探**（`GROWTH_TERMINAL_DOMINATED`：通道价值 100% 来自成熟期终值折回，按终值纪律禁止以安全边际单独支撑核心买入）。引擎档位带建议：单元经济已证 + implied p <100% → 观察等价格；价格 ≤ 概率加权成长价值 → 小仓位试探候选（仍须过 expected-return 闸门二）；implied p ≥100% → 拒绝（透支）。
-- **与三情景衔接**：基准/乐观情景 `method` 登记 `growth_terminal_backcast`（check_scenarios 已注册）；悲观情景仍须独立方法。持有期建议取到达年数 N（价值在 N 年兑现，5 年期 IRR 会系统性低估长跑道复利）。
-- **通道判别力**：Netflix 型（贡献利润率 44%）与乐视型（内容成本无边界、贡献率为负）在本通道得到相反结论——这正是通道存在的目的；单元经济未证的公司禁入，不得通过调高 p 或倍数让它"看起来值钱"。
+- **反向求解**：反向 DCF = 现价隐含到达概率。`implied p ≥100%`（`GROWTH_PRICE_IMPLIES_CERTAIN_ARRIVAL`）= 连必然到达都解释不了现价；`implied p ≥ 2×基率锚`（`GROWTH_IMPLIED_VS_BASERATE_GAP`）= 市场定价远超历史达成比例，分歧显式化。
+- **终局倍数 vs Gordon**：两口径都输出；分歧 >30% 须双口径并列（市场倍数含质量溢价，Gordon 为纪律下限），所选口径须论证。
+- **档位上限恒为小仓位试探**（`GROWTH_TERMINAL_DOMINATED`：价值 100% 来自终值折回，按终值纪律禁止以安全边际单独支撑核心买入）。档位带：单元经济已证 + implied p <100% → 观察等价格；价格 ≤ 概率加权成长价值 → 小仓位试探候选（仍须过闸门二）；implied p ≥100% → 拒绝（透支）。
+- **与三情景衔接**：基准/乐观 `method` 登记 `growth_terminal_backcast`（已注册）；悲观仍须独立方法。持有期取到达年数 N（5 年期 IRR 会系统性低估长跑道复利）。
+- **通道判别力**：Netflix 型（贡献利润率 44%）与乐视型（贡献率为负）在本通道得到相反结论——通道存在的目的；单元经济未证禁入，不得调高 p 或倍数让它"看起来值钱"。
 
 ## 输出
 

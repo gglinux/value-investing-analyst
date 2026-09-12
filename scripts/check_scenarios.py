@@ -72,6 +72,13 @@ S9b 股息率口径哨兵（OBS-600660-03 升格，2 案例达门槛）：`divid
    `dividend_yield_basis`（ttm_paid/annual_plan/sustainable_forward 三选一）；
    登记可选对照值 `dividend_yield_alt` 时两口径差 >25% 披露（>50% 强制换口径
    或挂 [E:] 豁免）——特别分红/首次中期分红会把 TTM 口径推高 38-53%（茅台/双汇实证）。
+S10 乐观情景增速基率上限（REQ-P1-05，登记才校验）：`industry` 不在行业基率
+   表白名单报错；乐观情景 `growth_assumption` 超基率 80 分位且无
+   `optimistic_growth_support`（含 [E:]，Phase 4.5 变异认知）支撑 → 拦截；
+   有支撑 → 放行但披露（BASERATE_OPTIMISTIC_P80_OVERRIDE）。
+S11 尾部风险块结构（REQ-P1-05，块存在才校验）：`tail_risk_derivation` 的
+   rationale_ref [E:] / forensic_score / arithmetic_coverage / governance
+   词表 / loss_tail ∈[-1,0)——非法结构在底稿关卡即拦，不等引擎崩。
 
 ═══ 输入格式（data/scenarios.json）═══
 {
@@ -134,6 +141,11 @@ _S_PREFIX_TO_CODE = [
     ("S2c", "S2C_WORST_YEAR_NOT_STRESS"),
     ("S2d", "S2D_TROUGH_PB_BASIS"),
     ("S2e", "S_DISCOUNT_RATE_FLOOR"),
+    # S10/S11 必须排在 S1 之前（前缀首次匹配，"S10-IND" 会被 "S1" 吞掉）
+    ("S10-IND", "BASERATE_INDUSTRY_UNKNOWN"),
+    ("S10-OVR", "BASERATE_OPTIMISTIC_P80_OVERRIDE"),
+    ("S10", "BASERATE_OPTIMISTIC_ABOVE_P80"),
+    ("S11", "TAIL_DERIVATION_UNANCHORED"),
     ("S7c-DR-TIER", "DR_INDUSTRY_TIER_UNKNOWN"),
     ("S7c-DR-RAT", "DR_DERIVATION_UNANCHORED"),
     ("S7c-DR", "DR_STRATIFIED_RATE_MISMATCH"),
@@ -913,6 +925,95 @@ def check(path, metrics_path=None, snapshot_path=None):
                         f"S9 股息率与快照不一致：scenarios.json = {dy:.4%}，"
                         f"market_snapshot `{skey}` 归一化后 = {sv:.4%}（{sbasis}）。"
                         f"两者必须同源同口径，否则闸门二的保底回报是假的")
+    # ---- S10 乐观情景增速基率上限（REQ-P1-05；登记才校验，legacy 零新增）----
+    # 乐观情景增速的天花板是行业基率不是想象力：『20 年 20% 增速』的公司
+    # 历史上不到 1%。industry + growth_assumption 都是 opt-in 字段——
+    # 存量 12 案不登记即不触发（基线不动）；登记了 industry 而 optimistic
+    # 情景声明 growth_assumption 超过基率 80 分位时，须挂 Phase 4.5 显式
+    # 变异认知支撑（optimistic_growth_support 含 [E:]）才放行（披露码）。
+    industry = d.get("industry")
+    _opt_scn = next((s for s in scen if s.get("name") == "乐观"), None)
+    _opt_g = (_opt_scn or {}).get("growth_assumption")
+    info["industry"] = industry
+    if industry is not None or _opt_g is not None:
+        _brt = None
+        try:
+            import reverse_dcf as _rd10
+            _brt = _rd10.INDUSTRY_GROWTH_BASE_RATES
+        except Exception:  # noqa: BLE001 — 引擎不可导入时降级为跳过并大声说
+            warnings.append("S10 无法导入 reverse_dcf 取基率表，S10 校验跳过")
+        if _brt is not None:
+            if industry is None:
+                errors.append(
+                    "S10-IND 乐观情景登记了 `growth_assumption` 但 scenarios.json"
+                    " 缺 `industry`——基率锚无从对照（行业基率表白名单见"
+                    " references/base-rates.md）")
+            elif industry not in _brt:
+                errors.append(
+                    f"S10-IND industry `{industry}` 不在行业增速基率表白名单——"
+                    f"应为 {sorted(_brt)}。白名单防自造行业档，新行业先在"
+                    " references/base-rates.md 登记基率（p50/p80）再使用")
+            if industry in _brt and _opt_g is not None:
+                if not isinstance(_opt_g, (int, float)) or not (-1.0 < _opt_g <= 2.0):
+                    errors.append(
+                        f"S10 乐观情景 growth_assumption `{_opt_g}` 非法"
+                        "（须为 (-1, 2] 的年收入增速小数）")
+                else:
+                    _p80 = _brt[industry]["p80"]
+                    info["optimistic_growth_vs_p80"] = {
+                        "growth": _opt_g, "p80": _p80,
+                        "exceeds": _opt_g > _p80}
+                    if _opt_g > _p80:
+                        _sup = (_opt_scn or {}).get("optimistic_growth_support") or ""
+                        if "[E:" in _sup:
+                            warnings.append(
+                                f"S10-OVR 乐观情景增速 {_opt_g:.1%} 超行业基率"
+                                f" 80 分位 {_p80:.1%}（{industry}），已挂 Phase 4.5"
+                                " 变异认知 [E:] 支撑——放行但强制披露：本案结论"
+                                "依赖『本行业历史分布不适用』的判断，红队质询的"
+                                "第一靶点就是它")
+                        else:
+                            errors.append(
+                                f"S10 乐观情景增速 {_opt_g:.1%} 超过行业基率"
+                                f" 80 分位 {_p80:.1%}（{industry}）且无"
+                                " optimistic_growth_support 支撑——『20 年 20%"
+                                " 增速』的公司历史上不到 1%，天花板是基率不是"
+                                "想象力。要么下调增速至基率内，要么给出 Phase"
+                                " 4.5 显式变异认知支撑（挂 [E:]）")
+    # ---- S11 尾部风险块结构校验（REQ-P1-05；块存在才校验）----
+    # 引擎在 expected-return 侧硬拒非法块；此处提前在底稿关卡拦住，避免
+    # "底稿过了门禁、引擎才崩"的两段式失败。p_tail 本身纯映射无采用值，
+    # 故无需对照采用概率（与 S7c 概率块的结构不同源）。
+    _trd = d.get("tail_risk_derivation")
+    if _trd is not None:
+        if not isinstance(_trd, dict):
+            errors.append("S11 tail_risk_derivation 须为对象")
+        else:
+            if "[E:" not in (_trd.get("rationale_ref") or ""):
+                errors.append(
+                    "S11 tail_risk_derivation.rationale_ref 为空或未挂 [E:] 证据"
+                    "指针——尾部概率直接决定期望 IRR 的第四项，裸参数禁止")
+            _fs = _trd.get("forensic_score")
+            if not isinstance(_fs, (int, float)) or _fs < 0:
+                errors.append(
+                    f"S11 tail_risk_derivation.forensic_score `{_fs}` 须为 ≥0 的"
+                    "数值（forensic_screen.py 输出：veto×10 + redflag×1）")
+            _cov = _trd.get("arithmetic_coverage")
+            if _cov is not None and (not isinstance(_cov, (int, float))
+                                     or not 0.0 <= _cov <= 1.0):
+                errors.append(
+                    f"S11 tail_risk_derivation.arithmetic_coverage `{_cov}`"
+                    "须在 [0,1]（forensic_screen.py 输出）")
+            _gov = _trd.get("governance", "normal")
+            if _gov not in ("good", "normal", "poor"):
+                errors.append(
+                    f"S11 tail_risk_derivation.governance `{_gov}` 非法，应为"
+                    " good/normal/poor（治理评分词表）")
+            _lt = _trd.get("loss_tail", -1.0)
+            if not isinstance(_lt, (int, float)) or not -1.0 <= _lt < 0.0:
+                errors.append(
+                    f"S11 tail_risk_derivation.loss_tail `{_lt}` 须为 [-1, 0) 的"
+                    "年化 IRR（-1=股权归零；缺省 -1.0）")
     return d, errors, warnings, info
 
 

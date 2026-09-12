@@ -336,6 +336,9 @@ RULES_REGISTRY = [
     ("prob_anchors", "reverse_dcf", "PROB_ANCHORS"),
     ("prob_deviation_free", "reverse_dcf", "PROB_DEVIATION_FREE"),
     ("prob_deviation_max", "reverse_dcf", "PROB_DEVIATION_MAX"),
+    ("tail_p_anchors", "reverse_dcf", "TAIL_P_ANCHORS"),
+    ("governance_tail_adj", "reverse_dcf", "GOVERNANCE_TAIL_ADJ"),
+    ("industry_growth_base_rates", "reverse_dcf", "INDUSTRY_GROWTH_BASE_RATES"),
     ("pessimistic_hurdle_default", "reverse_dcf", "DEFAULT_PESSIMISTIC_HURDLE"),
     ("loss_prob_hurdle_default", "reverse_dcf", "DEFAULT_LOSS_PROB_HURDLE"),
     # 情景门禁
