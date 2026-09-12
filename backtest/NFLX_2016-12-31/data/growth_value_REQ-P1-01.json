@@ -1,0 +1,80 @@
+{
+  "mode": "growth",
+  "mature_state": {
+    "mature_oe": 7200.0,
+    "mature_revenue": 36000.0,
+    "mature_oe_margin": 0.2,
+    "basis": "成熟会员 300M（US 75M=公司 2016-04 股东信 60-90M 目标中枢 + Intl 225M=全球宽带家庭约 10亿×25% 成熟渗透）× ARPU $10/月（2016 混合约 $8，两轮提价实证后保守 +2）× 12 = 360 亿美元收入；成熟 OE 利润率 20% = US 分部贡献利润率 44% 减成熟期技术与管理费用率（历史约 15-20% 带宽下沿）[E:qualitative_NFLX_2016.json][E:business_drivers_NFLX_2016.json]"
+  },
+  "unit_economics": {
+    "contribution_margin": 0.44,
+    "ltv_cac": null,
+    "proven": true,
+    "gate_note": "GROWTH_UNIT_ECONOMICS_UNPROVEN 未触发（规模化边际贡献率>0）"
+  },
+  "arrival": {
+    "probability": 0.25,
+    "basis": "所需收入 CAGR 15.1%（8,832→36,000 十年）查基率表：<100亿美元规模 ≥10% 档达成比例上界约 25%（插值行）；到达=增长兑现+利润率扩张+竞争存活联合概率，取等值 25% 不越锚 [E:valuation-guide.md基率表][E:metrics_NFLX_2016.json]",
+    "years_to_maturity": 10,
+    "required_cagr": 0.15086489797002334,
+    "required_cagr_basis": "revenue",
+    "base_rate_anchor": 0.25,
+    "base_rate_meta": {
+      "required_cagr": 0.15086489797002334,
+      "interpolated": true,
+      "scale_band": "<100亿美元",
+      "table_threshold": 0.1,
+      "note": "<100亿美元档的 ≥10%% 行为插值估计（原表未列）",
+      "cagr_basis": "revenue"
+    },
+    "base_rate_hook": "REQ-P1-05：references/base-rates.md 建成后由 --base-rates-file 接管（当前为引擎内置表，与 valuation-guide 基率检验表同源）"
+  },
+  "mature_oe": 7200.0,
+  "terminal_value_mature": 144000.0,
+  "terminal_value_method": "multiple",
+  "terminal_multiple": 20.0,
+  "gordon_cross_check_tv": 98399.99999999997,
+  "gordon_implied_multiple": 13.666666666666663,
+  "pv_today": 55518.23367785252,
+  "failure_equity_value": 646.0,
+  "arrival_prob": 0.25,
+  "years_to_maturity": 10,
+  "probability_weighted_value": 14364.05841946313,
+  "terminal_value_ratio": 1.0,
+  "terminal_value_ratio_note": "结构性终值主导（按构造为 1.0）：估值主体是『到达后的成熟态』这个尚未发生的状态，禁止以安全边际单独支撑核心买入",
+  "implied": {
+    "market_cap": 53128.0,
+    "implied_arrival_prob": 0.9564400149648498,
+    "gordon_cross_check_implied_prob": 1.4073463589395423,
+    "note": "反解 MC = p×PV(终值) + (1−p)×失败残值；≥100% 即透支信号"
+  },
+  "value_per_share": 32.91066778658818,
+  "sensitivity": {
+    "arrival_prob_pm0.10": [
+      45.48289354997613,
+      20.338442023200223
+    ],
+    "years_to_maturity_pm2": [
+      27.391557081522155,
+      39.58879173971807
+    ],
+    "terminal_multiple_pm20pct": [
+      39.27078583718807,
+      26.550549735988287
+    ]
+  },
+  "verdict_band": {
+    "cap": "小仓位试探",
+    "suggestion": "观察等价格",
+    "reasons": "单元经济已证、公司真实，与市场的分歧在到达赔率而非生意真假——触发参考 = 概率加权成长价值（须披露可达性）；单元经济证据深化或价格回落均可重估",
+    "codes": [
+      "GROWTH_TERMINAL_DOMINATED",
+      "GROWTH_IMPLIED_VS_BASERATE_GAP"
+    ],
+    "note": "引擎建议档位带，最终档位由双闸门与裁决层确定；通道档位上限恒为小仓位试探（终值结构性主导纪律）"
+  },
+  "codes": [
+    "GROWTH_TERMINAL_DOMINATED",
+    "GROWTH_IMPLIED_VS_BASERATE_GAP"
+  ]
+}

@@ -322,6 +322,8 @@ def _seal_check(case_dir: Path, audit: bool = False) -> int:
 RULES_REGISTRY = [
     # 双闸门 / 估值
     ("mos_requirement", "reverse_dcf", "MOAT_MOS_REQUIREMENT"),
+    ("moat_score_wide_min", "reverse_dcf", "MOAT_SCORE_WIDE_MIN"),
+    ("moat_score_narrow_min", "reverse_dcf", "MOAT_SCORE_NARROW_MIN"),
     ("discount_rate_default", "reverse_dcf", "DEFAULT_DISCOUNT_RATE"),
     ("terminal_growth_default", "reverse_dcf", "DEFAULT_TERMINAL_GROWTH"),
     ("terminal_growth_cap", "reverse_dcf", "DEFAULT_TERMINAL_GROWTH_CAP"),
@@ -329,6 +331,14 @@ RULES_REGISTRY = [
     ("hold_years_default", "reverse_dcf", "DEFAULT_HOLD_YEARS"),
     ("index_hurdle_default", "reverse_dcf", "DEFAULT_INDEX_HURDLE"),
     ("floor_hurdle_default", "reverse_dcf", "DEFAULT_FLOOR_HURDLE"),
+    ("industry_risk_premium", "reverse_dcf", "INDUSTRY_RISK_PREMIUM"),
+    ("market_floor_hurdles", "reverse_dcf", "MARKET_FLOOR_HURDLES"),
+    ("prob_anchors", "reverse_dcf", "PROB_ANCHORS"),
+    ("prob_deviation_free", "reverse_dcf", "PROB_DEVIATION_FREE"),
+    ("prob_deviation_max", "reverse_dcf", "PROB_DEVIATION_MAX"),
+    ("tail_p_anchors", "reverse_dcf", "TAIL_P_ANCHORS"),
+    ("governance_tail_adj", "reverse_dcf", "GOVERNANCE_TAIL_ADJ"),
+    ("industry_growth_base_rates", "reverse_dcf", "INDUSTRY_GROWTH_BASE_RATES"),
     ("pessimistic_hurdle_default", "reverse_dcf", "DEFAULT_PESSIMISTIC_HURDLE"),
     ("loss_prob_hurdle_default", "reverse_dcf", "DEFAULT_LOSS_PROB_HURDLE"),
     # 情景门禁

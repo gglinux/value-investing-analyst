@@ -29,6 +29,13 @@
 | `NORM_*` | 周期正常化与基期纪律 | `compute_metrics.py` 自动 |
 | `S*` | 三情景门禁十一项 | `check_scenarios.py` 自动 |
 | `GATE*` | 双闸门结果 | `reverse_dcf.py expected-return` 自动 |
+| `GROWTH_*` | 成长股通道门禁与诊断 | `reverse_dcf.py growth` 自动（UNANCHORED 为硬拒绝、人工登记） |
+| `SOTP_*` | 持仓型控股 SOTP 通道门禁与诊断 | `reverse_dcf.py sotp` 自动（TABLE_INVALID/UNANCHORED 为硬拒绝） |
+| `MOAT_*` | 护城河评级连续化门禁与披露 | `reverse_dcf.py expected-return --moat-score` 自动（BASIS_MISSING/WORD_MISMATCH 为硬拒绝） |
+| `DR_*` | 折现率分层证据传导门禁 | `reverse_dcf.py expected-return`（discount_rate_derivation 块）自动，全为硬拒绝 |
+| `PROB_*` | 情景概率证据传导门禁与敏感性 | `reverse_dcf.py expected-return`（probability_derivation 块）自动（INVALID/MISMATCH/OUT_OF_RANGE 硬拒绝；TIER_FLIP 为敏感性警示） |
+| `TAIL_*` | 尾部风险单列门禁与披露 | `reverse_dcf.py expected-return`（tail_risk_derivation 块）自动（UNANCHORED 硬拒绝；DRAG_MATERIALIZES 为披露警示） |
+| `BASERATE_*` | 行业基率锚定（乐观情景天花板） | `check_scenarios.py S10` 自动（INDUSTRY_UNKNOWN/ABOVE_P80 拦截；P80_OVERRIDE 为放行披露） |
 
 `P0_*` 合计 6+20+4 = 30 项，与福耀案「0/6+0/20+0/4 = 0/30 误杀」口径一致。
 
@@ -191,6 +198,155 @@ ALERTS = {
     "GATE2_4_LOSS_PROB_FAIL": ("gate", "闸门二④：亏损概率 > 30%（valuation-guide 核心买入下行约束）"),
     "GATE2_UNRATED": ("gate", "闸门二不可评（缺 --iv-growth），绝不可当作通过"),
     "GATE_EFFECTIVE_HURDLE_GAP": ("gate", "【诊断】旧三项全过口径下有效门槛显著高于名义门槛（解释旧口径假阴性，不构成当前门槛）"),
+
+    # ---- 成长股通道（reverse_dcf.py growth 自动，REQ-P1-01）----
+    # 动因：B2-09 Netflix 案（全回测最深假阴性）——纯 OE 框架对「当期 OE 极小但
+    # 单元经济已证」的公司无语言可说。通道以成熟期稳态利润×到达概率折回替代当期
+    # OE 基期；以下代号为通道的门禁与诊断输出。
+    "GROWTH_UNIT_ECONOMICS_UNPROVEN": (
+        "growth", "单元经济未证：规模化边际贡献率 ≤0 或 LTV/CAC <1——增长在单位层面"
+        "毁灭价值，是烧钱不是再投入。成长通道拒绝服务（exit 2），改走标准管道；"
+        "这是区分 Netflix 型再投入与乐视型成长陷阱的第一道门"),
+    "GROWTH_ARRIVAL_PROB_UNANCHORED": (
+        "growth", "到达概率未挂证据：--arrival-prob-basis 缺失或无 [E:] 指针——裸概率禁止"
+        "（与 S7 概率纪律同源；该参数直接决定通道价值）"),
+    "GROWTH_ARRIVAL_PROB_ABOVE_BASERATE": (
+        "growth", "到达概率高于收入基率锚：到达=增长兑现+利润率扩张+竞争存活的联合概率，"
+        "不应超过同等规模公司达成所需 CAGR 的历史比例——超出须在 basis 中论证例外"),
+    # 2026-09-11 落码：直接给 --mature-oe（无 --mature-revenue）时锚不可用。
+    # 旧实现用 mature_oe/current_revenue 当所需 CAGR 代理是量纲错误（利润÷收入
+    # 不是增长倍数，典型输入下 ≤0 → 锚静默关闭，ABOVE_BASERATE/GAP 两码永不
+    # 触发——fail-open）。修法：删代理，此路径显式告警，到达概率须脱离锚独立论证。
+    "GROWTH_ANCHOR_UNAVAILABLE": (
+        "growth", "基率锚不可用：缺 --mature-revenue，无法反推与基率表同口径的所需收入"
+        "CAGR。GROWTH_ARRIVAL_PROB_ABOVE_BASERATE / GROWTH_IMPLIED_VS_BASERATE_GAP "
+        "在该路径下不会触发——到达概率须在 basis 中脱离基率锚独立论证"
+        "（--arrival-prob 纪律：无锚须论证）"),
+    "GROWTH_PRICE_IMPLIES_CERTAIN_ARRIVAL": (
+        "growth", "现价隐含到达概率 ≥100%：连『必然到达』都解释不了现价——透支信号，"
+        "价格已定价通道外叙事"),
+    "GROWTH_IMPLIED_VS_BASERATE_GAP": (
+        "growth", "现价隐含到达概率显著高于基率锚（≥2 倍或绝对差 ≥25pct）：市场对到达的"
+        "定价远超历史达成比例——分歧显式化，是观察/拒绝档位带的分界输入"),
+    "GROWTH_TERMINAL_DOMINATED": (
+        "growth", "成长通道估值 100% 来自成熟期终值折回（结构性终值主导，按构造恒触发）："
+        "估值主体是尚未发生的成熟态，禁止以安全边际单独支撑核心买入，"
+        "通道档位上限恒为小仓位试探"),
+
+    # ---- 持仓型控股 SOTP 通道（reverse_dcf.py sotp 自动，REQ-P1-02）----
+    # 动因（OBS-2019-06-01 软银案，失效方向与 Netflix 相反——过乐观）：持仓型
+    # 控股公司的 OE 被并表错位 + 非现金重估 + 口径重分类三重污染，owner yield
+    # 21.1% 对股息率 0.43% 的公司是数学不可能；官方 must_trigger 两项
+    # （治理折价/非经营资产主导）此前在注册表无等价物——以下代号补全该缺口。
+    "M_OWNER_YIELD_CONSOLIDATION_DISTORTION": (
+        "metrics", "并表/重估污染：投资收益与公允价值变动占净利润比重主导"
+        "（最新年 ≥50% 或近 3 年 ≥2 年 ≥30%，双向——重估推高与减值压低同病）："
+        "OE 与 owner yield 被投资组合波动淹没，OE 通道结论不进档位裁决，"
+        "估值改走 SOTP 通道（company-types 卡四 / reverse_dcf.py sotp）"),
+    "SOTP_HOLDINGS_TABLE_INVALID": (
+        "sotp", "持仓表结构化字段不全（标的/归属毛值/估值方法/流动性/变现折价率/"
+        "[E:] 证据六要素）或估值方法/流动性不在白名单——通道拒绝服务（exit 2）。"
+        "--add-back 一个总数是不留结构化记录的补丁形态，通道入口即拦"),
+    "SOTP_NET_DEBT_CONSOLIDATION_BASIS": (
+        "sotp", "净债采用合并口径而持仓按持股比例计价——口径错配会双重计入少数"
+        "股东应担债务（软银 2019 案 alternative_treatment 教训：合并净债 11.83 万亿"
+        "全额扣减属错误做法），须改用母公司本体净债"),
+    "SOTP_HOLDING_DISCOUNT_UNANCHORED": (
+        "sotp", "控股折价未挂证据：--holding-discount-basis 缺失或无 [E:] 指针——"
+        "折价率是 SOTP 结论的最大摆动因子（valuation-guide 多元集团纪律：须给依据"
+        "并做 ±10pct 敏感性），裸折价禁止"),
+    "SOTP_DISCOUNT_BELOW_BASE_RATE": (
+        "sotp", "控股折价低于行业基率带下界：比历史实证（软银长期 NAV 折价 30-50%）"
+        "更乐观——超出须在 basis 中论证收敛机制证据（回购至NAV/分拆），"
+        "否则按带上界重估"),
+    "SOTP_IMPLIED_DISCOUNT_GAP": (
+        "sotp", "现价隐含控股折价与采用折价分歧 ≥10pct：市场定价与框架假设的分歧"
+        "显式化——若市场折价持续，可投资价值≈现价（无安全边际），是观察/拒绝"
+        "档位带的分界输入"),
+    # 2026-09-11 落码：旧打印条件 implied_d >= 1.0 是死分支（implied=1−MC/NAV，
+    # MC>0 时恒 <1），极性沿袭 growth 通道 implied_p >= 1.0 未翻转。文案本意
+    # 描述的"市值不低于 NAV、市场未计折价甚至溢价"对应 implied_d <= 0——
+    # 伯克希尔式形态。修复同时补注册码，使回放断言可判定。
+    "SOTP_PRICE_IMPLIES_NO_DISCOUNT": (
+        "sotp", "现价隐含控股折价 ≤0：市值 ≥ equity NAV——市场未计任何控股折价"
+        "甚至给溢价（伯克希尔式形态）。SOTP 口径下无安全边际，『等折价收敛』"
+        "语义对该形态失效——这是通道不适用的信号，非便宜"),
+    "SOTP_HOLDINGS_DOMINATED": (
+        "sotp", "持仓净价值占 equity NAV ≥50%（非经营资产主导，OBS-2019-06-01 "
+        "候选判据的通道内实现）：价值主体是资产变现而非经营复利，折价收敛不可控"
+        "——通道档位上限小仓位试探（与成长通道终值纪律同源），OE 通道结论"
+        "不进档位裁决"),
+
+    # ---- 护城河评级连续化（reverse_dcf.py expected-return --moat-score，
+    #      REQ-P1-03，2026-09-11）----
+    # 动因（神华 2015 案 diff.md 第 42 行实证）：评级词阶跃挂两道闸门门槛，
+    # "宽/窄"一字之差档位跳 2 档；persona 只能写"窄（偏宽）"这类自造中间词。
+    # 连续化后得分直接决定平滑门槛，前两码是入口硬拒绝（对齐 growth 通道的
+    # [E:] 纪律——得分与裸概率同为最易被叙事污染的参数）。
+    "MOAT_SCORE_BASIS_MISSING": (
+        "moat", "护城河得分无 [E:] 依据：--moat-score-basis 缺失或不含证据指针——"
+        "得分直接决定 MoS 门槛与闸门二①诊断门槛，裸分数禁止（与裸概率同罪），"
+        "引擎硬拒绝（exit 1）"),
+    "MOAT_SCORE_WORD_MISMATCH": (
+        "moat", "评级词与得分分带投影不一致：词必须等于投影（≥65 wide / "
+        "≥35 narrow / <35 none），禁止『词一套、分数一套』的双口径漂移，"
+        "引擎硬拒绝（exit 1）"),
+    "MOAT_BOUNDARY_BAND_DUAL": (
+        "moat", "得分落在边界带（分带边界 ±5 分）：闸门一门槛在窗口内随得分移动，"
+        "两个同样认真的分析师可能给出不同档位——双档报告强制输出并标注"
+        "『结论对护城河判断敏感』，并列披露优于强行定档（REQ-P1-03）"),
+    # ── REQ-P1-04 折现率与情景概率的证据传导（2026-09-11）──
+    # dr 层：分层表是事实源，声明分层却沿用旧折现率 = V0 与 r 不同源
+    "DR_INDUSTRY_TIER_UNKNOWN": (
+        "dr", "discount_rate_derivation.industry_tier 不在白名单（stable/standard/"
+        "cyclical/financials/speculative_growth/holding_complex）——行业档白名单"
+        "防自造档位，与护城河词表同源纪律"),
+    "DR_STRATIFIED_RATE_MISMATCH": (
+        "dr", "分层折现率 ≠ scenarios.json 声明的 discount_rate：声明了行业分层"
+        "却沿用旧折现率，V0（按旧 r 的 DCF）与新 r 不同源——premium 档须按分层值"
+        "重算三情景估值并同步 discount_rate"),
+    "DR_DERIVATION_UNANCHORED": (
+        "dr", "discount_rate_derivation 缺 industry_tier/market 或 rationale_ref "
+        "未挂 [E:]：折现率直接决定 IRR 下限与终值，裸参数与裸概率同罪"),
+    # prob 层：概率是闸门二唯一不受闸门一污染的输入，传导链必须可审计
+    "PROB_DERIVATION_INVALID": (
+        "prob", "probability_derivation 结构非法（缺 rationale_ref [E:] / 缺护城河"
+        "得分 / variant_perception 非法 / red_team_pessimistic 越界 / 情景名非标准"
+        "三情景）——概率传导链断裂，定性分析没有进入数字"),
+    "PROB_DERIVATION_MISMATCH": (
+        "prob", "采用概率偏离映射值 >2pp 但 deviation_rationale 未挂 [E:]：偏离"
+        "映射须逐项论证，与 S7 偏离默认须证据同构（可调范围 ±10pp）"),
+    "PROB_DERIVATION_OUT_OF_RANGE": (
+        "prob", "采用概率偏离映射值 >10pp（超出可调范围上限）：如此大的偏离意味"
+        "着映射输入与最终概率已不是一个世界观，应修输入而不是绕映射"),
+    "PROB_SENSITIVITY_TIER_FLIP": (
+        "prob", "悲观权重 ±10pp 即可在敏感性表中移动档位——结论对概率假设敏感，"
+        "本案最该花研究精力的判断就是三情景概率（REQ-P1-04 验收条款）"),
+    # ── REQ-P1-05 尾部风险单列与基率锚定（2026-09-12）──
+    # tail 层：尾部概率是期望 IRR 的第四项，纯映射不可采用偏离（防自欺底线）
+    "TAIL_DERIVATION_UNANCHORED": (
+        "tail", "tail_risk_derivation 结构非法（缺 rationale_ref [E:] / "
+        "forensic_score 非法 / arithmetic_coverage 越界 / governance 非白名单"
+        " / loss_tail 不在 [-1,0)）——尾部风险必须以独立项进期望值公式，"
+        "裸参数或挤进悲观增速折扣都是低估（REQ-P1-05）"),
+    "TAIL_DRAG_MATERIALIZES": (
+        "tail", "p_tail 把期望 IRR 拉低 ≥2pct——尾部风险已实质改变结论，"
+        "报告必须并列披露含尾部/剔尾部两个口径及其传导链"
+        "（TAIL_IRR_DRAG_DISCLOSE 披露线）"),
+    # baserate 层：乐观情景的天花板——没有它，上限就是分析师的想象力
+    "BASERATE_INDUSTRY_UNKNOWN": (
+        "baserate", "scenarios.json 的 industry 不在行业增速基率表白名单"
+        "（references/base-rates.md，INDUSTRY_GROWTH_BASE_RATES）——白名单"
+        "防自造行业档，新行业先登记基率再使用（与护城河/行业档词表同源纪律）"),
+    "BASERATE_OPTIMISTIC_ABOVE_P80": (
+        "baserate", "乐观情景 growth_assumption 超过行业基率 80 分位且无 "
+        "Phase 4.5 变异认知支撑（optimistic_growth_support 须挂 [E:]）——"
+        "『20 年 20% 增速』的公司历史上不到 1%，乐观情景增速的天花板是基率"
+        "不是想象力（REQ-P1-05 验收条款：check_scenarios.py S10 拦截）"),
+    "BASERATE_OPTIMISTIC_P80_OVERRIDE": (
+        "baserate", "乐观情景增速超基率 80 分位，但已挂 Phase 4.5 变异认知"
+        "[E:] 支撑——放行但强制披露：本案结论依赖『本行业历史分布不适用』"
+        "的判断，红队质询的第一靶点就是它"),
 }
 
 

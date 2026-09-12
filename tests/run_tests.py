@@ -25,6 +25,7 @@ import glob
 import json
 import os
 import re
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -2624,6 +2625,1285 @@ _v4a_noie = [c for c in FS.screen(_noie)["clauses"] if c["id"] == "V4A"][0]
 check("低于存款基准但缺利息支出 → insufficient_data（veto 不半响）",
       _v4a_noie["status"] == "insufficient_data" and "利息支出" in _v4a_noie.get("hint", ""),
       _v4a_noie.get("hint", ""))
+
+# ═══════════════════════════════════════════════════════════════════
+print("== 14.7 成长股通道（REQ-P1-01，reverse_dcf growth）==")
+# 动因：B2-09 Netflix 案（全回测最深假阴性 2 档）——纯 OE 框架对「当期 OE 极小
+# 但单元经济已证」的公司无语言可说。通道 = 成熟期稳态利润×到达概率折回；
+# 测试锁定四件事：数值数学、单元经济硬拒绝、基率锚挂钩、档位带语义。
+import reverse_dcf as _RD  # noqa: E402  (已在 7.55 导入，幂等)
+
+# --- A. 数值数学：成功分支折回 + 概率加权 + 失败残值 ---
+_gc = _RD.growth_channel_value(7200.0, 0.25, 10, 0.10,
+                               terminal_multiple=20.0, failure_equity_value=646.0)
+check("终值 = 成熟OE×倍数", abs(_gc["terminal_value_mature"] - 144000.0) < 1e-6)
+check("成功分支现值 = 终值/(1+r)^N",
+      abs(_gc["pv_today"] - 144000.0 / 1.1 ** 10) < 1e-6)
+check("概率加权价值 = p×PV + (1−p)×残值",
+      abs(_gc["probability_weighted_value"] - (0.25 * 144000 / 1.1 ** 10 + 0.75 * 646)) < 1e-6)
+check("Gordon 交叉核对 = OE×(1+g)/(r−g)",
+      abs(_gc["gordon_cross_check_tv"] - 7200 * 1.025 / 0.075) < 1e-6)
+check("终值占比结构性披露为 1.0（档位上限的依据）",
+      _gc["terminal_value_ratio"] == 1.0)
+
+# --- B. 极端值反推（体检纪律）：MC = 概率加权价值 ⇒ implied p = 供给的 p ---
+# 另一个铁律：MC = PV（p=1 的成功分支）⇒ implied p = 100%；
+# MC = PV + (PV−F)/2 ⇒ implied p = 50%。反解公式错一步就暴露。
+_pv = _gc["pv_today"]
+_imp_full = (144000 / 1.1 ** 10 - 646) / (_pv - 646)   # p=1
+_imp_half = (646 + (_pv - 646) / 2 - 646) / (_pv - 646)  # p=0.5
+check("极端值反推：MC=PV ⇒ implied p=1（数学自洽）", abs(_imp_full - 1.0) < 1e-9)
+check("极端值反推：MC=P/2+F/2 ⇒ implied p=0.5", abs(_imp_half - 0.5) < 1e-9)
+
+# --- C. 单元经济硬拒绝（区分 Netflix 与乐视的第一道门）---
+with tempfile.TemporaryDirectory() as _td:
+    _gargs = ["growth", "--market-cap", "53128", "--current-revenue", "8832",
+              "--mature-oe", "7200", "--arrival-prob", "0.5",
+              "--contribution-margin", "-0.05",
+              "--mature-state-basis", "x [E:a]", "--arrival-prob-basis", "y [E:b]"]
+    _p_neg = run(_gargs)
+    check("边际贡献率 ≤0 → 通道拒绝服务（exit 2）",
+          _p_neg.returncode == 2 and "GROWTH_UNIT_ECONOMICS_UNPROVEN" in _p_neg.stdout,
+          f"rc={_p_neg.returncode}")
+    _p_ltv = run([a if a != "-0.05" else "0.30" for a in _gargs] + ["--ltv-cac", "0.7"])
+    check("LTV/CAC <1 → 同样拒绝（exit 2）",
+          _p_ltv.returncode == 2 and "LTV/CAC" in _p_ltv.stdout, f"rc={_p_ltv.returncode}")
+
+# --- D. 裸概率禁止（与 S7 概率纪律同源）---
+    _p_naked = run(["growth", "--market-cap", "53128", "--current-revenue", "8832",
+                    "--mature-oe", "7200", "--arrival-prob", "0.5",
+                    "--contribution-margin", "0.30",
+                    "--mature-state-basis", "x [E:a]", "--arrival-prob-basis", "无证据"])
+    check("到达概率未挂 [E:] → 拒绝（exit 1）且提示注册码",
+          _p_naked.returncode == 1 and "GROWTH_ARRIVAL_PROB_UNANCHORED" in
+          (_p_naked.stderr or "") + (_p_naked.stdout or ""),
+          f"rc={_p_naked.returncode} stderr={(_p_naked.stderr or '')[:120]}")
+
+# --- E. 基率锚挂钩（REQ-P1-05 接口预留）---
+_a1, _m1 = _RD.revenue_growth_base_rate(8832, 0.1505)
+check("NFLX 形态：<100亿规模 × 15.05% 所需增速 → 锚 25%（≥10% 插值行）",
+      _a1 == 0.25 and _m1["interpolated"] is True and _m1["scale_band"] == "<100亿美元",
+      str(_m1))
+_a2, _m2 = _RD.revenue_growth_base_rate(8832, 0.22)
+check("所需增速 ≥20% → 用 ≥20% 行（同为上界）", _a2 == 0.10 and _m2["interpolated"] is False)
+_a3, _m3 = _RD.revenue_growth_base_rate(8832, 0.05)
+check("所需增速低于表内最低档 10% → 无上界约束（anchor=None）",
+      _a3 is None and "无上界约束" in _m3.get("note", ""), str(_m3))
+_a4, _m4 = _RD.revenue_growth_base_rate(8832, -0.02)
+check("成熟态不高于当期规模 → 无增长基率约束", _a4 is None)
+_a5, _m5 = _RD.revenue_growth_base_rate(60000, 0.15)
+check("规模 ≥500亿美元 → 分档正确（≥10% 行 10%）", _a5 == 0.10 and
+      _m5["scale_band"] == "≥500亿美元", str(_m5))
+
+# --- F. CLI 端到端：Netflix 2016 形态（验收锚）---
+with tempfile.TemporaryDirectory() as _td:
+    _fp = os.path.join(_td, "growth.json")
+    _p_nflx = run(["growth", "--market-cap", "53128", "--current-revenue", "8832",
+                   "--mature-revenue", "36000", "--mature-oe-margin", "0.20",
+                   "--terminal-multiple", "20", "--arrival-prob", "0.25",
+                   "--years-to-maturity", "10", "--shares", "436.456",
+                   "--contribution-margin", "0.44", "--failure-equity-value", "646",
+                   "--mature-state-basis", "300M会员×$10×12=360亿×20% [E:q.json]",
+                   "--arrival-prob-basis", "基率锚25%取等值 [E:vg.md]", "-o", _fp])
+    check("growth 模式运行成功（NFLX 2016 验收形态）", _p_nflx.returncode == 0,
+          (_p_nflx.stderr or "")[:200])
+    if _p_nflx.returncode == 0:
+        _g = json.load(open(_fp))
+        # 每股价值 = (0.25×(36000×0.20×20)/1.1^10 + 0.75×646)/436.456 ≈ 32.91
+        check("每股价值数学正确（≈32.91，vs 旧 OE 通道 13.71）",
+              abs(_g["value_per_share"] - 32.91) < 0.05, str(_g["value_per_share"]))
+        _imp = _g["implied"]["implied_arrival_prob"]
+        check("现价隐含到达概率 ≈ 96%（<100%，非透支）", 0.90 < _imp < 1.0, str(_imp))
+        check("隐含概率 vs 基率锚 3.8 倍 → GROWTH_IMPLIED_VS_BASERATE_GAP",
+              "GROWTH_IMPLIED_VS_BASERATE_GAP" in _g["codes"])
+        check("GROWTH_TERMINAL_DOMINATED 恒随通道输出",
+              "GROWTH_TERMINAL_DOMINATED" in _g["codes"])
+        check("p=25% 不高于锚 25% → 不触发 ABOVE_BASERATE",
+              "GROWTH_ARRIVAL_PROB_ABOVE_BASERATE" not in _g["codes"])
+        check("档位带=观察等价格、上限=小仓位试探",
+              _g["verdict_band"]["suggestion"] == "观察等价格"
+              and _g["verdict_band"]["cap"] == "小仓位试探")
+        check("Gordon 交叉核对口径同时输出",
+              _g["implied"]["gordon_cross_check_implied_prob"] > 1.0)
+    # 透支形态：市值抬到连必然到达都解释不了
+    _p_ovr = run(["growth", "--market-cap", "53128", "--current-revenue", "8832",
+                  "--mature-oe", "7200", "--arrival-prob", "0.25",
+                  "--contribution-margin", "0.44",
+                  "--mature-state-basis", "x [E:a]", "--arrival-prob-basis", "y [E:b]"])
+    # 无 --terminal-multiple → Gordon 口径：PV=37936 < MC → implied p ≥ 1
+    if _p_ovr.returncode == 0 or "透支" in (_p_ovr.stdout or ""):
+        check("Gordon 口径下现价隐含 p ≥100% → 透支拒绝档带 + 注册码",
+              "GROWTH_PRICE_IMPLIES_CERTAIN_ARRIVAL" in (_p_ovr.stdout or "")
+              and "拒绝（透支）" in (_p_ovr.stdout or ""), _p_ovr.stdout[-300:])
+
+# --- G. p 高于基率锚 → ABOVE_BASERATE 警示码 ---
+with tempfile.TemporaryDirectory() as _td:
+    _fp2 = os.path.join(_td, "g2.json")
+    _p_hi = run(["growth", "--market-cap", "20000", "--current-revenue", "8832",
+                 "--mature-revenue", "36000", "--mature-oe-margin", "0.20",
+                 "--terminal-multiple", "20", "--arrival-prob", "0.50",
+                 "--years-to-maturity", "10", "--shares", "436.456",
+                 "--contribution-margin", "0.44",
+                 "--mature-state-basis", "x [E:a]", "--arrival-prob-basis", "y [E:b]",
+                 "-o", _fp2])
+    check("p=50% > 锚 25% → GROWTH_ARRIVAL_PROB_ABOVE_BASERATE",
+          _p_hi.returncode == 0 and "GROWTH_ARRIVAL_PROB_ABOVE_BASERATE" in _p_hi.stdout)
+
+# --- G2. 直传 --mature-oe 而缺 --mature-revenue → 锚不可用显式告警（量纲修复回归）---
+# 旧实现用 mature_oe/current_revenue 当所需 CAGR 代理：7200/8832 → −2.02% ≤ 0
+# → 锚静默关闭，还打印事实错误的"成熟态不高于当期规模"。修复后必须显式告警。
+with tempfile.TemporaryDirectory() as _td:
+    _fp3 = os.path.join(_td, "g3.json")
+    _p_dn = run(["growth", "--market-cap", "20000", "--current-revenue", "8832",
+                 "--mature-oe", "7200", "--terminal-multiple", "20",
+                 "--arrival-prob", "0.25", "--years-to-maturity", "10",
+                 "--contribution-margin", "0.44",
+                 "--mature-state-basis", "x [E:a]", "--arrival-prob-basis", "y [E:b]",
+                 "-o", _fp3])
+    check("直传 --mature-oe → 运行成功且输出 GROWTH_ANCHOR_UNAVAILABLE",
+          _p_dn.returncode == 0 and "GROWTH_ANCHOR_UNAVAILABLE" in _p_dn.stdout,
+          f"rc={_p_dn.returncode}")
+    check("锚不可用时禁止再打印量纲错误的『成熟态不高于当期规模』",
+          "成熟态不高于当期规模" not in (_p_dn.stdout or ""))
+    if _p_dn.returncode == 0:
+        _g3 = json.load(open(_fp3))
+        check("锚不可用：required_cagr=None、basis=unavailable、anchor=None",
+              _g3["arrival"]["required_cagr"] is None
+              and _g3["arrival"]["required_cagr_basis"] == "unavailable"
+              and _g3["arrival"]["base_rate_anchor"] is None)
+        check("GROWTH_ANCHOR_UNAVAILABLE 落盘进 codes（回放断言可判定）",
+              "GROWTH_ANCHOR_UNAVAILABLE" in _g3["codes"])
+    _a6, _m6 = _RD.revenue_growth_base_rate(8832, None)
+    check("required_cagr=None → note 指明缺收入口径（非『不高于当期规模』）",
+          _a6 is None and "mature-revenue" in _m6.get("note", ""), str(_m6))
+    # 正向回归：给了 --mature-revenue 时锚正常、不触发 UNAVAILABLE
+    check("给了 --mature-revenue → 不触发 GROWTH_ANCHOR_UNAVAILABLE（F 节锚 25% 回归）",
+          "GROWTH_ANCHOR_UNAVAILABLE" not in _g["codes"])
+
+# --- H. check_scenarios 接线：growth_terminal_backcast 可作基准方法 ---
+import copy as _copy  # noqa: E402
+_scen_growth = _copy.deepcopy(GOOD)
+_scen_growth["scenarios"][1]["method"] = "growth_terminal_backcast"
+_d, _e, _w, _i = _run_cs(_scen_growth)
+check("基准情景 method=growth_terminal_backcast 不被 S2 误拦",
+      not any(x.startswith("S2") for x in _e), str(_e))
+# 反向：悲观情景用 growth_terminal_backcast（DCF 系）必须被拦——它不是独立下行估计
+_scen_bad = _copy.deepcopy(GOOD)
+_scen_bad["scenarios"][0]["method"] = "growth_terminal_backcast"
+_d2, _e2, _w2, _i2 = _run_cs(_scen_bad)
+check("悲观情景用 growth_terminal_backcast → S2 拦截（非独立方法）",
+      any(x.startswith("S2 悲观情景方法") for x in _e2), str(_e2))
+
+# --- I. 告警码全部已注册（写错必须被逮住）---
+_growth_codes = ["GROWTH_UNIT_ECONOMICS_UNPROVEN", "GROWTH_ARRIVAL_PROB_UNANCHORED",
+                 "GROWTH_ARRIVAL_PROB_ABOVE_BASERATE", "GROWTH_PRICE_IMPLIES_CERTAIN_ARRIVAL",
+                 "GROWTH_IMPLIED_VS_BASERATE_GAP", "GROWTH_TERMINAL_DOMINATED"]
+check("六个 GROWTH_* 码全部在 ALERTS 注册表", not AC.unknown_codes(_growth_codes),
+      str(AC.unknown_codes(_growth_codes)))
+_docs_local = open(os.path.join(ROOT, "SKILL.md"), encoding="utf-8").read() + "".join(
+    open(os.path.join(ROOT, "references", _r), encoding="utf-8").read()
+    for _r in os.listdir(os.path.join(ROOT, "references")) if _r.endswith(".md"))
+check("文档已接入成长通道（growth-framework/company-types/valuation-guide/SKILL）",
+      all(_kw in _docs_local for _kw in
+          ("growth_terminal_backcast", "GROWTH_UNIT_ECONOMICS_UNPROVEN", "成熟期稳态利润")))
+
+# ═══════════════════════════════════════════════════════════════════
+print("== 14.8 持仓型控股 SOTP 通道（REQ-P1-02，reverse_dcf sotp + compute_metrics sotp_screen）==")
+# 动因：OBS-2019-06-01 软银案（方向与 Netflix 相反——过乐观）——持仓型控股的
+# OE 被并表错位+非现金重估+口径重分类三重污染，owner yield 21.1% 对股息率
+# 0.43% 是数学不可能。通道 = 持仓表+经营业务−母公司净债，×(1−控股折价)；
+# 测试锁定：三段式数学、持仓表六要素硬拒绝、净债口径门、折价基率带、
+# 隐含折价反解、sotp_screen 双向失真识别、软银/腾讯两验收锚。
+
+# --- A. 三段式数学（核心函数）---
+_sv = _RD.sotp_channel_value([
+    {"name": "上市持仓A", "stake_pct": 66.49, "valuation_method": "market_price",
+     "gross_value": 1000.0, "liquidity": "listed_stake", "liquidity_haircut": 0.9,
+     "evidence": "x [E:a]"},
+    {"name": "私募持仓B", "stake_pct": None, "valuation_method": "fair_value_disclosed",
+     "gross_value": 500.0, "liquidity": "private_fund", "liquidity_haircut": 0.6,
+     "evidence": "y [E:b]"},
+], net_debt=200.0, holding_discount=0.40, operating_value=300.0)
+check("持仓毛值 = Σ gross_value", abs(_sv["portfolio_gross_value"] - 1500.0) < 1e-9)
+check("持仓净值 = Σ(毛值×变现折价)",
+      abs(_sv["portfolio_net_value"] - (1000 * 0.9 + 500 * 0.6)) < 1e-9)
+check("equity NAV = 持仓净值+经营−净债", abs(_sv["equity_nav"] - 1300.0) < 1e-9)
+check("可投资价值 = NAV×(1−控股折价)", abs(_sv["investable_value"] - 780.0) < 1e-9)
+check("持仓占 equity NAV = 1200/1300", abs(_sv["holdings_share_of_equity_nav"] - 1200 / 1300) < 1e-9)
+check("逐项明细保留六要素（可审计）",
+      len(_sv["holdings_detail"]) == 2 and
+      all(k in _sv["holdings_detail"][0] for k in
+          ("name", "stake_pct", "valuation_method", "liquidity",
+           "gross_value", "liquidity_haircut", "evidence")))
+
+# --- B. 持仓表六要素硬拒绝（区分『结构化记录』与 add-back 补丁的第一道门）---
+_H1 = {"name": "上市持仓A", "stake_pct": 66.49, "valuation_method": "market_price",
+       "gross_value": 11020000, "liquidity": "listed_stake", "liquidity_haircut": 1.0,
+       "evidence": "回放日市价×持股 [E:a]"}
+
+
+def _wht(items, path):
+    with open(path, "w", encoding="utf-8") as _f:
+        json.dump({"as_of": "2019-06-28", "currency": "JPY", "unit": "million",
+                   "items": items}, _f, ensure_ascii=False)
+    return path
+
+
+def _sotp_cli(hf, extra=None):
+    return run(["sotp", "--holdings-file", hf,
+                "--net-debt", "6200000", "--net-debt-basis", "parent_standalone",
+                "--holding-discount", "0.40",
+                "--holding-profile", "asian_conglomerate_no_convergence",
+                "--holding-discount-basis", "历史NAV折价30-50%中枢 [E:x]",
+                "--market-cap", "10890000", "--shares", "2107.667"]
+               + (extra or []))
+
+
+with tempfile.TemporaryDirectory() as _td:
+    _no_liq = dict(_H1); del _no_liq["liquidity"]
+    _p1 = _sotp_cli(_wht([_no_liq], os.path.join(_td, "h1.json")))
+    check("缺 liquidity 字段 → 通道拒绝服务（exit 2）",
+          _p1.returncode == 2 and "SOTP_HOLDINGS_TABLE_INVALID" in _p1.stdout,
+          f"rc={_p1.returncode}")
+    _bad_vm = dict(_H1); _bad_vm["valuation_method"] = "拍脑袋"
+    _p2 = _sotp_cli(_wht([_bad_vm], os.path.join(_td, "h2.json")))
+    check("估值方法白名单外 → exit 2",
+          _p2.returncode == 2 and "白名单" in _p2.stdout, f"rc={_p2.returncode}")
+    _no_e = dict(_H1); _no_e["evidence"] = "无证据裸数字"
+    _p3 = _sotp_cli(_wht([_no_e], os.path.join(_td, "h3.json")))
+    check("持仓缺 [E:] 证据 → exit 2（裸数字禁止）",
+          _p3.returncode == 2 and "[E:]" in _p3.stdout, f"rc={_p3.returncode}")
+    _bad_hc = dict(_H1); _bad_hc["liquidity_haircut"] = 1.5
+    _p4 = _sotp_cli(_wht([_bad_hc], os.path.join(_td, "h4.json")))
+    check("变现折价率 >1 → exit 2（SOTP 保守口径不接受溢价）",
+          _p4.returncode == 2 and "越界" in _p4.stdout, f"rc={_p4.returncode}")
+    _p5 = _sotp_cli(os.path.join(_td, "not_exist.json"))
+    check("持仓表文件不存在 → 非零退出（不静默降级）", _p5.returncode != 0)
+    # 折价未挂 [E:] → exit 1 + 注册码提示（与 growth UNANCHORED 同语义）
+    _p6 = _sotp_cli(_wht([_H1], os.path.join(_td, "h6.json")),
+                    ["--holding-discount-basis", "无依据的裸折价"])
+    check("控股折价未挂 [E:] → 拒绝（exit 1）且提示注册码",
+          _p6.returncode == 1 and "SOTP_HOLDING_DISCOUNT_UNANCHORED" in
+          (_p6.stderr or "") + (_p6.stdout or ""),
+          f"rc={_p6.returncode}")
+
+# --- C. 软银 2019-06 端到端（验收锚①：纯控股形态）---
+_SBT_H = os.path.join(ROOT, "backtest", "9984.T_2019-06-30", "data",
+                      "sotp_holdings_REQ-P1-02.json")
+with tempfile.TemporaryDirectory() as _td:
+    _fp = os.path.join(_td, "sb.json")
+    _p_sb = _sotp_cli(_SBT_H, ["-o", _fp])
+    check("sotp 模式运行成功（软银 2019-06 验收形态）", _p_sb.returncode == 0,
+          (_p_sb.stderr or "")[:200])
+    if _p_sb.returncode == 0:
+        _sb = json.load(open(_fp))
+        # 原案 ADJ3：equity NAV 23.3万亿×0.6÷21.0767亿股 = 6,633（23.3 为四舍五入）
+        check("每股 6,630 ≈ 原案 6,633（±0.5%，ADJ3 口径复现）",
+              abs(_sb["value_per_share"] - 6633) / 6633 < 0.005,
+              str(_sb["value_per_share"]))
+        check("equity NAV ≈ 23.29 万亿（毛 NAV 29.49 − 净债 6.2）",
+              abs(_sb["equity_nav"] - 23290000) < 1000, str(_sb["equity_nav"]))
+        check("现价隐含控股折价 ≈ 53%（与底稿 nav_discount 一致）",
+              abs(_sb["implied"]["implied_holding_discount"] - 0.5324) < 0.005,
+              str(_sb["implied"]["implied_holding_discount"]))
+        check("SOTP_HOLDINGS_DOMINATED（持仓 100%+ of NAV，非经营资产主导）",
+              "SOTP_HOLDINGS_DOMINATED" in _sb["codes"])
+        check("隐含 53% vs 采用 40% 分歧 13pct → SOTP_IMPLIED_DISCOUNT_GAP",
+              "SOTP_IMPLIED_DISCOUNT_GAP" in _sb["codes"])
+        check("折价 40% 落在 30-50% 基率带内（不触发 BELOW_BASE_RATE）",
+              _sb["base_rate_band"]["discount_in_band"] and
+              "SOTP_DISCOUNT_BELOW_BASE_RATE" not in _sb["codes"])
+        check("档位带=观察等价格（= 官方 {1,2} 且管线实际档位 2）",
+              _sb["verdict_band"]["suggestion"] == "观察等价格")
+        check("档位上限=小仓位试探（持仓主导结构纪律）",
+              _sb["verdict_band"]["cap"] == "小仓位试探")
+        check("折价 ±10pct 敏感性输出（valuation-guide 强制项）",
+              _sb["sensitivity"]["holding_discount_pm10pct"][0] is not None)
+
+# --- D. 腾讯形态端到端（验收锚②：经营+投资双轮，分列而不越权）---
+_TC_H = os.path.join(ROOT, "cases", "tencent", "data", "sotp_holdings_REQ-P1-02.json")
+with tempfile.TemporaryDirectory() as _td:
+    _fp = os.path.join(_td, "tc.json")
+    _p_tc = run(["sotp", "--holdings-file", _TC_H,
+                 "--net-debt", "-58200", "--net-debt-basis", "parent_standalone",
+                 "--operating-value", "3590630",
+                 "--operating-value-basis",
+                 "正常化 OE 219,013×g5%×10y DCF [E:valuation.json]",
+                 "--holding-discount", "0.10",
+                 "--holding-profile", "operating_with_portfolio",
+                 "--holding-discount-basis", "经营主导小带 0-15% 取 10 [E:vg]",
+                 "--market-cap", "3811730", "--shares", "9103.147", "--fx", "1.087",
+                 "-o", _fp])
+    check("sotp 模式运行成功（腾讯经营+投资双轮形态）", _p_tc.returncode == 0,
+          (_p_tc.stderr or "")[:200])
+    if _p_tc.returncode == 0:
+        _tc = json.load(open(_fp))
+        check("三段分列齐备（持仓 671,220 / 经营 3,590,630 / 净现金 58,200）",
+              abs(_tc["portfolio_net_value"] - 671220) < 1 and
+              abs(_tc["operating_value"] - 3590630) < 1 and
+              _tc["net_debt"] == -58200)
+        check("equity NAV = 4,320,050（三段加总）",
+              abs(_tc["equity_nav"] - 4320050) < 1, str(_tc["equity_nav"]))
+        check("持仓占比 16% <50% → 无 SOTP_HOLDINGS_DOMINATED（经营主导不越权）",
+              "SOTP_HOLDINGS_DOMINATED" not in _tc["codes"] and
+              _tc["holdings_share_of_equity_nav"] < 0.5)
+        check("档位带=标准双闸门裁定（通道只做分列，不加额外上限）",
+              _tc["verdict_band"]["suggestion"] == "标准双闸门裁定"
+              and _tc["verdict_band"]["cap"] is None)
+        check("fx 换算：每股 427.11 CNY = 464.27 HKD",
+              abs(_tc["value_per_share"] - 427.11) < 0.5 and
+              abs(_tc["value_per_share_quote_ccy"] - 464.27) < 0.5)
+        check("隐含折价 12% vs 采用 10% 分歧 <10pct → 无 GAP 码",
+              "SOTP_IMPLIED_DISCOUNT_GAP" not in _tc["codes"])
+
+# --- E. 净债口径门 + 折价越带（并表错位与乐观折价的机器防线）---
+with tempfile.TemporaryDirectory() as _td:
+    _hf = _wht([_H1], os.path.join(_td, "h.json"))
+    _p_con = _sotp_cli(_hf, ["--net-debt-basis", "consolidated"])
+    check("净债合并口径 → SOTP_NET_DEBT_CONSOLIDATION_BASIS（软银案教训）",
+          _p_con.returncode == 0 and
+          "SOTP_NET_DEBT_CONSOLIDATION_BASIS" in _p_con.stdout)
+    _p_low = _sotp_cli(_hf, ["--holding-discount", "0.15",
+                             "--holding-discount-basis", "带外 [E:x]"])
+    check("折价 15% < 基率带下界 30% → SOTP_DISCOUNT_BELOW_BASE_RATE",
+          _p_low.returncode == 0 and "SOTP_DISCOUNT_BELOW_BASE_RATE" in _p_low.stdout,
+          _p_low.stdout[-200:])
+    # 隐含折价数学自洽（体检纪律）：MC=NAV ⇒ implied=0；MC=NAV/2 ⇒ implied=0.5
+    _fp2 = os.path.join(_td, "math.json")
+    _p_m = _sotp_cli(_hf, ["--market-cap", str(11020000 - 6200000), "-o", _fp2])
+    if _p_m.returncode == 0:
+        _m = json.load(open(_fp2))
+        check("极端值反推：MC=equity NAV ⇒ 隐含折价 0（市场未计折价）",
+              abs(_m["implied"]["implied_holding_discount"]) < 1e-9)
+    _p_m2 = _sotp_cli(_hf, ["--market-cap", str((11020000 - 6200000) / 2)])
+    if _p_m2.returncode == 0 and "implied_holding_discount" in _p_m2.stdout:
+        check("极端值反推：MC=NAV/2 ⇒ 隐含折价 50%（数学自洽）",
+              "50%" in _p_m2.stdout)
+
+    # --- E2. 伯克希尔式溢价形态 → SOTP_PRICE_IMPLIES_NO_DISCOUNT（极性修复回归）---
+    # 旧打印条件 implied_d >= 1.0 是死分支（MC>0 时 implied=1−MC/NAV 恒<1），
+    # 从 growth 的 implied_p>=1.0 复制未翻转极性——溢价形态曾无任何提示。
+    _nav = 11020000 - 6200000  # 4,800,000 = equity NAV（haircut=1.0、无经营业务）
+    _fp3 = os.path.join(_td, "prem.json")
+    _p_prem = _sotp_cli(_hf, ["--market-cap", str(_nav * 1.25), "-o", _fp3])
+    check("溢价形态（MC=1.25×NAV）→ 输出 SOTP_PRICE_IMPLIES_NO_DISCOUNT",
+          _p_prem.returncode == 0 and "SOTP_PRICE_IMPLIES_NO_DISCOUNT"
+          in _p_prem.stdout, f"rc={_p_prem.returncode}")
+    check("溢价形态文案指出通道不适用（非『≥100%』旧死条件文案）",
+          "伯克希尔式" in _p_prem.stdout and "≥100%" not in _p_prem.stdout)
+    if _p_prem.returncode == 0:
+        _pm = json.load(open(_fp3))
+        check("溢价形态隐含折价 = −25%（数学自洽）且新码落盘 codes",
+              abs(_pm["implied"]["implied_holding_discount"] + 0.25) < 1e-9
+              and "SOTP_PRICE_IMPLIES_NO_DISCOUNT" in _pm["codes"])
+        check("溢价形态档位带仍为拒绝（透支）——investable<MC 判定方向不受影响",
+              _pm["verdict_band"]["suggestion"] == "拒绝（透支）")
+    # 正向回归：折价形态（MC=NAV/2，隐含 +50%）不触发新码
+    check("折价形态（隐含 +50%）→ 不触发 NO_DISCOUNT（E 段数学用例回归）",
+          "SOTP_PRICE_IMPLIES_NO_DISCOUNT" not in (_p_m2.stdout or ""))
+
+# --- F. sotp_screen：经营性 OE / look-through 分列与双向失真识别 ---
+def _rows_with_inv(inv_seq, div_seq=None):
+    _rows = mk_rows([0.10, 0.10, 0.10, 0.10])
+    for _r, _v in zip(_rows, inv_seq):
+        if _v is not None:
+            _r["investment_income"] = _v
+    if div_seq:
+        for _r, _v in zip(_rows, div_seq):
+            if _v is not None:
+                _r["dividend_income"] = _v
+    return _rows
+
+
+_r_hi = cm.compute({"company": "T", "ticker": "T", "currency": "CNY", "unit": "million",
+                    "annual": _rows_with_inv([10, 10, 10, 100], [0, 0, 0, 80])},
+                   market_cap=None)
+check("重估推高型：最新年占比 86% ≥50% → distortion",
+      _r_hi["sotp_screen"]["applicable"] and _r_hi["sotp_screen"]["distortion"])
+check("重估推高型 → M_OWNER_YIELD_CONSOLIDATION_DISTORTION 触发",
+      "M_OWNER_YIELD_CONSOLIDATION_DISTORTION" in _r_hi["alert_codes"])
+check("look-through 收益分列（dividend_income 单列）",
+      _r_hi["sotp_screen"]["look_through_income_latest"] == 80)
+check("operating_oe = OE − 投资收益（经营性口径单列）",
+      abs(_r_hi["series"][-1]["operating_oe"] -
+          (_r_hi["series"][-1]["owner_earnings"] - 100)) < 1e-9)
+
+_r_dn = cm.compute({"company": "T2", "ticker": "T2", "currency": "CNY", "unit": "million",
+                    "annual": _rows_with_inv([5, 5, 5, -60])}, market_cap=None)
+check("减值压低型（腾讯 2023 形态）：负投资收益同判 distortion（abs 口径）",
+      _r_dn["sotp_screen"]["distortion"] and
+      "M_OWNER_YIELD_CONSOLIDATION_DISTORTION" in _r_dn["alert_codes"])
+
+_r_pure = cm.compute({"company": "T3", "ticker": "T3", "currency": "CNY", "unit": "million",
+                      "annual": mk_rows([0.10, 0.10, 0.10, 0.10])}, market_cap=None)
+check("阴性对照：经营主导型（无投资收益字段）→ not applicable 零误伤",
+      not _r_pure["sotp_screen"]["applicable"] and
+      "M_OWNER_YIELD_CONSOLIDATION_DISTORTION" not in _r_pure["alert_codes"])
+
+_SBT_FIN = os.path.join(ROOT, "backtest", "9984.T_2019-06-30", "data",
+                        "sotp_demo_financials_REQ-P1-02.json")
+if os.path.exists(_SBT_FIN):
+    with open(_SBT_FIN, encoding="utf-8") as _f:
+        _sb_fin = json.load(_f)
+    _r_sb = cm.compute(_sb_fin, market_cap=10889000)
+    check("软银真实数据：FY2018 占比 92% → distortion（OBS-2019-06-01 首次机器识别）",
+          _r_sb["sotp_screen"]["distortion"] and
+          "M_OWNER_YIELD_CONSOLIDATION_DISTORTION" in _r_sb["alert_codes"])
+    check("软银经营性 OE ≈ 990,011（剔除重估 1,302,838 后的量级）",
+          abs(_r_sb["sotp_screen"]["operating_oe_latest"] - 990011) < 2000,
+          str(_r_sb["sotp_screen"]["operating_oe_latest"]))
+    check("软银 look-through 收益 = 2,051,422（从被投企业收到的分红）",
+          _r_sb["sotp_screen"]["look_through_income_latest"] == 2051422)
+
+# --- G. 告警码注册 + 分层命名 + 文档接入 ---
+_sotp_codes = ["SOTP_HOLDINGS_TABLE_INVALID", "SOTP_NET_DEBT_CONSOLIDATION_BASIS",
+               "SOTP_HOLDING_DISCOUNT_UNANCHORED", "SOTP_DISCOUNT_BELOW_BASE_RATE",
+               "SOTP_IMPLIED_DISCOUNT_GAP", "SOTP_HOLDINGS_DOMINATED",
+               "SOTP_PRICE_IMPLIES_NO_DISCOUNT",
+               "M_OWNER_YIELD_CONSOLIDATION_DISTORTION"]
+check("七个 SOTP 通道码全部在 ALERTS 注册表",
+      not AC.unknown_codes(_sotp_codes), str(AC.unknown_codes(_sotp_codes)))
+check("分层命名表含 SOTP_* 行",
+      "`SOTP_*`" in open(os.path.join(SCRIPTS, "alert_codes.py"), encoding="utf-8").read())
+check("文档已接入 SOTP 通道（company-types 卡四/valuation-guide/SKILL）",
+      all(_kw in _docs_local for _kw in
+          ("reverse_dcf.py sotp", "SOTP_HOLDINGS_DOMINATED",
+           "M_OWNER_YIELD_CONSOLIDATION_DISTORTION")))
+_PROMPT_SOTP = open(os.path.join(ROOT, "backtest", "PROMPT.md"),
+                    encoding="utf-8").read()
+check("PROMPT 已写入持仓型控股通道纪律段", "REQ-P1-02" in _PROMPT_SOTP and
+      "sotp_holdings_REQ-P1-02" in _PROMPT_SOTP and
+      "SOTP_HOLDINGS_TABLE_INVALID" in _PROMPT_SOTP)
+import check_scenarios as _CS  # noqa: E402
+check("check_scenarios：sotp 在 DCF_METHODS（基准/乐观）且 sotp_asset_floor 在独立方法白名单",
+      "sotp" in _CS.DCF_METHODS and "sotp_asset_floor" in _CS.INDEPENDENT_METHODS and
+      "REQ-P1-02" in _CS.DCF_METHODS["sotp"])
+
+# ═══════════════════════════════════════════════════════════════════
+print("== 14.9 护城河评级连续化（REQ-P1-03，平滑 MoS 门槛 + 边界带双档）==")
+# 动因：神华 2015 案（diff.md 第 42 行）——"窄"要 40%（实际 37.7% 差 2.3pct）、
+# 闸门二①要 21.83%，评"宽"则 25%/16.5% 双放行，一字之差档位跳 2 档。
+# 测试锁定：平滑函数数学（锚点/连续/带内 ≥ legacy）、词=投影一致性、
+# 裸分数禁止、神华边界带双档报告、legacy 词路径字节兼容、
+# 12 案"评级 1 级变动 → 档位跳 2 级 = 0"验收。
+
+# --- A. 平滑函数数学 ---
+_f = _RD.mos_requirement_from_score
+check("平滑锚点：35→50% / 65→40% / 100→25%",
+      abs(_f(35) - 0.50) < 1e-12 and abs(_f(65) - 0.40) < 1e-12
+      and abs(_f(100) - 0.25) < 1e-12)
+check("分带边界连续：65 分左右极限 = 40%（阶跃归零处）",
+      abs(_f(65 - 1e-6) - 0.40) < 1e-8 and abs(_f(65 + 1e-6) - 0.40) < 1e-8)
+check("单调递减（35→100 全程）",
+      all(_f(s) <= _f(s - 1) + 1e-12 for s in range(36, 101)))
+check("s<35 → None（不给买入结论，政策边界）",
+      _f(34.9) is None and _f(0) is None)
+try:
+    _f(101); _inv_ok = False
+except ValueError:
+    _inv_ok = True
+check("得分越界（>100）→ ValueError", _inv_ok)
+check("带内处处 ≥ legacy 常数（通道建设非阈值放松，仅锚点相等）",
+      all(_f(s) >= 0.40 - 1e-12 for s in range(35, 65))
+      and all(_f(s) >= 0.25 - 1e-12 for s in range(65, 101))
+      and _f(65) == 0.40 and _f(100) == 0.25)
+
+# --- B. 词投影与边界带 ---
+check("分带投影：≥65 wide / ≥35 narrow / <35 none",
+      _RD.moat_word_from_score(65) == "wide"
+      and _RD.moat_word_from_score(64.9) == "narrow"
+      and _RD.moat_word_from_score(35) == "narrow"
+      and _RD.moat_word_from_score(34.9) == "none")
+_b60 = _RD.moat_boundary_band(60)
+check("边界带检测：60/70 ∈ 宽窄带 [60,70]，59.9/70.1 ∉",
+      _b60["in_band"] and _RD.moat_boundary_band(70)["in_band"]
+      and not _RD.moat_boundary_band(59.9)["in_band"]
+      and not _RD.moat_boundary_band(70.1)["in_band"])
+check("边界带检测：30/40 ∈ 窄无带 [30,40]，相邻词正确",
+      _RD.moat_boundary_band(30)["in_band"]
+      and _RD.moat_boundary_band(40)["in_band"]
+      and _RD.moat_boundary_band(36)["adjacent_words"] == ("none", "narrow"))
+check("边界带外（如 50 分）不触发", not _RD.moat_boundary_band(50)["in_band"])
+
+# --- C. 反推门槛：得分路径与 legacy 在锚点衔接 ---
+_r65, _h65 = _RD.moat_irr_hurdle("narrow", 0.10, 5, score=65)
+_r100, _h100 = _RD.moat_irr_hurdle("wide", 0.10, 5, score=100)
+_rL, _hL = _RD.moat_irr_hurdle("narrow", 0.10, 5)
+check("score=65 反推门槛 = legacy 窄锚（连续性衔接实证）",
+      abs(_r65 - _rL) < 1e-12 and abs(_h65 - _hL) < 1e-12)
+check("score=100 反推门槛 = legacy 宽锚 16.5%",
+      abs(_r100 - 0.25) < 1e-12 and abs(_h100 - 0.16515) < 1e-3)
+check("score<35 → (None, None)（不给买入结论）",
+      _RD.moat_irr_hurdle("narrow", 0.10, 5, score=30) == (None, None))
+
+# --- D. 强制纪律：裸分数禁止 / 词-得分不一致（子进程端到端）---
+_SH = os.path.join(ROOT, "backtest", "601088.SH_2015-12-31", "data", "scenarios.json")
+_p_nobasis = run(["expected-return", "--scenarios-file", _SH, "--moat-score", "60"])
+check("得分无 basis → 硬拒绝（exit 1）+ MOAT_SCORE_BASIS_MISSING",
+      _p_nobasis.returncode == 1 and "MOAT_SCORE_BASIS_MISSING" in
+      (_p_nobasis.stderr or "") + (_p_nobasis.stdout or ""),
+      f"rc={_p_nobasis.returncode}")
+with tempfile.TemporaryDirectory() as _td13:
+    _sd = json.load(open(_SH, encoding="utf-8"))
+    _sd["moat"] = "wide"    # 与得分 60 的投影 narrow 故意不一致
+    _p_mismatch = os.path.join(_td13, "mismatch.json")
+    json.dump(_sd, open(_p_mismatch, "w", encoding="utf-8"), ensure_ascii=False)
+    _p_mm = run(["expected-return", "--scenarios-file", _p_mismatch,
+                 "--moat-score", "60",
+                 "--moat-score-basis", "x [E:a]"])
+    check("词与得分投影不一致 → 硬拒绝 + MOAT_SCORE_WORD_MISMATCH",
+          _p_mm.returncode == 1 and "MOAT_SCORE_WORD_MISMATCH" in
+          (_p_mm.stderr or "") + (_p_mm.stdout or ""),
+          f"rc={_p_mm.returncode}")
+
+# --- E. 神华边界带双档报告（验收演示端到端）---
+_ms_demo = os.path.join(ROOT, "backtest", "601088.SH_2015-12-31", "data",
+                        "expected_return_moat_score_REQ-P1-03.json")
+check("神华得分演示文件存在", os.path.exists(_ms_demo))
+if os.path.exists(_ms_demo):
+    _d = json.load(open(_ms_demo, encoding="utf-8"))
+    _ms = _d["moat_score"]
+    check("得分 60 → narrow + 平滑门槛 41.67%（> legacy 40%）",
+          _ms["word"] == "narrow" and abs(_ms["mos_requirement"] - 0.416667) < 1e-4
+          and _ms["legacy_requirement"] == 0.40)
+    check("闸门一：MoS 37.7% < 41.7% → 不过，触发价 14.02",
+          _ms["gate1_pass"] is False
+          and abs(_ms["gate1_margin_of_safety"] - 0.3773) < 1e-3
+          and abs(_ms["gate1_trigger_price"] - 14.0233) < 1e-3)
+    check("闸门二①诊断门槛随平滑 MoS（22.5% ≠ legacy 21.83%）",
+          abs(_ms["gate2_diagnostic_hurdle"] - 0.2252) < 1e-3)
+    _dr = _ms["dual_report"]
+    check("边界带触发：60 ∈ [60,70] + MOAT_BOUNDARY_BAND_DUAL",
+          _ms["boundary_band"]["in_band"]
+          and "MOAT_BOUNDARY_BAND_DUAL" in _d["gate2"]["codes"])
+    check("双档报告：±5 分两侧（55/65）门槛 43.3%/40.0%",
+          len(_dr["rows"]) == 2
+          and abs(_dr["rows"][0]["mos_requirement"] - 0.43333) < 1e-4
+          and abs(_dr["rows"][1]["mos_requirement"] - 0.40) < 1e-4)
+    check("65 分侧触发价 14.42 = 归档 legacy 触发价（连续性锚实证）",
+          abs(_dr["rows"][1]["trigger_price"] - 14.424) < 1e-2)
+    check("敏感性标注「结论对护城河判断敏感」",
+          "结论对护城河判断敏感" in _dr["sensitivity_note"])
+
+# --- F. legacy 词路径字节兼容（基线不动）---
+_p_word = run(["expected-return", "--scenarios-file", _SH,
+               "-o", os.path.join(tempfile.gettempdir(), "_ms_legacy.json")])
+_wj = os.path.join(tempfile.gettempdir(), "_ms_legacy.json")
+_word_res = json.load(open(_wj, encoding="utf-8")) if os.path.exists(_wj) else {}
+check("仅评级词（无得分）→ 输出无 moat_score 键（legacy 兼容）",
+      _p_word.returncode == 0 and "moat_score" not in _word_res)
+check("legacy ①门槛 = 21.83%（神华窄锚不动）",
+      _word_res and abs(_word_res["gate2"]["consistency_expected_irr"]["hurdle"]
+                        - 0.2183) < 1e-3)
+
+# --- G. 12 案验收：评级 1 级变动 → 档位跳 2 级 = 0 ---
+# 档位代理（裁决层语义的机器化下界）：none→1；闸门一/二任一不过→2（观察等价格）；
+# 双过→3（小仓位试探——核心买入须裁决层按核验强度/股东回报加码，不是评级
+# 传导变量）。"评级 1 级变动"操作化为分带边界的 ε 穿越（knife-edge 情形，
+# 即需求所述"两个同样认真的分析师在边界上分歧"），对 35/65 两边界各测一次。
+def _tier_313(word, g1, g2):
+    if word == "none":
+        return 1
+    if g1 is not True:
+        return 2
+    if g2 is not True:
+        return 2
+    return 3
+
+_max_delta, _cases_tested = 0, 0
+for _d13 in sorted(glob.glob(os.path.join(ROOT, "backtest", "*") + os.sep)):
+    _sfs = [f for f in glob.glob(os.path.join(_d13, "data", "scenarios*.json"))
+            if "audit" not in os.path.basename(f) and "REQ-" not in os.path.basename(f)]
+    if not _sfs:
+        continue    # 康美案（Phase 0 排除）：无评级无情景，档位由排雷定，评级免疫
+    _sd = json.load(open(_sfs[0], encoding="utf-8"))
+    _scen = [{"name": s["name"], "value_per_share": float(s["value_per_share"]),
+              "probability": float(s["probability"])} for s in _sd["scenarios"]]
+    try:
+        _res = _RD.expected_return(
+            float(_sd["price"]), _scen, int(_sd.get("hold_years", 5)), 0.09,
+            float(_sd.get("dividend_yield", 0.0)),
+            float(_sd.get("discount_rate", 0.10)),
+            moat=_sd.get("moat"), iv_growth=_sd.get("intrinsic_value_growth"))
+    except SystemExit:
+        continue
+    _base = next((s["value_per_share"] for s in _scen
+                  if s["name"] in ("基准", "base")), None)
+    if not _base:
+        continue
+    _mos = 1.0 - float(_sd["price"]) / _base
+    _g2p = _res["gate2"]["pass"]
+    for _edge in (35.0, 65.0):
+        _w_lo = _RD.moat_word_from_score(_edge - 0.5)
+        _w_hi = _RD.moat_word_from_score(_edge + 0.5)
+        _r_lo = _RD.mos_requirement_from_score(_edge - 0.5)
+        _r_hi = _RD.mos_requirement_from_score(_edge + 0.5)
+        _g1_lo = _mos >= _r_lo if _r_lo is not None else False
+        _g1_hi = _mos >= _r_hi if _r_hi is not None else False
+        _g2_lo = False if _w_lo == "none" else _g2p
+        _g2_hi = False if _w_hi == "none" else _g2p
+        _delta = abs(_tier_313(_w_hi, _g1_hi, _g2_hi)
+                     - _tier_313(_w_lo, _g1_lo, _g2_lo))
+        _max_delta = max(_max_delta, _delta)
+    _cases_tested += 1
+check(f"12 案验收：评级 1 级变动（边界 ε 穿越）档位跳 2 级 = 0"
+      f"（实测 {_cases_tested} 案 maxΔ={_max_delta}）",
+      _max_delta <= 1 and _cases_tested >= 11)
+
+# --- H. 对照：legacy 阶跃 + 旧闸门二（①参与）下神华确实跳 2 档 ---
+# 用神华档数据复现 diff.md 第 42 行实证——证明旧机制的问题真实存在、
+# 且新机制（上项测试）已把它归零。
+_sh_sd = json.load(open(_SH, encoding="utf-8"))
+_sh_scen = [{"name": s["name"], "value_per_share": float(s["value_per_share"]),
+             "probability": float(s["probability"])} for s in _sh_sd["scenarios"]]
+_sh_res = _RD.expected_return(
+    float(_sh_sd["price"]), _sh_scen, 5, 0.09,
+    float(_sh_sd.get("dividend_yield", 0.0)), 0.10,
+    moat="narrow", iv_growth=_sh_sd.get("intrinsic_value_growth"))
+_sh_g = _sh_res["gate2"]
+_sh_mos = 1.0 - float(_sh_sd["price"]) / 24.04
+# 旧口径闸门二 = ①②③ 全过（REQ-P0-04 之前）；旧档位口径 = 双闸全过即
+# 核心买入候选（4）——diff.md 第 42 行"档位直接跳到 3~4"的量化复现。
+def _old_gate2(word):
+    _h = _RD.moat_irr_hurdle(word, 0.10, 5)[1]
+    _c1 = _sh_res["expected_annualized_irr"] >= _h if _h is not None else None
+    _checks = [_c1, _sh_g["no_convergence_floor"]["pass"],
+               _sh_g["pessimistic_irr"]["pass"]]
+    if word == "none":
+        return False
+    if any(c is None for c in _checks):
+        return None
+    return all(_checks)
+
+def _old_tier(word, g1, g2):
+    if word == "none":
+        return 1
+    if g1 is not True:
+        return 2
+    if g2 is not True:
+        return 2
+    return 4   # 旧口径：双闸全过 = 核心买入候选
+
+_tier_narrow = _old_tier("narrow", _sh_mos >= 0.40, _old_gate2("narrow"))
+_tier_wide = _old_tier("wide", _sh_mos >= 0.25, _old_gate2("wide"))
+check("对照实证：legacy 阶跃 + 旧闸门二/旧档位口径下，神华 窄→宽 档位跳 2 档"
+      f"（{_tier_narrow}→{_tier_wide}，diff.md 第 42 行问题复现）",
+      _tier_narrow == 2 and _tier_wide == 4)
+
+# --- I. check_scenarios S1b（scenarios.json 得分字段校验）---
+def _run_cs(path):
+    return subprocess.run(
+        [sys.executable, os.path.join(SCRIPTS, "check_scenarios.py"), path],
+        capture_output=True, text=True)
+
+with tempfile.TemporaryDirectory() as _td14:
+    _tpl = {"price": 10, "moat": "wide", "discount_rate": 0.1, "hold_years": 5,
+            "scenarios": [
+                {"name": "悲观", "value_per_share": 5, "probability": 0.25,
+                 "method": "liquidation", "method_inputs": {}},
+                {"name": "基准", "value_per_share": 20, "probability": 0.5,
+                 "method": "dcf_owner_earnings"},
+                {"name": "乐观", "value_per_share": 30, "probability": 0.25,
+                 "method": "dcf_owner_earnings"}]}
+    _bad = dict(_tpl, moat_score=50)   # 词 wide 与投影 narrow 不一致 + 无 basis
+    _p1 = os.path.join(_td14, "bad.json")
+    json.dump(_bad, open(_p1, "w", encoding="utf-8"), ensure_ascii=False)
+    _cs_r = _run_cs(_p1)
+    _cs_out = _cs_r.stdout + _cs_r.stderr
+    check("S1b：词与得分投影不一致 → FAIL + MOAT_SCORE_WORD_MISMATCH",
+          "MOAT_SCORE_WORD_MISMATCH" in _cs_out and "[FAIL]" in _cs_out)
+    check("S1b：得分缺 [E:] basis → FAIL + MOAT_SCORE_BASIS_MISSING",
+          "MOAT_SCORE_BASIS_MISSING" in _cs_out)
+    _good = dict(_tpl, moat="narrow", moat_score=50,
+                 moat_score_basis="A 30 [E:x]；B 10 [E:y]；C +10 [E:z]",
+                 moat_sources=["成本优势"])
+    _p2 = os.path.join(_td14, "good.json")
+    json.dump(_good, open(_p2, "w", encoding="utf-8"), ensure_ascii=False)
+    _cs_r2 = _run_cs(_p2)
+    check("S1b：合法得分三字段（词=投影 + [E:]）不触发 S1b 错误",
+          "MOAT_SCORE_WORD_MISMATCH" not in _cs_r2.stdout
+          and "MOAT_SCORE_BASIS_MISSING" not in _cs_r2.stdout)
+
+# --- J. 码注册与文档接线 ---
+_moat_codes = ["MOAT_SCORE_BASIS_MISSING", "MOAT_SCORE_WORD_MISMATCH",
+               "MOAT_BOUNDARY_BAND_DUAL"]
+check("三个 MOAT_* 码全部在 ALERTS 注册表",
+      not AC.unknown_codes(_moat_codes), str(AC.unknown_codes(_moat_codes)))
+check("分层命名表含 MOAT_* 行",
+      "`MOAT_*`" in open(os.path.join(SCRIPTS, "alert_codes.py"),
+                         encoding="utf-8").read())
+_docs_313 = open(os.path.join(ROOT, "SKILL.md"), encoding="utf-8").read() + "".join(
+    open(os.path.join(ROOT, "references", _r), encoding="utf-8").read()
+    for _r in os.listdir(os.path.join(ROOT, "references")) if _r.endswith(".md"))
+check("文档已接入连续化（moat-framework 第二节半/valuation-guide/SKILL）",
+      all(_kw in _docs_313 for _kw in
+          ("REQ-P1-03", "第二节半", "mos_requirement_from_score",
+           "MOAT_BOUNDARY_BAND_DUAL", "data-moat-score")))
+_prompt_313 = open(os.path.join(ROOT, "backtest", "PROMPT.md"),
+                   encoding="utf-8").read()
+check("PROMPT 已写入护城河定量得分纪律段（第四批起强制）",
+      "REQ-P1-03" in _prompt_313 and "moat_score" in _prompt_313
+      and "MOAT_BOUNDARY_BAND_DUAL" in _prompt_313)
+
+# ═══════════════════════════════════════════════════════════════════
+print("== 14.10 REQ-P1-04 折现率与情景概率的证据传导 ==")
+import copy as _copy104
+import reverse_dcf as _rd104  # noqa: E402
+import check_scenarios as _cs104  # noqa: E402
+from alert_codes import unknown_codes as _uc104  # noqa: E402
+
+# A. 分层表数学
+_rate_a, _comp_a = _rd104.stratified_discount_rate("cyclical", 0.0282)
+check("A 分层：cyclical@2.82% Rf → 11%（下限 10% + 溢价 1pct）",
+      abs(_rate_a - 0.11) < 1e-12 and _comp_a["industry_premium"] == 0.01)
+_rate_b, _ = _rd104.stratified_discount_rate("stable", 0.035)
+check("A 分层：stable@3.5% Rf → 10%（下限绑定，premium 0）",
+      abs(_rate_b - 0.10) < 1e-12)
+_rate_c, _ = _rd104.stratified_discount_rate("speculative_growth", None)
+check("A 分层：speculative_growth 无 Rf → 12%", abs(_rate_c - 0.12) < 1e-12)
+_rate_d, _ = _rd104.stratified_discount_rate("financials", 0.045)
+check("A 分层：financials@4.5% Rf → 11%（Rf+4pct=8.5%<10% 下限绑定 +1pct）",
+      abs(_rate_d - 0.11) < 1e-12)
+try:
+    _rd104.stratified_discount_rate("nope")
+    check("A 分层：未知行业档硬拒绝", False)
+except SystemExit:
+    check("A 分层：未知行业档硬拒绝", True)
+
+# B. 概率映射锚点与调整
+for _s, _pe, _po in ((35, .35, .15), (65, .30, .20), (100, .25, .25)):
+    _m = _rd104.map_scenario_probabilities(_s)
+    check(f"B 映射锚点：得分 {_s} → 悲观 {_pe:.0%}/乐观 {_po:.0%}",
+          abs(_m["probabilities"]["悲观"] - _pe) < 1e-9
+          and abs(_m["probabilities"]["乐观"] - _po) < 1e-9)
+    check(f"B 映射锚点：得分 {_s} → 基准恒 50%",
+          abs(_m["probabilities"]["基准"] - 0.50) < 1e-9)
+_m60 = _rd104.map_scenario_probabilities(60)
+check("B 映射：得分 60 → 悲观 30.83%/乐观 19.17%（两翼线性、基准 50%）",
+      abs(_m60["probabilities"]["悲观"] - 0.308333) < 1e-4
+      and abs(_m60["probabilities"]["乐观"] - 0.191667) < 1e-4)
+_prev = 1.0
+for _s in range(35, 101):
+    _pp = _rd104.map_scenario_probabilities(_s)["probabilities"]["悲观"]
+    if _pp > _prev + 1e-12:
+        check("B 映射：悲观权重随得分单调递减", False)
+        break
+    _prev = _pp
+else:
+    check("B 映射：悲观权重随得分单调递减", True)
+check("B 映射：得分 <35 → None（无买入结论，传导无意义）",
+      _rd104.map_scenario_probabilities(30) is None)
+_m_vp = _rd104.map_scenario_probabilities(75, "strong", 0.30)
+check("B 传导链：strong −5pp 后被红队下界 30% 吸收（茅台式演示）",
+      abs(_m_vp["probabilities"]["悲观"] - 0.30) < 1e-9
+      and any("红队" in s[0] for s in _m_vp["chain"]))
+_m_wk = _rd104.map_scenario_probabilities(65, "weak", None)
+check("B 传导链：weak 悲观 +5pp（三问答不出 → 更悲观）",
+      abs(_m_wk["probabilities"]["悲观"] - 0.35) < 1e-9)
+_m_cl = _rd104.map_scenario_probabilities(35, "weak", 0.55)
+check("B 传导链：红队 55% 服从映射，clamp 上界 60% 内",
+      abs(_m_cl["probabilities"]["悲观"] - 0.55) < 1e-9)
+try:
+    _rd104.map_scenario_probabilities(65, "omg")
+    check("B 传导链：非法 variant 硬拒绝", False)
+except SystemExit:
+    check("B 传导链：非法 variant 硬拒绝", True)
+
+# C. 引擎 derivation 块（合成三情景）
+_scen104 = [{"name": "悲观", "value_per_share": 8, "probability": .30},
+            {"name": "基准", "value_per_share": 20, "probability": .50},
+            {"name": "乐观", "value_per_share": 28, "probability": .20}]
+def _er104(**kw):
+    _d = dict(price=10.0, scenarios=_copy104.deepcopy(_scen104), hold_years=5,
+              discount_rate=0.10, moat="narrow", iv_growth=0.03,
+              dividend_yield=0.02, moat_score=60,
+              moat_score_basis="x [E:t]", prob_derivation={
+                  "moat_score": 60, "variant_perception": "strong",
+                  "red_team_pessimistic": 0.30,
+                  "rationale_ref": "传导链 [E:demo]"})
+    _d.update(kw)
+    return _rd104.expected_return(**_d)
+
+_r_ok = _er104()
+check("C 引擎：derivation 块过 → probability_derivation 输出含 rationale_ref/映射/采用/传导链",
+      _r_ok["probability_derivation"]["rationale_ref"].startswith("传导链")
+      and abs(_r_ok["probability_derivation"]["mapped_probabilities"]["悲观"] - .30) < 1e-9
+      and len(_r_ok["probability_derivation"]["transmission_chain"]) >= 3)
+check("C 引擎：derivation 块过 → 敏感性表三行（−10/0/+10pp）+ 档位建议",
+      len(_r_ok["probability_derivation"]["sensitivity_pm10pp"]["rows"]) == 3
+      and all(r.get("tier_suggestion") for r in
+              _r_ok["probability_derivation"]["sensitivity_pm10pp"]["rows"]
+              if r.get("valid")))
+_sc_low = _copy104.deepcopy(_scen104)
+_sc_low[0]["probability"], _sc_low[2]["probability"] = .26, .24
+try:
+    _rd104.expected_return(price=10.0, scenarios=_sc_low, hold_years=5,
+                           discount_rate=.10, moat="narrow", iv_growth=.03,
+                           moat_score=60, moat_score_basis="x [E:t]",
+                           prob_derivation={"moat_score": 60,
+                                            "rationale_ref": "r [E:x]"})
+    check("C 引擎：偏离映射 >2pp 无论证 → PROB_DERIVATION_MISMATCH 硬拒", False)
+except SystemExit as _e:
+    check("C 引擎：偏离映射 >2pp 无论证 → PROB_DERIVATION_MISMATCH 硬拒",
+          "PROB_DERIVATION_MISMATCH" in str(_e))
+_sc_low2 = _copy104.deepcopy(_sc_low)
+try:
+    _rd104.expected_return(price=10.0, scenarios=_sc_low2, hold_years=5,
+                           discount_rate=.10, moat="narrow", iv_growth=.03,
+                           moat_score=60, moat_score_basis="x [E:t]",
+                           prob_derivation={"moat_score": 60,
+                                            "rationale_ref": "r [E:x]",
+                                            "deviation_rationale": "无证据理由"})
+    check("C 引擎：deviation_rationale 缺 [E:] → 仍硬拒", False)
+except SystemExit as _e:
+    check("C 引擎：deviation_rationale 缺 [E:] → 仍硬拒",
+          "PROB_DERIVATION_MISMATCH" in str(_e))
+_sc_far = _copy104.deepcopy(_scen104)
+_sc_far[0]["probability"], _sc_far[2]["probability"] = .15, .35   # 偏离 −15.8pp
+try:
+    _rd104.expected_return(price=10.0, scenarios=_sc_far, hold_years=5,
+                           discount_rate=.10, moat="narrow", iv_growth=.03,
+                           moat_score=60, moat_score_basis="x [E:t]",
+                           prob_derivation={"moat_score": 60,
+                                            "rationale_ref": "r [E:x]",
+                                            "deviation_rationale": "论证 [E:x]"})
+    check("C 引擎：偏离映射 >10pp → PROB_DERIVATION_OUT_OF_RANGE 硬拒（论证也不救）", False)
+except SystemExit as _e:
+    check("C 引擎：偏离映射 >10pp → PROB_DERIVATION_OUT_OF_RANGE 硬拒（论证也不救）",
+          "PROB_DERIVATION_OUT_OF_RANGE" in str(_e))
+_sc_rt = _copy104.deepcopy(_scen104)
+_sc_rt[0]["probability"], _sc_rt[1]["probability"] = .25, .55   # 低于红队下界 30%
+try:
+    _rd104.expected_return(price=10.0, scenarios=_sc_rt, hold_years=5,
+                           discount_rate=.10, moat="narrow", iv_growth=.03,
+                           moat_score=60, moat_score_basis="x [E:t]",
+                           prob_derivation={"moat_score": 60,
+                                            "red_team_pessimistic": 0.30,
+                                            "rationale_ref": "r [E:x]",
+                                            "deviation_rationale": "论证 [E:x]"})
+    check("C 引擎：采用悲观 < 红队下界 → 硬拒（红队下界不可被论证突破）", False)
+except SystemExit as _e:
+    check("C 引擎：采用悲观 < 红队下界 → 硬拒（红队下界不可被论证突破）",
+          "PROB_DERIVATION_MISMATCH" in str(_e))
+for _bad_pd, _label, _moat_arg in (
+        ({"rationale_ref": "裸的"}, "rationale 缺 [E:]", "narrow"),
+        ({"moat_score": None, "rationale_ref": "r [E:x]"}, "缺得分", "narrow"),
+        ({"moat_score": 30, "rationale_ref": "r [E:x]"}, "得分 <35 无买入结论", None)):
+    try:
+        _rd104.expected_return(price=10.0, scenarios=_copy104.deepcopy(_scen104),
+                               hold_years=5, discount_rate=.10, moat=_moat_arg,
+                               iv_growth=.03, moat_score_basis="x [E:t]",
+                               prob_derivation=_bad_pd)
+        check(f"C 引擎：{_label} → PROB_DERIVATION_INVALID 硬拒", False)
+    except SystemExit as _e:
+        check(f"C 引擎：{_label} → PROB_DERIVATION_INVALID 硬拒",
+              "PROB_DERIVATION_INVALID" in str(_e))
+
+# D. ±10pp 敏感性与翻档码（合成翻档形态：悲观 IRR=0、基准/乐观 IRR≈16.8%，
+# 采用悲观 33% 时期望 IRR 11.3% ≥ r；+10pp 到 43% 时 9.6% < r → 闸门二翻档）
+# 数学约束（证明见测试外注释）：闸门一过 ⇒ 基准 IRR > r，翻档只能由
+# expected_irr_floor 跨越 r 触发——悲观 IRR 必须压到恰为 0（不违反③）。
+_B = 20.0
+_P = 0.74 * _B                      # MoS 26% > score100 门槛 25% → 闸门一过
+_VP = _P / (1.10 ** 5)              # 悲观 V_H = P → IRR 恰 0（③ 过、无亏损情景）
+_sc_flip = [{"name": "悲观", "value_per_share": _VP, "probability": .33},
+            {"name": "基准", "value_per_share": _B, "probability": .47},
+            {"name": "乐观", "value_per_share": _B, "probability": .20}]
+_r_flip = _rd104.expected_return(
+    price=_P, scenarios=_sc_flip, hold_years=5, discount_rate=.10,
+    moat="wide", iv_growth=.06, moat_score=100,
+    moat_score_basis="x [E:t]",
+    prob_derivation={"moat_score": 100, "variant_perception": "neutral",
+                     "rationale_ref": "r [E:x]",
+                     "deviation_rationale": "论证 [E:x]"})   # 悲观 +8pp 在可调范围内
+_sens = _r_flip["probability_derivation"]["sensitivity_pm10pp"]
+check("D 敏感性：翻档形态被识别（PROB_SENSITIVITY_TIER_FLIP）",
+      _sens["tier_flip"] and "PROB_SENSITIVITY_TIER_FLIP" in _r_flip["gate2"]["codes"])
+_tiers_d = [r["tier_suggestion"] for r in _sens["rows"] if r.get("valid")]
+check("D 敏感性：档位建议确实随 ±10pp 变化", len(set(_tiers_d)) > 1)
+
+# E. DR 块（分层一致性 + 市场校准 floor）
+_r_dr = _rd104.expected_return(
+    price=10.0, scenarios=_copy104.deepcopy(_scen104), hold_years=5,
+    discount_rate=.10, moat="narrow", iv_growth=.03,
+    dr_derivation={"industry_tier": "standard", "market": "US",
+                   "rationale_ref": "r [E:x]"})
+check("E DR：standard 档 10% 一致 → discount_rate_derivation 输出含 rationale_ref",
+      _r_dr["discount_rate_derivation"]["rate"] == 0.10
+      and "[E:" in _r_dr["discount_rate_derivation"]["rationale_ref"])
+check("E DR：market=US → 不收敛下限门槛切 5%（P0-04③ 口径修复）",
+      _r_dr["gate2"]["no_convergence_floor"]["hurdle"] == 0.05)
+_r_jp = _rd104.expected_return(
+    price=10.0, scenarios=_copy104.deepcopy(_scen104), hold_years=5,
+    discount_rate=.10, moat="narrow", iv_growth=.03,
+    floor_hurdle=None,
+    dr_derivation={"industry_tier": "standard", "market": "JP",
+                   "rationale_ref": "r [E:x]"})
+check("E DR：market=JP → floor 门槛 3%（JGB+3pct）",
+      _r_jp["gate2"]["no_convergence_floor"]["hurdle"] == 0.03)
+_r_explicit = _rd104.expected_return(
+    price=10.0, scenarios=_copy104.deepcopy(_scen104), hold_years=5,
+    discount_rate=.10, moat="narrow", iv_growth=.03, floor_hurdle=0.07,
+    dr_derivation={"industry_tier": "standard", "market": "US",
+                   "rationale_ref": "r [E:x]"})
+check("E DR：显式 --floor-hurdle 优先于市场校准", 
+      _r_explicit["gate2"]["no_convergence_floor"]["hurdle"] == 0.07)
+try:
+    _rd104.expected_return(
+        price=10.0, scenarios=_copy104.deepcopy(_scen104), hold_years=5,
+        discount_rate=.10, moat="narrow", iv_growth=.03,
+        dr_derivation={"industry_tier": "cyclical", "market": "CN",
+                       "rationale_ref": "r [E:x]"})
+    check("E DR：cyclical 11% ≠ 声明 10% → DR_STRATIFIED_RATE_MISMATCH 硬拒", False)
+except SystemExit as _e:
+    check("E DR：cyclical 11% ≠ 声明 10% → DR_STRATIFIED_RATE_MISMATCH 硬拒",
+          "DR_STRATIFIED_RATE_MISMATCH" in str(_e))
+try:
+    _rd104.expected_return(
+        price=10.0, scenarios=_copy104.deepcopy(_scen104), hold_years=5,
+        discount_rate=.10, moat="narrow", iv_growth=.03,
+        dr_derivation={"industry_tier": "standard", "rationale_ref": "裸"})
+    check("E DR：rationale 缺 [E:] → DR_DERIVATION_UNANCHORED 硬拒", False)
+except SystemExit as _e:
+    check("E DR：rationale 缺 [E:] → DR_DERIVATION_UNANCHORED 硬拒",
+          "DR_DERIVATION_UNANCHORED" in str(_e))
+
+# F. legacy 兼容：无 derivation 块输出无新键（12 案基线不动）
+_r_legacy = _rd104.expected_return(
+    price=10.0, scenarios=_copy104.deepcopy(_scen104), hold_years=5,
+    discount_rate=.10, moat="narrow", iv_growth=.03)
+check("F legacy：无块 → 无 probability_derivation/discount_rate_derivation 键",
+      "probability_derivation" not in _r_legacy
+      and "discount_rate_derivation" not in _r_legacy)
+check("F legacy：无块 → floor 门槛仍 6%（默认不变）",
+      _r_legacy["gate2"]["no_convergence_floor"]["hurdle"] == 0.06)
+
+# G. 神华演示端到端（验收锚）
+_sh_demo = json.load(open(os.path.join(
+    ROOT, "backtest/601088.SH_2015-12-31", "data",
+    "prob_expected_return_REQ-P1-04.json"), encoding="utf-8"))
+check("G 神华演示：红队下界把悲观从原案 25% 上调到 30%（传导进入数字）",
+      _sh_demo["probability_derivation"]["adopted_probabilities"]["悲观"] == 0.30
+      and abs(_sh_demo["probability_derivation"]["mapped_probabilities"]["悲观"] - .30) < 1e-9)
+check("G 神华演示：期望 IRR 16.60%（原案 25/50/25 为 18.46%，悲观上调的代价显式化）",
+      abs(_sh_demo["expected_annualized_irr"] - 0.166) < 5e-3)
+check("G 神华演示：敏感性表三行 + 稳健结论（±10pp 档位不动）",
+      _sh_demo["probability_derivation"]["sensitivity_pm10pp"]["tier_flip"] is False)
+_aapl_demo = json.load(open(os.path.join(
+    ROOT, "backtest/AAPL_2016-04-30", "data",
+    "dr_expected_return_REQ-P1-04.json"), encoding="utf-8"))
+check("G AAPL 演示：US floor 门槛 5% 且 rationale_ref 落盘",
+      _aapl_demo["gate2"]["no_convergence_floor"]["hurdle"] == 0.05
+      and "[E:" in _aapl_demo["discount_rate_derivation"]["rationale_ref"])
+
+# H. S7c 门禁正反
+def _s7c_case(pd=None, dr=None, probs=None):
+    _d = {"price": 10, "moat": "narrow", "discount_rate": 0.1,
+          "hold_years": 5,
+          "scenarios": [
+              {"name": "悲观", "value_per_share": 5, "probability": .3,
+               "method": "liquidation", "method_inputs": {}},
+              {"name": "基准", "value_per_share": 20, "probability": .5,
+               "method": "dcf_owner_earnings"},
+              {"name": "乐观", "value_per_share": 30, "probability": .2,
+               "method": "dcf_owner_earnings"}]}
+    if probs:
+        for _s, _p in zip(_d["scenarios"], probs):
+            _s["probability"] = _p
+    if pd:
+        _d["probability_derivation"] = pd
+    if dr:
+        _d["discount_rate_derivation"] = dr
+    _fd = tempfile.mkdtemp(prefix="s7c104_")
+    _p = os.path.join(_fd, "s7c_case.json")
+    json.dump(_d, open(_p, "w", encoding="utf-8"), ensure_ascii=False)
+    _e, _w = [], []
+    try:
+        _ignored, _e, _w, _i = _cs104.check(_p)
+    except SystemExit as _ex:
+        return ["EXIT:" + str(_ex)[:40]], []
+    finally:
+        shutil.rmtree(_fd, ignore_errors=True)
+    return _e, _w
+_e_ok, _w_ok = _s7c_case(pd={"moat_score": 60, "variant_perception": "neutral",
+                             "rationale_ref": "r [E:x]"})
+check("H S7c：合法 probability_derivation → 无 S7c 错误（合成底稿的其余 S 检查不计）",
+      not any(m.startswith("S7c") for m in _e_ok))
+_e_bad, _ = _s7c_case(pd={"moat_score": 60, "rationale_ref": "裸"})
+check("H S7c：rationale 缺 [E:] → PROB_DERIVATION_INVALID",
+      any("S7c-VAR" in _m for _m in _e_bad))
+_e_dev, _ = _s7c_case(pd={"moat_score": 60, "rationale_ref": "r [E:x]"},
+                      probs=[.22, .58, .20])   # 悲观偏离映射 30.83% 达 −8.8pp 无论证
+check("H S7c：偏离 >2pp 无论证 → S7c-DEV",
+      any("S7c-DEV" in _m for _m in _e_dev))
+_e_rng, _ = _s7c_case(pd={"moat_score": 60, "rationale_ref": "r [E:x]",
+                          "deviation_rationale": "论证 [E:x]"},
+                      probs=[.15, .65, .20])
+check("H S7c：偏离 >10pp 即使有论证 → S7c-RANGE",
+      any("S7c-RANGE" in _m for _m in _e_rng))
+_e_dr, _ = _s7c_case(dr={"industry_tier": "cyclical", "rationale_ref": "r [E:x]"})
+check("H S7c：DR 不一致 → DR_STRATIFIED_RATE_MISMATCH（S7c-DR）",
+      any("S7c-DR" in _m and "分层折现率" in _m for _m in _e_dr))
+_e_none, _ = _s7c_case()
+check("H S7c：无块 → 无 S7c 消息（legacy 零新增，基线不动）",
+      not any(m.startswith("S7c") for m in _e_none))
+
+# I. 告警码注册与文档接线
+check("I 七码全部注册",
+      not _uc104(["DR_INDUSTRY_TIER_UNKNOWN", "DR_STRATIFIED_RATE_MISMATCH",
+                  "DR_DERIVATION_UNANCHORED", "PROB_DERIVATION_INVALID",
+                  "PROB_DERIVATION_MISMATCH", "PROB_DERIVATION_OUT_OF_RANGE",
+                  "PROB_SENSITIVITY_TIER_FLIP"]))
+_docs104 = (open(os.path.join(ROOT, "SKILL.md"), encoding="utf-8").read()
+            + open(os.path.join(ROOT, "references", "valuation-guide.md"),
+                   encoding="utf-8").read()
+            + open(os.path.join(ROOT, "references", "report-spec.md"),
+                   encoding="utf-8").read())
+check("I 文档已接线（valuation-guide 两段 + report-spec ②e + SKILL 指针）",
+      all(_kw in _docs104 for _kw in
+          ("REQ-P1-04", "discount_rate_derivation", "probability_derivation",
+           "map_scenario_probabilities", "②e 参数依据卡",
+           "discount_rate_rationale_ref")))
+_prompt104 = open(os.path.join(ROOT, "backtest", "PROMPT.md"),
+                  encoding="utf-8").read()
+check("I PROMPT 已写入证据传导纪律段（第四批起强制）",
+      "REQ-P1-04" in _prompt104 and "probability_derivation" in _prompt104
+      and "DR_STRATIFIED_RATE_MISMATCH" in _prompt104
+      and "PROB_SENSITIVITY_TIER_FLIP" in _prompt104)
+
+# ═══════════════════════════════════════════════════════════════════
+print("== 14.11 REQ-P1-05 尾部风险单列与基率锚定 ==")
+import copy as _copy105
+import tempfile as _tf105
+import reverse_dcf as _rd105  # noqa: E402
+import check_scenarios as _cs105  # noqa: E402
+from alert_codes import unknown_codes as _uc105  # noqa: E402
+
+# A. p_tail 映射数学（锚 0→1%/5→10%/20→30%；治理 ±；双地板）
+_m = _rd105.map_tail_probability(0, 1.0, "good")
+check("A 尾部映射：score0/good/满覆盖 → 1%（黑天鹅基率地板）",
+      abs(_m["p_tail"] - 0.01) < 1e-12 and "black_swan_floor" in _m["floors_applied"])
+_m = _rd105.map_tail_probability(2, 1.0, "normal")
+check("A 尾部映射：score2（通过上限 2 红旗）→ 4.6% 分段线性",
+      abs(_m["p_tail"] - 0.046) < 1e-12)
+_m = _rd105.map_tail_probability(10, 1.0, "normal")
+check("A 尾部映射：score10（单 veto）→ 10%+5/15×20%≈16.7%",
+      abs(_m["p_tail"] - (0.10 + 5.0 / 15.0 * 0.20)) < 1e-12)
+_m = _rd105.map_tail_probability(21, 0.364, "poor")
+check("A 尾部映射：score21>20 顶锚 30% + 治理 poor 3pp → 33%（康美实测形态）",
+      abs(_m["p_tail"] - 0.33) < 1e-12 and not _m["floors_applied"])
+_m = _rd105.map_tail_probability(0, 0.3, "good")
+check("A 尾部映射：算术覆盖率 30%<50% 低分≠安全 → 覆盖率地板 5%",
+      abs(_m["p_tail"] - 0.05) < 1e-12 and "coverage_floor" in _m["floors_applied"])
+_g_lo = _rd105.map_tail_probability(8, 0.9, "good")["p_tail"]
+_g_md = _rd105.map_tail_probability(8, 0.9, "normal")["p_tail"]
+_g_hi = _rd105.map_tail_probability(8, 0.9, "poor")["p_tail"]
+check("A 尾部映射：治理方向 poor > normal > good（保守不对称）",
+      _g_hi > _g_md > _g_lo)
+for _bad in ((-1, 1.0, "normal"), (0, 1.0, "godlike"), (0, 1.5, "normal")):
+    try:
+        _rd105.map_tail_probability(*_bad)
+        check(f"A 尾部映射：非法输入 {_bad} 硬拒绝", False)
+    except SystemExit:
+        check(f"A 尾部映射：非法输入 {_bad} 硬拒绝", True)
+
+# B. expected_return 尾部集成（公式 (1−p)Σp·IRR + p·loss_tail）
+_scen105 = [{"name": "悲观", "value_per_share": 18.84, "probability": 0.3},
+            {"name": "基准", "value_per_share": 30.0, "probability": 0.5},
+            {"name": "乐观", "value_per_share": 42.0, "probability": 0.2}]
+_kw105 = {"index_hurdle": 0.13, "dividend_yield": 0.009,
+          "discount_rate": 0.10, "moat": "narrow", "iv_growth": 0.06}
+_r_legacy = _rd105.expected_return(22.36, _scen105, 5, **_kw105)
+check("B legacy：无 tail 块零新增键",
+      "tail_risk" not in _r_legacy and "expected_annualized_irr_ex_tail"
+      not in _r_legacy)
+_tail105 = {"forensic_score": 21, "arithmetic_coverage": 0.364,
+            "governance": "poor", "loss_tail": -1.0,
+            "rationale_ref": "康美排雷实测 [E:km_forensic.json]"}
+_r_tail = _rd105.expected_return(22.36, _scen105, 5, tail_derivation=_tail105,
+                                 **_kw105)
+_ex = _r_tail["tail_risk"]["expected_annualized_irr_ex_tail"]
+check("B 剔尾部 IRR = legacy IRR（同一三情景口径）",
+      abs(_ex - _r_legacy["expected_annualized_irr"]) < 1e-12)
+check("B 含尾部 IRR = 0.67×ex + 0.33×(−1)（公式手算锚）",
+      abs(_r_tail["expected_annualized_irr"]
+          - (0.67 * _ex - 0.33)) < 1e-9)
+check("B 亏损概率并入：0% → 33%（尾部态按定义是亏损态）",
+      abs(_r_legacy["loss_probability"] - 0.0) < 1e-12
+      and abs(_r_tail["loss_probability"] - 0.33) < 1e-9)
+check("B 闸门二④ 用尾部口径重判（33% > 30% 上限 → GATE2_4_LOSS_PROB_FAIL）",
+      _r_tail["gate2"]["loss_probability"]["pass"] is False
+      and "GATE2_4_LOSS_PROB_FAIL" in _r_tail["gate2"]["codes"])
+check("B 闸门二①' 用尾部口径重判（负 IRR < r → GATE2_1B_IRR_BELOW_R）",
+      _r_tail["gate2"]["expected_irr_floor"]["pass"] is False)
+check("B 尾部拖累 ≥2pct 触发披露码 TAIL_DRAG_MATERIALIZES",
+      "TAIL_DRAG_MATERIALIZES" in _r_tail["gate2"]["codes"])
+check("B 传导链可审计（≥2 步：得分锚 + 治理修正）",
+      len(_r_tail["tail_risk"]["transmission_chain"]) >= 2)
+
+# C. 引擎硬拒（结构非法子例）
+for _fld, _fix in (("rationale_ref", "无证据指针"),
+                   ("loss_tail", 0.0), ("loss_tail", -2.0),
+                   ("governance", "godlike")):
+    _bad105 = dict(_tail105)
+    if _fld == "rationale_ref":
+        _bad105[_fld] = _fix
+    else:
+        _bad105[_fld] = _fix
+    try:
+        _rd105.expected_return(22.36, _scen105, 5, tail_derivation=_bad105,
+                               **_kw105)
+        check(f"C 硬拒：{_fld}={_fix!r}", False)
+    except SystemExit:
+        check(f"C 硬拒：{_fld}={_fix!r}", True)
+try:
+    _rd105.expected_return(22.36, _scen105, 5,
+                           tail_derivation={"governance": "poor"},
+                           **_kw105)
+    check("C 硬拒：缺 forensic_score（None 非法）", False)
+except SystemExit:
+    check("C 硬拒：缺 forensic_score（None 非法）", True)
+
+# D. 康美端到端（反事实演示：真实排雷得分 21 → 期望 IRR 15.2%→−22.8%）
+_km_demo = os.path.join(ROOT, "backtest", "600518.SH_2017-12-31", "data",
+                        "tail_demo_REQ-P1-05.json")
+_km_out = os.path.join(ROOT, "backtest", "600518.SH_2017-12-31", "data",
+                       "tail_expected_return_REQ-P1-05.json")
+check("D 康美演示底稿与引擎输出均已归档",
+      os.path.exists(_km_demo) and os.path.exists(_km_out))
+_km = json.load(open(_km_out, encoding="utf-8"))
+check("D 康美：p_tail 33%（score 21 顶锚 + poor 治理）",
+      abs(_km["tail_risk"]["p_tail"] - 0.33) < 1e-9)
+check("D 康美：账面三情景全正回报的世界观被尾部翻转为深负"
+      "（15.17% → −22.83%，『不错买』数学形态）",
+      abs(_km["tail_risk"]["expected_annualized_irr_ex_tail"] - 0.1517) < 5e-4
+      and abs(_km["expected_annualized_irr"] - (-0.2283)) < 5e-4
+      and _km["tail_risk"]["loss_probability_ex_tail"] == 0.0
+      and abs(_km["loss_probability"] - 0.33) < 1e-9)
+_d, _e, _w, _i = _cs105.check(_km_demo)
+check("D 康美演示底稿过全门禁（S10/S11 零错误——验收条款的机器载体）",
+      not any(m.startswith(("S10", "S11")) for m in _e + _w))
+
+# E. S10 乐观情景增速基率上限（check_scenarios 拦截——验收条款）
+_sh_base = json.load(open(os.path.join(
+    ROOT, "backtest", "601088.SH_2015-12-31", "data", "scenarios.json"),
+    encoding="utf-8"))
+_d, _e, _w, _i = _cs105.check(os.path.join(
+    ROOT, "backtest", "601088.SH_2015-12-31", "data", "scenarios.json"))
+check("E legacy：神华冻结底稿零新增 S10/S11 消息（基线不动）",
+      not any(m.startswith(("S10", "S11")) for m in _e + _w))
+_d, _e, _w, _i = _cs105.check(os.path.join(
+    ROOT, "backtest", "601088.SH_2015-12-31", "data",
+    "baserate_pass_REQ-P1-05.json"))
+check("E pass：industry=coal_energy + 乐观 growth 2.5% ≤ p80 8% → 零 S10 消息",
+      not any(m.startswith("S10") for m in _e + _w))
+_d, _e, _w, _i = _cs105.check(os.path.join(
+    ROOT, "backtest", "601088.SH_2015-12-31", "data",
+    "baserate_intercept_REQ-P1-05.json"))
+_codes_e, _ = _cs105.derive_codes(_e, _w, _i)
+check("E 拦截：乐观 growth 15% > p80 8% 且无支撑 → S10 错误 + 码",
+      any(m.startswith("S10") for m in _e)
+      and "BASERATE_OPTIMISTIC_ABOVE_P80" in _codes_e)
+_tmp105 = _tf105.mkdtemp(prefix="req_p1_05_")
+def _mk_sh(growth, industry="coal_energy", support=None):
+    t = _copy105.deepcopy(_sh_base)
+    t["industry"] = industry
+    if growth is not None:
+        t["scenarios"][2]["growth_assumption"] = growth
+    if support is not None:
+        t["scenarios"][2]["optimistic_growth_support"] = support
+    p = os.path.join(_tmp105, "s.json")
+    json.dump(t, open(p, "w", encoding="utf-8"), ensure_ascii=False)
+    return p
+_d, _e, _w, _i = _cs105.check(_mk_sh(0.15, support="渗透率天花板 [E:x]"))
+_codes_e, _ = _cs105.derive_codes(_e, _w, _i)
+check("E 放行披露：超限但挂 Phase 4.5 [E:] 支撑 → 仅 warning + OVERRIDE 码",
+      not any(m.startswith("S10 ") for m in _e)
+      and any(m.startswith("S10-OVR") for m in _w)
+      and "BASERATE_OPTIMISTIC_P80_OVERRIDE" in _codes_e)
+_d, _e, _w, _i = _cs105.check(_mk_sh(0.025, industry="interstellar_mining"))
+_codes_e, _ = _cs105.derive_codes(_e, _w, _i)
+check("E 白名单：未注册行业 → S10-IND + BASERATE_INDUSTRY_UNKNOWN",
+      any(m.startswith("S10-IND") for m in _e)
+      and "BASERATE_INDUSTRY_UNKNOWN" in _codes_e)
+_d, _e, _w, _i = _cs105.check(_mk_sh(0.15, industry=None))
+check("E 缺行业：有 growth_assumption 无 industry → S10-IND 错误",
+      any(m.startswith("S10-IND") for m in _e))
+_codes_e, _ = _cs105.derive_codes(
+    ["S10 乐观情景增速 15.0% 超过行业基率 80 分位 8.0% 且无支撑",
+     "S10-IND industry `x` 不在白名单",
+     "S10-OVR 已挂支撑放行披露", "S11 结构非法", "S1 缺必填字段 x"], [], {})
+check("E 前缀映射：S10-IND/S10-OVR/S10/S11 不被 S1 前缀吞掉",
+      _codes_e == ["BASERATE_INDUSTRY_UNKNOWN", "BASERATE_OPTIMISTIC_ABOVE_P80",
+                   "BASERATE_OPTIMISTIC_P80_OVERRIDE", "S1_SCHEMA",
+                   "TAIL_DERIVATION_UNANCHORED"])
+
+# F. S11 尾部块结构校验（正反）
+_t_ok = _copy105.deepcopy(_sh_base)
+_t_ok["tail_risk_derivation"] = {"forensic_score": 21,
+                                 "arithmetic_coverage": 0.364,
+                                 "governance": "poor", "loss_tail": -1.0,
+                                 "rationale_ref": "x [E:y]"}
+_p = os.path.join(_tmp105, "t_ok.json")
+json.dump(_t_ok, open(_p, "w", encoding="utf-8"), ensure_ascii=False)
+_d, _e, _w, _i = _cs105.check(_p)
+check("F S11：合法尾部块零错误", not any(m.startswith("S11") for m in _e))
+for _fld, _bad_v in (("rationale_ref", "no evidence"), ("forensic_score", -1),
+                     ("governance", "godlike"), ("loss_tail", 0.5),
+                     ("arithmetic_coverage", 1.5)):
+    _t_bad = _copy105.deepcopy(_t_ok)
+    _t_bad["tail_risk_derivation"][_fld] = _bad_v
+    _p = os.path.join(_tmp105, "t_bad.json")
+    json.dump(_t_bad, open(_p, "w", encoding="utf-8"), ensure_ascii=False)
+    _d, _e, _w, _i = _cs105.check(_p)
+    check(f"F S11：{_fld}={_bad_v!r} 被拦截", any(m.startswith("S11") for m in _e))
+shutil.rmtree(_tmp105, ignore_errors=True)
+
+# G. 注册、快照、基率表覆盖（验收条款）与文档接线
+check("G 五码全部注册（TAIL_*×2 + BASERATE_*×3）",
+      not _uc105(["TAIL_DERIVATION_UNANCHORED", "TAIL_DRAG_MATERIALIZES",
+                  "BASERATE_INDUSTRY_UNKNOWN", "BASERATE_OPTIMISTIC_ABOVE_P80",
+                  "BASERATE_OPTIMISTIC_P80_OVERRIDE"]))
+import prepare_case as _pc105  # noqa: E402
+_snap105 = _pc105.snapshot_rules()["thresholds"]
+check("G prepare_case 快照注册三常量（tail 锚/治理修正/行业基率表）",
+      {"tail_p_anchors", "governance_tail_adj",
+       "industry_growth_base_rates"} <= set(_snap105))
+# 验收条款：基率表覆盖回测案例涉及的全部行业（12 案 → 12 行业键）
+_CASE_INDUSTRIES = {
+    "000895.SZ_2019-06-30": "food_processing",      # 双汇
+    "000898.SZ_2015-12-31": "steel",                # 鞍钢
+    "600518.SH_2017-12-31": "pharma",               # 康美
+    "600519.SH_2015-08-31": "liquor_premium",       # 茅台
+    "600660.SH_2018-12-31": "auto_parts",           # 福耀
+    "601088.SH_2015-12-31": "coal_energy",          # 神华
+    "601919.SH_2021-07-31": "shipping",             # 中远海控
+    "9984.T_2019-06-30": "holding_investment",     # 软银
+    "AAPL_2016-04-30": "consumer_electronics",      # 苹果
+    "EK_2011-06-30": "imaging_legacy",              # 柯达
+    "NFLX_2016-12-31": "streaming_media",           # Netflix
+    "ZM_2021-10-31": "saas_communications",         # Zoom
+}
+check("G 验收：基率表覆盖 12 案全部行业（含康美——虽被排除仍需可登记）",
+      set(_CASE_INDUSTRIES.values()) <= set(
+          _rd105.INDUSTRY_GROWTH_BASE_RATES))
+check("G 基率表结构：每行 {p50, p80} 且 p80 ≥ p50",
+      all(_v["p80"] >= _v["p50"]
+          for _v in _rd105.INDUSTRY_GROWTH_BASE_RATES.values()))
+_docs105 = (open(os.path.join(ROOT, "references", "base-rates.md"),
+                 encoding="utf-8").read()
+            + open(os.path.join(ROOT, "references", "valuation-guide.md"),
+                   encoding="utf-8").read()
+            + open(os.path.join(ROOT, "SKILL.md"), encoding="utf-8").read())
+check("G 文档接线：base-rates.md 存在且 valuation-guide/SKILL 已引用",
+      os.path.exists(os.path.join(ROOT, "references", "base-rates.md"))
+      and "REQ-P1-05" in _docs105 and "map_tail_probability" in _docs105
+      and "tail_risk_derivation" in _docs105)
+_prompt105 = open(os.path.join(ROOT, "backtest", "PROMPT.md"),
+                  encoding="utf-8").read()
+check("G PROMPT 已写入尾部风险纪律段（第四批起强制）",
+      "REQ-P1-05" in _prompt105 and "tail_risk_derivation" in _prompt105
+      and "BASERATE_OPTIMISTIC_ABOVE_P80" in _prompt105)
 
 # ═══════════════════════════════════════════════════════════════════
 print("== 15 脚本接入完整性（元测试） ==")

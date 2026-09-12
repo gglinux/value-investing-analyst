@@ -268,9 +268,20 @@
 - 价值：让系统对成长股既能说"买"也能说"不买"，并且两者都有依据。单位经济（LTV/CAC、边际贡献率）是区分"再投入"和"烧钱"的唯一可量化标准，这一维度加进来后，Netflix 和乐视在框架内会得到相反的结论，而不是同样的"观察"。
 - 交付物：`growth-framework.md` 补齐单位经济（LTV/CAC、边际贡献率）、渗透率天花板、成熟期利润率反推三段式；`reverse_dcf.py` 新增 `--mode growth`，以成熟期稳态利润 × 到达概率 折回替代当期 OE。到达概率与基率表（REQ-P1-05）挂钩。
 - 验收：Netflix 案例缺口 ≤1 档；至少 2 个新成长股案例作锚（正向与假阳性各一）。
-- 涉及文件：`references/company-types.md` 卡四、`references/growth-framework.md`、`references/valuation-guide.md`、`scripts/reverse_dcf.py`
+- 涉及文件：`references/company-types.md` 卡四、`references/growth-framework.md`、`references/valuation-guide.md`、`scripts/reverse_dcf.py`（注：需求原文「卡四」系旧编号——成长/再投入型现行为卡二，卡四现为隐蔽资产；已按现行编号落码）
 - 依赖：REQ-P0-04、REQ-P1-05
-- 状态：todo
+- 状态：**doing**（2026-09-11 通道落码 + Netflix 验收演示完成，缺口 2→1 档；2 个新案例锚待批次执行）
+- 进展：
+  - ✅ `growth-framework.md` 新增「第三半：成熟态三段式与成长股估值通道」：①单位经济（规模化边际贡献率 + LTV/CAC，第一道门）②渗透率天花板（成熟会员/用户 × 成熟 ARPU 自下而上，禁止增速外推当天花板）③成熟期利润率反推（单元经济法首选 / 同业成熟态法，禁止当期利润率外推）④到达概率与基率锚（联合概率 ≤ 收入基率锚；多情景混算的条件/无条件概率语义——无条件混合到达概率 = Σ 情景概率 × 条件 p）。
+  - ✅ `reverse_dcf.py` 新增 `growth` 子命令（subparsers 的 dest 即 mode，与需求 `--mode growth` 一致）：成熟期稳态 OE × 终局倍数（Gordon 恒作交叉核对，分歧 >30% 强制双口径并列）折回 N 年 × 到达概率 + 失败残值；**反解「现价隐含到达概率」**（成长通道形态的反向 DCF）；基率锚机器反查（`REVENUE_CAGR_BASE_RATES` 与 valuation-guide 基率表同源，`--base-rates-file` 为 REQ-P1-05 预留接管接口）；护栏与 forward-value 同源（永续上限 / r-g 间距 / 正基期 / 成熟态与到达概率双 [E:] 强制）。
+  - ✅ 六个 `GROWTH_*` 告警码注册（alert_codes.py 新增 growth 层）：`UNIT_ECONOMICS_UNPROVEN`（exit 2 硬拒绝——Netflix 与乐视型分道的第一道门）、`ARRIVAL_PROB_UNANCHORED`（裸概率禁止，与 S7 同源）、`ARRIVAL_PROB_ABOVE_BASERATE`（越锚警示须论证例外）、`PRICE_IMPLIES_CERTAIN_ARRIVAL`（隐含 p ≥100% 透支）、`IMPLIED_VS_BASERATE_GAP`（市场 vs 框架的赔率分歧显式化）、`TERMINAL_DOMINATED`（结构性终值主导，档位上限依据）。
+  - ✅ 通道三纪律：单元经济未证即通道拒绝服务（禁止调高 p/倍数让烧钱公司"看起来值钱"）；**档位上限恒为小仓位试探**（通道价值 100% 来自成熟期终值折回，与终值纪律一致）；到达概率不得高于基率锚。引擎输出档位带建议（透支→拒绝 / 价格 ≤ 概率加权价值→试探候选 / 其余→观察等价格），最终档位仍由双闸门与裁决层定——与既有哲学一致。
+  - ✅ 接线五处：company-types 卡二估值通道 cell（旧「通道失语披露级处理」条文废除）、valuation-guide 方法树行 + 通道纪律段、SKILL.md Phase 4 一行指针（体积红线内）、backtest/PROMPT.md Step 2 机器化纪律（第三批起强制）、check_scenarios `DCF_METHODS` 注册 `growth_terminal_backcast`（基准/乐观可用；悲观禁用，S2 照拦——下行估计必须独立）。
+  - ✅ **验收「Netflix 缺口 ≤1 档」达成**：成长通道对照轨落盘 `backtest/NFLX_2016-12-31/data/growth_{value,scenarios,expected_return}_REQ-P1-01.json`（冻结底稿 scenarios.json/verdict.json 未动，文件名避开 runner 的 `scenarios*` glob）。基准 32.91（成熟态 300M 会员×$10×20% OE×20x×p=0.25 基率锚取等值）/ 乐观 94.92（350M×$11×24%×24x×p=0.40 条件概率，越锚已论证披露）/ 悲观 1.48（原案 worst_year_margin 独立方法逐字保留，失败残值同源）。check_scenarios 0 错 0 警通过；expected-return 闸门二四项全灭 → 档位上限「观察等价格」；通道档位带=观察等价格（单元经济已证 + 隐含到达概率 96% <100%）。**档位 1（拒绝）→2（观察等价格），缺口 2→1 档**。语言质变：从「131x OE 无解、现价 9.0× 基准价值、无语言可说」到「现价隐含到达概率 96%（Gordon 口径 141%）vs 基率锚 25%——市场比框架乐观 3.8 倍」的显式赔率分歧，且该分歧可证伪（单元经济证据深化或价格回落即重估）。
+  - ✅ 判别力锚定（不错买方向）：乐视型（贡献利润率 ≤0）在通道入口即被拒（tests 锁定 exit 2）；通道不放松任何下行输入——悲观 1.48、亏损概率 80%、悲观年化 −29.3% 原样呈现。这是「通道建设而非阈值放松」：BATCH2 第八节指定的修复方向。
+  - ✅ `tests/run_tests.py` 新增 14.7 段 29 项行为测试（终值/折回/概率加权数学、极端值反推自洽 MC=PV⇒p=1、单元经济双判据硬拒绝、裸概率拒绝、基率查表五形态、NFLX 验收形态端到端含隐含概率与档位带、Gordon 口径透支、越锚警示、check_scenarios 正反接线、六码注册、文档接入）；全套件 558 项全绿；`--rerun --baseline` 12 案代号集合与基线一致、假阳性轨 0 新增。
+  - ⏳ 待办：验收条款「至少 2 个新成长股案例作锚（正向与假阳性各一）」待批次执行——建议正向：亚马逊 2010-12-31 或拼多多 2018-06-30（OE 极小 + 单元经济已证形态，注意 BATCH2 第七节提示 Meta 2022 有巨额 OE、走标准通道大概率不复现）；假阳性：乐视 2015-05（已在 PROMPT 假阳性对照替补池，放行路径=成长叙事）——建议入第五批（类型卡阈值锚批）与通道判别力复验同批执行。
+  - 📌 设计说明：官方期望 {3,4} 中的档位 3 在基率锚约束下**刻意不可达**——需 p>25% 或倍数>20x，通道不给（防拟合答案，REQ-P0-08 纪律）；该残差移交 REQ-P1-04（概率证据传导）与 REQ-P1-05（基率表建成后的到达概率校准）跟踪。基率表挂钩接口已就绪（`--base-rates-file` + 引擎内置表标注 REQ-P1-05 接管）。
 
 ### REQ-P1-02 持仓型控股 SOTP 通道
 - 来源：D
@@ -279,9 +290,22 @@
 - 价值：让持仓型公司可分析。这类公司在港股和美股大市值标的中占比很高（腾讯、软银、伯克希尔、Prosus、复星）。做完后经营性 OE 与 look-through 价值分列，投资者能看清"我买的是什么"。
 - 交付物：底稿新增结构化持仓表（标的、持股比例、估值方法、折价率、流动性）；`compute_metrics.py` 区分经营性 OE 与 look-through 收益；`reverse_dcf.py` 新增 `--mode sotp`，控股折价作为显式参数。
 - 验收：软银、腾讯案例重跑后经营性 OE 与投资组合价值分列；控股折价参数有行业基率引用。
-- 涉及文件：`references/company-types.md` 卡三、`scripts/compute_metrics.py`、`scripts/reverse_dcf.py`
+- 涉及文件：`references/company-types.md` 卡三、`scripts/compute_metrics.py`、`scripts/reverse_dcf.py`（注：需求原文「卡三」系旧编号——隐蔽资产/控股子型现行为卡四，卡三现为周期；已按现行编号落码，与 REQ-P1-01 的卡四/卡二编号漂移同源）
 - 依赖：REQ-P0-03
-- 状态：todo
+- 状态：**doing**（2026-09-11 通道落码 + 软银/腾讯双验收锚完成；案例库内持仓型新案例锚待批次执行）
+- 进展：
+  - ✅ `reverse_dcf.py` 新增 `sotp` 子命令（subparsers 的 dest 即 mode，与需求 `--mode sotp` 一致）：三段式 `可投资价值 = [Σ(持仓归属毛值×变现折价) + 经营业务价值 − 母公司净债] × (1−控股折价)`；**反解"现价隐含控股折价"** `implied = 1 − 市值/equity NAV`（SOTP 形态的反向 DCF）；两层折价显式分工（持仓级变现折价管"这笔资产卖得回几成"，整体控股折价管"钱在别人手里再打几折"）——替代 `--add-back/--deduct` 手工补丁。
+  - ✅ 结构化持仓表 schema（交付物①）：六要素（标的/持股比例/估值方法/变现折价率/流动性/[E:] 证据）不全即**通道拒绝服务（exit 2）**；估值方法白名单五档（market_price/fair_value_disclosed/private_estimate/book_value/dcf_segment）+ 流动性分级五档（listed_major/listed_stake/private_fund/private_co/illiquid）；`gross_value` 语义=按持股比例折算后的归属毛值（stake_pct 仅披露不参与计算，防双重折算）。
+  - ✅ 净债口径门（并表错位防线）：`--net-debt-basis ∈ {parent_standalone, consolidated}` 显式声明；合并口径触发 `SOTP_NET_DEBT_CONSOLIDATION_BASIS`（软银案 alternative_treatment 教训：持仓按持股计价而净债用合并口径=双重计入少数股东应担债务）。
+  - ✅ 控股折价挂行业基率带（交付物③）：`HOLDING_DISCOUNT_BANDS` 四档（亚洲多元化控股无收敛机制 30-50%【软银 2016-2019 实证】/ 上市持仓主导无收敛 20-40% / 有收敛机制 5-20% / 经营主导+投资副轮 0-15%），`--holding-profile` 机器对照，低于下界触发 `SOTP_DISCOUNT_BELOW_BASE_RATE`（比历史实证更乐观须论证）；`--discount-bands-file` 为 REQ-P1-05 预留接管接口。
+  - ✅ `compute_metrics.py` 区分经营性 OE 与 look-through 收益（交付物②）：annual 行可选字段 `investment_income`（投资收益+公允价值变动，重估推高与减值压低同字段）/ `dividend_income`（从被投企业收到的分红）；自动产出 `sotp_screen` 块（经营性 OE / look-through / 占比序列 / channel_hint）；**双向失真识别**：最新年占比 ≥50% 或近 3 年 ≥2 年 ≥30% → `M_OWNER_YIELD_CONSOLIDATION_DISTORTION`（OBS-2019-06-01 候选名落码——owner yield 21.1% vs 股息率 0.43% 的数学不可能首次被机器识别；腾讯 2023 减值年为反向同病）。缺字段=not applicable（经营主导型正确阴性，存在性前置）。
+  - ✅ 六+1 告警码注册（SOTP_* 层 + M_OWNER_YIELD_CONSOLIDATION_DISTORTION），官方 must_trigger 两项「治理折价」「非经营资产主导」的注册表等价物补全（软银案 answer.json 登记的能力缺口）。
+  - ✅ 通道结构纪律：持仓占 equity NAV ≥50% 即非经营资产主导（`SOTP_HOLDINGS_DOMINATED`）——OE 通道结论不进档位裁决 + 档位上限小仓位试探（与成长通道终值纪律同源）；无收敛机制的折价不是便宜（价值陷阱 SOTP 形态：兑现押在普通股东无法触发的治理行动上）；经营主导形态（<50%）通道只做分列、档位由标准双闸门定。
+  - ✅ 接线五处：company-types 卡四正常化/估值通道 cell（含底稿字段登记指引）、valuation-guide 方法树行 + SOTP 通道纪律段（五条纪律 + 双验收锚）、SKILL.md Phase 4 一行指针（体积红线内）、backtest/PROMPT.md Step 2 机器化纪律段（第三批起强制，含持仓表模板指引）、check_scenarios `DCF_METHODS["sotp"]` 描述更新（与 sotp_asset_floor 上下行不同源说明）。
+  - ✅ **验收「软银重跑分列」达成**：`backtest/9984.T_2019-06-30/data/` 新增三文件（冻结底稿未动，命名避开 runner 的 `financials_*`/`metrics_*`/`scenarios*` glob）——①`sotp_holdings_REQ-P1-02.json`（结构化持仓表交付物实例，由 business_drivers sotp_holdings 六要素化）②`sotp_value_REQ-P1-02.json`（通道输出：毛 NAV 29,490,000 − 净债 6,200,000 = equity NAV 23,290,000 ×(1−40%) → **每股 6,630 ≈ 原案 ADJ3 的 6,633**（±0.5%，原案 23.3 万亿四舍五入）；隐含折价 53.2% 与底稿 nav_discount 53% 一致；档位带「观察等价格」= 官方 {1,2} 且管线实际档位 2；codes：HOLDINGS_DOMINATED（持仓 100%+ 主导）+ IMPLIED_DISCOUNT_GAP（隐含 53% vs 采用 40%，分歧 13pct——正是原案 gate1 多锚稳健性的机器化：边际 ≥40% 需折价 ≤14%，历史带之外））③`sotp_demo_financials_REQ-P1-02.json` + `sotp_screen_REQ-P1-02.json`（compute_metrics 分列演示：投资收益占比 92.3% → distortion 首次真实触发；**经营性 OE 990,011**（剔除 VF/Delta 重估 1,302,838 后，与 ADJ1 证据 A 的量级对应）/ **look-through 收益 2,051,422**（分红收入）分列；并表 D&A 错位维度的处理边界在 note 披露——两个污染维度分开治理）。
+  - ✅ **验收「腾讯重跑分列」达成**：`cases/tencent/data/` 新增 `sotp_holdings_REQ-P1-02.json` + `sotp_value_REQ-P1-02.json`——经营+投资双轮形态：持仓 671,220（上市 9 折 438,480 + 非上市 6 折 232,740）+ 经营 DCF 3,590,630（forward-value 正常化 OE 219,013×g5%）+ 净现金 58,200 = equity NAV 4,320,050；持仓占比 16% <50% → 经营主导不越权（无 DOMINATED 码、档位带=标准双闸门裁定）；控股折价 10% 落 operating_with_portfolio 带 [0-15%] 内（回购注销+分拆提供部分收敛机制）；每股 464.27 HKD（fx 1.087）。
+  - ✅ `tests/run_tests.py` 新增 14.8 段 46 项行为测试（三段式数学、六要素四形态硬拒绝、折价未挂 [E:] 拒绝、净债合并口径告警、折价越带、隐含折价极端值反推 MC=NAV⇒0 / MC=NAV/2⇒50%、软银端到端含 6,633 复现与隐含 53%、腾讯分列与不越权、sotp_screen 双向失真（重估推高/减值压低）+ 经营主导阴性对照 + 软银真实数据、七码注册、分层命名表、五处文档接入、check_scenarios 接线）；全套件 558 → **604 项全绿**；`--rerun --baseline` 12 案代号集合与基线一致、假阳性轨 0 新增。
+  - ⏳ 待办：案例库内持仓型**新**案例锚（伯克希尔/Prosus/复星类，正向与假阳性各一）待批次执行——建议入第五批与 P1-01 成长通道案例锚同批（彼时 sotp 通道判别力可复验）；存量底稿（软银 financials、腾讯 financials）补 `investment_income`/`dividend_income` 字段使 sotp_screen 在真实管道常驻（当前为演示副本，按「历史 case 数据不动」纪律未改冻结底稿）。
 
 ### REQ-P1-03 护城河评级连续化
 - 来源：A2、D
@@ -292,7 +316,14 @@
 - 验收：神华案例边界带双档报告可生成；12 个案例中评级变动 1 级导致档位跳 2 级的情况为 0。
 - 涉及文件：`references/moat-framework.md`、`scripts/reverse_dcf.py`、`references/report-spec.md`
 - 依赖：与 REQ-P0-04 联合设计
-- 状态：todo
+- 状态：**doing**（2026-09-11 三项交付物与两项验收全部达成；第四批首个带得分案例实测后转 done）
+- 进展：
+  - ✅ 设计（与 REQ-P0-04 联合）：护城河得分 0~100（三组件：A 超额回报证据 0~50 / B 源硬度 0~30 / C 定标与趋势修正 −10~+20，各挂 [E:]），评级词降级为得分的分带投影（≥65 wide / ≥35 narrow / <35 none），词表与 S1 校验兼容不变。平滑 MoS 门槛 = 分段线性（35 分→50%、65 分→40%、100 分→25%），**分带边界连续**（65 分两侧都是 40%）+ **带内处处 ≥ legacy 阶跃常数**（仅锚点相等）——通道建设而非阈值放松，与 REQ-P0-08 纪律同源。闸门二①诊断门槛随平滑 MoS 派生；none（<35 分）为政策边界（不给买入结论），由双档披露而非连续性消除。
+  - ✅ 落码：`reverse_dcf.py` 新增 `mos_requirement_from_score`/`moat_word_from_score`/`moat_boundary_band` 纯函数 + `expected-return --moat-score/--moat-score-basis/--moat-sources`（scenarios.json 三字段同源读取）；裸分数硬拒绝 `MOAT_SCORE_BASIS_MISSING`、词≠投影硬拒绝 `MOAT_SCORE_WORD_MISMATCH`、边界带（边界 ±5 分）自动双档报告并列 ±5 分两侧门槛/闸门一/触发价/档位建议 + `MOAT_BOUNDARY_BAND_DUAL`。**legacy 词路径字节级不变**（无得分时不新增输出键、门槛走旧常数）——12 案基线不动（`--rerun --baseline` 实证一致）。
+  - ✅ 接线：`check_scenarios.py` S1b（得分可选字段校验：区间/投影/[E:]）；`prepare_case.py` 快照注册表补 `MOAT_SCORE_WIDE_MIN/NARROW_MIN`；moat-framework 第二节半（量表+纪律）、report-spec ②c（决策卡得分卡 + `data-moat-score`/`data-moat-boundary` 标记）、valuation-guide 闸门一默认标准节、SKILL.md Phase 3/Phase 4.5、PROMPT Step 2（第四批起强制带得分）。
+  - ✅ 验收①（神华双档报告）：三组件透明打分 A=40（十年正利差但当期收窄）+ B=10（成本优势一源硬证据）+ C=+10（三定标 +15、稳定偏变窄 −5）= **60 分**（窄带，落宽/窄边界带 [60,70]）→ `expected_return_moat_score_REQ-P1-03.json` 双档报告自动生成：55 分侧门槛 43.3%/65 分侧门槛 40.0%（触发价 14.42 恰为归档 legacy 触发价——连续性锚实证）；两侧闸门一均未过（MoS 37.7% vs 41.7%），档位维持观察等价格。
+  - ✅ 验收②（12 案跳 2 档归零）：操作化为分带边界 ε 穿越（knife-edge 情形，即需求所述"两个同样认真的分析师在边界上分歧"），档位代理 none→1 / 任一闸门不过→2 / 双过→3（核心买入须裁决层按核验强度加码，非评级传导变量）。实测 11 个有情景案例（康美案 Phase 0 排除、无评级天然免疫）× 35/65 两边界 **maxΔ=1**（全部来自 35 分政策边界 none→narrow 的 1↔2，非连续性可消除的档位跳变）；legacy 对照复现神华 窄→宽 2→4 跳 2 档（diff.md 第 42 行问题实证，新机制下归零）。tests 14.9 段 45 项，全套件 649 全绿。
+  - ⚠ 遗留：第四批起新案例强制带得分（PROMPT 已写），首个实测案例落地后转 done；references/ 体积红线余量仅 23 字节（153,577/153,600），下次新增文档须先压缩等量。
 
 ### REQ-P1-04 折现率与情景概率的证据传导
 - 来源：A2、D
@@ -303,7 +334,7 @@
 - 验收：每个案例的折现率与概率在 `verdict.json` 中有 `rationale_ref`；敏感性表显示概率 ±10pp 对档位的影响。
 - 涉及文件：`references/valuation-guide.md`、`scripts/reverse_dcf.py`、`scripts/check_scenarios.py`
 - 依赖：REQ-P1-03
-- 状态：todo
+- 状态：done（as-built：分层折现率 r = max(10% 纪律下限, 10Y国债+4pct) + 行业溢价（六档，Damodaran 相对排序校准，分层只向上、10% 下限不动）；概率映射 `map_scenario_probabilities` 分段线性锚 35→(35/50/15)、65→(30/50/20)、100→(25/50/25) + 变异认知 weak +5pp/strong −5pp + 红队悲观概率 max() 下界同时约束映射值与采用值（保守不对称）；采用值偏离映射 ≤2pp 免论、2~10pp 须 deviation_rationale 挂 [E:]、>10pp 硬拒；±10pp 敏感性表（翻档触发 PROB_SENSITIVITY_TIER_FLIP）；DR 一致性门禁（声明分层值 ≠ discount_rate 即硬拒）；floor 门槛分市场 CN 6%/HK 5%/US 5%/JP 3%（P0-04③ 移交项一并处理）；S7c 校验 + S7 豁免链；七码 DR_*/PROB_*；神华概率传导演示（期望 IRR 16.60%、悲观 25%→30% 红队下界吸收）+ AAPL 校准（standard 档 10%、US floor 5%）+ 门禁拦截演示；无 derivation 块走旧路径零新增键，12 案基线字节级不动；tests 14.10 段 50 项、套件 699 全绿、基线一致）
 
 ### REQ-P1-05 尾部风险单列与基率锚定
 - 来源：A2
@@ -314,7 +345,7 @@
 - 验收：基率表覆盖回测案例涉及的全部行业；违反基率上限的情景被 `check_scenarios.py` 拦截。
 - 涉及文件：`references/valuation-guide.md`、`references/base-rates.md`（新）、`scripts/reverse_dcf.py`、`scripts/check_scenarios.py`
 - 依赖：REQ-P0-02
-- 状态：todo
+- 状态：done（as-built：期望 IRR 公式第四项 `(1−p_tail)×Σpᵢ·IRRᵢ + p_tail×loss_tail` 落码，p_tail 由 `map_tail_probability` 纯映射（排雷得分分段线性锚 0→1%/5→10%/20→30% + 治理修正 poor +3pp/good −0.5pp + 黑天鹅地板 1% + 覆盖率地板 5%——**不可采用偏离**，允许把"公司可能归零"论证没=允许自欺）；闸门二①'④按尾部口径重判，拖累 ≥2pct 触发 TAIL_DRAG_MATERIALIZES；康美反事实演示（真实排雷 score 21/覆盖率 36.4%/poor → p_tail 33%，账面三情景全正回报 15.2% → −22.8%、亏损概率 0→33%、闸门二不过）；行业基率表 INDUSTRY_GROWTH_BASE_RATES 覆盖 12 案全部行业（p50/p80，Damodaran 相对排序校准）；check_scenarios S10 拦截乐观增速超 p80（无 [E:] 支撑硬拒、有支撑放行披露）+ S11 尾部块结构校验；五码 TAIL_*/BASERATE_*；base-rates.md 统一三张基率表参考；references 等量压缩（余 78 字节）；legacy 无块零新增键、12 案基线不动；tests 14.11 段 45 项、套件 744 全绿、基线一致）
 
 ### REQ-P1-06 无标签滚动回测轨
 - 来源：A3、C
@@ -572,3 +603,8 @@
 | 2026-09-10 | v1.2 | REQ-P0-01 基础设施落地：runner FP/FN 双向统计 + `fp_control` 字段 + 基线 `_fp_fn` 段 + PROMPT 执行顺序 1→2→4→3→5 + 对照替补池；状态 todo → doing |
 | 2026-09-11 | v1.3 | REQ-P0-02 审查修订三版：V4A 复合判据（双高形态 ∧ 币种×年份存款基准 ∧ 融资成本一半）+ `phase0_arithmetic` 取数兜底 + `--deposit-rate` 覆盖；康美真实数据首次命中，负样本零误杀 |
 | 2026-09-11 | v1.3 | REQ-P0-04 三版审查修订：交付物/验收按 as-built 改写（换源候选维度未建、实际为"去同源化 + 下行约束落码"，外部锚移交 REQ-P1-05/P2-06）；新增存量 12 案 rerun + 基线重建 + 神华档位重判待办；茅台"被 ③ 拦"修正为 ①' ③ 双拦（valuation-guide 同步） |
+| 2026-09-11 | v1.4 | REQ-P1-01 成长股通道落码：growth-framework 三段式 + reverse_dcf `growth` 模式（成熟期稳态利润×到达概率折回 + 现价隐含到达概率反解 + 基率锚挂钩）+ 六个 GROWTH_* 告警码 + 五处接线；Netflix 验收演示档位 1→2、缺口 2→1 档；tests 14.7 段 29 项、套件 558 全绿、基线一致；状态 todo → doing（2 个新案例锚待批次执行） |
+| 2026-09-11 | v1.5 | REQ-P1-02 持仓型控股 SOTP 通道落码：reverse_dcf `sotp` 模式（持仓表六要素+经营业务−母公司净债 ×(1−控股折价) + 现价隐含控股折价反解 + 折价基率带四档）+ compute_metrics `sotp_screen`（经营性 OE / look-through 分列 + 双向失真识别 M_OWNER_YIELD_CONSOLIDATION_DISTORTION，OBS-2019-06-01 候选方向落码）；软银验收锚每股 6,630≈原案 6,633、隐含折价 53% 一致、经营性 OE 990,011 与 look-through 2,051,422 分列；腾讯经营+投资双轮分列（持仓 16% 不越权）；六+1 告警码 + 五处接线；tests 14.8 段 46 项、套件 604 全绿、基线一致；状态 todo → doing（新案例锚待批次执行） |
+| 2026-09-11 | v1.6 | REQ-P1-03 护城河评级连续化落码：moat-framework 第二节半三组件评分（A 超额回报/B 源硬度/C 定标与趋势，0~100）+ reverse_dcf 平滑 MoS 门槛（35→50%/65→40%/100→25%，分带边界连续、带内 ≥ legacy 常数）+ 边界带（±5 分）自动双档报告（MOAT_BOUNDARY_BAND_DUAL）+ 裸分数/词≠投影硬拒绝 + S1b 校验 + legacy 词路径字节兼容；神华验收锚 60 分双档报告（65 分侧触发价 14.42=归档 legacy 值，连续性锚实证）、12 案边界 ε 穿越 maxΔ=1（legacy 对照复现神华 2→4 跳 2 档）；tests 14.9 段 45 项、套件 649 全绿、基线一致；状态 todo → doing（第四批首个带得分案例实测后 done） |
+| 2026-09-11 | v1.7 | REQ-P1-04 折现率与概率证据传导落码：分层折现率（r = max(10%, 10Y+4pct) + 行业溢价六档，分层只向上）+ 概率映射公式（分段线性锚 35/65/100 + 变异认知 ±5pp + 红队悲观概率 max() 下界保守不对称）+ 偏离区间门禁（≤2pp 免论 / 2~10pp [E:] / >10pp 硬拒）+ ±10pp 敏感性表与翻档码 + DR 一致性门禁 + floor 门槛分市场（CN 6%/HK 5%/US 5%/JP 3%，P0-04③ 移交项）+ S7c 校验与 S7 豁免链 + 七码；神华期望 IRR 16.60% 传导演示、AAPL 校准、门禁拦截演示；references 体积等量压缩（余 92 字节）；legacy 无 derivation 块零新增键、12 案基线不动；tests 14.10 段 50 项、套件 699 全绿、基线一致；状态 todo → done |
+| 2026-09-12 | v1.8 | REQ-P1-05 尾部风险单列与基率锚定落码：期望 IRR 第四项 p_tail×loss_tail（map_tail_probability 纯映射：得分锚 0/5/20→1%/10%/30% + 治理修正 + 双地板，不可采用偏离）+ 行业增速基率表覆盖 12 案行业 + S10 乐观超 p80 拦截（[E:] 支撑放行披露）+ S11 尾部块校验 + 五码；康美反事实演示 15.2%→−22.8%（真实排雷 score 21）；base-rates.md 三表统一参考；references 等量压缩；tests 14.11 段 45 项、套件 744 全绿、基线一致；状态 todo → done |

@@ -29,6 +29,8 @@ check_scenarios.py — 三情景底稿门禁（Phase 4 出口关卡，expected-r
 
 ═══ 十二项检查 ═══
 S1 schema：必填字段齐全、概率和为 1、现价为正、护城河档位合法。
+S1b 护城河定量得分（REQ-P1-03，可选）：给了 moat_score 即校验区间 / 词=分带投影 /
+   依据挂 [E:]——得分是平滑 MoS 门槛的直接输入，裸分数禁止。
 S2 悲观情景方法独立性：`method` 必须属独立方法白名单（不走 DCF 的另一条路），
    禁止 dcf_* 系列。基准/乐观可以用 DCF。
 S2b 悲观值算术重算：`method` 只是标签，标签与数字之间此前零算术关联——实测把
@@ -70,6 +72,13 @@ S9b 股息率口径哨兵（OBS-600660-03 升格，2 案例达门槛）：`divid
    `dividend_yield_basis`（ttm_paid/annual_plan/sustainable_forward 三选一）；
    登记可选对照值 `dividend_yield_alt` 时两口径差 >25% 披露（>50% 强制换口径
    或挂 [E:] 豁免）——特别分红/首次中期分红会把 TTM 口径推高 38-53%（茅台/双汇实证）。
+S10 乐观情景增速基率上限（REQ-P1-05，登记才校验）：`industry` 不在行业基率
+   表白名单报错；乐观情景 `growth_assumption` 超基率 80 分位且无
+   `optimistic_growth_support`（含 [E:]，Phase 4.5 变异认知）支撑 → 拦截；
+   有支撑 → 放行但披露（BASERATE_OPTIMISTIC_P80_OVERRIDE）。
+S11 尾部风险块结构（REQ-P1-05，块存在才校验）：`tail_risk_derivation` 的
+   rationale_ref [E:] / forensic_score / arithmetic_coverage / governance
+   词表 / loss_tail ∈[-1,0)——非法结构在底稿关卡即拦，不等引擎崩。
 
 ═══ 输入格式（data/scenarios.json）═══
 {
@@ -132,6 +141,17 @@ _S_PREFIX_TO_CODE = [
     ("S2c", "S2C_WORST_YEAR_NOT_STRESS"),
     ("S2d", "S2D_TROUGH_PB_BASIS"),
     ("S2e", "S_DISCOUNT_RATE_FLOOR"),
+    # S10/S11 必须排在 S1 之前（前缀首次匹配，"S10-IND" 会被 "S1" 吞掉）
+    ("S10-IND", "BASERATE_INDUSTRY_UNKNOWN"),
+    ("S10-OVR", "BASERATE_OPTIMISTIC_P80_OVERRIDE"),
+    ("S10", "BASERATE_OPTIMISTIC_ABOVE_P80"),
+    ("S11", "TAIL_DERIVATION_UNANCHORED"),
+    ("S7c-DR-TIER", "DR_INDUSTRY_TIER_UNKNOWN"),
+    ("S7c-DR-RAT", "DR_DERIVATION_UNANCHORED"),
+    ("S7c-DR", "DR_STRATIFIED_RATE_MISMATCH"),
+    ("S7c-VAR", "PROB_DERIVATION_INVALID"),
+    ("S7c-RANGE", "PROB_DERIVATION_OUT_OF_RANGE"),
+    ("S7c-DEV", "PROB_DERIVATION_MISMATCH"),
     ("S7b", "S7B_IV_GROWTH_EVIDENCE"),
     ("S1", "S1_SCHEMA"),
     ("S2", "S2_BEAR_METHOD_INDEPENDENCE"),
@@ -162,8 +182,16 @@ DCF_METHODS = {
     "rab": "受监管资产基数",
     "rnpv": "管线风险调整净现值",
     "reverse_dcf": "反向 DCF",
-    "sotp": "分部加总（盈利能力口径）",
+    # REQ-P1-02 持仓型控股通道：reverse_dcf.py sotp 的结构化产出（持仓表+控股
+    # 折价+反解隐含折价）。悲观情景的 SOTP 对应形态是 sotp_asset_floor（分部按
+    # 可变现价值，在独立方法白名单）——基准/乐观的 "sotp" 与之构成上下行不同源，
+    # 软银 2019 案即此形态。
+    "sotp": "分部加总（盈利能力口径；REQ-P1-02 起由 reverse_dcf.py sotp 结构化产出）",
     "pb_roe": "PB-ROE 回归",
+    # REQ-P1-01 成长股通道：成熟期稳态利润×到达概率折回（reverse_dcf.py growth）。
+    # 只允许出现在基准/乐观——悲观情景仍须走独立方法白名单（到达失败分支的
+    # 失败残值锚定建议复用悲观情景的独立方法，两处同源）。
+    "growth_terminal_backcast": "成长股通道：成熟期稳态 OE×终局倍数折回×到达概率",
 }
 MOATS = {"wide", "narrow", "none"}
 DISPERSION_MAX = 0.85          # S4：悲观/基准 上限
@@ -387,6 +415,40 @@ def check(path, metrics_path=None, snapshot_path=None):
         errors.append("S1 现价必须为正")
     if d["moat"] not in MOATS:
         errors.append(f"S1 护城河档位 `{d['moat']}` 非法，应为 {sorted(MOATS)}")
+    # ---- S1b 护城河定量得分（REQ-P1-03，可选字段；给了即校验）----
+    # 得分是 MoS 门槛的直接输入（平滑函数），纪律与裸概率同罪：
+    # 区间合法 / 词=分带投影 / 依据必须挂 [E:]。不给不报错（legacy 词路径合法）。
+    if d.get("moat_score") is not None:
+        try:
+            _ms = float(d["moat_score"])
+        except (TypeError, ValueError):
+            errors.append(f"S1b 护城河得分 `{d.get('moat_score')}` 非数值")
+            _ms = None
+        if _ms is not None:
+            if not (0 <= _ms <= 100):
+                errors.append(f"S1b 护城河得分 {_ms} 超出 0~100 区间")
+            else:
+                try:
+                    sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+                    from reverse_dcf import moat_word_from_score
+                    _proj = moat_word_from_score(_ms)
+                    if d["moat"] != _proj:
+                        errors.append(
+                            f"S1b 护城河评级 `{d['moat']}` 与得分 {_ms} 的分带投影 "
+                            f"`{_proj}` 不一致（MOAT_SCORE_WORD_MISMATCH）——评级词"
+                            "必须等于得分投影（≥65 wide / ≥35 narrow / <35 none），"
+                            "禁止两套口径并存")
+                except ImportError:
+                    warnings.append("S1b 无法导入 reverse_dcf 校验得分投影（分带校验跳过）")
+                _basis = d.get("moat_score_basis")
+                if not _basis or "[E:" not in str(_basis):
+                    errors.append(
+                        "S1b 护城河得分缺 `moat_score_basis` 或其不含 [E:] 证据指针"
+                        "（MOAT_SCORE_BASIS_MISSING）——得分直接决定 MoS 门槛，"
+                        "裸分数禁止，须登记三组件（超额回报证据/源硬度/定标与趋势）"
+                        "各自的证据来源")
+        if d.get("moat_sources") is not None and not isinstance(d.get("moat_sources"), list):
+            errors.append("S1b `moat_sources` 须为字符串数组（有硬证据的护城河源列表）")
     psum = sum(float(s.get("probability", 0)) for s in scen)
     if abs(psum - 1.0) > 1e-6:
         errors.append(f"S1 概率之和为 {psum:.4f}，必须等于 1")
@@ -623,6 +685,15 @@ def check(path, metrics_path=None, snapshot_path=None):
 
     # ---- S7 概率证据指针 ----
     defaults = d.get("default_probabilities") or {"悲观": 0.3, "基准": 0.5, "乐观": 0.2}
+    # REQ-P1-04：probability_derivation 块（存在且合法）本身就是概率来源的
+    # 结构化证据——得分/变异认知/红队 → 映射 → 采用值的传导链 + rationale_ref
+    # 已覆盖"偏离默认须挂证据"的语义，逐情景 probability_evidence 不再重复
+    # 要求（推导链即证据）；块不出现时维持 legacy 逐情景要求。
+    pd_block = d.get("probability_derivation")
+    pd_valid = False
+    if pd_block is not None:
+        _pd_rat = pd_block.get("rationale_ref") or ""
+        pd_valid = ("[E:" in _pd_rat)
     info["probability_deviations"] = {}
     for s in scen:
         p = float(s["probability"])
@@ -633,12 +704,14 @@ def check(path, metrics_path=None, snapshot_path=None):
             dp = None
         if dp is not None and abs(p - float(dp)) > 1e-9:
             info["probability_deviations"][s["name"]] = round(p - float(dp), 6)
-            if not E_PTR.search(s.get("probability_evidence", "") or ""):
+            if not pd_valid and not E_PTR.search(s.get("probability_evidence", "") or ""):
                 errors.append(
                     f"S7 情景 `{s['name']}` 概率 {p:.0%} 偏离默认 {float(dp):.0%}，"
                     f"但 `probability_evidence` 未挂 [E:] 指针。概率是闸门二唯一不受"
                     f"闸门一污染的输入，也是最容易被叙事污染的参数——任何偏离都必须"
-                    f"挂 Phase 3 证据，不是「偏离超过 10pct 才写理由」")
+                    f"挂 Phase 3 证据，不是「偏离超过 10pct 才写理由」"
+                    + ("；或改用 probability_derivation 块（REQ-P1-04，须挂 [E:] "
+                       "rationale_ref）" if pd_block is not None else ""))
 
     # ---- S7b iv-growth 证据指针（与 S7 同等强制）----
     # `intrinsic_value_growth` 是闸门二"不收敛下限"的加数（下限 = 股息率 + 内在价值增速），
@@ -665,6 +738,87 @@ def check(path, metrics_path=None, snapshot_path=None):
                 f"保守取 5% [E:financials_XX.json]」），与 S7 概率纪律同等强制")
         elif abs(ivg) > 1e-12:
             info["iv_growth_evidence"] = ivg_ev[:120]
+
+    # ---- S7c 证据传导块（REQ-P1-04；块存在才校验，legacy 文件零新增消息）----
+    # 交付物原文：「check_scenarios.py S7 校验概率来源字段非空」。两个块都是
+    # opt-in：出现即须结构合法 + 证据挂 [E:] + 与声明值一致——让 Phase 3 护城河
+    # 得分、Phase 4.5 变异认知、红队悲观概率对最终数字的传导可审计。
+    if pd_block is not None:
+        import reverse_dcf as _rd
+        _pd_rat = pd_block.get("rationale_ref") or ""
+        if "[E:" not in _pd_rat:
+            errors.append("S7c-VAR probability_derivation.rationale_ref 为空或未挂 "
+                          "[E:]——概率是闸门二唯一不受闸门一污染的输入，传导链"
+                          "必须可审计（REQ-P1-04 交付物：概率来源字段非空）")
+        else:
+            _score = pd_block.get("moat_score", d.get("moat_score"))
+            if _score is None:
+                errors.append("S7c-VAR probability_derivation 缺 moat_score（块内与"
+                              "顶层均未提供）——映射公式以护城河得分为锚")
+            else:
+                _vp = pd_block.get("variant_perception", "neutral")
+                _rt = pd_block.get("red_team_pessimistic")
+                _mapped = _rd.map_scenario_probabilities(
+                    float(_score), _vp, _rt)
+                if _mapped is None:
+                    errors.append(
+                        f"S7c-VAR 护城河得分 {_score} < 35：无买入结论，概率传导"
+                        "无意义")
+                else:
+                    _names = {s["name"] for s in scen}
+                    if _names != {"悲观", "基准", "乐观"}:
+                        errors.append("S7c-VAR 概率映射定义于标准三情景名"
+                                      "（悲观/基准/乐观）")
+                    else:
+                        _adopted = {s["name"]: float(s["probability"]) for s in scen}
+                        for _k, _v in _adopted.items():
+                            _dev = _v - _mapped["probabilities"][_k]
+                            if abs(_dev) > _rd.PROB_DEVIATION_MAX + 1e-9:
+                                errors.append(
+                                    f"S7c-RANGE 情景 `{_k}` 采用概率 {_v:.2%} 偏离"
+                                    f"映射值 {_mapped['probabilities'][_k]:.2%} 达 "
+                                    f"{_dev:+.1%}，超出可调范围 ±10%——应修映射输入"
+                                    "（得分/变异认知/红队）而不是绕映射")
+                            elif abs(_dev) > _rd.PROB_DEVIATION_FREE + 1e-9 and \
+                                    "[E:" not in (pd_block.get("deviation_rationale")
+                                                  or ""):
+                                errors.append(
+                                    f"S7c-DEV 情景 `{_k}` 采用概率偏离映射 "
+                                    f"{_dev:+.1%}（>2%），但 deviation_rationale "
+                                    "未挂 [E:]——偏离映射须逐项论证，与 S7 偏离"
+                                    "默认须证据同构")
+                        info["prob_derivation_mapped"] = {
+                            k: round(v, 4)
+                            for k, v in _mapped["probabilities"].items()}
+    dr_block = d.get("discount_rate_derivation")
+    if dr_block is not None:
+        import reverse_dcf as _rd
+        _tier = dr_block.get("industry_tier")
+        if _tier is None:
+            errors.append("S7c-DR-RAT discount_rate_derivation 缺 industry_tier"
+                          "（行业档白名单 stable/standard/cyclical/financials/"
+                          "speculative_growth/holding_complex）")
+        elif _tier not in _rd.INDUSTRY_RISK_PREMIUM:
+            errors.append(f"S7c-DR-TIER industry_tier `{_tier}` 不在白名单——"
+                          "行业档白名单防自造档位，与护城河词表同源纪律")
+        else:
+            _rate, _ = _rd.stratified_discount_rate(
+                _tier, dr_block.get("rf_10y"))
+            _stated = d.get("discount_rate")
+            if _stated is None or abs(_rate - float(_stated)) > 1e-9:
+                errors.append(
+                    f"S7c-DR 分层折现率 {_rate:.2%}（{_tier} 档）≠ 声明的 "
+                    f"discount_rate {_stated}——声明分层却沿用旧折现率，V0 与 r "
+                    "不同源；premium 档须按分层值重算三情景估值并同步")
+        if "[E:" not in (dr_block.get("rationale_ref") or ""):
+            errors.append("S7c-DR-RAT discount_rate_derivation.rationale_ref 为空或"
+                          "未挂 [E:]——折现率直接决定 IRR 下限与终值，裸参数与"
+                          "裸概率同罪")
+        _mkt = dr_block.get("market")
+        if _mkt is not None and _mkt not in _rd.MARKET_FLOOR_HURDLES:
+            errors.append(f"S7c-DR-RAT market `{_mkt}` 未注册（应为 "
+                          f"{sorted(_rd.MARKET_FLOOR_HURDLES)}）——floor 门槛市场"
+                          "校准仅支持已注册市场")
 
     # ---- S8 价值陷阱闸门 ----
     mos = info["margin_of_safety_vs_base"]
@@ -771,6 +925,95 @@ def check(path, metrics_path=None, snapshot_path=None):
                         f"S9 股息率与快照不一致：scenarios.json = {dy:.4%}，"
                         f"market_snapshot `{skey}` 归一化后 = {sv:.4%}（{sbasis}）。"
                         f"两者必须同源同口径，否则闸门二的保底回报是假的")
+    # ---- S10 乐观情景增速基率上限（REQ-P1-05；登记才校验，legacy 零新增）----
+    # 乐观情景增速的天花板是行业基率不是想象力：『20 年 20% 增速』的公司
+    # 历史上不到 1%。industry + growth_assumption 都是 opt-in 字段——
+    # 存量 12 案不登记即不触发（基线不动）；登记了 industry 而 optimistic
+    # 情景声明 growth_assumption 超过基率 80 分位时，须挂 Phase 4.5 显式
+    # 变异认知支撑（optimistic_growth_support 含 [E:]）才放行（披露码）。
+    industry = d.get("industry")
+    _opt_scn = next((s for s in scen if s.get("name") == "乐观"), None)
+    _opt_g = (_opt_scn or {}).get("growth_assumption")
+    info["industry"] = industry
+    if industry is not None or _opt_g is not None:
+        _brt = None
+        try:
+            import reverse_dcf as _rd10
+            _brt = _rd10.INDUSTRY_GROWTH_BASE_RATES
+        except Exception:  # noqa: BLE001 — 引擎不可导入时降级为跳过并大声说
+            warnings.append("S10 无法导入 reverse_dcf 取基率表，S10 校验跳过")
+        if _brt is not None:
+            if industry is None:
+                errors.append(
+                    "S10-IND 乐观情景登记了 `growth_assumption` 但 scenarios.json"
+                    " 缺 `industry`——基率锚无从对照（行业基率表白名单见"
+                    " references/base-rates.md）")
+            elif industry not in _brt:
+                errors.append(
+                    f"S10-IND industry `{industry}` 不在行业增速基率表白名单——"
+                    f"应为 {sorted(_brt)}。白名单防自造行业档，新行业先在"
+                    " references/base-rates.md 登记基率（p50/p80）再使用")
+            if industry in _brt and _opt_g is not None:
+                if not isinstance(_opt_g, (int, float)) or not (-1.0 < _opt_g <= 2.0):
+                    errors.append(
+                        f"S10 乐观情景 growth_assumption `{_opt_g}` 非法"
+                        "（须为 (-1, 2] 的年收入增速小数）")
+                else:
+                    _p80 = _brt[industry]["p80"]
+                    info["optimistic_growth_vs_p80"] = {
+                        "growth": _opt_g, "p80": _p80,
+                        "exceeds": _opt_g > _p80}
+                    if _opt_g > _p80:
+                        _sup = (_opt_scn or {}).get("optimistic_growth_support") or ""
+                        if "[E:" in _sup:
+                            warnings.append(
+                                f"S10-OVR 乐观情景增速 {_opt_g:.1%} 超行业基率"
+                                f" 80 分位 {_p80:.1%}（{industry}），已挂 Phase 4.5"
+                                " 变异认知 [E:] 支撑——放行但强制披露：本案结论"
+                                "依赖『本行业历史分布不适用』的判断，红队质询的"
+                                "第一靶点就是它")
+                        else:
+                            errors.append(
+                                f"S10 乐观情景增速 {_opt_g:.1%} 超过行业基率"
+                                f" 80 分位 {_p80:.1%}（{industry}）且无"
+                                " optimistic_growth_support 支撑——『20 年 20%"
+                                " 增速』的公司历史上不到 1%，天花板是基率不是"
+                                "想象力。要么下调增速至基率内，要么给出 Phase"
+                                " 4.5 显式变异认知支撑（挂 [E:]）")
+    # ---- S11 尾部风险块结构校验（REQ-P1-05；块存在才校验）----
+    # 引擎在 expected-return 侧硬拒非法块；此处提前在底稿关卡拦住，避免
+    # "底稿过了门禁、引擎才崩"的两段式失败。p_tail 本身纯映射无采用值，
+    # 故无需对照采用概率（与 S7c 概率块的结构不同源）。
+    _trd = d.get("tail_risk_derivation")
+    if _trd is not None:
+        if not isinstance(_trd, dict):
+            errors.append("S11 tail_risk_derivation 须为对象")
+        else:
+            if "[E:" not in (_trd.get("rationale_ref") or ""):
+                errors.append(
+                    "S11 tail_risk_derivation.rationale_ref 为空或未挂 [E:] 证据"
+                    "指针——尾部概率直接决定期望 IRR 的第四项，裸参数禁止")
+            _fs = _trd.get("forensic_score")
+            if not isinstance(_fs, (int, float)) or _fs < 0:
+                errors.append(
+                    f"S11 tail_risk_derivation.forensic_score `{_fs}` 须为 ≥0 的"
+                    "数值（forensic_screen.py 输出：veto×10 + redflag×1）")
+            _cov = _trd.get("arithmetic_coverage")
+            if _cov is not None and (not isinstance(_cov, (int, float))
+                                     or not 0.0 <= _cov <= 1.0):
+                errors.append(
+                    f"S11 tail_risk_derivation.arithmetic_coverage `{_cov}`"
+                    "须在 [0,1]（forensic_screen.py 输出）")
+            _gov = _trd.get("governance", "normal")
+            if _gov not in ("good", "normal", "poor"):
+                errors.append(
+                    f"S11 tail_risk_derivation.governance `{_gov}` 非法，应为"
+                    " good/normal/poor（治理评分词表）")
+            _lt = _trd.get("loss_tail", -1.0)
+            if not isinstance(_lt, (int, float)) or not -1.0 <= _lt < 0.0:
+                errors.append(
+                    f"S11 tail_risk_derivation.loss_tail `{_lt}` 须为 [-1, 0) 的"
+                    "年化 IRR（-1=股权归零；缺省 -1.0）")
     return d, errors, warnings, info
 
 
