@@ -83,6 +83,30 @@ RULES_SNAPSHOT_MIN_BATCH = 3
 CONFIDENCE_LEVELS = ("high", "medium", "low")
 ANSWER_CONFIDENCE_MIN_BATCH = 3
 
+
+def gate_label_conflict(a):
+    """answer.json 派生闸门注记（expected_gate1/2）与官方档位集是否自相矛盾。
+
+    档位集是真值源；闸门注记只是执行者对官方原文的推导，不允许反过来约束档位语义。
+    - 档位集含 ≥POSITIVE_ORDINAL（positive/mixed）：正面档位要求双闸门全过，任一注记为 False 即矛盾
+    - 档位集全 <POSITIVE_ORDINAL（negative）：两注记同时为 True 即矛盾（双过 ⇒ 正面档位）
+    返回冲突描述或 None。gate2_ab.py 同款判定，两处语义须保持一致。
+    """
+    vs = a.get("expected_verdict_set") or []
+    nums = [v for v in vs if isinstance(v, (int, float))]
+    if not nums:
+        return None
+    g1, g2 = a.get("expected_gate1"), a.get("expected_gate2")
+    if max(nums) >= POSITIVE_ORDINAL:
+        bad = [n for n, g in (("expected_gate1", g1), ("expected_gate2", g2)) if g is False]
+        if bad:
+            return (f"expected_verdict_set={vs} 含正面档位（≥{POSITIVE_ORDINAL}，要求双闸门全过），"
+                    f"但 {'/'.join(bad)}=false")
+    elif g1 is True and g2 is True:
+        return (f"expected_verdict_set={vs} 全为非正面档位，但 expected_gate1/expected_gate2 "
+                f"同时为 true（双过 ⇒ 正面档位）")
+    return None
+
 # 重跑引擎所需的逐案参数（三类键独立可选，改动它等于改动案例本身，须走案例
 # 修订而非脚本调参）：
 #   moat + iv_growth —— reverse_dcf expected-return 传参，**两键齐备才跑反推**。
@@ -627,6 +651,15 @@ def check_case(case, do_rerun=False):
             f"acceptable_grades={_ag} 与 expected_verdict_set={a.get('expected_verdict_set')}"
             " 不一致（REQ-P2-01 单源纪律：expected_verdict_set 即可接受档位区间，"
             "镜像字段不得分叉）")
+    # expected_gate1/expected_gate2 是执行者的派生注记，不是官方原文；档位集才是真值源。
+    # B3-14 平安教训（2026-09-14）：官方集 {3,2} 含正面档位 3（要求双闸门全过），执行者
+    # 却按"与系统输出形态相容"登记 expected_gate2=false——用系统输出反向标注答案，
+    # gate2_ab 读到该注记后把 mixed 样本判成 should_fail，制造一盏假红灯。
+    _gc = gate_label_conflict(a)
+    if _gc:
+        res["failures"].append(f"answer 闸门注记与档位集自相矛盾：{_gc}"
+                               "（expected_gate1/2 须与 expected_verdict_set 蕴含一致，"
+                               "或删除注记只留档位集；禁止按系统输出反推答案标签）")
 
     # ---- 已知失败 vs 新增回归 ----
     # 茅台档位轨未命中是第一批**记录在案**的真实假阴性（`backtest/REPORT.md` 元问题 3）。

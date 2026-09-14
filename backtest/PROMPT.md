@@ -443,6 +443,15 @@ OBS 在本批是**复现了**（达门槛，进入第 4 步）、**阴性对照�
 
 `排除=0 / 拒绝=1 / 观察等价格=2 / 小仓位试探=3 / 核心买入=4`（定义见 `scripts/alert_codes.py` 的 `VERDICT_ORDINAL`）。官方不约束档位时 `expected_verdict_set: null` → 档位轨不计分，但**错过成本仍进入元问题 1 的统计**。
 
+### `expected_gate1` / `expected_gate2`（派生注记，非真值源）
+
+两字段是执行者对官方原文的推导，`expected_verdict_set` 才是真值源，runner 与 `gate2_ab.py`
+的样本角色（negative / positive / mixed）与假阳性判定**只读档位集**。取值纪律：官方原文
+点名闸门读数才填 true/false；否则填 `null`。档位集含 ≥3 时任一注记为 false、或档位集全
+<3 时两注记同为 true，均与档位蕴含矛盾，runner lint 判 answer 失败。**禁止参照系统输出
+"形态相容"反推注记**——B3-14 平安官方集 {3,2} 被登记 `expected_gate2=false`，让 A/B 工具
+把 mixed 样本判成 should_fail、报出一盏假红灯（OBS-601318-05）。
+
 ### `fp_control` 字段（REQ-P0-01）
 
 标记该案例是**假阳性对照**（第四批全部 6 案 + 第三批起每批混入的 ≥1 例）。runner 据此

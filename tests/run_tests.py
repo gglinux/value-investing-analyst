@@ -1643,6 +1643,44 @@ _ab = subprocess.run([sys.executable, os.path.join(SCRIPTS, "gate2_ab.py"), "--a
                      capture_output=True, text=True)
 check("gate2_ab --assert：新口径未放行任何 should_fail 案例（回退条件未触发）",
       _ab.returncode == 0, (_ab.stdout[-400:] + _ab.stderr[-200:]))
+# B3-14 平安假红灯（2026-09-14）：方向标签的唯一真值源是 expected_verdict_set（档位级
+# 假阳性定义），派生注记 expected_gate2 不得反向约束；mixed 样本翻正只披露、不入 FP。
+import gate2_ab as _g2ab  # noqa: E402
+check("gate2_ab 方向：官方集 {3,2}（mixed）→ 不判 should_fail，即便派生注记 expected_gate2=false",
+      _g2ab._expected_direction({"expected_verdict_set": [3, 2], "expected_gate2": False}) == "mixed")
+check("gate2_ab 方向：官方集 {1,2}（negative）→ should_fail，与注记无关",
+      _g2ab._expected_direction({"expected_verdict_set": [1, 2], "expected_gate2": True}) == "should_fail")
+check("gate2_ab 方向：官方不约束档位时才回退读 expected_gate2",
+      _g2ab._expected_direction({"expected_verdict_set": None, "expected_gate2": False}) == "should_fail"
+      and _g2ab._expected_direction({}) is None)
+check("gate2_ab 冲突检测：正面档位集 + expected_gate2=false 报矛盾",
+      _g2ab.gate_label_conflict({"expected_verdict_set": [3, 2], "expected_gate2": False}) is not None
+      and _g2ab.gate_label_conflict({"expected_verdict_set": [3, 4],
+                                     "expected_gate1": True, "expected_gate2": True}) is None
+      and _g2ab.gate_label_conflict({"expected_verdict_set": [1],
+                                     "expected_gate1": True, "expected_gate2": True}) is not None)
+# 双闸门双过隐含正面档位 → negative 样本即便只看档位级也判 FP（比闸门级代理更接近正式定义）
+_rows_fp = [{"case": "x", "expected": "should_fail", "old_pass": False, "new_pass": False,
+             "implied_positive_tier": True}]
+check("gate2_ab classify：should_fail 样本双闸门双过（隐含正面档位）计入 FP 新增",
+      [r["case"] for r in _g2ab.classify(_rows_fp)[0]] == ["x"])
+_rows_mx = [{"case": "y", "expected": "mixed", "old_pass": False, "new_pass": True,
+             "implied_positive_tier": False}]
+_fpm, _, _, _mxf = _g2ab.classify(_rows_mx)
+check("gate2_ab classify：mixed 样本闸门二翻正只进披露列表、不入 FP",
+      not _fpm and [r["case"] for r in _mxf] == ["y"])
+check("gate2_ab simulate_gate1：平安形态（窄护城河 MoS 4.9%<40%）闸门一不过",
+      _g2ab.simulate_gate1({"price": 56.1, "moat": "narrow",
+                            "scenarios": [{"name": "基准", "value_per_share": 59.0}]})[0] is False)
+check("gate2_ab simulate_gate1：宽护城河 MoS 40%≥25% 闸门一过；moat=none 恒不过",
+      _g2ab.simulate_gate1({"price": 60.0, "moat": "wide",
+                            "scenarios": [{"name": "基准", "value_per_share": 100.0}]})[0] is True
+      and _g2ab.simulate_gate1({"price": 10.0, "moat": "none",
+                                "scenarios": [{"name": "基准", "value_per_share": 100.0}]})[0] is False)
+check("gate2_ab 实跑：平安 601318 为 mixed 且不在 fp_new（假红灯已消除）",
+      "601318.SH_2018-12-31      mixed" in _ab.stdout
+      and "'601318.SH_2018-12-31'" not in
+      (_ab.stdout.split("新增假阳性")[1].split("\n")[0] if "新增假阳性" in _ab.stdout else "x"))
 # 缺 iv_growth → 不可评，绝不能当作通过（静默通过是最危险的形态）
 _r2 = rd.expected_return(6.99, _sc, 5, 0.13, 0.087, 0.10, moat="narrow")
 check("缺 --iv-growth 时闸门二不可评（pass=None，不得视为通过）",
@@ -5028,6 +5066,30 @@ check("A acceptable_grades 与 expected_verdict_set 镜像一致 → 通过",
 _r = _RBA.check_case(_mkc216("ag_bad", [1, 2], 1, acceptable_grades=[1, 2, 3]))
 check("A acceptable_grades 与 expected_verdict_set 分叉 → 失败（单源纪律）",
       any("acceptable_grades" in f and "不一致" in f for f in _r["failures"]))
+# 闸门注记与档位集自洽（B3-14 平安假红灯，2026-09-14）
+_c = _mkc216("gate_conflict", [3, 2], 2)
+_c["answer"]["expected_gate1"] = False
+_c["answer"]["expected_gate2"] = False
+_r = _RBA.check_case(_c)
+check("A 官方集含正面档位 + expected_gate2=false → 失败（闸门注记与档位集矛盾）",
+      any("闸门注记与档位集自相矛盾" in f for f in _r["failures"]), str(_r["failures"]))
+_c = _mkc216("gate_ok_null", [3, 2], 2)
+_c["answer"]["expected_gate1"] = None
+_c["answer"]["expected_gate2"] = None
+_r = _RBA.check_case(_c)
+check("A 官方集含正面档位 + 闸门注记 null → 通过",
+      not any("闸门注记" in f for f in _r["failures"]))
+_c = _mkc216("gate_neg_bad", [1, 2], 1)
+_c["answer"]["expected_gate1"] = True
+_c["answer"]["expected_gate2"] = True
+_r = _RBA.check_case(_c)
+check("A 官方集全非正面 + 双闸门注记 true → 失败（双过蕴含正面档位）",
+      any("闸门注记与档位集自相矛盾" in f for f in _r["failures"]))
+_c = _mkc216("gate_neg_ok", [1, 2], 1)
+_c["answer"]["expected_gate1"] = False
+_c["answer"]["expected_gate2"] = False
+_r = _RBA.check_case(_c)
+check("A 官方集全非正面 + 双闸门注记 false → 通过", not any("闸门注记" in f for f in _r["failures"]))
 
 # B. 低置信度计分语义：三轨仍评测但不进主指标
 _r = _RBA.check_case(_mkc216("low_fp", [1, 2], 3, confidence="low", basis="L1：测试"))

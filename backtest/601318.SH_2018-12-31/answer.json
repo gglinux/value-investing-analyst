@@ -1,9 +1,18 @@
 {
   "case": "601318.SH_2018-12-31",
   "expected_verdict_set": [3, 2],
-  "expected_note": "官方答案原文：『平安 2018-12：小仓位试探 或 观察等价格。此后寿险改革承压，结论正确性看安全边际是否留足。』官方接受 3（小仓位试探）或 2（观察等价格）两档，未按系统闸门语言表述——即官方不要求 Gate1/Gate2 双闸全过（两档位均非核心买入），与系统输出（观察等价格，Gate1 FAIL + Gate2 半过）形态相容。",
-  "expected_gate1": false,
-  "expected_gate2": false,
+  "expected_note": "官方答案原文：『平安 2018-12：小仓位试探 或 观察等价格。此后寿险改革承压，结论正确性看安全边际是否留足。』官方接受 3（小仓位试探）或 2（观察等价格）两档。官方未按系统闸门语言表述——闸门注记留空（null），不作派生推导：档位 3 要求双闸门全过、档位 2 只要求任一闸门不过，两档对闸门读数的蕴含不同，任何单值注记都与档位集自相矛盾。",
+  "expected_gate1": null,
+  "expected_gate2": null,
+  "gate_label_revision": {
+    "date": "2026-09-14",
+    "before": {"expected_gate1": false, "expected_gate2": false},
+    "after": {"expected_gate1": null, "expected_gate2": null},
+    "reason": "原注记按『与系统输出（Gate1 FAIL + Gate2 半过）形态相容』登记 false——用系统输出反向标注答案，且与档位集含 3 矛盾。gate2_ab.py 旧版让 expected_gate2 优先于档位集，把本案（runner 样本角色 mixed、不入 FP/FN 分母）判成 should_fail，在 REQ-P0-04 新四项口径下闸门二翻正（IRR 11.6%≥r 10.2% / 下限 8.7% / 悲观 +2.0% / 亏损概率 0%）即报『新增假阳性 1 例』——假红灯。本次修订不改 expected_verdict_set、不改 must_*，不属 ANSWERS.md 五步修订流程适用对象（派生注记非官方标签）；档位 2 的系统输出在新口径下不变（闸门一 MoS 4.9% vs 40% 深度不过），战绩表无影响。",
+    "obs": "OBS-601318-05"
+  },
+  "confidence": "medium",
+  "confidence_basis": "M1/M2：{2,3} 跨档且答案自带条件句（『结论正确性看安全边际是否留足』）——此后寿险改革承压，区间两端各有实证支撑，事后验证为定性（镜像自密封 payload 2026-09-14 预注值；answer.json 于 2026-09-10 揭示时 payload 尚无该字段，2026-09-14 补同步，未改动内容）",
   "must_trigger": [],
   "must_trigger_any": [],
   "must_not_trigger": [],
