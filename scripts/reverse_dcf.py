@@ -2609,6 +2609,9 @@ def main():
             div_growth=args.div_growth, discount_rate=args.discount_rate,
             continuity_years=args.continuity_years,
             equity_premium_min=args.equity_premium_min)
+        unknown = unknown_codes(res["codes"])
+        if unknown:
+            raise KeyError(f"未注册的告警码 {unknown}，请先在 scripts/alert_codes.py 登记")
         print(f"═══ 卡五缓慢增长通道：股息锚（REQ-P1-07）═══")
         print(f"正常化每股股息      : {res['dps']:.4g}（{res['dps_basis']}）")
         print(f"股息永续增速        : {res['div_growth']:.2%}（上限 {DIV_GROWTH_CAP:.0%}）")
@@ -2653,6 +2656,9 @@ def main():
                       and args.price < lf["floor_per_share"] * DIST_DEEP_VALUE_FACTOR)
         if deep_value:
             codes.append("DIST_BELOW_LIQUIDATION")
+        unknown = unknown_codes(codes)
+        if unknown:
+            raise KeyError(f"未注册的告警码 {unknown}，请先在 scripts/alert_codes.py 登记")
         if dv["verdict"] == "structured" and not deep_value:
             gate_cap = "excluded"
         elif dv["verdict"] == "indeterminate" and not deep_value:
