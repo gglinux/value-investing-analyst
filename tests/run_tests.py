@@ -443,6 +443,11 @@ with tempfile.TemporaryDirectory() as td:
     good = {
         "company": "测试银行", "ticker": "TB", "currency": "CNY", "unit": "million",
         "company_type": "银行", "accounting_standard": "CAS", "fiscal_year_end": "12-31",
+        # 14.14 分层验收（REQ-P0-03）：主底稿必须 strict——合成 fixture 同样带完整 meta
+        "meta": {"schema_version": 2, "unit": "百万", "currency": "CNY",
+                 "basis": "consolidated", "standard": "CAS", "period_type": "annual",
+                 "data_vintage": "2026-06-30", "source_ref": "2024年报摘要 p.3",
+                 "field_overrides": {}},
         "annual": [
             {"year": 2022, "publish_date": "2023-03-25", "operating_income": 280000.0,
              "net_interest_income": 190000.0, "non_interest_income": 90000.0,
@@ -496,6 +501,11 @@ with tempfile.TemporaryDirectory() as td:
         "company": "门禁测试", "ticker": "GT", "currency": "USD", "unit": "million",
         "company_type": "平台/网络效应型", "accounting_standard": "US-GAAP",
         "fiscal_year_end": "12-31",
+        # 14.14 分层验收（REQ-P0-03）：主底稿必须 strict
+        "meta": {"schema_version": 2, "unit": "百万", "currency": "USD",
+                 "basis": "consolidated", "standard": "US-GAAP", "period_type": "annual",
+                 "data_vintage": f"{_cur}-09-01",
+                 "source_ref": f"{_cur-2} 年报 10-K p.1", "field_overrides": {}},
         "annual": [
             {"year": _cur - 4, "publish_date": f"{_cur-3}-02-01", "revenue": 820.0,
              "net_income": 164.0, "ocf": 200.0, "capex": 45.0, "d_and_a": 36.0,
@@ -832,7 +842,12 @@ def _draft(nyears=5, with_bs=True, with_pub=True):
         rows.append(r)
     d = {"company": "链路测试", "ticker": "DL", "currency": "USD", "unit": "million",
          "company_type": "平台/网络效应型", "accounting_standard": "US-GAAP",
-         "fiscal_year_end": "12-31", "annual": rows, "crosscheck": []}
+         "fiscal_year_end": "12-31", "annual": rows, "crosscheck": [],
+         # 14.14 分层验收（REQ-P0-03）：主底稿必须 strict
+         "meta": {"schema_version": 2, "unit": "百万", "currency": "USD",
+                  "basis": "consolidated", "standard": "US-GAAP", "period_type": "annual",
+                  "data_vintage": f"{_y}-06-30",
+                  "source_ref": "10-K FY p.1 (EDGAR)", "field_overrides": {}}}
     for r in rows[-3:]:
         d["crosscheck"].append({
             "year": r["year"], "source": f"10-K {r['year']} (EDGAR)",
@@ -4235,7 +4250,22 @@ with tempfile.TemporaryDirectory() as _td209:
 
 # ---- monkeypatch git 时序：靶在箭前/箭后两种形态 ----
 _orig_gct = PC._git_commit_times
+_orig_git209 = PC._git
+_R209 = subprocess.CompletedProcess  # _git 返回值替身（stdout 可控）
+
+
+def _git_status209(out):
+    # 只劫持 status 调用（时序闸门已由 _git_commit_times 补丁接管），
+    # 模拟 preregistration.json 的工作区清洁/脏状态
+    def _f(args, cwd=None):
+        if args and args[0] == "status":
+            return _R209(args, 0, stdout=out, stderr="")
+        return _orig_git209(args, cwd=cwd)
+    return _f
+
+
 try:
+    PC._git = _git_status209("")  # 工作区干净（= 最后一次注册已提交）
     PC._git_commit_times = lambda rel, diff_filter=None: (
         [100] if (diff_filter == "A" and str(rel).endswith("verdict.json")) else
         ([50] if str(rel).endswith("preregistration.json") else []))
@@ -4256,8 +4286,54 @@ try:
     _iss = PC.prereg_issues(__import__("pathlib").Path(_cdX), audit=True)
     check("G git 时序：verdict 落地后追加注册(150≥100) → 判揭示后改参数",
           any("揭示后改参数" in i for i in _iss), str(_iss))
+    # 揭示后改参 + 重注册但不提交：摘要比对读工作区（regs[-1] 与篡改参数吻合）、
+    # 时序闸门只看最后提交（仍箭前）——两把锁都看不到未提交改动，须靠清洁检查拦截
+    _scDirty = json.loads(json.dumps(_sc209, ensure_ascii=False))
+    _scDirty["default_probabilities"]["悲观"] = 0.20
+    for _s in _scDirty["scenarios"]:
+        if _s["name"] == "悲观":
+            _s["probability"] = 0.20
+    json.dump(_scDirty, open(os.path.join(_cdX, "data", "scenarios.json"), "w"),
+              ensure_ascii=False)
+    _tp209 = PC.preregistration_parameters(_scDirty)
+    _tdig209 = PC.preregistration_digest(_tp209)  # 重注册会写入的摘要（与篡改参数吻合）
+    json.dump({"case": "_TMP_PREREG_2020-12-31", "spec_version": 1, "registrations": [
+        {"registered_at": "2026-09-14T10:00:00+08:00", "trigger": "initial", "note": "",
+         "digest": _d209, "parameters": _p209},
+        {"registered_at": "2026-09-14T14:00:00+08:00", "trigger": "evidence_revision",
+         "note": "掩盖篡改", "digest": _tdig209, "parameters": _tp209}]},
+        open(os.path.join(_cdX, "preregistration.json"), "w"), ensure_ascii=False)
+    PC._git_commit_times = lambda rel, diff_filter=None: (
+        [100] if (diff_filter == "A" and str(rel).endswith("verdict.json")) else
+        ([50] if str(rel).endswith("preregistration.json") else []))  # 恢复箭前时序
+    PC._git = _git_status209("?? backtest/_TMP_PREREG_2020-12-31/preregistration.json\n")
+    _iss = PC.prereg_issues(__import__("pathlib").Path(_cdX), audit=True)
+    check("G 注册未提交：重注册不提交（摘要吻合+时序箭前）→ 清洁检查拦截",
+          any("未提交" in i for i in _iss)
+          and not any("post_hoc_changed" in i for i in _iss), str(_iss))
+    # 纵深对照：攻击者退回 preregistration.json 至已提交内容（porcelain 变干净），
+    # 但 scenarios.json 仍是篡改值 → 摘要比对兜底检出（既有防线，不因清洁检查失效）
+    json.dump({"case": "_TMP_PREREG_2020-12-31", "spec_version": 1, "registrations": [
+        {"registered_at": "2026-09-14T10:00:00+08:00", "trigger": "initial", "note": "",
+         "digest": _d209, "parameters": _p209}]},
+        open(os.path.join(_cdX, "preregistration.json"), "w"), ensure_ascii=False)
+    PC._git = _git_status209("")
+    _iss = PC.prereg_issues(__import__("pathlib").Path(_cdX), audit=True)
+    check("G 注册未提交：退回注册文件伪装已提交 → 摘要不一致兜底检出",
+          any("post_hoc_changed" in i for i in _iss), str(_iss))
+    PC._git = _git_status209("?? backtest/_TMP_PREREG_2020-12-31/preregistration.json\n")
+    json.dump({"case": "_TMP_PREREG_2020-12-31", "spec_version": 1, "registrations": [
+        {"registered_at": "2026-09-14T10:00:00+08:00", "trigger": "initial", "note": "",
+         "digest": _d209, "parameters": _p209},
+        {"registered_at": "2026-09-14T14:00:00+08:00", "trigger": "evidence_revision",
+         "note": "掩盖篡改", "digest": _tdig209, "parameters": _tp209}]},
+        open(os.path.join(_cdX, "preregistration.json"), "w"), ensure_ascii=False)
+    _issPre = PC.prereg_issues(__import__("pathlib").Path(_cdX))
+    check("G 注册未提交：pre 模式（lint-verdict）同样拦截",
+          any("未提交" in i for i in _issPre), str(_issPre))
 finally:
     PC._git_commit_times = _orig_gct
+    PC._git = _orig_git209
     shutil.rmtree(_cdX, ignore_errors=True)
 
 # legacy 真实案例豁免：601088（batch 2）无 preregistration.json 也通过
@@ -4275,6 +4351,155 @@ check("H PROMPT 交付物清单含 preregistration.json（单独 commit 早于 v
       "preregistration.json" in _PROMPT209)
 check("H lint 体检说明含预注册比对",
       "预注册摘要比对核对 `post_hoc_changed` 标注" in _PROMPT209)
+
+print("== 14.14 schema 分层验收与存量补录（REQ-P0-03/07 收尾，2026-09-14） ==")
+# 教训：原验收「全部迁移并通过」对竞对底稿不可达（免原文核对纪律 → 溯源锚无从
+# 取得），21 份 legacy 长期挂账；裁决改分层口径后，关键是"无声 legacy"必须被
+# 机器逮住——豁免要显式且可问责，而不是文件停在半路没人知道。
+import schema_meta as SM214  # noqa: E402
+
+# A. 分层验收四态（单元级）
+_eA, _ = SM214.layered_acceptance({"meta": {"schema_version": 0}})
+check("A 主底稿停留 legacy → ERROR（必须 strict）",
+      any("主底稿" in e for e in _eA), str(_eA))
+_eB, _ = SM214.layered_acceptance({"is_peer": True, "meta": {"schema_version": 0}})
+check("A 竞对停留 legacy 无豁免 → ERROR（禁止无声 legacy）",
+      any("禁止无声 legacy" in e for e in _eB), str(_eB))
+_eC, _wC = SM214.layered_acceptance({
+    "is_peer": True, "meta": {"schema_version": 0, "schema_waiver": {
+        "scope": "peer_traceability", "reason": "竞对免原文核对", "covers": ["source_ref"],
+        "decided_by": "用户裁决 2026-09-14", "date": "2026-09-14"}}})
+check("A 竞对带完整豁免 → 通过 + 豁免披露 WARN",
+      not _eC and any("豁免披露" in w for w in _wC), f"{_eC} / {_wC}")
+_eD, _ = SM214.layered_acceptance({
+    "is_peer": True, "meta": {"schema_version": 0, "schema_waiver": {
+        "scope": "peer_traceability", "reason": "缺裁决人与日期", "covers": ["source_ref"]}}})
+check("A 豁免缺 decided_by/date → ERROR（豁免必须可问责）",
+      any("必填键" in e for e in _eD), str(_eD))
+_eE, _ = SM214.layered_acceptance({"is_peer": True, "meta": {"schema_version": 2}})
+check("A strict 竞对不适用分层规则（豁免是地板不是天花板）",
+      not _eE, str(_eE))
+
+# B. 存量 43 份底稿落地核查：无无声 legacy；NVDA/NFLX 严格档状态正确
+import glob as _glob214
+_legacy_no_waiver, _strict_count = [], 0
+for _fp in (_glob214.glob(os.path.join(ROOT, "backtest", "*", "data", "financials_*.json"))
+            + _glob214.glob(os.path.join(ROOT, "cases", "*", "data", "financials_*.json"))):
+    _fd = json.load(open(_fp, encoding="utf-8"))
+    _m214 = _fd.get("meta") or {}
+    if (_m214.get("schema_version") or 0) >= 2:
+        _strict_count += 1
+        continue
+    if not (_fd.get("is_peer") and isinstance(_m214.get("schema_waiver"), dict)
+            and all(_m214["schema_waiver"].get(k)
+                    for k in SM214.SCHEMA_WAIVER_REQUIRED_KEYS)):
+        _legacy_no_waiver.append(_fp)
+check("B 存量底稿零无声 legacy（legacy 必为带五要素豁免的竞对）",
+      not _legacy_no_waiver, str(_legacy_no_waiver[:4]))
+check("B strict 数 22→23（NVDA 主底稿补 EDGAR 申报日升档；NFLX 对照表非标准 schema 归 waiver）",
+      _strict_count == 23, f"strict={_strict_count}")
+_nvda = json.load(open(os.path.join(ROOT, "cases", "nvidia", "data",
+                                    "financials_NVDA.json"), encoding="utf-8"))
+check("B NVDA 主底稿 data_vintage=2026-02-25（FY2026 10-K EDGAR 申报日，官方索引核实）",
+      _nvda["meta"].get("data_vintage") == "2026-02-25"
+      and _nvda["meta"].get("schema_version") == 2, str(_nvda["meta"])[:200])
+
+# C. 竞对底稿 CLI 全量通过（--skip-crosscheck）且 spike 跨实体降级不阻断
+_peer_spike = subprocess.run(
+    [sys.executable, os.path.join(SCRIPTS, "validate_data.py"),
+     os.path.join(ROOT, "backtest", "601088.SH_2015-12-31", "data",
+                  "financials_peer_600011.json"), "--skip-crosscheck"],
+    capture_output=True, text=True)
+check("C 竞对底稿 CLI 通过且 spike 降级为警告（跨实体同比不再阻断）",
+      _peer_spike.returncode == 0 and "竞对底稿降级为警告" in _peer_spike.stdout,
+      _peer_spike.stdout[-200:])
+_nflx_peer = subprocess.run(
+    [sys.executable, os.path.join(SCRIPTS, "validate_data.py"),
+     os.path.join(ROOT, "backtest", "NFLX_2016-12-31", "data",
+                  "financials_peer_NFLX_2016.json"), "--skip-crosscheck"],
+    capture_output=True, text=True)
+check("C NFLX 逐实体对照表（year='FY2012' 字符串）不再触发校验器崩溃",
+      _nflx_peer.returncode == 0 and "FATAL" not in _nflx_peer.stdout,
+      (_nflx_peer.stdout + _nflx_peer.stderr)[-200:])
+
+# D. source_tier 存量补录：80 条全覆盖且与推断函数一致（同一事实源）
+import crosscheck_official as CCO214  # noqa: E402
+_tier_missing, _tier_conflict = [], 0
+for _fp in (_glob214.glob(os.path.join(ROOT, "backtest", "*", "data", "financials_*.json"))
+            + _glob214.glob(os.path.join(ROOT, "cases", "*", "data", "financials_*.json"))):
+    _fd = json.load(open(_fp, encoding="utf-8"))
+    for _cc in (_fd.get("crosscheck") or []):
+        if not isinstance(_cc, dict):
+            continue
+        _st = _cc.get("source_tier")
+        if not _st:
+            _tier_missing.append((_fp, _cc.get("year")))
+        elif _st in CCO214.SOURCE_PRIORITY:
+            if CCO214.source_tier(_cc) != CCO214.SOURCE_PRIORITY[_st]:
+                _tier_conflict += 1
+check("D crosscheck 条目 source_tier 零缺失（22 份 80 条补录）",
+      not _tier_missing, str(_tier_missing[:4]))
+check("D 显式 source_tier 与推断函数一致（补录用同一关键词表）",
+      _tier_conflict == 0, f"conflicts={_tier_conflict}")
+
+# E. investment_income 补录 → sotp_screen 在真实管道常驻（软银失真检出/腾讯诚实不触发）
+_tx_fin = os.path.join(ROOT, "cases", "tencent", "data", "financials_TENCENT.json")
+_sb_fin = os.path.join(ROOT, "backtest", "9984.T_2019-06-30", "data",
+                       "financials_9984_2019.json")
+_tx_rows = {r["year"]: r for r in json.load(open(_tx_fin, encoding="utf-8"))["annual"]}
+check("E 腾讯 2020-2025 investment_income 补录（官方公告口径，2021=149,467 占归母 66%）",
+      all(_tx_rows[y].get("investment_income") is not None
+          for y in (2020, 2021, 2022, 2023, 2024, 2025))
+      and _tx_rows[2021]["investment_income"] == 149467, "")
+_tx_cm = tempfile.mkdtemp(prefix="tx_cm_")
+_r_tx = subprocess.run([sys.executable, os.path.join(SCRIPTS, "compute_metrics.py"),
+                        _tx_fin, "-o", os.path.join(_tx_cm, "m.json")],
+                       capture_output=True, text=True)
+_tx_sotp = (json.load(open(os.path.join(_tx_cm, "m.json"))) or {}).get("sotp_screen") or {}
+check("E 腾讯 sotp_screen 真实产出：applicable=true、share_series 六年、distortion=false",
+      _r_tx.returncode == 0 and _tx_sotp.get("applicable") is True
+      and len(_tx_sotp.get("share_series") or {}) == 6
+      and _tx_sotp.get("distortion") is False, str(_tx_sotp)[:150])
+_r_sb = subprocess.run([sys.executable, os.path.join(SCRIPTS, "compute_metrics.py"),
+                        _sb_fin, "-o", os.path.join(_tx_cm, "sb.json")],
+                       capture_output=True, text=True)
+_sb_sotp = (json.load(open(os.path.join(_tx_cm, "sb.json"))) or {}).get("sotp_screen") or {}
+check("E 软银失真检出：distortion=true（FY2018 重估占净利 92%）+ look-through 分红回填",
+      _r_sb.returncode == 0 and _sb_sotp.get("distortion") is True
+      and _sb_sotp.get("look_through_income_latest") == 2051422.0, str(_sb_sotp)[:150])
+shutil.rmtree(_tx_cm, ignore_errors=True)
+
+# F. verify_report 接线：任一底稿带 schema_waiver → 报告必须带 validate-summary 附录
+_txdir = tempfile.mkdtemp(prefix="waiver_rep_")
+_shutil = shutil
+for _f214 in _glob214.glob(os.path.join(ROOT, "backtest", "600519.SH_2015-08-31",
+                                        "data", "*.json")):
+    _shutil.copy(_f214, _txdir)
+_waiver_fp = os.path.join(_txdir, "financials_peer_600999.json")
+json.dump({"company": "假想竞对", "ticker": "600999.SH", "is_peer": True,
+           "currency": "CNY", "unit": "million", "accounting_standard": "CAS",
+           "fiscal_year_end": "12-31", "annual": [],
+           "meta": {"schema_version": 0, "schema_waiver": {
+               "scope": "peer_traceability", "reason": "测试", "covers": ["source_ref"],
+               "decided_by": "测试裁决", "date": "2026-09-14"}}},
+          open(_waiver_fp, "w", encoding="utf-8"), ensure_ascii=False)
+
+def _vrun214(html):
+    fp = os.path.join(_txdir, "r.html")
+    open(fp, "w", encoding="utf-8").write(html)
+    return subprocess.run([sys.executable, os.path.join(SCRIPTS, "verify_report.py"),
+                           fp, "--data-dir", _txdir], capture_output=True, text=True)
+
+_r214 = _vrun214(_rpt)
+check("F 底稿带 schema_waiver 而报告缺 validate-summary → FAIL",
+      _r214.returncode == 1 and "appendix:validate-summary" in _r214.stdout,
+      _r214.stdout[-200:])
+_r214 = _vrun214(_rpt.replace("</body>",
+                              '<section data-appendix="validate-summary">'
+                              "竞对对照底稿按分层验收登记 schema 豁免。</section></body>"))
+check("F 报告补 validate-summary 附录后通过",
+      "appendix:validate-summary" not in _r214.stdout, _r214.stdout[-200:])
+_shutil.rmtree(_txdir, ignore_errors=True)
 
 print("== 15 脚本接入完整性（元测试） ==")
 # 教训：阶段二写了 check_market_snapshot.py、跑通了、验证它能逮住海控存量错误，

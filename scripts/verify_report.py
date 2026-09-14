@@ -476,15 +476,24 @@ def main():
     # restated_from、或 meta.point_in_time_waiver，报告必须带对应机器标记：
     #   data-appendix="source-conflicts" / "restatements" / "point-in-time-waiver"
     # 缺标记 → FAIL（对完整报告）。标记形式不限元素，可挂在附录表格/段落上。
+    # REQ-P0-03 分层验收接线：任一底稿登记 meta.schema_waiver（竞对豁免）→
+    # 报告必须带 data-appendix="validate-summary"（豁免披露住在入口校验摘要段）。
     _appendix_tags = set(re.findall(r'data-appendix="([^"]+)"', html))
     _need = {}
     for _fp in sorted(glob.glob(os.path.join(args.data_dir, "financials_*.json"))):
-        if "peer" in os.path.basename(_fp):
-            continue
         try:
             with open(_fp, "r", encoding="utf-8") as f:
                 _fd = json.load(f)
         except Exception:  # noqa: BLE001
+            continue
+        # schema 豁免披露：竞对底稿也在扫描范围（豁免恰发生在竞对上），置于 peer 跳过之前
+        _sw = (_fd.get("meta") or {}).get("schema_waiver")
+        if isinstance(_sw, dict) and _sw.get("scope"):
+            _need["validate-summary"] = (
+                f"底稿 {os.path.basename(_fp)} 登记了 schema 豁免"
+                f"（{_sw.get('scope')}，裁决 {_sw.get('date')}）——"
+                "报告数据附录须披露竞对免原文核对与豁免理由（REQ-P0-03 分层验收）")
+        if "peer" in os.path.basename(_fp):
             continue
         if _fd.get("crosscheck_conflicts"):
             _need["source-conflicts"] = (f"底稿含 {len(_fd['crosscheck_conflicts'])} 条源冲突差异"

@@ -517,6 +517,50 @@ def validate_full(data, path=""):
     return errors, warns
 
 
+# ---- 分层验收（REQ-P0-03，用户裁决 2026-09-14：主底稿 strict、竞对显式豁免）----
+# 原验收条款「全部迁移并通过」对竞对底稿不可达：现行纪律竞对免双源/原文核对，
+# source_ref 的可定位锚无从取得（数据商快照无页码无 URL），强行补 = 编造溯源。
+# 但"无声 legacy"更危险——迁移停在半路的文件看起来和豁免文件一样。裁决口径：
+#   主底稿必须 strict；竞对底稿要么补齐升 strict、要么带显式豁免块；
+#   豁免必须可问责（裁决人 + 日期 + 覆盖字段），禁止静默 legacy。
+SCHEMA_WAIVER_REQUIRED_KEYS = ("scope", "reason", "covers", "decided_by", "date")
+
+
+def layered_acceptance(data):
+    """REQ-P0-03 分层验收：返回 (errors, warns)。
+
+    规则（schema_version < 2 即停留 legacy 时判定）：
+      - 非竞对底稿（无 is_peer=true）停留 legacy → ERROR（主底稿必须 strict）；
+      - 竞对底稿停留 legacy 无 schema_waiver → ERROR（禁止无声 legacy）；
+      - schema_waiver 缺必填键（scope/reason/covers/decided_by/date）→ ERROR；
+      - 合规豁免 → WARN（要求报告数据附录 validate-summary 段披露）。
+    """
+    errors, warns = [], []
+    meta = data.get("meta") or {}
+    if (meta.get("schema_version") or 0) >= 2:
+        return errors, warns  # strict：分层规则不适用
+    waiver = meta.get("schema_waiver")
+    if not data.get("is_peer"):
+        errors.append(
+            "schema 分层验收（REQ-P0-03）：主底稿停留 legacy（meta.schema_version<2）——"
+            "主底稿必须完整迁移升 strict；若确属竞对对照底稿，请显式登记 is_peer=true")
+        return errors, warns
+    if not isinstance(waiver, dict):
+        errors.append(
+            "schema 分层验收（REQ-P0-03）：竞对底稿停留 legacy 必须带显式豁免 "
+            "meta.schema_waiver={scope,reason,covers,decided_by,date}——禁止无声 legacy"
+            "（豁免含义：免原文核对、仅作定性对照、不进估值管线）")
+        return errors, warns
+    missing = [k for k in SCHEMA_WAIVER_REQUIRED_KEYS if not waiver.get(k)]
+    if missing:
+        errors.append(f"meta.schema_waiver 缺必填键 {missing}——豁免必须可问责"
+                      "（谁裁决、何时、覆盖哪些字段、为什么）")
+        return errors, warns
+    warns.append("schema 豁免披露（REQ-P0-03）：竞对底稿 " + str(waiver.get("scope"))
+                 + "——报告数据附录 validate-summary 段须披露该豁免")
+    return errors, warns
+
+
 def scan(roots):
     """批量扫描迁移进度。"""
     files = []

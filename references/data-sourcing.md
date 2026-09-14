@@ -63,14 +63,14 @@ SKILL.md 只保留数据分级与降级协议的原则；**源能力矩阵、强
 | 伊利 | `dividend_yield_ttm` | 5.14 | 5.14%（百分数，另给了 `_frac` 消歧） |
 | 英伟达 | `dividend_yield_ttm_pct` | 0.13 | **0.13%**，不是 13% |
 
-闸门二的**价值不收敛下限 = 股息率 + 内在价值增速**把股息率当加数直接参与判定——英伟达的 0.13% 若被读成 13%，闸门二直接自动过闸。这是典型的「算得出数、不报错、无痕迹」静默错误，因此升级为门禁：`check_scenarios.py` S9 要求 `dividend_yield` 必须是小数且 ≤20%；传 `--snapshot` 时与快照归一化值交叉核对（容差 5%）。归一化规则（`normalize_yield`）：后缀是强证据，裸字段值 > 0.20 判为百分数误填并标记**歧义**——脚本会归一但同时告警，要求分析师用后缀显式消歧。
+闸门二的**价值不收敛下限 = 股息率 + 内在价值增速**把股息率当加数直接参与判定——英伟达的 0.13% 若被读成 13%，闸门二直接自动过闸。「算得出数、不报错、无痕迹」的静默错误，故升级为门禁：`check_scenarios.py` S9 要求 `dividend_yield` 必须是小数且 ≤20%；传 `--snapshot` 时与快照归一化值交叉核对（容差 5%）。归一化规则（`normalize_yield`）：后缀是强证据；裸值 >0.20 判为百分数误填并标**歧义**——脚本归一但告警，要求后缀显式消歧。
 
 ## 六、信息覆盖度强制动作
 
-0. **搬运完整性（最隐蔽的事故）**：抽取产物拿到了、底稿却没搬进去——比"数据源没有"更危险，因为分析师以为自己有。事故原型：GOOG/TSM 的 raw 产物 9 个年度全抓到，底稿却只有 1 年有值，勾稽覆盖率 18% 而入口校验照打"通过"（从 raw 回填后 91%，数据本身是好的、只是从未被验证）。纪律：凡有抽取中间产物必须跑 `scripts/check_transcription.py` 比对；建稿脚本化优先于手工转录。附带：`cash` 取"现金+短期投资"（`cash_sti`）是估值正确口径，不要为"过校验"改狭义。
+0. **搬运完整性（最隐蔽的事故）**：抽取产物拿到了、底稿却没搬进去——比"数据源没有"更危险，因为分析师以为自己有。事故原型：GOOG/TSM 的 raw 产物 9 个年度全抓到，底稿却只有 1 年有值，勾稽覆盖率 18% 而入口校验照打"通过"（raw 回填后 91%——数据是好的，只是从未被验证）。纪律：凡有抽取中间产物必须跑 `check_transcription.py` 比对；建稿脚本化优先。附带：`cash` 取"现金+短期投资"（`cash_sti`）是估值口径，不要为过校验改狭义。
 1. **分部数据只认财报原文**：`data/segments.json` 的分部收入必须从年报/20-F 的**分部报告附注**提取（A 级，登记 filings 文件名+页码）；接口主营构成与新闻转述只作交叉验证。五维定性一半论断压在分部数据上，这里降级等于全楼地基降级。
-2. **对立面检索（Phase 0 排雷强制步）**：逐项检索 `公司名 + 做空报告/财务造假/监管处罚/集体诉讼/审计意见`，命中进排雷清单评估；未命中也要在 manifest 登记"对立面检索已做、无发现"（`adversarial_check`，含检索日期与结论；validate_data 无痕迹即告警——纯文档纪律没有执行力，10 个归档案例只有 1 个留了痕）。
-3. **信息时效检查**：分析日距最新财报披露日超过 100 天时（validate_data 会提示），强制核对最新季报/盈利预告是否有未消化的剧变（腾讯 AI capex +176% 是季中爆出的教训），核对结果写入 manifest 的 `latest_quarter_checked`。
+2. **对立面检索（Phase 0 排雷强制步）**：逐项检索 `公司名 + 做空报告/财务造假/监管处罚/集体诉讼/审计意见`，命中进排雷清单评估；未命中也要在 manifest 登记"对立面检索已做、无发现"（`adversarial_check`，含检索日期与结论；validate_data 无痕迹即告警——纯文档纪律没有执行力，归档案例 10 中只 1 留痕）。
+3. **信息时效检查**：距最新财报披露超 100 天时（validate_data 会提示），强制核对最新季报/盈利预告有无未消化的剧变（腾讯 AI capex +176% 的教训），结果写入 manifest 的 `latest_quarter_checked`。
 4. **来源措辞要精确**：`crosscheck.source` 里官方原文标识（10-K/20-F/年报/EDGAR/巨潮/披露易/XBRL）是强证据；混入"接口/加总/估算"会触发警告。写"20-F p.45 表 3"这类定位，不写"20-F 披露接口值"。
 
 ## 七、各市场实操与踩坑
@@ -136,7 +136,7 @@ SKILL.md 只保留数据分级与降级协议的原则；**源能力矩阵、强
 
 | 科目类型 | 阈值 | 处置 |
 |---|---|---|
-| **命门科目**（revenue / net_income / ocf / shares_diluted，外加 cash / interest_bearing_debt / total_debt） | >1% | **阻断**（`crosscheck_official.py` 退出码 1，`validate_data.py` ERROR）。确认为口径差异时在 `crosscheck_exempt` 写五要素结构化豁免并在报告披露 |
+| **命门科目**（revenue / net_income / ocf / shares_diluted，外加 cash / interest_bearing_debt / total_debt） | >1% | **阻断**（`crosscheck_official.py` 退出码 1，`validate_data.py` ERROR）；确认口径差异时在 `crosscheck_exempt` 写五要素豁免并披露 |
 | 资产负债表科目（total_assets / total_equity / total_liabilities / goodwill / inventory / receivables 等） | >3% | **告警**并登记差异表进报告附录 |
 | 其他科目 | >5% | **登记**进差异表 |
 
@@ -145,7 +145,7 @@ crosscheck 条目中登记的**任何**数值科目都参与分级比对，不�
 **裁决动作**：
 - 发现差异后，以 tier 更高的源为准更新底稿。豁免必须是结构化五要素：`"crosscheck_exempt": {"<field>": {"adopted_value", "adopted_source", "rejected_value", "rejected_source", "reason"}}`——纯字符串豁免仍被接受（legacy）但每次运行都会提示迁移。
 - 差异表（含已裁决与未裁决）由 `crosscheck_official.py --write` 落盘到底稿 `crosscheck_conflicts`（字段：year / field / annual_value / official_value / annual_tier / official_tier / diff_pct / severity / adopted_side / resolved / resolution）。
-- 报告「数据附录」节须列出差异表并带机器标记 `data-appendix="source-conflicts"`；底稿含非空 `crosscheck_conflicts`（或结构化豁免中有 `rejected_value`）而报告缺该标记时，`verify_report.py` 直接 FAIL。同理，含 `restated_from` 的底稿须带 `data-appendix="restatements"`，含 `meta.point_in_time_waiver` 的须带 `data-appendix="point-in-time-waiver"`（REQ-P0-06）。
+- 报告侧披露统一走 `data-appendix` 机器标记（差异表/重述/时点豁免/validate-summary 五类、何时必填、verify_report 机核规则）——清单见 `report-spec.md` 数据附录规范，此处不重复。
 
 ## 十、新增数据源的接入清单
 
