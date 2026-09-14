@@ -1854,13 +1854,15 @@ _r_miss = cm.compute(base(_rows_miss))
 check("分红缺失≠零：告警照常触发",
       "M_DIVIDEND_ILLUSION" in _r_miss["alert_codes"])
 
-# 断言 runner 端到端：第一批六案例应为 5 全绿 + 1 已知失败（茅台），0 回归
+# 断言 runner 端到端：第一批六案例（海控=低置信度单列后）4 全绿 + 1 已知失败（茅台）
+# REQ-P2-01：海控 low → 不进主指标，5/6 变 4/5——这是验收语义而非回归
 _rr = subprocess.run([sys.executable, os.path.join(SCRIPTS, "run_backtest_assertions.py"),
                       "--batch", "1"], capture_output=True, text=True, cwd=ROOT)
 check("断言 runner 可运行且无回归失败", _rr.returncode == 0,
       (_rr.stdout + _rr.stderr)[-300:])
-check("断言 runner 复现第一批战绩（5 全绿 + 1 已知失败）",
-      "5/6 全绿" in _rr.stdout and "1 已知失败" in _rr.stdout,
+check("断言 runner 复现第一批战绩（4/5 全绿 + 1 已知失败 + 1 低置信度单列）",
+      "4/5 全绿" in _rr.stdout and "1 已知失败" in _rr.stdout
+      and "1 例低置信度单独列示" in _rr.stdout,
       _rr.stdout[-300:])
 check("茅台档位轨失败被识别为已知失败而非回归",
       "已知失败：档位轨未命中" in _rr.stdout, _rr.stdout[-300:])
@@ -4984,6 +4986,205 @@ _ref_total = sum(os.path.getsize(p)
 check("references/ 总体积红线 ≤ 150KB",
       _ref_total <= 150 * 1024,
       f"当前 {_ref_total / 1024:.1f}KB 超线——过程性叙述归宿是 backtest/BATCH*_FINDINGS.md")
+
+# ── 13.6 官方答案置信度与修订流程（REQ-P2-01，2026-09-14）──
+print("\n== 13.6 官方答案置信度与低置信度单列（REQ-P2-01） ==")
+
+
+def _mkc216(name, exp, got, must=None, fired=None, fp_control=False, batch=1,
+            confidence="high", basis="H1：测试依据", acceptable_grades=None):
+    a = {"expected_verdict_set": exp, "must_trigger": must or [],
+         "fp_control": fp_control, "known_failures": []}
+    if confidence is not None:
+        a["confidence"] = confidence
+        a["confidence_basis"] = basis
+    if acceptable_grades is not None:
+        a["acceptable_grades"] = acceptable_grades
+    return {"name": name, "dir": "/nonexistent/" + name, "meta": {"batch": batch},
+            "verdict": {"verdict_ordinal": got, "codes": fired or [],
+                        "codes_provenance": {"engine_derived": fired or []}},
+            "answer": a}
+
+
+# A. schema 校验
+_r = _RBA.check_case(_mkc216("ok_high", [1, 2], 1))
+check("A confidence=high 合法且不触发低置信度路径",
+      _r["answer_confidence"] == "high" and not _r.get("low_confidence"))
+_r = _RBA.check_case(_mkc216("bad_val", [1, 2], 1, confidence="超高"))
+check("A 非法 confidence 取值 → 失败", any("非法" in f for f in _r["failures"]), str(_r["failures"]))
+_r = _RBA.check_case(_mkc216("no_basis", [1, 2], 1, basis=""))
+check("A 缺 confidence_basis → 失败（置信度必须可问责）",
+      any("confidence_basis" in f for f in _r["failures"]))
+_r = _RBA.check_case(_mkc216("miss_b1", [1, 2], 1, confidence=None))
+check("A 缺 confidence（批次<3）→ 咨询性提示而非失败",
+      not any("confidence" in f for f in _r["failures"])
+      and any("按高置信度计分" in n for n in _r["notes"]))
+_r = _RBA.check_case(_mkc216("miss_b4", [1, 2], 1, confidence=None, batch=4))
+check("A 缺 confidence（批次≥3）→ 失败（第 3 批起强制）",
+      any("缺 confidence" in f for f in _r["failures"]))
+_r = _RBA.check_case(_mkc216("ag_ok", [1, 2], 1, acceptable_grades=[2, 1]))
+check("A acceptable_grades 与 expected_verdict_set 镜像一致 → 通过",
+      not any("acceptable_grades" in f for f in _r["failures"]))
+_r = _RBA.check_case(_mkc216("ag_bad", [1, 2], 1, acceptable_grades=[1, 2, 3]))
+check("A acceptable_grades 与 expected_verdict_set 分叉 → 失败（单源纪律）",
+      any("acceptable_grades" in f and "不一致" in f for f in _r["failures"]))
+
+# B. 低置信度计分语义：三轨仍评测但不进主指标
+_r = _RBA.check_case(_mkc216("low_fp", [1, 2], 3, confidence="low", basis="L1：测试"))
+check("B 低置信度假阳性：false_positive 仍判定（可见性保留）",
+      _r["false_positive"] and _r["sample_role"] == "negative")
+check("B 低置信度假阳性：不进 regressions（不阻塞门禁，争议走修订流程）",
+      not _r["regressions"], str(_r["regressions"]))
+check("B 低置信度：failures 转存 low_conf_failures 供单列",
+      any("假阳性轨红灯" in f for f in _r.get("low_conf_failures", [])))
+check("B 低置信度：notes 指向修订流程",
+      any("REQ-P2-01" in n and "不计入主指标" in n for n in _r["notes"]))
+_r = _RBA.check_case(_mkc216("high_fp", [1, 2], 3))
+check("B 对照：高置信度假阳性仍进 regressions（不对称设计不变）",
+      any("假阳性轨红灯" in x for x in _r["regressions"]))
+
+# C. fp_fn_summary：低置信度不进分母、单列名单
+_main = [_RBA.check_case(_mkc216("m_neg", [0, 1], 1)),
+         _RBA.check_case(_mkc216("m_pos_fn", [3, 4], 2))]
+_low = [_RBA.check_case(_mkc216("l_pos_fn", [3, 4], 2, confidence="low", basis="L1：测试")),
+        _RBA.check_case(_mkc216("l_neg", [1, 2], 1, confidence="low", basis="L3：测试"))]
+_s = _RBA.fp_fn_summary(_main, low_conf_results=_low)
+check("C 低置信度排除分母：positive_n=1（l_pos_fn 不计入）",
+      _s["positive_n"] == 1 and _s["negative_n"] == 1, str(_s))
+check("C 低置信度假阴性单列：low_conf_false_negatives 含 l_pos_fn",
+      _s["low_conf_false_negatives"] == ["l_pos_fn"], str(_s))
+check("C 低置信度名单与计数齐备",
+      _s["low_conf_n"] == 2 and set(_s["low_conf_cases"]) == {"l_pos_fn", "l_neg"})
+check("C 低置信度不产生比率字段（被排除的是统计权重）",
+      "low_conf_fp_rate" not in _s and "low_conf_fn_rate" not in _s)
+_s_old = _RBA.fp_fn_summary(_main)
+check("C 向后兼容：不传 low_conf_results 时行为与旧签名一致",
+      _s_old["positive_n"] == 1 and _s_old["low_conf_n"] == 0)
+
+# D. 存量 12 案真实数据断言
+import glob as _g216
+_real = []
+for _d216 in sorted(_g216.glob(os.path.join(ROOT, "backtest", "*") + os.sep)):
+    _c216 = _RBA.load_case(_d216)
+    if _c216:
+        _real.append(_c216)
+check("D 存量回测案例 = 12", len(_real) == 12, str(len(_real)))
+_rr = {c["name"]: _RBA.check_case(c) for c in _real}
+check("D 12 案全部携带合法 confidence + 非空 confidence_basis",
+      all(r["answer_confidence"] in ("high", "medium", "low")
+          and (c["answer"].get("confidence_basis") or "").strip()
+          for c, r in zip(_real, (_rr[c["name"]] for c in _real))))
+_lowreal = [r["name"] for r in _rr.values() if r.get("low_confidence")]
+check("D 低置信度 = 需求正文点名的两案（海控 + Netflix）",
+      set(_lowreal) == {"601919.SH_2021-07-31", "NFLX_2016-12-31"}, str(_lowreal))
+_res_main = [r for r in _rr.values() if not r.get("low_confidence")]
+_s = _RBA.fp_fn_summary(_res_main, low_conf_results=[r for r in _rr.values() if r.get("low_confidence")])
+check("D 验收口径：低置信度出分母后 negative_n=6 / positive_n=3",
+      _s["negative_n"] == 6 and _s["positive_n"] == 3, str(_s))
+check("D 验收口径：FN 名单只剩茅台+神华（NFLX 单列不计分）",
+      set(_s["false_negatives"]) == {"600519.SH_2015-08-31", "601088.SH_2015-12-31"}
+      and _s["low_conf_false_negatives"] == ["NFLX_2016-12-31"], str(_s))
+
+# E. 密封库 18 案预注断言（靶在箭前：预注时点早于任何批次 3-5 verdict）
+import base64 as _b216
+_enc216 = sorted(_g216.glob(os.path.join(ROOT, "backtest", "sealed_answers", "*.enc")))
+_annot = []
+for _e216 in _enc216:
+    _p216 = json.loads(_b216.b64decode(open(_e216, encoding="utf-8").read()))
+    _annot.append((_p216.get("case"),
+                   _p216.get("confidence"),
+                   (_p216.get("confidence_basis") or "").strip(),
+                   _p216.get("confidence_annotated_at")))
+check("E 密封库 18 案全部预注合法置信度 + 依据 + 日期",
+      len(_annot) == 18 and all(c in ("high", "medium", "low") and b and d
+                                for _, c, b, d in _annot), str(_annot[:3]))
+_lv = [c for _, c, _, _ in _annot]
+check("E 预注分布：high 12 / medium 6 / low 0（第三四五批无 L 类争议案）",
+      _lv.count("high") == 12 and _lv.count("medium") == 6 and _lv.count("low") == 0)
+
+# F. --annotate-confidence 行为（预注 / 已揭示拒绝 / 非法值拒绝 / 重封保留）
+import prepare_case as _PC216  # noqa: E402（与 14.13 的 PC 同一模块缓存）
+from pathlib import Path as _P216
+with tempfile.TemporaryDirectory() as _td216:
+    _old_sd, _old_rt, _old_al = _PC216.SEALED_DIR, _PC216.REPO_ROOT, dict(_PC216.ALIAS_TO_CASE)
+    try:
+        _PC216.SEALED_DIR = _P216(_td216) / "sealed"
+        _PC216.SEALED_DIR.mkdir()
+        _PC216.REPO_ROOT = _P216(_td216)
+        _fix = {"case": "TEST_2000-01-01", "batch": 3, "alias": "测试",
+                "official_answer": "测试 2000-01：拒绝。"}
+        _enc = _PC216.SEALED_DIR / "TEST_2000-01-01.enc"
+        _enc.write_text(_b216.b64encode(json.dumps(_fix, ensure_ascii=False).encode()).decode(),
+                        encoding="utf-8")
+        check("F 非法 confidence 值拒绝", _PC216._annotate_confidence("TEST_2000-01-01", "超高", "x") == 1)
+        check("F 缺 basis 拒绝", _PC216._annotate_confidence("TEST_2000-01-01", "low", " ") == 1)
+        check("F 库中不存在案例拒绝", _PC216._annotate_confidence("NOPE", "high", "H1：x") == 1)
+        check("F 合法预注成功", _PC216._annotate_confidence("TEST_2000-01-01", "low", "L1：测试") == 0)
+        _p = json.loads(_b216.b64decode(_enc.read_text(encoding="utf-8")))
+        check("F 预注落盘四要素（值/依据/日期/空历史）",
+              _p["confidence"] == "low" and _p["confidence_basis"] == "L1：测试"
+              and _p["confidence_annotated_at"] and _p["confidence_history"] == [])
+        check("F 改值预注留痕（confidence_history 记录 from→to）",
+              _PC216._annotate_confidence("TEST_2000-01-01", "medium", "M2：新证据") == 0
+              and json.loads(_b216.b64decode(_enc.read_text(encoding="utf-8")))
+              ["confidence_history"][0]["from"] == "low")
+        # 已揭示案例拒绝（修订流程专属路径）
+        _cd = _PC216.REPO_ROOT / "backtest" / "TEST_2000-01-01"
+        _cd.mkdir(parents=True)
+        open(_cd / "answer.json", "w").write("{}")
+        check("F 已揭示案例拒绝预注（改判=修订流程，不提供绕过路径）",
+              _PC216._annotate_confidence("TEST_2000-01-01", "high", "H1：x") == 1)
+        # _seal 重封保留已注字段
+        _PC216.ALIAS_TO_CASE = {"测试": "TEST_2000-01-01"}
+        _md = _P216(_td216) / "ANSWERS.md"
+        _md.write_text("**第三批**\n- 测试 2000-01：拒绝。测试。\n", encoding="utf-8")
+        import io as _io216, contextlib as _cl216
+        with _cl216.redirect_stdout(_io216.StringIO()):
+            _PC216._seal(_md)
+        _p = json.loads(_b216.b64decode(_enc.read_text(encoding="utf-8")))
+        check("F 重封保留预注（--seal 覆写不抹掉靶在箭前的赋值）",
+              _p["confidence"] == "medium" and _p["confidence_annotated_at"]
+              and _p["confidence_history"])
+    finally:
+        _PC216.SEALED_DIR, _PC216.REPO_ROOT, _PC216.ALIAS_TO_CASE = \
+            _old_sd, _old_rt, _old_al
+
+# G. runner 端到端 + 基线门禁接线 + 文档同步
+_r = subprocess.run([sys.executable, os.path.join(SCRIPTS, "run_backtest_assertions.py")],
+                    capture_output=True, text=True, cwd=ROOT)
+check("G 全量 runner 退出码 0（低置信度单列不阻塞门禁）",
+      _r.returncode == 0, _r.stdout[-300:])
+check("G 输出含低置信度单列段与明细",
+      "[低置信度答案]" in _r.stdout and "低置信度不计分" in _r.stdout
+      and "601919.SH_2021-07-31" in _r.stdout and "NFLX_2016-12-31" in _r.stdout)
+check("G 输出含分母口径声明（只含高/中置信度）",
+      "只含高/中置信度" in _r.stdout)
+_RUNNER_SRC = open(os.path.join(SCRIPTS, "run_backtest_assertions.py"), encoding="utf-8").read()
+check("G 基线门禁保留低置信度假阳性（不错买优先不容静默消失）",
+      "low_conf_false_positives" in _RUNNER_SRC
+      and "gate_fp" in _RUNNER_SRC
+      and "基线代号比对池含低置信度案例" in _RUNNER_SRC)
+check("G 基线快照含 low_conf 段（向后兼容追加）",
+      "low_conf_cases" in _RUNNER_SRC and "low_conf_false_positives" in _RUNNER_SRC)
+_ANS = open(os.path.join(ROOT, "backtest", "ANSWERS.md"), encoding="utf-8").read()
+check("G ANSWERS.md 已写入置信度规则表（H1~L3 条目）",
+      all(k in _ANS for k in ("H1", "H2", "M1", "M2", "M3", "L1", "L2", "L3"))
+      and "置信度规则表" in _ANS)
+check("G ANSWERS.md 已写入修订流程五步",
+      all(k in _ANS for k in ("提出", "举证", "复核", "生效", "旧战绩重算"))
+      and "修订流程" in _ANS)
+check("G ANSWERS.md 赋值时点纪律（靶在箭前）+ 与红灯规则接口",
+      "靶在箭前" in _ANS and "禁止用「标个 low」代替回滚" in _ANS)
+check("G ANSWERS.md 批次一二 12 案 inline 置信度标记",
+      _ANS.count("〔置信：高〕") == 7 and _ANS.count("〔置信：中〕") == 3
+      and _ANS.count("〔置信：低〕") == 2)
+check("G PROMPT 模板含 confidence 字段 + 置信度小节",
+      '"confidence": "high"' in _PROMPT and "置信度字段（REQ-P2-01）" in _PROMPT)
+check("G PROMPT FP/FN 分母口径注记",
+      "分母只含高/中置信度案例" in _PROMPT)
+check("G PROMPT 红灯规则接入低置信度例外路径",
+      "低置信度答案（`confidence=low`）不豁免本规则" in _PROMPT)
+
 
 print()
 if FAILED:

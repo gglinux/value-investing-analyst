@@ -18,5 +18,7 @@
   "multiple_driven_return": null,
   "outcome_note": "2021 全年归母 892.96 亿后 2022 断崖至 109.59 亿（-87.7%）；SCFI 5109.6→1061.14（-79%）。注：引擎输出 NORM_BASE_UNUSABLE（均值路径失效、拒绝给标签）而非 NORM_CYCLE_PEAK，二者在 ASSERTIONS 中显式等价",
   "answer_source": "PROMPT 第七节 + 公司年报",
-  "case": "601919.SH_2021-07-31"
+  "case": "601919.SH_2021-07-31",
+  "confidence": "low",
+  "confidence_basis": "L1+L3：需求正文点名争议案（REQ-P2-01 现状：『海控是周期顶部，事后表现好不等于当时该买』）——标签依赖『峰值利润不作基期』的纪律裁决而非事后结果，且本案 actual_5y 回报未做行情复核（无数值锚），冲突未在答案内消解"
 }

@@ -21,5 +21,7 @@
   "multiple_driven_return": null,
   "outcome_note": "2012-01-19 申请破产保护，2013 旧股归零；回放后 6 个月 -81.9%。官方 must_trigger 为二选一",
   "answer_source": "PROMPT 第七节 + diff.md 第 25-27 行",
-  "case": "EK_2011-06-30"
+  "case": "EK_2011-06-30",
+  "confidence": "high",
+  "confidence_basis": "H1：2012-01 申请破产保护、2013 旧股归零（回报 −100%，不可辩驳事实）"
 }

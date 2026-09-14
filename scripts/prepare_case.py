@@ -11,7 +11,9 @@ B 档协议 = 双会话 + 文件闸门：答案在 Step 3 verdict commit 之前*
   python3 scripts/prepare_case.py --reveal backtest/<ticker>_<date>/
       # 机器校验该案例 verdict.json 已被 git 提交后，解码落地 answer_source.md
   python3 scripts/prepare_case.py --status
-      # 查看密封库状态（哪些案例已密封/已揭示）
+      # 查看密封库状态（哪些案例已密封/已揭示、置信度预注情况）
+  python3 scripts/prepare_case.py --annotate-confidence <案例目录名> --confidence <high|medium|low> --basis "<规则表条目依据>"
+      # REQ-P2-01：密封 payload 预注官方答案置信度（须在该案例 verdict 存在前执行）
   python3 scripts/prepare_case.py --seal-check backtest/<ticker>_<date>/
       # 进入 verdict 阶段前扫描该案例隔离是否完好（REQ-P0-05）
   python3 scripts/prepare_case.py --seal-check backtest/<ticker>_<date>/ --audit
@@ -128,7 +130,18 @@ def _seal(answers_md: Path) -> int:
                 continue
             payload = {"case": case, "batch": batch, "alias": alias,
                        "official_answer": f"{alias} {ym}：{body}"}
+            # REQ-P2-01：覆写密封时保留已预注的置信度字段（--annotate-confidence
+            # 的产物）——重封不得静默抹掉靶在箭前的赋值。
             enc = SEALED_DIR / f"{case}.enc"
+            if enc.exists():
+                try:
+                    prev = json.loads(base64.b64decode(enc.read_text(encoding="utf-8")))
+                except Exception:  # noqa: BLE001
+                    prev = {}
+                for k in ("confidence", "confidence_basis",
+                          "confidence_annotated_at", "confidence_history"):
+                    if k in prev:
+                        payload[k] = prev[k]
             enc.write_text(base64.b64encode(
                 json.dumps(payload, ensure_ascii=False).encode()).decode(), encoding="utf-8")
             sealed.append(f"{case}（第{batch}批）")
@@ -180,11 +193,23 @@ def _reveal(case_dir: Path) -> int:
         return 1
 
     payload = json.loads(base64.b64decode(enc.read_text(encoding="utf-8")))
+    # REQ-P2-01：官方置信度随答案一并揭示——揭示会话不得改动（改判=修订流程）。
+    # 密封时未预注的（旧流程密封），按 ANSWERS.md 规则表赋值并亮牌「揭示时赋值」。
+    conf = payload.get("confidence")
+    if conf:
+        conf_line = (f"\n> **官方置信度（REQ-P2-01，密封时预注）：{conf}**——"
+                     f"{payload.get('confidence_basis', '')}\n"
+                     "> 揭示会话不得改动；改判属答案修订，走 ANSWERS.md 修订流程五步。\n")
+    else:
+        conf_line = ("\n> ⚠ 密封 payload 未预注置信度（REQ-P2-01）——创建 answer.json 时按\n"
+                     "> ANSWERS.md 置信度规则表赋值，confidence_basis 须以「揭示时赋值」开头\n"
+                     "> 并引用规则表条目编号。\n")
     out = case_dir / "answer_source.md"
     out.write_text(
         f"# 官方答案（密封揭示，第{payload['batch']}批 {payload['alias']}）\n\n"
         f"> 揭示闸门：verdict commit {log.stdout.strip().splitlines()[0]}\n"
-        f"> 先于本次揭示（PROMPT 第七节 B 档文件闸门）。\n\n"
+        f"> 先于本次揭示（PROMPT 第七节 B 档文件闸门）。\n"
+        f"{conf_line}\n"
         f"{payload['official_answer']}\n", encoding="utf-8")
     print(f"✅ 答案已落地：{out}")
     print(f"   verdict commit：{log.stdout.strip().splitlines()[0]}")
@@ -201,10 +226,61 @@ def _status() -> int:
         case = enc.stem
         cd = REPO_ROOT / "backtest" / case
         revealed = (cd / "answer_source.md").exists() or (cd / "answer.json").exists()
-        rows.append((case, "已揭示" if revealed else "密封中"))
-    for case, s in rows:
-        print(f"  {s}  {case}")
+        try:
+            payload = json.loads(base64.b64decode(enc.read_text(encoding="utf-8")))
+            conf = payload.get("confidence") or "未注"
+        except Exception:  # noqa: BLE001
+            conf = "损坏"
+        rows.append((case, "已揭示" if revealed else "密封中", conf))
+    for case, s, conf in rows:
+        print(f"  {s}  置信:{conf:<4} {case}")
+    unannotated = [c for c, s, conf in rows if conf == "未注"]
+    if unannotated:
+        print(f"⚠ {len(unannotated)} 案未预注置信度（REQ-P2-01）：{unannotated}")
+        print("  执行前用 --annotate-confidence 预注（靶在箭前）；揭示后只能走修订流程")
     print(f"共 {len(rows)} 案")
+    return 0
+
+
+# ── REQ-P2-01 官方答案置信度预注 ────────────────────────────────────
+# 时点纪律（反博弈核心）：低置信度案例不进主指标，意味着「谁在何时赋值」决定
+# 这条机制会不会被用来洗掉难看的假阴性。因此置信度必须在**该案例 verdict 存在
+# 之前**落进密封 payload（与 P2-09 靶在箭前同构）；verdict 已揭示后再改置信度
+# 属答案修订，只能走 ANSWERS.md 修订流程五步，本命令拒绝执行。
+
+_CONFIDENCE_LEVELS = ("high", "medium", "low")
+
+
+def _annotate_confidence(case: str, confidence: str, basis: str) -> int:
+    if confidence not in _CONFIDENCE_LEVELS:
+        print(f"❌ --confidence 非法取值 {confidence!r}（合法：high / medium / low，"
+              "规则表见 ANSWERS.md）")
+        return 1
+    if not basis.strip():
+        print("❌ --basis 必填（REQ-P2-01：置信度必须可问责，依据须引用 ANSWERS.md 规则表条目）")
+        return 1
+    enc = SEALED_DIR / f"{case}.enc"
+    if not enc.exists():
+        print(f"❌ 密封库中无此案例：{enc}")
+        return 1
+    cd = REPO_ROOT / "backtest" / case
+    if (cd / "answer.json").exists() or (cd / "answer_source.md").exists():
+        print(f"❌ {case} 已揭示——揭示后改置信度属答案修订，走 ANSWERS.md 修订流程"
+              "（提出/举证/复核/生效/旧战绩重算），本命令不提供绕过路径")
+        return 1
+    payload = json.loads(base64.b64decode(enc.read_text(encoding="utf-8")))
+    hist = list(payload.get("confidence_history") or [])
+    if payload.get("confidence") is not None and payload["confidence"] != confidence:
+        hist.append({"from": payload["confidence"], "to": confidence,
+                     "at": datetime.date.today().isoformat(), "basis": basis})
+    payload["confidence"] = confidence
+    payload["confidence_basis"] = basis
+    payload["confidence_annotated_at"] = datetime.date.today().isoformat()
+    payload["confidence_history"] = hist
+    enc.write_text(base64.b64encode(
+        json.dumps(payload, ensure_ascii=False).encode()).decode(), encoding="utf-8")
+    print(f"✅ {case} 置信度已预注：{confidence}")
+    print("   预注时点早于该案例任何 verdict——靶在箭前（REQ-P2-01 反博弈时点纪律）")
     return 0
 
 
@@ -751,11 +827,24 @@ def main():
     ap.add_argument("--prereg-audit", action="store_true", dest="prereg_audit",
                     help="配合 --prereg-check：事后审计模式（追加 git 时序比对）")
     ap.add_argument("--status", action="store_true", help="查看密封库状态")
+    ap.add_argument("--annotate-confidence", metavar="CASE", dest="annotate_confidence",
+                    help="REQ-P2-01：密封 payload 预注官方答案置信度（verdict 存在前；"
+                         "已揭示案例须走 ANSWERS.md 修订流程）")
+    ap.add_argument("--confidence", choices=list(_CONFIDENCE_LEVELS),
+                    help="配合 --annotate-confidence：high / medium / low（规则表见 ANSWERS.md）")
+    ap.add_argument("--basis", default="",
+                    help="配合 --annotate-confidence：置信度依据（须引用 ANSWERS.md 规则表条目编号）")
     args = ap.parse_args()
     if args.seal:
         sys.exit(_seal(Path(args.seal)))
     if args.reveal:
         sys.exit(_reveal(Path(args.reveal).resolve()))
+    if args.annotate_confidence:
+        if not args.confidence:
+            print("❌ --annotate-confidence 须配 --confidence（high / medium / low）")
+            sys.exit(1)
+        sys.exit(_annotate_confidence(args.annotate_confidence,
+                                      args.confidence, args.basis))
     if args.seal_check:
         sys.exit(_seal_check(Path(args.seal_check).resolve(), audit=args.audit))
     if args.preregister:

@@ -17,5 +17,7 @@
   "multiple_driven_return": null,
   "outcome_note": "2018-12-28 立案调查，2019-04 更正披露虚增货币资金 299.44 亿（账面 327.67 亿的 91.4%）；Phase 0 一票否决不进估值，gate 记 null",
   "answer_source": "PROMPT 第七节 + 2019 年更正公告",
-  "case": "600518.SH_2017-12-31"
+  "case": "600518.SH_2017-12-31",
+  "confidence": "high",
+  "confidence_basis": "H1：2019-04 更正公告坐实虚增货币资金 299.44 亿（不可辩驳事实），Phase 0 排雷语义完全验证"
 }
