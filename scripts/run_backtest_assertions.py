@@ -48,6 +48,7 @@ from pathlib import Path
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from alert_codes import (ASSERTIONS, ORDINAL_TO_VERDICT, assertion_satisfied,
                          matched_codes, unknown_assertions, unknown_codes)
+import check_scenarios as CS  # noqa: E402（REQ-P3-03：五字段校验唯一实现，回测侧不另写一套）
 import prepare_case as _PC  # noqa: E402（REQ-P2-09 预注册：lint 比对 + runner 审计）
 
 REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -735,6 +736,41 @@ def lint_verdict(path):
         elif pre_issues and v.get("post_hoc_changed"):
             advisories.append("post_hoc_changed=true：三轨不计分，从战绩表排除（REQ-P2-09）——"
                               "diff.md 须说明改动动因")
+
+    # ---- REQ-P3-03 变异认知硬化（第三批起强制；与 check_scenarios S12 同源）----
+    # 回测侧口径：cap 生效（五字段不完整，或新批次缺块）时 verdict_ordinal
+    # 必须 ≤2——否则就是「机器锁观察、verdict 仍写买入」：底稿正确不等于
+    # 结论正确，这道闸守的是最终档位。五字段校验直接复用 CS 的唯一实现，
+    # 两处口径永不漂移。
+    _scen_fp = sorted(glob.glob(os.path.join(case_dir, "data", "scenarios*.json")))
+    if _scen_fp:
+        try:
+            with open(_scen_fp[0], encoding="utf-8") as _f:
+                _scen_d = json.load(_f)
+        except (OSError, ValueError):
+            _scen_d = {}
+        if _scen_d:
+            _snap_fp = sorted(glob.glob(os.path.join(case_dir, "data",
+                                                     "market_snapshot*.json")))
+            _adate = CS._analysis_date(_scen_d, _snap_fp[0] if _snap_fp else None)
+            _vpi, _vp_present = CS.variant_perception_issues(_scen_d, _adate)
+            _cap = bool(_vpi) or (not _vp_present
+                                  and batch >= CS.VARIANT_PERCEPTION_MIN_BATCH)
+            if not _vp_present and batch >= CS.VARIANT_PERCEPTION_MIN_BATCH:
+                problems.append(
+                    f"scenarios 缺 variant_perception 块（REQ-P3-03，第 "
+                    f"{CS.VARIANT_PERCEPTION_MIN_BATCH} 批起强制，schema 见 "
+                    "check_scenarios.py 头 docstring）——答不出五字段就只能给观察")
+            elif _cap:
+                _ord = v.get("verdict_ordinal")
+                if _ord is not None and _ord > 2:
+                    problems.append(
+                        f"变异认知 cap 生效（REQ-P3-03）但 verdict_ordinal={_ord}"
+                        f"（{ORDINAL_TO_VERDICT.get(_ord)}）——五字段不完整时档位"
+                        f"上限为「观察等价格」(2)。问题：{'；'.join(_vpi[:3])}")
+                else:
+                    advisories.append("变异认知五字段不完整（REQ-P3-03）：档位已被 "
+                                      "cap 在「观察等价格」——" + "；".join(_vpi[:3]))
 
     if problems:
         print(f"❌ {path} 落盘体检未通过：")

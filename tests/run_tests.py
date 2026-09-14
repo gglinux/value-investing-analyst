@@ -4154,6 +4154,21 @@ _diff209 = PC._prereg_param_diff(_p209, _p209b)
 check("B 参数差异定位：概率改动逐项可见",
       any("scenarios[0].probability" in d for d in _diff209)
       and any("default_probabilities" in d for d in _diff209), str(_diff209))
+# REQ-P3-03（2026-09-14）：batch≥3 的 lint fixture 须按新协议携带完整
+# variant_perception 块，否则会被 S12 的「新批次缺块」门禁拦下（这是预期行为，
+# fixture 更新为合规形态）。P2 旁路修复后，块的**判定状态**（gate：
+# ok/missing/no_anchor/no_evidence + check_by 全值）进预注册摘要——原文文本
+# 仍不进（措辞编辑自由），故须在补块后重算 _p209/_d209，下方所有 digest
+# 断言基于新值。
+_sc209["variant_perception"] = {
+    "market_view": "现价隐含 10 年 OE 增速 4.2%（reverse_dcf）；一致预期 2016 收入增速 3% [E:c.json]",
+    "my_view": "我方基准 2%：煤价 2015 已跌破行业现金成本，长期合同价锁定 [E:fin.json]",
+    "why_market_wrong": "市场把 2015 煤价崩塌外推为常态 [E:p3.md]",
+    "verification": "2016 年报自产煤单位成本与长协兑现率 [E:fin.json]",
+    "check_by": "2017-04-30",
+}
+_p209 = PC.preregistration_parameters(_sc209)   # P2 修复：gate 进摘要，重算
+_d209 = PC.preregistration_digest(_p209)
 
 with tempfile.TemporaryDirectory() as _td209:
     _cd209 = os.path.join(_td209, "601088.SH_2015-12-31")
@@ -4500,6 +4515,264 @@ _r214 = _vrun214(_rpt.replace("</body>",
 check("F 报告补 validate-summary 附录后通过",
       "appendix:validate-summary" not in _r214.stdout, _r214.stdout[-200:])
 _shutil.rmtree(_txdir, ignore_errors=True)
+
+print("== 14.15 REQ-P3-03 Phase 4.5 变异认知硬化（S12 + lint + verify_report 三处同源） ==")
+# 负向清单优先（设计稿 §3.5）：清空字段 / 无 [E:] / 空白绕过 / 日期格式 /
+# 存量兼容 / 新批次缺块 / 两表打架 / cap 合并 / 报告与 cap 打架 / 完整放行。
+# 共用实现 variant_perception_issues 是三处校验的唯一事实源——本节同时断言
+# 三处行为一致，防止回测侧与底稿侧口径漂移。
+VP_FULL = {
+    "market_view": "现价隐含 10 年收入 CAGR 11.3%；consensus 2027 增速 9.8% [E:c.json]",
+    "my_view": "我方基准 6.5%：单店产出连续 3 季转负 [E:d.json]",
+    "why_market_wrong": "市场把提价周期当常态 [E:p3.md]",
+    "verification": "2026 年报分部收入增速；连续两期低于 8% 即坐实 [E:fin.json]",
+    "check_by": "2027-04-30",
+}
+
+
+def _scen315(**over):
+    d = json.loads(json.dumps(GOOD))
+    d.update(over)
+    return d
+
+
+def _cs315(d, batch=None, extra=None):
+    """按真实目录形态落盘再跑 CLI：batch 回溯读 case/meta.json（两层存量兼容的第二层）。"""
+    with tempfile.TemporaryDirectory() as td:
+        cd = os.path.join(td, "600000.SH_2026-06-30")
+        os.makedirs(os.path.join(cd, "data"))
+        fp = os.path.join(cd, "data", "scenarios.json")
+        json.dump(d, open(fp, "w", encoding="utf-8"), ensure_ascii=False)
+        if batch is not None:
+            json.dump({"batch": batch}, open(os.path.join(cd, "meta.json"), "w"))
+        cmd = [sys.executable, os.path.join(SCRIPTS, "check_scenarios.py"), fp]
+        if extra:
+            cmd += extra
+        return subprocess.run(cmd, capture_output=True, text=True)
+
+
+# 5（先证正向）：五字段齐全 → 放行无 cap
+_r = _cs315(_scen315(variant_perception=VP_FULL))
+check("S12 五字段齐全放行（无 cap、无 S12 消息）",
+      _r.returncode == 0 and "S12" not in _r.stdout and "档位上限" not in _r.stdout,
+      _r.stdout[-200:])
+# 1：清空 market_view → 降档 ordinal 2 + 披露码（不是错误）
+_d = _scen315(variant_perception=dict(VP_FULL, market_view=""))
+_r = _cs315(_d)
+check("S12 清空 market_view → 降档至观察等价格 + 披露码（cap 不是错误）",
+      _r.returncode == 0 and "档位上限（cap）：观察等价格" in _r.stdout
+      and "VARIANT_PERCEPTION_INCOMPLETE_CAP" in _r.stdout, _r.stdout[-250:])
+# 2：why_market_wrong 无 [E:] → 降档 + 提示补证据指针
+_r = _cs315(_scen315(variant_perception=dict(VP_FULL, why_market_wrong="市场错了")))
+check("S12 why_market_wrong 无 [E:] → 降档并点名补证据指针",
+      _r.returncode == 0 and "why_market_wrong` 未挂 [E:]" in _r.stdout
+      and "档位上限（cap）：观察等价格" in _r.stdout, _r.stdout[-250:])
+# 3：verification = 纯空白 → 视为缺（不以空白绕过关键要求）
+_r = _cs315(_scen315(variant_perception=dict(VP_FULL, verification="   ")))
+check("S12 verification 纯空白视为缺（空串/空白一律=缺）",
+      _r.returncode == 0 and "缺字段 `verification`" in _r.stdout, _r.stdout[-200:])
+# 4：check_by = "下季度" → 格式错误
+_r = _cs315(_scen315(variant_perception=dict(VP_FULL, check_by="下季度")))
+check("S12 check_by 非 ISO 日期 → 判格式错误",
+      "非 ISO 日期" in _r.stdout, _r.stdout[-200:])
+# 4b：check_by 不晚于分析日 → 判错（分析日取快照 fetched_at 的 ISO 日期）
+with tempfile.TemporaryDirectory() as _td315:
+    _cd315 = os.path.join(_td315, "case")
+    os.makedirs(os.path.join(_cd315, "data"))
+    json.dump(_scen315(variant_perception=dict(VP_FULL, check_by="2026-01-01")),
+              open(os.path.join(_cd315, "data", "scenarios.json"), "w",
+                   encoding="utf-8"), ensure_ascii=False)
+    json.dump({"fetched_at": "2026-09-01 收盘"},
+              open(os.path.join(_cd315, "data", "market_snapshot.json"), "w"),
+              ensure_ascii=False)
+    _r = subprocess.run([sys.executable, os.path.join(SCRIPTS, "check_scenarios.py"),
+                         os.path.join(_cd315, "data", "scenarios.json"),
+                         "--snapshot", os.path.join(_cd315, "data", "market_snapshot.json")],
+                        capture_output=True, text=True)
+    check("S12 check_by 早于分析日（快照 fetched_at）→ 判错",
+          "须晚于分析日 2026-09-01" in _r.stdout, _r.stdout[-200:])
+# 6：旧批次底稿完全无该块 → 不报错（存量兼容第一层）
+_r = _cs315(_scen315())
+check("S12 legacy 底稿无块零新增消息（12 回测案 + 10 实盘基线不动）",
+      _r.returncode == 0 and "S12" not in _r.stdout, _r.stdout[-200:])
+# 7：新批次底稿无该块 → 报错（存量兼容第二层：缺块不能绕过全部校验）
+_r = _cs315(_scen315(), batch=4)
+check("S12 新批次（batch≥3）缺块 → 报错",
+      _r.returncode == 1 and "缺 `variant_perception` 块" in _r.stdout, _r.stdout[-200:])
+# 8：key_differences 非空但缺 my_view → 报错（两表打架是结构性错误，不是答不出）
+_d8 = _scen315(variant_perception=dict(VP_FULL, my_view=None),
+               key_differences=[{"param": "稳态利润率", "implied_requirement": 0.121,
+                                 "my_call": 0.155, "gap": 0.034,
+                                 "value_impact_per_share": 8.6,
+                                 "verify_condition": "毛利率 [E:fin.json]"}])
+_r = _cs315(_d8)
+check("S12b key_differences 非空但五字段不完整 → 报错（非降档）",
+      _r.returncode == 1 and "两表打架" in _r.stdout
+      and "VARIANT_PERCEPTION_CONFLICT" in _r.stdout, _r.stdout[-250:])
+# 8b：块整体缺失 + key_differences 非空（legacy 批次）→ 同样报错
+_d8b = _scen315(key_differences=[{"param": "稳态利润率", "implied_requirement": 0.121,
+                                  "my_call": 0.155, "gap": 0.034,
+                                  "value_impact_per_share": 8.6,
+                                  "verify_condition": "毛利率 [E:fin.json]"}])
+_r = _cs315(_d8b)
+check("S12b 块缺失 + key_differences 非空 → 报错（差异表必须挂在完整块下）",
+      _r.returncode == 1 and "S12b" in _r.stdout, _r.stdout[-200:])
+# 9：S8 cap=排除 与 S12 cap=观察等价格 同时命中 → 取更严者（min 序数）
+_d9 = _scen315(variant_perception=dict(VP_FULL, market_view=""),
+               value_trap={"catalyst": "特别分红 [E:p3.md]",
+                           "catalyst_deadline": "2028-12-31", "verdict_cap": "排除"})
+with tempfile.TemporaryDirectory() as _td316:
+    _fp316 = os.path.join(_td316, "s.json")
+    _mp316 = os.path.join(_td316, "m.json")
+    json.dump(_d9, open(_fp316, "w", encoding="utf-8"), ensure_ascii=False)
+    json.dump(WB_METRICS, open(_mp316, "w", encoding="utf-8"))
+    _, _errs316, _warns316, _info316 = cs.check(_fp316, _mp316)
+    check("S12+S8 双 cap 合并取更严者（排除 0 < 观察 2）",
+          _info316.get("verdict_cap_effective", {}).get("cap") == "排除"
+          and _info316.get("verdict_cap_effective", {}).get("source") == "value_trap",
+          str(_info316.get("verdict_cap_effective")))
+    check("S12+S8 双 cap：告警码双触发且无 unmapped",
+          "S8_VALUE_TRAP" in " ".join(cs.derive_codes(_errs316, _warns316, _info316)[0])
+          and "VARIANT_PERCEPTION_INCOMPLETE_CAP" in
+          " ".join(cs.derive_codes(_errs316, _warns316, _info316)[0]))
+# --strict-variant：硬拒绝开关（回测批次按需启用）
+_r = _cs315(_scen315(variant_perception=dict(VP_FULL, market_view="")),
+            extra=["--strict-variant"])
+check("S12 --strict-variant 硬拒绝（缺字段 exit 1 而非降档放行）",
+      _r.returncode == 1 and "硬拒绝" in _r.stdout, _r.stdout[-200:])
+# 常量对齐：与 RULES_SNAPSHOT/PREREGISTER 同款批次语义
+check("S12 VARIANT_PERCEPTION_MIN_BATCH=3（与 RULES_SNAPSHOT/PREREGISTER 同款）",
+      cs.VARIANT_PERCEPTION_MIN_BATCH == RBA209.RULES_SNAPSHOT_MIN_BATCH
+      == PC.PREREGISTER_MIN_BATCH)
+
+# ---- lint-verdict 侧（回测口径：cap 生效时 verdict_ordinal 必须 ≤2）----
+_SNAP315 = {"skill_commit": "b" * 40, "skill_commit_short": "b" * 7, "dirty": False,
+            "missing": [], "thresholds": {
+                "discount_rate_default": 0.10, "pessimistic_hurdle_default": 0.0,
+                "mos_requirement": {"wide": 0.5, "narrow": 0.4}}}
+
+
+def _lint315(scen, batch, ordinal, final):
+    with tempfile.TemporaryDirectory() as td:
+        cd = os.path.join(td, "600000.SH_2026-06-30")
+        os.makedirs(os.path.join(cd, "data"))
+        json.dump(scen, open(os.path.join(cd, "data", "scenarios.json"), "w",
+                             encoding="utf-8"), ensure_ascii=False)
+        json.dump({"batch": batch}, open(os.path.join(cd, "meta.json"), "w"))
+        subprocess.run([sys.executable, os.path.join(SCRIPTS, "prepare_case.py"),
+                        "--preregister", cd], capture_output=True, text=True)
+        v = {"final_verdict": final, "verdict_ordinal": ordinal, "gate1": True,
+             "gate2": False, "codes": ["GATE1_FAIL"],
+             "codes_provenance": {"engine_derived": ["GATE1_FAIL"]},
+             "frozen_before_diff": True, "frozen_at": "2026-09-14",
+             "rules_snapshot": _SNAP315}
+        vp = os.path.join(cd, "verdict.json")
+        json.dump(v, open(vp, "w", encoding="utf-8"), ensure_ascii=False)
+        return subprocess.run([sys.executable, os.path.join(
+            SCRIPTS, "run_backtest_assertions.py"), "--lint-verdict", vp],
+            capture_output=True, text=True)
+
+
+_SCEN315 = _scen315(variant_perception=dict(VP_FULL, market_view=""))
+_l = _lint315(_SCEN315, 4, 4, "核心买入")
+check("lint：cap 生效而 verdict_ordinal=4 → 体检不过（REQ-P3-03）",
+      _l.returncode == 1 and "- 变异认知 cap 生效（REQ-P3-03）" in _l.stdout
+      and "verdict_ordinal=4" in _l.stdout, _l.stdout[-300:])
+_l = _lint315(_SCEN315, 4, 2, "观察等价格")
+check("lint：cap 生效且 ordinal=2 → REQ-P3-03 仅 advisory（降档放行语义）",
+      "⚠ 变异认知五字段不完整（REQ-P3-03）" in _l.stdout
+      and "- 变异认知" not in _l.stdout, _l.stdout[-300:])
+_l = _lint315(_scen315(), 4, 2, "观察等价格")
+check("lint：新批次缺块 → 体检不过并点名 schema 出处",
+      _l.returncode == 1 and "缺 variant_perception 块（REQ-P3-03" in _l.stdout,
+      _l.stdout[-300:])
+_l = _lint315(_scen315(), 2, 4, "核心买入")
+check("lint：legacy（batch 2）缺块且高档位 → REQ-P3-03 不触发（基线不动）",
+      _l.returncode == 0 and "REQ-P3-03" not in _l.stdout, _l.stdout[-200:])
+
+# ---- verify_report 侧（第三道闸：报告 = 底稿）----
+with tempfile.TemporaryDirectory() as _td317:
+    _dd317 = os.path.join(_td317, "case", "data")
+    os.makedirs(_dd317)
+    json.dump(_SCEN315, open(os.path.join(_dd317, "scenarios_T.json"), "w",
+                             encoding="utf-8"), ensure_ascii=False)
+    json.dump({"batch": 4}, open(os.path.join(_td317, "case", "meta.json"), "w"))
+
+    def _rpt315(tier, marker=False):
+        _m = ' data-verdict-cap="variant-perception"' if marker else ""
+        return ('<html><body><div class="report-header"><h1>T</h1></div>'
+                f'<div class="verdict-banner">结论档位：<b>{tier}</b></div>{_m}'
+                '<p>现价 <span class="vnum" data-src="scenarios_T.json" '
+                'data-path="price" data-fmt="num2">6.99</span></p></body></html>')
+
+    def _vr315(html_text):
+        fp = os.path.join(_td317, "r.html")
+        open(fp, "w", encoding="utf-8").write(html_text)
+        return subprocess.run([sys.executable, os.path.join(SCRIPTS, "verify_report.py"),
+                               fp, "--data-dir", _dd317], capture_output=True, text=True)
+
+    _r = _vr315(_rpt315("核心买入"))
+    check("verify_report：底稿 cap=观察而报告写核心买入 → FAIL（设计稿 §3.5 用例 10）",
+          _r.returncode == 1
+          and "档位上限为「观察等价格」，报告却声明正面档位" in _r.stdout
+          and "variant-perception" in _r.stdout, _r.stdout[-300:])
+    _r = _vr315(_rpt315("小仓位试探"))
+    check("verify_report：小仓位试探（≥3 档）同被拦（无 <b> 裸文本声明形态）",
+          "报告却声明正面档位" in _r.stdout, _r.stdout[-200:])
+    _r = _vr315(_rpt315("观察等价格", marker=True))
+    check("verify_report：档位=观察 + 首屏披露标记 → cap 两项检查不触发",
+          "verdict-cap" not in _r.stdout, _r.stdout[-200:])
+    _r = _vr315(_rpt315("观察等价格"))
+    check("verify_report：档位=观察但缺首屏披露标记 → FAIL（不得只写附录）",
+          "data-verdict-cap" in _r.stdout and "首屏" in _r.stdout, _r.stdout[-250:])
+
+# 验收演示（需求原文）：人为清空一个字段后，无法生成 ≥3 档报告——
+# 三道闸各拦一层：S12 锁 cap、lint 拒 ordinal≥3、verify_report 拒报告档位声明。
+check("验收口径对齐：VARIANT_CAP=观察等价格 且 ordinal=2（≥3 即小仓位试探/核心买入）",
+      cs.VARIANT_CAP == "观察等价格"
+      and AC.VERDICT_ORDINAL["观察等价格"] == 2 < AC.VERDICT_ORDINAL["小仓位试探"])
+_SKILL315 = open(os.path.join(ROOT, "SKILL.md"), encoding="utf-8").read()
+check("SKILL.md Phase 4.5 已接入五字段机器门禁指针（REQ-P3-03）",
+      "variant_perception" in _SKILL315 and "REQ-P3-03" in _SKILL315
+      and "check_scenarios.py" in _SKILL315)
+
+# ── P2 旁路修复（2026-09-14 审查）：variant_perception 的 cap 判定状态进预注册摘要 ──
+# 攻击链（修复前）：五字段留空被 cap → 揭示前补齐解锁 cap → 块不进 digest →
+# post_hoc_changed 不触发 → 无痕抬升档位。修复：variant_perception_gate（判定
+# 状态：ok/missing/no_anchor/no_evidence + check_by 全值）条件进冻结集。
+_VP315 = {"market_view": "现价隐含 10 年收入 CAGR 11.3% [E:c.json]",
+          "my_view": "我方基准 6.5%：单店产出连续 3 季转负 [E:d.json]",
+          "why_market_wrong": "市场把提价周期当常态 [E:p3.md]",
+          "verification": "2026 年报分部收入增速 [E:fin.json]",
+          "check_by": "2027-04-30"}
+
+def _digest_vp315(vp_block):
+    with open(os.path.join(ROOT, "backtest", "601088.SH_2015-12-31", "data",
+                           "scenarios.json"), encoding="utf-8") as _f315:
+        _base315 = dict(json.load(_f315))
+    if vp_block is None:
+        _base315.pop("variant_perception", None)
+    else:
+        _base315["variant_perception"] = vp_block
+    return PC.preregistration_digest(PC.preregistration_parameters(_base315))
+
+_d315a = _digest_vp315(_VP315)
+check("P2 修复·措辞编辑不触发摘要变化（rationale 修改自由保留）",
+      _d315a == _digest_vp315(dict(_VP315, why_market_wrong="市场把提价周期视作常态 [E:p3.md]")))
+check("P2 修复·空→填触发摘要变化（补齐五字段解锁 cap 的旁路已堵死）",
+      _d315a != _digest_vp315(dict(_VP315, market_view="")))
+check("P2 修复·check_by 改期触发摘要变化（验证时点是决策输入）",
+      _d315a != _digest_vp315(dict(_VP315, check_by="2028-04-30")))
+check("P2 修复·去 [E:] 证据指针触发摘要变化（no_evidence 状态入冻结）",
+      _d315a != _digest_vp315(dict(_VP315, verification="2026 年报分部收入增速（见年报）")))
+check("P2 修复·块从无到有触发摘要变化（注册时无块→揭示前加块亦须亮牌）",
+      _d315a != _digest_vp315(None))
+check("P2 修复·gate 状态分类与 S12 判定同源（cs.variant_perception_gate 三态语义）",
+      cs.variant_perception_gate({"variant_perception": dict(_VP315, market_view="")})
+      ["field_status"]["market_view"] == "missing"
+      and cs.variant_perception_gate({"variant_perception": dict(_VP315, market_view="便宜")})
+      ["field_status"]["market_view"] == "no_anchor"
+      and cs.variant_perception_gate({}) == {"present": False})
 
 print("== 15 脚本接入完整性（元测试） ==")
 # 教训：阶段二写了 check_market_snapshot.py、跑通了、验证它能逮住海控存量错误，

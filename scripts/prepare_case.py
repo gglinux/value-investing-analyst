@@ -57,6 +57,12 @@ from pathlib import Path
 REPO_ROOT = Path(__file__).resolve().parent.parent
 SEALED_DIR = REPO_ROOT / "backtest" / "sealed_answers"
 
+# REQ-P3-03 P2 旁路修复：variant_perception 的 cap 判定状态冻结（唯一实现
+# 在 check_scenarios，防回测侧与底稿侧口径漂移——与 variant_perception_issues
+# 三处共用同一哲学）。check_scenarios 不 import 本模块，无循环依赖。
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from check_scenarios import variant_perception_gate  # noqa: E402
+
 # ANSWERS.md 别名 → 案例目录名（目录名 = <ticker>_<replay_date>，与 PROMPT 案例表一致）
 ALIAS_TO_CASE = {
     "招行": "600036.SH_2014-12-31",
@@ -469,6 +475,12 @@ PREREG_SPEC_VERSION = 1
 # canonical 参数集抽取键（scenarios.json 中分析师自定的决策输入）。
 # 只冻「数字与枚举」——method_note / probability_evidence 等 rationale 文本
 # 不进摘要：措辞改动不改变结论，放进摘要会让哈希对无害编辑脆弱。
+# 例外（REQ-P3-03 P2 旁路修复）：variant_perception 是门禁输入而非叙述——
+# 它直接决定 verdict cap（观察等价格），不冻的话「被 cap 后补齐五字段」
+# 无痕解锁且不触发 post_hoc_changed。但不冻原文、只冻 variant_perception_gate
+# 的判定状态（ok/missing/no_anchor/no_evidence + check_by 全值）：措辞编辑
+# 自由保留，任何改变 cap 判定的编辑必被摘要抓住。条件加键（无块不进摘要）
+# 同时使「注册时无块→揭示前加块」也触发 digest 变——块从无到有即决策变更。
 _PREREG_TOP_KEYS = ("moat", "moat_score", "discount_rate", "hold_years",
                     "intrinsic_value_growth", "industry")
 _PREREG_BLOCK_KEYS = ("discount_rate_derivation", "probability_derivation",
@@ -493,6 +505,8 @@ def preregistration_parameters(sc: dict) -> dict:
     for k in _PREREG_BLOCK_KEYS:
         if sc.get(k) is not None:
             out[k] = sc[k]
+    if sc.get("variant_perception") is not None:
+        out["variant_perception_gate"] = variant_perception_gate(sc)
     return out
 
 

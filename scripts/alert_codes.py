@@ -388,6 +388,22 @@ ALERTS = {
     "DIST_EQUITY_WIPED_OUT": (
         "dist", "清算口径股东所得为负——清算后一无所有，任何价格都没有"
         "安全边际（有限责任保护的是『不用再掏钱』，不是『还有价值』）"),
+    # ── REQ-P3-03 Phase 4.5 变异认知硬化（2026-09-14）──
+    # 「答不出就只能观察」从文档纪律进机器门禁：variant_perception 五字段
+    # 任一缺失/非法 ⇒ 档位上限锁定「观察等价格」(ordinal 2)。cap 是上限
+    # 不是错误——报告仍可交付，但 ≥3 档报告必须先补齐五字段。三处校验点
+    # （check_scenarios S12 / lint-verdict / verify_report）共用
+    # variant_perception_issues() 唯一实现。
+    "VARIANT_PERCEPTION_INCOMPLETE_CAP": (
+        "variant", "变异认知五字段不完整（market_view 缺量化锚 / my_view 缺 / "
+        "why_market_wrong 无 [E:] / verification 无 [E:] / check_by 非 ISO 日期"
+        "或不晚于分析日，键不存在/null/空串/纯空白一律视为缺）——档位上限锁定"
+        "「观察等价格」：答不出「我和市场的分歧在哪、为什么我对」，估值再便宜"
+        "也只是市场知道些我不知道的事（REQ-P3-03）"),
+    "VARIANT_PERCEPTION_CONFLICT": (
+        "variant", "key_differences 非空但 variant_perception 缺失或不完整——"
+        "两表打架属结构性错误（价格反解差异表必须挂在完整的变异认知块之下，"
+        "AST-021 §4.3），报错而非降档"),
 }
 
 

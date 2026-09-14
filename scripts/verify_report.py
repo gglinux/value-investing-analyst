@@ -42,6 +42,10 @@ import os
 import re
 import sys
 
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from check_scenarios import (VARIANT_PERCEPTION_MIN_BATCH,  # noqa: E402
+                             variant_perception_issues)
+
 # 护城河评级与闸门一安全边际门槛的映射（references/moat-framework.md 第 33 行）。
 # 两道闸门的门槛直接挂在这个评级词上，故报告正文的用词必须可与底稿机器比对。
 MOAT_WORDS = ("wide", "narrow", "none")
@@ -469,6 +473,51 @@ def main():
                                    "报告必须显式披露「该触发器实际可达性低」", ""))
             else:
                 print("提示：快照缺 52 周区间数值字段，触发价可达性仅检查声明存在性。")
+
+    # ---- 变异认知 cap 与报告档位一致性（REQ-P3-03，Phase 4.5 门禁第三道闸）----
+    # 前两道守底稿（check_scenarios S12）与 verdict（lint-verdict ordinal ≤2），
+    # 这里守「报告 = 底稿」：底稿 cap=观察而报告首屏写核心买入/小仓位试探的
+    # 文件不允许交付。cap 生效的完整报告还必须首屏披露降档原因（与核验强度
+    # 徽章的「与结论同屏」纪律同源，不得只写附录）。五字段判定复用
+    # check_scenarios 的唯一实现，两处口径不漂移。legacy（batch<3 且无块）
+    # 零新增检查——12 回测报告与存量实盘报告基线不动。
+    if scen_files:
+        try:
+            with open(scen_files[0], "r", encoding="utf-8") as f:
+                _sd12 = json.load(f)
+        except (OSError, ValueError):
+            _sd12 = {}
+        if _sd12:
+            _batch12 = 0
+            for _cand in (os.path.dirname(os.path.abspath(args.data_dir)),
+                          os.path.dirname(os.path.dirname(os.path.abspath(args.data_dir)))):
+                _mp12 = os.path.join(_cand, "meta.json")
+                if os.path.exists(_mp12):
+                    try:
+                        with open(_mp12, encoding="utf-8") as _f:
+                            _b12 = json.load(_f).get("batch")
+                        _batch12 = int(_b12) if _b12 is not None else 0
+                    except (OSError, ValueError, TypeError):
+                        _batch12 = 0
+                    break
+            _vpi12, _present12 = variant_perception_issues(_sd12)
+            _cap12 = bool(_vpi12) or (not _present12
+                                      and _batch12 >= VARIANT_PERCEPTION_MIN_BATCH)
+            if _cap12 and is_full_report:
+                _tier_hi = re.search(
+                    r"(?:最终档位|结论档位)[：:][^。]{0,120}?<b[^>]*>\s*(?:小仓位试探|核心买入)\s*</b>"
+                    r"|(?:最终档位|结论档位)[：:]\s*(?:小仓位试探|核心买入)", html)
+                if _tier_hi:
+                    failed.append(("scenarios.json", "verdict-cap:variant",
+                                   "底稿变异认知 cap 生效（五字段不完整或新批次缺块，"
+                                   "REQ-P3-03），档位上限为「观察等价格」，报告却声明正面"
+                                   "档位——任何 ≥3 档报告都必然包含完整的变异认知，"
+                                   "先补齐五字段再出档", _tier_hi.group(0)[:60]))
+                if 'data-verdict-cap="variant-perception"' not in html:
+                    failed.append(("report", "verdict-cap:variant",
+                                   "变异认知 cap 生效的完整报告必须在首屏披露降档原因"
+                                   "（加 data-verdict-cap=\"variant-perception\" 标记并写明"
+                                   "「因变异认知不完整而降档」，不得只写附录）", ""))
 
     # ---- 数据附录门禁（REQ-P0-07 源冲突差异表 / REQ-P0-06 重述与时点豁免披露）----
     # data-sourcing.md 第九节承诺"缺差异表降 B 级"，此前 verify_report 无任何对应检查。

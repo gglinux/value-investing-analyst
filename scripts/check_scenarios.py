@@ -79,6 +79,13 @@ S10 乐观情景增速基率上限（REQ-P1-05，登记才校验）：`industry`
 S11 尾部风险块结构（REQ-P1-05，块存在才校验）：`tail_risk_derivation` 的
    rationale_ref [E:] / forensic_score / arithmetic_coverage / governance
    词表 / loss_tail ∈[-1,0)——非法结构在底稿关卡即拦，不等引擎崩。
+S12 变异认知硬化（REQ-P3-03，Phase 4.5 门禁层）：`variant_perception` 五字段
+   （market_view/my_view/why_market_wrong/verification/check_by）任一缺失或
+   非法 ⇒ 档位上限锁定「观察等价格」(ordinal 2)——cap 是上限不是错误，报告
+   仍可交付（「答不出也是合法结论，只是只配观察」）；`--strict-variant`
+   可切换为硬拒绝。第 3 批起（VARIANT_PERCEPTION_MIN_BATCH）缺块即报错。
+   多 cap 源（S8 价值陷阱 / S12 变异认知）取更严者（min 序数）。
+   与 lint-verdict、verify_report 共用 variant_perception_issues()（唯一实现）。
 
 ═══ 输入格式（data/scenarios.json）═══
 {
@@ -117,8 +124,24 @@ S11 尾部风险块结构（REQ-P1-05，块存在才校验）：`tail_risk_deriv
   ],
   "value_trap": {                        # 仅在 S8 触发时必填
     "catalyst": "…", "catalyst_deadline": "2027-12-31", "verdict_cap": "小仓位试探"
+  },
+  "variant_perception": {                # S12（REQ-P3-03）：Phase 4.5 变异认知五字段
+    "market_view": "现价隐含要求未来 10 年收入 CAGR 11.3%；卖方一致预期 2027 收入增速 9.8% [E:consensus.json]",
+    "my_view": "我方基准 6.5%：单店产出已连续 3 季同比转负 [E:business_drivers.json]",
+    "why_market_wrong": "市场把 2024 年的提价周期当成常态；渠道库存数据显示动销已回落 [E:phase3.md]",
+    "verification": "2026 年报分部收入增速 + 存货周转天数；连续两期低于 8% 即坐实我方判断 [E:financials.json]",
+    "check_by": "2027-04-30"              # ISO 日期，且须晚于分析日
   }
 }
+五字段规则（S12 校验依据，三处校验点共用同一实现 variant_perception_issues）：
+  market_view 必须含至少一个量化锚（现价隐含 X% 或 consensus 数值，纯定性不满足）；
+  my_view 非空；why_market_wrong / verification 必须含 [E:] 证据指针；
+  check_by 为 ISO 日期 YYYY-MM-DD 且晚于分析日（分析日取 scenarios 的
+  as_of_date/analysis_date 或快照 fetched_at 中的 ISO 日期，均无则只查格式）。
+  「缺」的口径：键不存在 / null / 空串 / 纯空白一律视为缺。
+  任一不满足 ⇒ verdict_cap=观察等价格（ordinal 2），披露码
+  VARIANT_PERCEPTION_INCOMPLETE_CAP；key_differences 非空而五字段不完整
+  ⇒ 报错 VARIANT_PERCEPTION_CONFLICT（两表打架是结构性错误，不是「答不出」）。
 
 用法：
     python3 check_scenarios.py data/scenarios.json [--metrics data/metrics_X.json] \
@@ -126,13 +149,14 @@ S11 尾部风险块结构（REQ-P1-05，块存在才校验）：`tail_risk_deriv
 退出码：0 通过（可含警告）；1 存在错误，禁止进入 Phase 4.5；3 脚本自身异常。
 """
 import argparse
+import datetime
 import json
 import os
 import re
 import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from alert_codes import unknown_codes  # 告警码注册表：唯一事实源
+from alert_codes import VERDICT_ORDINAL, unknown_codes  # 告警码注册表：唯一事实源
 
 # S 前缀 -> 注册表代号。长前缀必须排在短前缀之前（S2b 先于 S2、S7b 先于 S7），
 # derive_codes 按本列表顺序做首次匹配。
@@ -141,7 +165,9 @@ _S_PREFIX_TO_CODE = [
     ("S2c", "S2C_WORST_YEAR_NOT_STRESS"),
     ("S2d", "S2D_TROUGH_PB_BASIS"),
     ("S2e", "S_DISCOUNT_RATE_FLOOR"),
-    # S10/S11 必须排在 S1 之前（前缀首次匹配，"S10-IND" 会被 "S1" 吞掉）
+    # S10/S11/S12 必须排在 S1 之前（前缀首次匹配，"S10-IND" 会被 "S1" 吞掉）
+    ("S12b", "VARIANT_PERCEPTION_CONFLICT"),
+    ("S12", "VARIANT_PERCEPTION_INCOMPLETE_CAP"),
     ("S10-IND", "BASERATE_INDUSTRY_UNKNOWN"),
     ("S10-OVR", "BASERATE_OPTIMISTIC_P80_OVERRIDE"),
     ("S10", "BASERATE_OPTIMISTIC_ABOVE_P80"),
@@ -206,6 +232,149 @@ VALUE_TRAP_MOS = 0.50          # S8：安全边际触发线
 VALUE_TRAP_DECLINE_YEARS = 3   # S8：连续负增长年数
 TRAP_VERDICT_CAPS = {"小仓位试探", "排除"}
 E_PTR = re.compile(r"\[E:[^\]]+\]")
+
+# ── S12 变异认知硬化（REQ-P3-03，Phase 4.5 门禁层）──
+# 「答不出就只能观察」从 SKILL.md 纪律进机器门禁。cap 语义对齐 S8：上限而非错误。
+VARIANT_PERCEPTION_MIN_BATCH = 3   # 第 3 批起（与 RULES_SNAPSHOT/PREREGISTER 同款
+                                   # 批次语义）scenarios 必须登记 variant_perception 块，
+                                   # 否则新案例干脆不写块就绕过全部校验
+VARIANT_FIELDS = ("market_view", "my_view", "why_market_wrong",
+                  "verification", "check_by")
+VARIANT_CAP = "观察等价格"           # 五字段不完整时的档位上限（ordinal 2）
+
+
+def _field_missing(v):
+    """「缺」的判定口径（REQ-P3-03 三处校验必须一致）：键不存在 / null /
+    空字符串 / 纯空白四种状态一律视为缺——只判 None 的话一个 "" 就能绕过
+    （与 AST-022「未知字段显式标注，不以空白绕过关键要求」同构）。"""
+    return v is None or (isinstance(v, str) and not v.strip())
+
+
+def case_batch(scenarios_path):
+    """从 scenarios 路径回溯案例 meta.json 的 batch（backtest/<case>/data/…）。
+
+    找不到 meta.json 或无 batch 字段 → 0（legacy：只做「块存在才校验」第一层，
+    实盘 cases/ 无 meta.json，同属 legacy，基线不动）。
+    """
+    p = os.path.abspath(scenarios_path)
+    for cand in (os.path.dirname(p), os.path.dirname(os.path.dirname(p))):
+        mp = os.path.join(cand, "meta.json")
+        if os.path.exists(mp):
+            try:
+                with open(mp, "r", encoding="utf-8") as f:
+                    b = json.load(f).get("batch")
+                return int(b) if b is not None else 0
+            except (OSError, ValueError, TypeError):
+                return 0
+    return 0
+
+
+def _analysis_date(d, snapshot_path=None):
+    """分析日的机器可判来源：scenarios 的 as_of_date/analysis_date 字段，
+    或行情快照 fetched_at/date 中的首个 ISO 日期。均不可得 → None（只查格式）。"""
+    for k in ("as_of_date", "analysis_date", "as_of"):
+        v = d.get(k)
+        if isinstance(v, str):
+            m = re.search(r"\d{4}-\d{2}-\d{2}", v)
+            if m:
+                try:
+                    return datetime.date.fromisoformat(m.group())
+                except ValueError:
+                    pass
+    if snapshot_path and os.path.exists(snapshot_path):
+        try:
+            with open(snapshot_path, "r", encoding="utf-8") as f:
+                s = json.load(f)
+            for k in ("fetched_at", "date", "as_of_date"):
+                v = s.get(k)
+                if isinstance(v, str):
+                    m = re.search(r"\d{4}-\d{2}-\d{2}", v)
+                    if m:
+                        try:
+                            return datetime.date.fromisoformat(m.group())
+                        except ValueError:
+                            pass
+        except (OSError, ValueError):
+            pass
+    return None
+
+
+def variant_perception_issues(d, analysis_date=None):
+    """REQ-P3-03 五字段校验的唯一实现（check_scenarios S12 / lint-verdict /
+    verify_report 三处共用，防止回测侧与底稿侧口径漂移）。
+
+    返回 (issues, present)：
+      present=False —— 块整体缺失（legacy 合法；新批次非法，由调用方按批次裁决）
+      issues 非空  —— 五字段不完整/非法 ⇒ 档位上限锁定「观察等价格」
+    """
+    vp = d.get("variant_perception")
+    if vp is None:
+        return [], False
+    if not isinstance(vp, dict):
+        return ["variant_perception 须为对象（五字段结构块，schema 见 "
+                "check_scenarios.py 头 docstring）"], True
+    issues = []
+    for f in VARIANT_FIELDS:
+        if _field_missing(vp.get(f)):
+            issues.append(f"缺字段 `{f}`")
+    mv = vp.get("market_view")
+    if isinstance(mv, str) and mv.strip() and not re.search(r"\d", mv):
+        issues.append("`market_view` 缺量化锚（须含现价隐含 X% 或 consensus 数值，"
+                      "纯定性描述不满足）")
+    for f in ("why_market_wrong", "verification"):
+        v = vp.get(f)
+        if isinstance(v, str) and v.strip() and not E_PTR.search(v):
+            issues.append(f"`{f}` 未挂 [E:] 证据指针")
+    cb = vp.get("check_by")
+    if isinstance(cb, str) and cb.strip():
+        m = re.fullmatch(r"(\d{4})-(\d{2})-(\d{2})", cb.strip())
+        if not m:
+            issues.append(f"`check_by` = {cb!r} 非 ISO 日期 YYYY-MM-DD")
+        else:
+            try:
+                cbd = datetime.date(int(m.group(1)), int(m.group(2)), int(m.group(3)))
+            except ValueError:
+                issues.append(f"`check_by` = {cb!r} 非法日期")
+            else:
+                if analysis_date is not None and cbd <= analysis_date:
+                    issues.append(f"`check_by` {cb} 须晚于分析日 "
+                                  f"{analysis_date.isoformat()}")
+    return issues, True
+
+
+def variant_perception_gate(d):
+    """REQ-P3-03 预注册冻结面：S12 档位 cap 的**全部机器判定输入**（P2 旁路修复）。
+
+    为什么文本字段不能整块冻结、又不能完全不冻（2026-09-14 审查裁决）：
+    `variant_perception` 直接决定 verdict cap（观察等价格），是**门禁输入**而非
+    叙述——与 method_note 性质不同。完全不进 digest 的话，五字段不完整被 cap
+    后，揭示前补齐字段即可解锁 cap 且不触发 post_hoc_changed（绕过 P2-09
+    靶在箭前，无痕抬升档位）。整块冻结原文又违背「rationale 措辞不冻结」
+    哲学（无害编辑会让哈希脆弱）。
+    解法：只冻**判定状态**——每字段 ok/missing/no_anchor/no_evidence 四态 +
+    check_by 全值（ISO 日期是数字性质决策输入，改期即决策变更）。
+    措辞编辑不改状态 → digest 不变；任何改变 cap 判定的编辑 → digest 变
+    → prereg 比对失败，必须亮牌 post_hoc_changed。
+    「晚于分析日」是相对判定（依赖外部 analysis_date），不入 gate——但改
+    check_by 必然改全值，已被覆盖。
+    """
+    vp = d.get("variant_perception")
+    if vp is None:
+        return {"present": False}
+    if not isinstance(vp, dict):
+        return {"present": True, "malformed": True}
+    status = {}
+    for f in VARIANT_FIELDS:
+        status[f] = "missing" if _field_missing(vp.get(f)) else "ok"
+    if status["market_view"] == "ok" and not re.search(r"\d", vp["market_view"]):
+        status["market_view"] = "no_anchor"          # 无量化锚 → 同样触发 cap
+    for f in ("why_market_wrong", "verification"):
+        if status[f] == "ok" and not E_PTR.search(vp[f]):
+            status[f] = "no_evidence"                # 未挂 [E:] → 同样触发 cap
+    cb = vp.get("check_by")
+    return {"present": True,
+            "field_status": status,
+            "check_by": cb.strip() if isinstance(cb, str) else cb}
 
 
 # ═══ S2b 悲观值算术重算 ═══
@@ -394,7 +563,7 @@ def revenue_peak_stagnation(metrics, min_drawdown=0.10, min_years_since_peak=3):
     }
 
 
-def check(path, metrics_path=None, snapshot_path=None):
+def check(path, metrics_path=None, snapshot_path=None, strict_variant=False):
     errors, warnings, info = [], [], {}
     with open(path, "r", encoding="utf-8") as f:
         d = json.load(f)
@@ -1019,6 +1188,72 @@ def check(path, metrics_path=None, snapshot_path=None):
                 errors.append(
                     f"S11 tail_risk_derivation.loss_tail `{_lt}` 须为 [-1, 0) 的"
                     "年化 IRR（-1=股权归零；缺省 -1.0）")
+
+    # ---- S12 变异认知硬化（REQ-P3-03；Phase 4.5 门禁层，cap=上限而非错误）----
+    # 纪律原文「答不出就只能观察」从文档进代码：variant_perception 五字段任一
+    # 缺失或非法 ⇒ 档位上限锁定「观察等价格」(ordinal 2)。默认降档放行——
+    # 「答不出」是体面的合法结论（对齐 SKILL.md 核心纪律第 3 条「敢说不」），
+    # 硬拒绝反而会诱导执行者为过闸凑字段；--strict-variant 可切换为硬拒绝。
+    # 存量兼容两层：块存在才校验（legacy 缺块零新增消息，12 回测案 + 10 实盘
+    # cases 基线不动）+ 第 VARIANT_PERCEPTION_MIN_BATCH 批起缺块即报错（否则
+    # 新案例干脆不写块就绕过全部校验）。
+    _batch = case_batch(path)
+    info["case_batch"] = _batch
+    _adate = _analysis_date(d, snapshot_path)
+    if _adate is not None:
+        info["analysis_date"] = _adate.isoformat()
+    _vp_issues, _vp_present = variant_perception_issues(d, _adate)
+    info["variant_perception_issues"] = _vp_issues
+    _kd = d.get("key_differences")
+    _kd_nonempty = isinstance(_kd, list) and len(_kd) > 0
+    if not _vp_present:
+        if _batch >= VARIANT_PERCEPTION_MIN_BATCH:
+            errors.append(
+                f"S12 第 {_batch} 批案例（≥{VARIANT_PERCEPTION_MIN_BATCH}）缺 "
+                f"`variant_perception` 块——变异认知是主动投资唯一的超额收益来源，"
+                f"答不出五字段（市场共识/我的不同观点/为什么市场错/验证方式/验证时点）"
+                f"就只能给「观察等价格」。schema 见本脚本头 docstring")
+        elif _kd_nonempty:
+            errors.append(
+                "S12b `key_differences` 非空但 `variant_perception` 块缺失——两表"
+                "打架属结构性错误（价格反解差异表必须挂在完整的变异认知块之下，"
+                "AST-021 §4.3），报错而非降档")
+    elif _vp_issues:
+        if _kd_nonempty:
+            errors.append(
+                "S12b `key_differences` 非空但 variant_perception 五字段不完整（"
+                + "；".join(_vp_issues) + "）——两表打架属结构性错误（差异表必须挂在"
+                "完整的变异认知块之下，AST-021 §4.3），报错而非降档")
+        else:
+            _msg = ("S12 variant_perception 五字段不完整：" + "；".join(_vp_issues)
+                    + "——档位上限锁定「观察等价格」(ordinal 2)。答不出「我和市场"
+                    "的分歧在哪、为什么我对」，即使估值显示便宜，也只能是市场知道"
+                    "某些我不知道的事；补齐字段即可解除 cap")
+            if strict_variant:
+                errors.append(_msg + "（--strict-variant 硬拒绝模式：禁止进入 Phase 4.5）")
+            else:
+                warnings.append(_msg)
+    else:
+        info["variant_perception_complete"] = True
+    # cap 生效判定 + 多 cap 源合并：取更严者（min 序数）。S8 的 cap 可为「排除」(0)、
+    # 本次为「观察等价格」(2)，二者同时命中时若不定序就会依赖代码书写顺序——
+    # 序数越小越严，min 是唯一无歧义的合并规则。
+    _cap_applies = bool(_vp_issues) or (not _vp_present
+                                        and _batch >= VARIANT_PERCEPTION_MIN_BATCH)
+    if _cap_applies:
+        info["variant_perception_cap"] = VARIANT_CAP
+    if _cap_applies or info.get("value_trap_triggered"):
+        _caps = []
+        if _cap_applies:
+            _caps.append({"source": "variant_perception", "cap": VARIANT_CAP,
+                          "ordinal": VERDICT_ORDINAL[VARIANT_CAP]})
+        _vt_cap = ((d.get("value_trap") or {}).get("verdict_cap"))
+        if info.get("value_trap_triggered") and _vt_cap in TRAP_VERDICT_CAPS:
+            _caps.append({"source": "value_trap", "cap": _vt_cap,
+                          "ordinal": VERDICT_ORDINAL[_vt_cap]})
+        if _caps:
+            info["verdict_cap_sources"] = _caps
+            info["verdict_cap_effective"] = min(_caps, key=lambda c: c["ordinal"])
     return d, errors, warnings, info
 
 
@@ -1054,11 +1289,15 @@ def main():
     ap.add_argument("scenarios", help="data/scenarios.json 路径")
     ap.add_argument("--metrics", help="data/metrics_<公司>.json，用于自动核验收入连续下滑年数")
     ap.add_argument("--snapshot", help="data/market_snapshot.json，用于股息率量纲与同源交叉核对（S9）")
+    ap.add_argument("--strict-variant", action="store_true",
+                    help="REQ-P3-03：variant_perception 五字段不完整时硬拒绝（默认降档放行："
+                         "档位上限锁定「观察等价格」，回测批次可按需启用）")
     ap.add_argument("-o", "--output", help="审计结果 JSON 输出路径")
     args = ap.parse_args()
 
     try:
-        d, errors, warnings, info = check(args.scenarios, args.metrics, args.snapshot)
+        d, errors, warnings, info = check(args.scenarios, args.metrics,
+                                          args.snapshot, args.strict_variant)
     except Exception as e:  # noqa: BLE001 — 脚本自身异常必须与"数据不合格"区分
         print(f"[EXCEPTION] 校验器自身异常：{type(e).__name__}: {e}")
         print("退出码 3 绝不可当作「已校验」或「数据不合格」 —— 那是脚本 bug，修脚本后重跑。")
@@ -1074,6 +1313,12 @@ def main():
         print(f"  悲观方法 {info.get('bear_method')} / 压力项 {info.get('bear_stressed')}")
     if info.get("value_trap_triggered"):
         print("  🔴 价值陷阱闸门已触发：" + "；".join(info.get("shrinking_reasons", [])))
+    if info.get("verdict_cap_effective"):
+        _e = info["verdict_cap_effective"]
+        print(f"  🔴 档位上限（cap）：{_e['cap']}（来源 {_e['source']}；多 cap 源取更严者）")
+        if _e["source"] == "variant_perception":
+            print("      REQ-P3-03：报告首屏必须披露「因变异认知不完整而降档」"
+                  "（data-verdict-cap=\"variant-perception\"），不得只写附录")
     for w in warnings:
         print(f"  [WARN] {w}")
     for e in errors:
