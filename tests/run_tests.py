@@ -3906,6 +3906,205 @@ check("G PROMPT 已写入尾部风险纪律段（第四批起强制）",
       and "BASERATE_OPTIMISTIC_ABOVE_P80" in _prompt105)
 
 # ═══════════════════════════════════════════════════════════════════
+print("== 14.12 REQ-P1-07 缓慢增长与转困境两卡补齐 ==")
+import reverse_dcf as _rd107  # noqa: E402
+import check_scenarios as _cs107  # noqa: E402
+import prepare_case as _pc107  # noqa: E402
+from alert_codes import unknown_codes as _uc107  # noqa: E402
+
+_E = "[E:测试依据]"
+
+# A. 卡五数学：Gordon-DDM / 回本年数 / 利差
+_r = _rd107.dividend_anchor_value(
+    dps=1.0, dps_basis=_E, price=20.0, payout_fcf_ratio=1.5,
+    payout_basis=_E, rf_10y=0.03, div_growth=0.0,
+    discount_rate=0.10, continuity_years=10)
+check("A 卡五数学：g=0 时 DDM 价值 = DPS/r = 10.0",
+      abs(_r["value_per_share"] - 10.0) < 1e-12)
+check("A 卡五数学：静态股息率 5%、回本 20 年、利差 +2%",
+      abs(_r["static_dividend_yield"] - 0.05) < 1e-12
+      and abs(_r["payback_years"] - 20.0) < 1e-12
+      and abs(_r["spread_vs_rf"] - 0.02) < 1e-12)
+_r = _rd107.dividend_anchor_value(
+    dps=1.0, dps_basis=_E, price=20.0, payout_fcf_ratio=1.5,
+    payout_basis=_E, rf_10y=0.03, div_growth=0.01)
+check("A 卡五数学：g=1% 时价值 = 1.01/0.09 ≈ 11.22",
+      abs(_r["value_per_share"] - 1.01 / 0.09) < 1e-12)
+
+# B. 卡五门禁：覆盖/利差/连续性
+_r = _rd107.dividend_anchor_value(
+    dps=1.5, dps_basis=_E, price=20.0, payout_fcf_ratio=0.68,
+    payout_basis=_E, rf_10y=0.03, div_growth=0.01, continuity_years=20)
+check("B 覆盖<1：DIV_PAYOUT_UNCOVERED 且 verdict=observe（双汇形态）",
+      "DIV_PAYOUT_UNCOVERED" in _r["codes"] and _r["verdict"] == "observe")
+_r = _rd107.dividend_anchor_value(
+    dps=1.5, dps_basis=_E, price=20.0, payout_fcf_ratio=1.5,
+    payout_basis=_E, rf_10y=0.045, div_growth=0.01, continuity_years=20)
+check("B 利差不足：股息率 7.5%−rf 4.5%=3% 恰过线，4.6% 不过",
+      _r["spread_ok"] is True
+      and _rd107.dividend_anchor_value(
+          dps=1.5, dps_basis=_E, price=20.0, payout_fcf_ratio=1.5,
+          payout_basis=_E, rf_10y=0.046, div_growth=0.01)["codes"]
+      == ["DIV_SPREAD_INSUFFICIENT"])
+_r = _rd107.dividend_anchor_value(
+    dps=1.5, dps_basis=_E, price=20.0, payout_fcf_ratio=1.1,
+    payout_basis=_E, rf_10y=0.02, div_growth=0.0, continuity_years=3)
+check("B 双警示：覆盖 1.1 贴线 + 连续 3 年 <5 → BORDERLINE + CONTINUITY_SHORT",
+      _r["codes"] == ["DIV_PAYOUT_BORDERLINE", "DIV_CONTINUITY_SHORT"]
+      and _r["verdict"] == "bond_substitute_viable")
+try:
+    _rd107.dividend_anchor_value(dps=1.0, dps_basis="裸依据", price=20.0,
+                                 payout_fcf_ratio=1.5, payout_basis=_E, rf_10y=0.03)
+    _ok107 = False
+except SystemExit:
+    _ok107 = True
+check("B 入口硬拒：dps_basis 缺 [E:] → SystemExit（DIV_DPS_BASIS_MISSING）", _ok107)
+try:
+    _rd107.dividend_anchor_value(dps=1.0, dps_basis=_E, price=20.0,
+                                 payout_fcf_ratio=1.5, payout_basis=_E,
+                                 rf_10y=0.03, div_growth=0.05)
+    _ok107 = False
+except SystemExit:
+    _ok107 = True
+check("B 入口硬拒：股息增速 5% > 3% 上限 → SystemExit（判型错误）", _ok107)
+try:
+    _rd107.dividend_anchor_value(dps=1.0, dps_basis=_E, price=20.0,
+                                 payout_fcf_ratio=1.5, payout_basis=_E,
+                                 rf_10y=0.03, discount_rate=0.105, div_growth=0.10)
+    _ok107 = False
+except SystemExit:
+    _ok107 = True
+check("B 入口硬拒：r−g 间距护栏（r=10.5%/g=10%）→ SystemExit", _ok107)
+
+# C. 卡五端到端：双汇真实数据独立复现官方档位 2
+_dv = json.load(open(os.path.join(
+    ROOT, "backtest/000895.SZ_2019-06-30/data/dividend_channel_REQ-P1-07.json")))
+check("C 双汇演示：股息率 5.83%（annual_plan 口径真实值）",
+      abs(_dv["static_dividend_yield"] - 0.0583) < 5e-4)
+check("C 双汇演示：覆盖 0.68 → PAYOUT_UNCOVERED + SPREAD_INSUFFICIENT → observe",
+      _dv["verdict"] == "observe"
+      and "DIV_PAYOUT_UNCOVERED" in _dv["codes"]
+      and "DIV_SPREAD_INSUFFICIENT" in _dv["codes"])
+_ans = json.load(open(os.path.join(
+    ROOT, "backtest/000895.SZ_2019-06-30/answer.json")))
+check("C 双汇演示：通道 observe 与官方答案档位 {2}『观察等价格』一致",
+      _ans["expected_verdict_set"] == [2] and _dv["verdict"] == "observe")
+_ic = json.load(open(os.path.join(
+    ROOT, "backtest/000895.SZ_2019-06-30/data/dividend_intercept_REQ-P1-07.json")))
+check("C 合成拦截：股息率 8% 诱惑被覆盖 0.5 + 连续 3 年拆穿 → observe",
+      abs(_ic["static_dividend_yield"] - 0.08) < 1e-9
+      and "DIV_PAYOUT_UNCOVERED" in _ic["codes"]
+      and "DIV_CONTINUITY_SHORT" in _ic["codes"]
+      and _ic["verdict"] == "observe")
+
+# D. 卡六判别清单：周期/结构/不确定
+_d = _rd107.distress_verdict(2, "yes", "no", 0.05, "stable")
+check("D 神华形态：全行业+价格分位 5%+无替代+份额稳 → cyclical",
+      _d["verdict"] == "cyclical" and "全行业" in _d["key_reason"])
+_d = _rd107.distress_verdict(9, "no", "yes", 0.5, "losing")
+check("D 柯达形态：技术替代一票 → structured（单项即决）",
+      _d["verdict"] == "structured" and "技术替代" in _d["key_reason"])
+_d = _rd107.distress_verdict(6, "no", "no", 0.5, "stable")
+check("D 下滑 6 年但非替代非份额丢失 → indeterminate + CYCLE_EVIDENCE_MISSING",
+      _d["verdict"] == "indeterminate"
+      and _d["codes"] == ["DIST_CYCLE_EVIDENCE_MISSING"])
+_d = _rd107.distress_verdict(6, "unknown", "no", 0.1, "stable")
+check("D 行业性 unknown 不当周期证据用 → indeterminate（保守不对称）",
+      _d["verdict"] == "indeterminate")
+_d = _rd107.distress_verdict(7, "yes", "no", 0.05, "losing")
+check("D 份额丢失覆盖周期证据 → structured（自己的问题优先）",
+      _d["verdict"] == "structured")
+for _bad in [(3, "maybe", "no", 0.1, "stable"), (2, "yes", "no", 1.5, "stable"),
+             (2, "yes", "no", 0.1, "expanding")]:
+    try:
+        _rd107.distress_verdict(*_bad)
+        _ok107 = False
+    except SystemExit:
+        _ok107 = True
+    if not _ok107:
+        break
+check("D 输入校验：非法枚举/分位越界 → SystemExit", _ok107)
+
+# E. 卡六清算下限
+_l = _rd107.liquidation_floor(532596, 176969, 43502, 0.5, 19890)
+check("E 神华清算下限：(43502 + 489094×0.5 − 176969)/19890 = 5.585",
+      abs(_l["floor_per_share"] - (43502 + 489094 * 0.5 - 176969) / 19890) < 1e-9
+      and not _l["equity_wiped_out"])
+_l = _rd107.liquidation_floor(6239, 7314, 1624, 0.5, 268.9)
+check("E 柯达清算：残值 −3382.5 为负 → 按 0 封顶 + equity_wiped_out",
+      _l["equity_wiped_out"] and _l["floor_per_share"] == 0.0
+      and abs(_l["liquidation_residual"] + 3382.5) < 1e-9)
+_l = _rd107.liquidation_floor(1000, 200, 100, 1.0, 10)
+check("E 折价=1（全额变现）：下限 = (100+900−200)/10 = 80",
+      abs(_l["floor_per_share"] - 80.0) < 1e-12)
+try:
+    _rd107.liquidation_floor(1000, 200, 1500, 0.5, 10)
+    _ok107 = False
+except SystemExit:
+    _ok107 = True
+check("E 输入校验：现金 > 总资产（口径不一致）→ SystemExit", _ok107)
+
+# F. 卡六端到端：神华正向 + 柯达假阳性（均锚定官方答案）
+_sc = json.load(open(os.path.join(
+    ROOT, "backtest/601088.SH_2015-12-31/data/distress_channel_REQ-P1-07.json")))
+check("F 神华演示：cyclical + 清算下限 5.585 + 档位上限 normal_gates_apply",
+      _sc["discrimination"]["verdict"] == "cyclical"
+      and abs(_sc["liquidation_floor"]["floor_per_share"] - 5.585) < 1e-3
+      and _sc["gate_cap"] == "normal_gates_apply")
+_ans = json.load(open(os.path.join(
+    ROOT, "backtest/601088.SH_2015-12-31/answer.json")))
+check("F 神华演示：判别通过 + 悲观地板 < 现存悲观情景 10.43，与官方 {3,4} 相容",
+      _ans["expected_verdict_set"] == [3, 4]
+      and _sc["liquidation_floor"]["floor_per_share"] < 10.43)
+_ek = json.load(open(os.path.join(
+    ROOT, "backtest/EK_2011-06-30/data/distress_channel_REQ-P1-07.json")))
+check("F 柯达演示：structured + EQUITY_WIPED_OUT → 档位上限 excluded",
+      _ek["discrimination"]["verdict"] == "structured"
+      and "DIST_STRUCTURED_DECLINE" in _ek["codes"]
+      and "DIST_EQUITY_WIPED_OUT" in _ek["codes"]
+      and _ek["gate_cap"] == "excluded")
+_ans = json.load(open(os.path.join(ROOT, "backtest/EK_2011-06-30/answer.json")))
+check("F 柯达演示：通道排除与官方答案档位 {1} 一致（2012-01 破产实证）",
+      _ans["expected_verdict_set"] == [1] and _ek["gate_cap"] == "excluded")
+
+# G. 深度价值例外档（结构性也允许小仓位的唯一出口）
+_d = _rd107.distress_verdict(6, "no", "yes", 0.5, "losing")
+_l = _rd107.liquidation_floor(1000, 200, 100, 0.9, 10)
+# 手工组合：现价 50 < 清算下限 81×0.8=64.8 → deep_value
+_deep = (not _l["equity_wiped_out"]) and 50 < _l["floor_per_share"] * 0.8
+check("G 深度价值线：现价 50 < 清算下限×0.8=64.8 → 例外档信号为真", _deep)
+
+# H. 注册与文档接线
+check("H 十码注册完整",
+      _uc107(["DIV_DPS_BASIS_MISSING", "DIV_GROWTH_CAP_EXCEEDED",
+              "DIV_PAYOUT_UNCOVERED", "DIV_SPREAD_INSUFFICIENT",
+              "DIV_CONTINUITY_SHORT", "DIST_STRUCTURED_DECLINE",
+              "DIST_CYCLE_EVIDENCE_MISSING", "DIST_LIQUIDATION_UNANCHORED",
+              "DIST_BELOW_LIQUIDATION", "DIST_EQUITY_WIPED_OUT"]) == [])
+check("H liquidation_floor 进 check_scenarios 独立方法白名单",
+      "liquidation_floor" in _cs107.INDEPENDENT_METHODS)
+_th107 = _pc107.snapshot_rules()["thresholds"]
+check("H 快照注册：五常量进 rules_snapshot",
+      all(k in _th107 for k in ("div_growth_cap", "div_equity_premium_min",
+                                "dist_decline_years_structured",
+                                "dist_price_pctl_cyclical",
+                                "dist_deep_value_factor")))
+_docs107 = (open(os.path.join(ROOT, "references", "company-types.md"),
+                 encoding="utf-8").read()
+            + open(os.path.join(ROOT, "references", "valuation-guide.md"),
+                   encoding="utf-8").read()
+            + open(os.path.join(ROOT, "SKILL.md"), encoding="utf-8").read()
+            + open(os.path.join(ROOT, "backtest", "PROMPT.md"),
+                   encoding="utf-8").read())
+check("H 文档接线：卡五卡六正式化 + 方法树两行 + SKILL/PROMPT 纪律段",
+      "REQ-P1-07" in _docs107
+      and "reverse_dcf.py dividend" in _docs107
+      and "reverse_dcf.py distress" in _docs107
+      and "liquidation_floor" in _docs107
+      and "DIV_PAYOUT_UNCOVERED" in _docs107)
+check("H 占位已清除：『判据待案例锚』不再出现",
+      "占位——判据待案例锚" not in _docs107)
+
 print("== 15 脚本接入完整性（元测试） ==")
 # 教训：阶段二写了 check_market_snapshot.py、跑通了、验证它能逮住海控存量错误，
 # 但**忘了在 SKILL.md 里引用它**——脚本存在 ≠ agent 会执行。SKILL.md 是 agent

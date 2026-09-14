@@ -402,7 +402,16 @@ INDUSTRY_GROWTH_BASE_RATES = {
     "saas_communications":  {"p50": 0.15,  "p80": 0.30},   # Zoom：视频通信
 }
 
-
+# ── REQ-P1-07 卡五缓慢增长 / 卡六转困境（2026-09-12）────────────────────
+DIV_GROWTH_CAP = 0.03              # 股息永续增速上限：超此即非缓慢增长（判型错误）
+DIV_EQUITY_PREMIUM_MIN = 0.03      # 债券替代门槛：股息利差须 ≥3pct 权益补偿
+DIV_CONTINUITY_MIN_YEARS = 5       # 连续分红最少年限：股息锚可靠性的前提
+DIV_PAYOUT_HARD_FLOOR = 1.0        # FCF 覆盖 <1：分红在吃老本，类债论证不成立
+DIV_PAYOUT_WARN = 1.2              # 覆盖 <1.2：贴线警示（双汇 2017=1.23 形态）
+DIST_HAIRCUT_DEFAULT = 0.50        # 非现金资产清算折价默认值（须 [E:] 论证）
+DIST_DECLINE_YEARS_STRUCTURED = 5  # 下滑年数 ≥5 且份额丢失 → 结构性证据
+DIST_PRICE_PCTL_CYCLICAL = 0.30    # 产品价格历史分位 <0.3 才支持周期底主张
+DIST_DEEP_VALUE_FACTOR = 0.80      # 现价 < 清算下限×0.8：深度价值例外档
 
 def stratified_discount_rate(industry_tier, rf_10y=None):
     """折现率分层（REQ-P1-04）：r = max(10%, Rf+4pct) + 行业溢价。
@@ -1638,6 +1647,221 @@ def expected_return(price, scenarios, hold_years, index_hurdle=0.09,
             tail_block["loss_probability_ex_tail"]
     return result
 
+# ═══════════════════════════════════════════════════════════════════
+# REQ-P1-07 卡五缓慢增长：股息锚通道
+# ═══════════════════════════════════════════════════════════════════
+def dividend_anchor_value(dps, dps_basis, price, payout_fcf_ratio,
+                          payout_basis, rf_10y,
+                          div_growth=0.0,
+                          discount_rate=DEFAULT_DISCOUNT_RATE,
+                          continuity_years=None,
+                          equity_premium_min=DIV_EQUITY_PREMIUM_MIN,
+                          min_spread=DEFAULT_MIN_SPREAD):
+    """卡五缓慢增长通道（REQ-P1-07）：股息锚估值 + 债券替代比较 + 分红可持续性门禁。
+
+    估值口径：Gordon-DDM V = DPS×(1+g)/(r−g)，护栏与 forward-value 同源
+    （r−g ≥ min_spread；g ≤ 3% 缓慢增长定义上限）。
+    债券替代比较：股息利差 = 静态股息率 − 10Y 无风险利率，须 ≥ 权益补偿
+    门槛（默认 3pct）——"买股票而不是买债"的最低补偿。
+    可持续性门禁（类债论证的地基）：FCF 覆盖 <1 即分红在消耗资产负债表，
+    当前股息口径不可作正常化锚（DIV_PAYOUT_UNCOVERED，结论退回观察）。
+    返回 dict（含价值、股息率、回本年数、利差、覆盖判定、verdict 与 codes）。
+    """
+    if dps is None or dps <= 0:
+        raise SystemExit(f"错误：正常化每股股息须为正，收到 {dps}。")
+    if "[E:" not in (dps_basis or ""):
+        raise SystemExit("错误：--dps-basis 必填且须含 [E:] 证据指针——正常化股息"
+                         "是本通道最大假设（特别分红/爬坡期股息都会污染锚），"
+                         "裸股息禁止。告警码：DIV_DPS_BASIS_MISSING。")
+    if payout_fcf_ratio is None:
+        raise SystemExit("错误：--payout-fcf-ratio 必填（最近年度 FCF/分红总额）——"
+                         "不查覆盖就按股息估值＝把庞氏分红当永续债。")
+    if "[E:" not in (payout_basis or ""):
+        raise SystemExit("错误：--payout-basis 必填且须含 [E:]——覆盖倍数的取数"
+                         "（OCF−capex 与分红总额的口径）必须可审计。")
+    if div_growth > DIV_GROWTH_CAP:
+        raise SystemExit(f"错误：股息永续增速 {div_growth:.2%} 超过缓慢增长定义"
+                         f"上限 {DIV_GROWTH_CAP:.0%}（DIV_GROWTH_CAP_EXCEEDED）——"
+                         "这已经不是卡五公司，判型错误会连估值方法一起错。")
+    if discount_rate <= div_growth or discount_rate - div_growth < min_spread:
+        raise SystemExit(f"错误：折现率 {discount_rate:.2%} 与股息增速 "
+                         f"{div_growth:.2%} 间距不足 {min_spread:.2%}——"
+                         "Gordon 分母趋零价值爆炸，与 forward-value 同一护栏。")
+    if price is None or price <= 0:
+        raise SystemExit(f"错误：现价须为正，收到 {price}。")
+    if rf_10y is None or rf_10y < 0:
+        raise SystemExit(f"错误：--rf-10y 必填（债券替代比较的无风险利率），"
+                         f"收到 {rf_10y}。")
+
+    value = dps * (1.0 + div_growth) / (discount_rate - div_growth)
+    static_yield = dps / price
+    payback_years = price / dps
+    spread = static_yield - rf_10y
+    codes = []
+    hard_block = False
+    if payout_fcf_ratio < DIV_PAYOUT_HARD_FLOOR:
+        codes.append("DIV_PAYOUT_UNCOVERED")
+        hard_block = True   # 分红在吃老本：类债论证的地基塌了
+    elif payout_fcf_ratio < DIV_PAYOUT_WARN:
+        codes.append("DIV_PAYOUT_BORDERLINE")
+    if spread < equity_premium_min:
+        codes.append("DIV_SPREAD_INSUFFICIENT")
+    if continuity_years is not None and continuity_years < DIV_CONTINUITY_MIN_YEARS:
+        codes.append("DIV_CONTINUITY_SHORT")
+
+    if hard_block:
+        verdict = "observe"   # 覆盖 <1：股息锚当前口径不可用，退回观察
+    elif "DIV_SPREAD_INSUFFICIENT" in codes:
+        verdict = "observe"   # 利差不足：不如买债
+    else:
+        verdict = "bond_substitute_viable"
+    return {
+        "channel": "dividend_anchor",
+        "dps": dps, "dps_basis": dps_basis,
+        "div_growth": div_growth,
+        "discount_rate": discount_rate,
+        "value_per_share": value,
+        "static_dividend_yield": static_yield,
+        "payback_years": payback_years,
+        "rf_10y": rf_10y,
+        "spread_vs_rf": spread,
+        "equity_premium_min": equity_premium_min,
+        "spread_ok": spread >= equity_premium_min,
+        "payout_fcf_ratio": payout_fcf_ratio,
+        "payout_basis": payout_basis,
+        "continuity_years": continuity_years,
+        "verdict": verdict,
+        "codes": codes,
+        "verdict_note": {
+            "bond_substitute_viable": "覆盖与利差双过关，可按债券替代框架估值",
+            "observe": "门禁未全过（见 codes）——股息锚当前口径不足以支撑类债买入",
+        }[verdict],
+    }
+
+
+# ═══════════════════════════════════════════════════════════════════
+# REQ-P1-07 卡六转困境：周期/结构判别 + 清算下限
+# ═══════════════════════════════════════════════════════════════════
+def distress_verdict(revenue_decline_years, industry_wide, tech_substitution,
+                     price_percentile, market_share):
+    """卡六判别清单（REQ-P1-07）：困境是周期性还是结构性。
+
+    结构性证据（任一命中即指向结构性）：
+    - 技术替代 = yes：一票——产品被淘汰时均值回复不会发生（柯达/数码）；
+    - 下滑年数 ≥5 且份额丢失：自己的问题，不是行业的问题。
+    周期性判定（须全部满足）：全行业下滑 ∧ 价格分位 <0.3 ∧ 无技术替代 ∧
+    份额非丢失。其余形态 → indeterminate，默认按结构性质疑（保守不对称：
+    转困境通道的买点是"证明是周期"，不是"证明不是结构"）。
+    返回 dict：verdict + 逐项清单 + 证据指向。
+    """
+    if not isinstance(revenue_decline_years, int) or revenue_decline_years < 0:
+        raise SystemExit(f"错误：下滑年数须为 ≥0 整数，收到 {revenue_decline_years}。")
+    if industry_wide not in ("yes", "no", "unknown"):
+        raise SystemExit(f"错误：industry_wide 须为 yes/no/unknown，收到 {industry_wide!r}。")
+    if tech_substitution not in ("yes", "no"):
+        raise SystemExit(f"错误：tech_substitution 须为 yes/no，收到 {tech_substitution!r}。")
+    if market_share not in ("stable", "losing", "gaining"):
+        raise SystemExit(f"错误：market_share 须为 stable/losing/gaining，"
+                         f"收到 {market_share!r}。")
+    if price_percentile is None or not (0.0 <= price_percentile <= 1.0):
+        raise SystemExit(f"错误：价格历史分位须在 [0,1]，收到 {price_percentile}。")
+
+    checklist = {
+        "revenue_decline_years": {
+            "value": revenue_decline_years,
+            "points_to": "structured" if revenue_decline_years >= DIST_DECLINE_YEARS_STRUCTURED
+                         else ("cyclical" if revenue_decline_years <= 2 else "neutral"),
+        },
+        "industry_wide_decline": {
+            "value": industry_wide,
+            "points_to": {"yes": "cyclical", "no": "structured",
+                          "unknown": "neutral"}[industry_wide],
+        },
+        "tech_substitution": {
+            "value": tech_substitution,
+            "points_to": "structured" if tech_substitution == "yes" else "neutral",
+        },
+        "price_percentile": {
+            "value": price_percentile,
+            "points_to": "cyclical" if price_percentile < DIST_PRICE_PCTL_CYCLICAL
+                         else "neutral",
+        },
+        "market_share_trend": {
+            "value": market_share,
+            "points_to": {"losing": "structured", "stable": "neutral",
+                          "gaining": "cyclical"}[market_share],
+        },
+    }
+    codes = []
+    if tech_substitution == "yes":
+        verdict, key_reason = "structured", "技术替代一票：产品被淘汰，均值回复不会发生"
+    elif (revenue_decline_years >= DIST_DECLINE_YEARS_STRUCTURED
+          and market_share == "losing"):
+        verdict, key_reason = "structured", (
+            f"下滑 {revenue_decline_years} 年且份额丢失——自己的问题而非行业问题")
+    elif (industry_wide == "yes" and tech_substitution == "no"
+          and price_percentile < DIST_PRICE_PCTL_CYCLICAL
+          and market_share != "losing"):
+        verdict, key_reason = "cyclical", (
+            "全行业亏损 + 价格历史低分位 + 无技术替代 + 份额未丢——行业性低谷")
+    else:
+        verdict, key_reason = "indeterminate", (
+            "清单证据不足以判周期性——按保守不对称默认结构性质疑"
+            "（DIST_CYCLE_EVIDENCE_MISSING）")
+        codes.append("DIST_CYCLE_EVIDENCE_MISSING")
+    if verdict == "structured":
+        codes.append("DIST_STRUCTURED_DECLINE")
+    return {
+        "channel": "distress",
+        "checklist": checklist,
+        "verdict": verdict,
+        "key_reason": key_reason,
+        "codes": codes,
+        "verdict_note": {
+            "cyclical": "周期性困境：允许中周期正常化，清算下限作悲观地板",
+            "structured": "结构性困境：禁用均值回复正常化，档位上限排除"
+                          "（除非现价 < 清算下限×0.8 的深度价值档）",
+            "indeterminate": "证据不足：按结构性对待，档位上限排除",
+        }[verdict],
+    }
+
+
+def liquidation_floor(total_assets, total_liabilities, cash, haircut, shares):
+    """清算价值下限（卡六悲观地板）。
+
+    (现金全额 + 非现金资产×折价 − 总负债) / 股本。现金不打折（最流动）；
+    非现金资产统一折价（重资产/高专用性资产须给更低折价并论证）。
+    股东清算所得 <0 时按 0 封顶（有限责任），同时打 equity_wiped_out 标志——
+    "清算后一无所有"与"清算恰好归零"是两种不同的坏，后者仍可能有重整期权。
+    """
+    if total_assets is None or total_assets <= 0:
+        raise SystemExit(f"错误：总资产须为正，收到 {total_assets}。")
+    if total_liabilities is None or total_liabilities < 0:
+        raise SystemExit(f"错误：总负债须非负，收到 {total_liabilities}。")
+    if cash is None or cash < 0:
+        raise SystemExit(f"错误：现金须非负，收到 {cash}。")
+    if cash > total_assets:
+        raise SystemExit(f"错误：现金 {cash} > 总资产 {total_assets}——口径不一致。")
+    if not (0.0 < haircut <= 1.0):
+        raise SystemExit(f"错误：清算折价须在 (0,1]，收到 {haircut}。")
+    if shares is None or shares <= 0:
+        raise SystemExit(f"错误：股本须为正，收到 {shares}。")
+    residual = cash + (total_assets - cash) * haircut - total_liabilities
+    wiped = residual < 0
+    floor_per_share = max(residual, 0.0) / shares
+    return {
+        "cash": cash,
+        "non_cash_assets": total_assets - cash,
+        "haircut": haircut,
+        "liquidation_residual": residual,
+        "equity_wiped_out": wiped,
+        "floor_per_share": floor_per_share,
+        "floor_note": ("清算口径股东所得为负（按 0 封顶）——股东在清算顺序中"
+                       "一无所有，任何价格都没有安全边际（DIST_EQUITY_WIPED_OUT）"
+                       if wiped else
+                       "清算下限＝悲观情景的硬地板：跌到这里以下，亏的不是"
+                       "盈利能力而是资产变现值"),
+    }
 
 def main():
     ap = argparse.ArgumentParser(description="反向 DCF 求解器")
@@ -1851,6 +2075,64 @@ def main():
     p5.add_argument("--fx", type=float, default=1.0,
                     help="每股价值的币种换算系数（报告币→行情币），如 CNY→HKD 用 1.087")
     p5.add_argument("-o", "--output", help="输出 JSON 路径")
+    p6 = sub.add_parser(
+        "dividend", help="卡五缓慢增长通道：股息锚估值 + 债券替代比较 + 分红可持续性门禁")
+    p6.add_argument("--dps", type=float, required=True,
+                    help="正常化每股股息（报告币种，元）。特别分红/爬坡期股息"
+                         "不得混入——正常化口径在 --dps-basis 论证")
+    p6.add_argument("--dps-basis", required=True,
+                    help="正常化股息依据（必填，须含 [E:] 指针 + 口径声明"
+                         "ttm_paid/annual_plan/sustainable_forward，与 S9b 同枚举）")
+    p6.add_argument("--price", type=float, required=True, help="现价")
+    p6.add_argument("--payout-fcf-ratio", type=float, required=True,
+                    help="最近年度 FCF 覆盖倍数 = (经营现金流 − capex)/分红总额。"
+                         "<1 即分红在消耗资产负债表（DIV_PAYOUT_UNCOVERED）")
+    p6.add_argument("--payout-basis", required=True,
+                    help="覆盖倍数取数依据（必填，须含 [E:]——OCF/capex/分红"
+                         "三值的口径与出处）")
+    p6.add_argument("--rf-10y", type=float, required=True,
+                    help="10 年期国债收益率（债券替代比较的无风险锚）")
+    p6.add_argument("--div-growth", type=float, default=0.0,
+                    help="长期股息增速（默认 0；上限 3%%——超限即非缓慢增长，"
+                         "DIV_GROWTH_CAP_EXCEEDED）")
+    p6.add_argument("--discount-rate", type=float, default=DEFAULT_DISCOUNT_RATE)
+    p6.add_argument("--continuity-years", type=int,
+                    help="连续分红年数（<5 年触发 DIV_CONTINUITY_SHORT——"
+                         "股息锚的可靠性前提）")
+    p6.add_argument("--equity-premium-min", type=float,
+                    default=DIV_EQUITY_PREMIUM_MIN,
+                    help="债券替代的最低权益补偿（默认 3pct）：股息利差低于此"
+                         "＝不如买债（DIV_SPREAD_INSUFFICIENT）")
+    p6.add_argument("-o", "--output", help="输出 JSON 路径")
+
+    p7 = sub.add_parser(
+        "distress", help="卡六转困境通道：周期/结构判别清单 + 清算价值下限")
+    p7.add_argument("--revenue-decline-years", type=int, required=True,
+                    help="近十年收入下滑年数（≥5 且份额丢失 → 结构性证据）")
+    p7.add_argument("--industry-wide", choices=["yes", "no", "unknown"], required=True,
+                    help="下滑是否全行业驱动（yes=周期证据；unknown 不当周期证据用）")
+    p7.add_argument("--tech-substitution", choices=["yes", "no"], required=True,
+                    help="是否存在技术替代（yes=结构性一票——柯达/数码形态）")
+    p7.add_argument("--price-percentile", type=float, required=True,
+                    help="产品价格历史分位 [0,1]（<0.3 支持周期底主张）")
+    p7.add_argument("--market-share", choices=["stable", "losing", "gaining"],
+                    required=True, help="市场份额趋势")
+    p7.add_argument("--decline-basis", required=True,
+                    help="判别清单取数依据（必填，须含 [E:]——五个判别项的证据来源）")
+    p7.add_argument("--total-assets", type=float, required=True,
+                    help="总资产（与负债/现金同币种同单位）")
+    p7.add_argument("--total-liabilities", type=float, required=True)
+    p7.add_argument("--cash", type=float, required=True,
+                    help="货币资金（清算口径现金全额不打折）")
+    p7.add_argument("--haircut", type=float, default=DIST_HAIRCUT_DEFAULT,
+                    help="非现金资产清算折价（默认 0.5；重资产/高专用性须更低）")
+    p7.add_argument("--haircut-basis", required=True,
+                    help="清算折价依据（必填，须含 [E:]——DIST_LIQUIDATION_"
+                         "UNANCHORED：裸折价禁止，与控股折价同纪律）")
+    p7.add_argument("--shares", type=float, required=True,
+                    help="股本（百万股，与资产负债表单位匹配）")
+    p7.add_argument("--price", type=float, required=True, help="现价")
+    p7.add_argument("-o", "--output", help="输出 JSON 路径")
 
     args = ap.parse_args()
 
@@ -2315,6 +2597,100 @@ def main():
             with open(args.output, "w", encoding="utf-8") as f:
                 json.dump(out, f, ensure_ascii=False, indent=2)
             print(f"\n已写入 {args.output}")
+        return
+
+    if args.mode == "dividend":
+        if args.continuity_years is not None and args.continuity_years < 0:
+            raise SystemExit(f"错误：连续分红年数须 ≥0，收到 {args.continuity_years}。")
+        res = dividend_anchor_value(
+            dps=args.dps, dps_basis=args.dps_basis, price=args.price,
+            payout_fcf_ratio=args.payout_fcf_ratio,
+            payout_basis=args.payout_basis, rf_10y=args.rf_10y,
+            div_growth=args.div_growth, discount_rate=args.discount_rate,
+            continuity_years=args.continuity_years,
+            equity_premium_min=args.equity_premium_min)
+        print(f"═══ 卡五缓慢增长通道：股息锚（REQ-P1-07）═══")
+        print(f"正常化每股股息      : {res['dps']:.4g}（{res['dps_basis']}）")
+        print(f"股息永续增速        : {res['div_growth']:.2%}（上限 {DIV_GROWTH_CAP:.0%}）")
+        print(f"股息锚每股价值      : {res['value_per_share']:.4g}"
+              f"（Gordon-DDM，r={res['discount_rate']:.0%}）")
+        print(f"静态股息率          : {res['static_dividend_yield']:.2%}")
+        print(f"回本年数            : {res['payback_years']:.1f} 年")
+        print(f"股息利差 vs 10Y     : {res['spread_vs_rf']:+.2%}"
+              f"（门槛 {res['equity_premium_min']:.0%}，"
+              f"{'过' if res['spread_ok'] else '不过'}）")
+        print(f"FCF 覆盖倍数        : {res['payout_fcf_ratio']:.2f}×"
+              f"（<1 即分红吃老本）")
+        if res['continuity_years'] is not None:
+            print(f"连续分红年数        : {res['continuity_years']} 年"
+                  f"（门槛 {DIV_CONTINUITY_MIN_YEARS}）")
+        print(f"通道结论            : {res['verdict']} —— {res['verdict_note']}")
+        if res['codes']:
+            print(f"告警码              : {', '.join(res['codes'])}")
+        if args.output:
+            with open(args.output, "w", encoding="utf-8") as _f:
+                json.dump(res, _f, ensure_ascii=False, indent=1)
+        return
+
+    if args.mode == "distress":
+        if "[E:" not in (args.decline_basis or ""):
+            raise SystemExit("错误：--decline-basis 必须含 [E:] 证据指针——判别清单"
+                             "五项（下滑年数/行业性/技术替代/价格分位/份额）的取数"
+                             "必须可审计。周期性主张尤其容易被叙事污染。")
+        if "[E:" not in (args.haircut_basis or ""):
+            raise SystemExit("错误：--haircut-basis 必须含 [E:] 证据指针——清算折价"
+                             "是清算下限的最大摆动因子，裸折价禁止"
+                             "（DIST_LIQUIDATION_UNANCHORED），与控股折价同纪律。")
+        dv = distress_verdict(args.revenue_decline_years, args.industry_wide,
+                              args.tech_substitution, args.price_percentile,
+                              args.market_share)
+        lf = liquidation_floor(args.total_assets, args.total_liabilities,
+                               args.cash, args.haircut, args.shares)
+        codes = list(dv["codes"])
+        if lf["equity_wiped_out"]:
+            codes.append("DIST_EQUITY_WIPED_OUT")
+        deep_value = (not lf["equity_wiped_out"]
+                      and args.price < lf["floor_per_share"] * DIST_DEEP_VALUE_FACTOR)
+        if deep_value:
+            codes.append("DIST_BELOW_LIQUIDATION")
+        if dv["verdict"] == "structured" and not deep_value:
+            gate_cap = "excluded"
+        elif dv["verdict"] == "indeterminate" and not deep_value:
+            gate_cap = "excluded"
+        elif deep_value:
+            gate_cap = "small_position_probe_only"
+        else:
+            gate_cap = "normal_gates_apply"
+        res = {
+            "channel": "distress",
+            "discrimination": dv,
+            "liquidation_floor": lf,
+            "price": args.price,
+            "deep_value_signal": deep_value,
+            "gate_cap": gate_cap,
+            "decline_basis": args.decline_basis,
+            "haircut_basis": args.haircut_basis,
+            "codes": codes,
+        }
+        print(f"═══ 卡六转困境通道：判别 + 清算下限（REQ-P1-07）═══")
+        print(f"判别结论            : {dv['verdict']} —— {dv['key_reason']}")
+        for k, v in dv["checklist"].items():
+            print(f"  · {k:24s}: {str(v['value']):8s} → {v['points_to']}")
+        print(f"清算下限（每股）    : {lf['floor_per_share']:.4g}"
+              f"（现金 {lf['cash']:.0f} 全额 + 非现金 {lf['non_cash_assets']:.0f}"
+              f"×{lf['haircut']:.0%} − 负债，折价依据 {args.haircut_basis}）")
+        if lf["equity_wiped_out"]:
+            print(f"  ⚠ 清算口径股东所得为负（{lf['liquidation_residual']:.0f}）——"
+                  "清算后一无所有，任何价格都没有安全边际")
+        print(f"现价                : {args.price:.4g}"
+              f"（vs 清算下限×{DIST_DEEP_VALUE_FACTOR:.0%} 深度价值线"
+              f" {lf['floor_per_share']*DIST_DEEP_VALUE_FACTOR:.4g}）")
+        print(f"档位上限            : {gate_cap}")
+        if codes:
+            print(f"告警码              : {', '.join(codes)}")
+        if args.output:
+            with open(args.output, "w", encoding="utf-8") as _f:
+                json.dump(res, _f, ensure_ascii=False, indent=1)
         return
 
     if args.mode == "sotp":

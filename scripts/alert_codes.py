@@ -36,6 +36,8 @@
 | `PROB_*` | 情景概率证据传导门禁与敏感性 | `reverse_dcf.py expected-return`（probability_derivation 块）自动（INVALID/MISMATCH/OUT_OF_RANGE 硬拒绝；TIER_FLIP 为敏感性警示） |
 | `TAIL_*` | 尾部风险单列门禁与披露 | `reverse_dcf.py expected-return`（tail_risk_derivation 块）自动（UNANCHORED 硬拒绝；DRAG_MATERIALIZES 为披露警示） |
 | `BASERATE_*` | 行业基率锚定（乐观情景天花板） | `check_scenarios.py S10` 自动（INDUSTRY_UNKNOWN/ABOVE_P80 拦截；P80_OVERRIDE 为放行披露） |
+| `DIV_*` | 卡五股息锚门禁（分红可持续性 + 债券替代利差） | `reverse_dcf.py dividend` 自动（BASIS_MISSING/GROWTH_CAP 入口硬拒；PAYOUT_UNCOVERED 退回观察；SPREAD/CONTINUITY 警示） |
+| `DIST_*` | 卡六转困境门禁（周期/结构判别 + 清算下限） | `reverse_dcf.py distress` 自动（STRUCTURED_DECLINE/EQUITY_WIPED_OUT 档位上限；CYCLE_EVIDENCE_MISSING 保守质疑；BELOW_LIQUIDATION 深度价值披露） |
 
 `P0_*` 合计 6+20+4 = 30 项，与福耀案「0/6+0/20+0/4 = 0/30 误杀」口径一致。
 
@@ -347,6 +349,41 @@ ALERTS = {
         "baserate", "乐观情景增速超基率 80 分位，但已挂 Phase 4.5 变异认知"
         "[E:] 支撑——放行但强制披露：本案结论依赖『本行业历史分布不适用』"
         "的判断，红队质询的第一靶点就是它"),
+    # ── REQ-P1-07 卡五缓慢增长 / 卡六转困境（2026-09-12）──
+    # div 层：类债论证的地基是"股息是可持续现金流"——覆盖门禁不过，锚即不可用
+    "DIV_DPS_BASIS_MISSING": (
+        "div", "正常化股息缺 [E:] 依据或口径声明——特别分红/爬坡期股息"
+        "都会污染锚，裸股息禁止（卡五通道入口硬拒）"),
+    "DIV_GROWTH_CAP_EXCEEDED": (
+        "div", "股息永续增速 >3% 缓慢增长定义上限——这不是卡五公司，"
+        "判型错误会连估值方法一起错（入口硬拒）"),
+    "DIV_PAYOUT_UNCOVERED": (
+        "div", "最近年度 FCF 覆盖倍数 <1——分红在消耗资产负债表，"
+        "当前股息口径不可作正常化锚，类债买入论证不成立（双汇 2018=0.68、"
+        "2016=0.63 实证形态）"),
+    "DIV_SPREAD_INSUFFICIENT": (
+        "div", "股息利差 < 3pct 权益补偿门槛——承担股权波动却只赚债券"
+        "级补偿，不如买债"),
+    "DIV_CONTINUITY_SHORT": (
+        "div", "连续分红 <5 年——股息锚的可靠性前提不足，回本年数"
+        "口径的置信度存疑"),
+    # dist 层：转困境通道的买点是"证明是周期"，不是"证明不是结构"
+    "DIST_STRUCTURED_DECLINE": (
+        "dist", "判别清单指向结构性困境（技术替代一票 / 下滑≥5年且份额丢失）"
+        "——禁用均值回复正常化，档位上限排除，除非现价 < 清算下限×0.8 的"
+        "深度价值档（柯达 2011=技术替代+清算权益 −34 亿实证形态）"),
+    "DIST_CYCLE_EVIDENCE_MISSING": (
+        "dist", "周期性主张缺证据（全行业性/价格低分位/无技术替代/份额未丢"
+        "须同时满足）——保守不对称：证据不足按结构性质疑"),
+    "DIST_LIQUIDATION_UNANCHORED": (
+        "dist", "清算折价缺 [E:] 依据——折价是清算下限的最大摆动因子，"
+        "裸折价禁止（与控股折价同纪律）"),
+    "DIST_BELOW_LIQUIDATION": (
+        "dist", "现价 < 清算下限×0.8——深度价值信号（市场按低于资产变现值"
+        "定价），披露并允许小仓位试探档"),
+    "DIST_EQUITY_WIPED_OUT": (
+        "dist", "清算口径股东所得为负——清算后一无所有，任何价格都没有"
+        "安全边际（有限责任保护的是『不用再掏钱』，不是『还有价值』）"),
 }
 
 

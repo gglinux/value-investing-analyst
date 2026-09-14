@@ -339,6 +339,11 @@ RULES_REGISTRY = [
     ("tail_p_anchors", "reverse_dcf", "TAIL_P_ANCHORS"),
     ("governance_tail_adj", "reverse_dcf", "GOVERNANCE_TAIL_ADJ"),
     ("industry_growth_base_rates", "reverse_dcf", "INDUSTRY_GROWTH_BASE_RATES"),
+    ("div_growth_cap", "reverse_dcf", "DIV_GROWTH_CAP"),
+    ("div_equity_premium_min", "reverse_dcf", "DIV_EQUITY_PREMIUM_MIN"),
+    ("dist_decline_years_structured", "reverse_dcf", "DIST_DECLINE_YEARS_STRUCTURED"),
+    ("dist_price_pctl_cyclical", "reverse_dcf", "DIST_PRICE_PCTL_CYCLICAL"),
+    ("dist_deep_value_factor", "reverse_dcf", "DIST_DEEP_VALUE_FACTOR"),
     ("pessimistic_hurdle_default", "reverse_dcf", "DEFAULT_PESSIMISTIC_HURDLE"),
     ("loss_prob_hurdle_default", "reverse_dcf", "DEFAULT_LOSS_PROB_HURDLE"),
     # 情景门禁

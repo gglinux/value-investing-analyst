@@ -16,11 +16,11 @@ SKILL.md 只保留数据分级与降级协议的原则；**源能力矩阵、强
 
 | 源 | 形态 | 授权 | 覆盖 | 本 skill 中的定位 |
 |---|---|---|---|---|
-| **westock-data**（腾讯自选股）| 平级 skill，`node <skill目录>/scripts/index.js <子命令>` | **免费、无需 key**，需 Node ≥ 18 + 网络 | A股/港股/美股/日韩股 + ETF/指数/板块/期货/外汇/可转债；三表财报、行情、K线、一致预期、研报、公告、股东、分红、事件、龙虎榜、产业链图谱、宏观 | **推荐默认**。已实证四条管道（美股 NVDA 系 / A股伊利 / 港股泡泡玛特+腾讯 / A股银行招行）。命中其能力域时禁止用 web_search 替代 |
-| **SEC EDGAR** | 官方 HTTP JSON API | 免费、免鉴权（需 User-Agent 头）| 美股全历史 XBRL 财务事实、10-K/10-Q/20-F/6-K 原文 | **美股永久兜底且仍算 A 级**。`scripts/extract_edgar_annual.py` 直连。命门科目双源核对首选 |
+| **westock-data**（腾讯自选股）| 平级 skill，`node <skill目录>/scripts/index.js <子命令>` | **免费无 key**，Node ≥ 18 + 网络 | A股/港股/美股/日韩股 + ETF/指数/期货/外汇；三表财报、行情、K线、一致预期、研报、公告、股东、分红、龙虎榜、宏观 | **推荐默认**。已实证四管道（NVDA/伊利/泡泡玛特+腾讯/招行）。命中其能力域禁用 web_search 替代 |
+| **SEC EDGAR** | 官方 HTTP JSON API | 免费免鉴权（需 User-Agent）| 美股全历史 XBRL 事实、10-K/10-Q/20-F/6-K 原文 | **美股永久兜底仍算 A 级**。`extract_edgar_annual.py` 直连，命门双源核对首选 |
 | **巨潮资讯网** | 官方网站 | 免费 | A股年报原文 PDF、处罚记录、问询函 | **A股命门科目双源核对强制走它**（原文优先于任何接口）|
 | **港交所披露易** | 官方网站 | 免费 | 港股年报/公告原文、合股供股配售史 | **港股原文核对 + 老千股特征排查** |
-| **ifind-finance-data**（同花顺）| 平级 skill，安装见[官方指南](https://mcp.51ifind.com/gwstatic/static/ds_web/ifind-mcp-web/skills/SKILL_INSTALL_GUIDE.md) | **付费**，需自备 key 写入 `mcp_config.json`（[密钥管理](https://mcp.51ifind.com)）| A股/港股/美股行情财报、行业与宏观 | **可选增强**，不作默认。有 key 时优先用于补 A 股 capex/D&A 与银行专属科目；无 key 完全不影响主流程 |
+| **ifind-finance-data**（同花顺）| 平级 skill（[安装指南](https://mcp.51ifind.com/gwstatic/static/ds_web/ifind-mcp-web/skills/SKILL_INSTALL_GUIDE.md)）| **付费**，key 写 `mcp_config.json` | A股/港股/美股行情财报、行业宏观 | **可选增强**：有 key 时补 A 股 capex/D&A 与银行科目；无 key 不影响主流程 |
 | **机构研报** | B 级二手 | — | 历史 capex 序列、行业数据、竞争格局 | 补接口缺口。**只取事实，不取评级与目标价** |
 | **web_search / web-fetch** | C 级兜底 | — | 媒体报道、访谈、行业新闻 | 仅作旁证，必须标来源链接。**影响结论的核心判断禁止只靠 C 级** |
 
@@ -36,7 +36,7 @@ SKILL.md 只保留数据分级与降级协议的原则；**源能力矩阵、强
    | A股 | 巨潮年报 PDF（非结构化）| **人工转录 + `--audit` 体检完整性** |
    | 港股 | 披露易年报 PDF（非结构化）| 同上 |
 
-   美股必须机器核对的理由：手抄进 `crosscheck` 与手填进 `annual` 的值来自同一次阅读，比对的是"我抄得一致吗"而不是"接口对不对"——同人同眼，看错年份不会被发现。EDGAR 有结构化 XBRL，能真正独立取数，就不该退回人工。
+   美股必须机器核对：手抄 `crosscheck` 与手填 `annual` 出自同一次阅读，比的是"抄得一致吗"而非"接口对不对"。EDGAR 有 XBRL 能真正独立取数，不该退回人工。
 
    **A4 规则**：强制科目的官方值为空＝该科目实际未被交叉核对，**直接报错**而非告警（`shares_diluted` 是每股序列的分母，未核对会线性缩放整个估值与安全边际）。确无法取得时写 `crosscheck_exempt` 显式豁免并进报告披露。
 

@@ -1,0 +1,47 @@
+{
+ "channel": "distress",
+ "discrimination": {
+  "channel": "distress",
+  "checklist": {
+   "revenue_decline_years": {
+    "value": 2,
+    "points_to": "cyclical"
+   },
+   "industry_wide_decline": {
+    "value": "yes",
+    "points_to": "cyclical"
+   },
+   "tech_substitution": {
+    "value": "no",
+    "points_to": "neutral"
+   },
+   "price_percentile": {
+    "value": 0.05,
+    "points_to": "cyclical"
+   },
+   "market_share_trend": {
+    "value": "stable",
+    "points_to": "neutral"
+   }
+  },
+  "verdict": "cyclical",
+  "key_reason": "全行业亏损 + 价格历史低分位 + 无技术替代 + 份额未丢——行业性低谷",
+  "codes": [],
+  "verdict_note": "周期性困境：允许中周期正常化，清算下限作悲观地板"
+ },
+ "liquidation_floor": {
+  "cash": 43502.0,
+  "non_cash_assets": 489094.0,
+  "haircut": 0.5,
+  "liquidation_residual": 111080.0,
+  "equity_wiped_out": false,
+  "floor_per_share": 5.584715937657114,
+  "floor_note": "清算下限＝悲观情景的硬地板：跌到这里以下，亏的不是盈利能力而是资产变现值"
+ },
+ "price": 14.97,
+ "deep_value_signal": false,
+ "gate_cap": "normal_gates_apply",
+ "decline_basis": "神华 2015-12：①收入 2014 起随煤价回落（250260→283797→248360 百万，2015 前三季续降）[E:financials_601088_2015.json]；②全行业亏损——2015 煤炭全行业利润总额转负、协会口径九成企业亏损 [E:business_drivers_601088_2015.json]；③环渤海动力煤 2015-12 报 372 元/吨，为该指数 2010 发布以来最低，历史分位≈5% [E:business_drivers_601088_2015.json]；④无技术替代（煤炭能源基础地位）；⑤份额稳定（神华成本曲线前 20%、逆势不减产）",
+ "haircut_basis": "非现金资产 50% 折价：矿井/铁路/电站/船舶重资产可变现性论证（专用性高、处置市场浅），保守取值 [E:business_drivers_601088_2015.json 资产结构]",
+ "codes": []
+}

@@ -173,6 +173,11 @@ INDEPENDENT_METHODS = {
     "worst_year_margin": "历史最差年利润率 × 当期收入，再乘危机期倍数（全程不走 DCF）",
     "peer_death_analogy": "同类死亡案例类比（该商业模式已衰退完的公司，峰值→稳态的实际跌幅与终局倍数）",
     "sotp_asset_floor": "分部资产底价加总（各分部按可变现价值而非盈利能力估）",
+    # REQ-P1-07 卡六转困境通道：reverse_dcf.py distress 的结构化产出
+    # （现金全额 + 非现金×清算折价 − 总负债）。与裸 "liquidation" 的区别：
+    # 折价率须挂 [E:]（DIST_LIQUIDATION_UNANCHORED 同纪律），且通道同时
+    # 输出周期/结构判别——结构性困境下这是悲观情景唯一合法的均值回复豁免依据。
+    "liquidation_floor": "清算价值下限（REQ-P1-07 结构化：现金全额+非现金×折价−负债，折价须 [E:]）",
 }
 # 基准/乐观允许的方法（走 DCF 系列没问题，问题只在悲观情景也走它）
 DCF_METHODS = {
