@@ -470,7 +470,7 @@
 - 验收：人为在 Phase 4 后改动概率能被检出。
 - 涉及文件：`scripts/prepare_case.py`、`backtest/PROMPT.md`
 - 依赖：REQ-P0-05
-- 状态：todo
+- 状态：done（as-built：采纳 astra AST-028 修正——不按原文"Phase 2 一刀切锁死"，区分研究迭代与揭示前冻结：`--preregister` 可多次执行、每次 trigger+note 留痕（evidence_revision 无 note 拒绝）、全部历史注册与参数差异保留（射箭前允许换弓），靶在箭前由 git 时序保证（preregistration.json 最后提交 < verdict.json 首次提交，audit 模式机核）。冻结对象为 scenarios.json 的 canonical 决策参数集（moat/moat_score/折现率及推导块/三情景概率及推导块/尾部推导块/行业/逐情景价值与方法——只冻数字与枚举，rationale 文本不进摘要防无害编辑误报；系统级阈值归 rules_snapshot/P0-08，两者互补）。落点偏离：哈希写入独立 `preregistration.json` 而非 meta.json——meta 是 Step 1 冻结文件、"写入后不得修改"，追加会破坏该纪律且 git 时序闸门需要独立提交记录。三处接线：`--lint-verdict` 重算摘要比对（不一致未标 post_hoc_changed 即体检不过，contaminated 已标者不叠加要求）；runner `check_prereg_evidence` 对 batch≥3 案例揭示后审计（未亮牌的改动判 hard failure）；post_hoc 案例三轨不计分、从战绩表排除（与 contaminated 同款）。顺手修复：`_git_commit_times`/`_seal_check` 对仓库外路径（测试 tempdir）从崩溃降级为无时序证据。验收演示 backtest/601088.SH_2015-12-31/data/prereg_demo_REQ-P2-09.json（神华参数反事实五步：注册→合法迭代留痕→揭示后改悲观 25%→20% 被检出含参数差异→lint 拦截/亮牌放行）。第四批起强制（PREREGISTER_MIN_BATCH=3 同 RULES_SNAPSHOT_MIN_BATCH 语义）；legacy 零改动、12 案基线不动；tests 14.13 段 26 项、套件 777→803 全绿、基线一致）
 
 ---
 
@@ -610,3 +610,4 @@
 | 2026-09-12 | v1.8 | REQ-P1-05 尾部风险单列与基率锚定落码：期望 IRR 第四项 p_tail×loss_tail（map_tail_probability 纯映射：得分锚 0/5/20→1%/10%/30% + 治理修正 + 双地板，不可采用偏离）+ 行业增速基率表覆盖 12 案行业 + S10 乐观超 p80 拦截（[E:] 支撑放行披露）+ S11 尾部块校验 + 五码；康美反事实演示 15.2%→−22.8%（真实排雷 score 21）；base-rates.md 三表统一参考；references 等量压缩；tests 14.11 段 45 项、套件 744 全绿、基线一致；状态 todo → done |
 | 2026-09-12 | v1.9 | REQ-P1-07 缓慢增长与转困境两卡补齐落码：卡五股息锚通道（Gordon-DDM+债券替代利差+FCF 覆盖门禁，双汇 2019 覆盖 0.68 实证）+ 卡六判别清单与清算下限（技术替代一票、周期性四条件、清算权益穿透→排除，柯达 2011 实证）+ 十码 DIV_*/DIST_* + liquidation_floor 进独立方法白名单；四演示锚定官方答案（双汇档位 2 复现/神华 {3,4} 相容/柯达档位 1 一致/合成拦截）；六卡占位清除；tests 14.12 段 33 项、套件 777 全绿、基线一致；状态 todo → done |
 | 2026-09-14 | v1.9.1 | 审查修订：注册表补 DIV_PAYOUT_BORDERLINE（覆盖 1.0~1.2 贴线警示，原引擎发出、测试锁定但漏注册——'十码'实为十一码）；reverse_dcf.py dividend/distress 两分支补 unknown_codes 硬校验，堵注册表纪律对两条新通道的缺位；套件 777 全绿不变 |
+| 2026-09-14 | v1.10 | REQ-P2-09 预注册机器化落码：--preregister canonical 参数摘要（moat/折现率及推导/三情景概率及推导/尾部推导/行业/逐情景价值方法，只冻数字与枚举）+ 研究迭代留痕（evidence_revision 须 note）+ 靶在箭前 git 时序（prereg 最后提交 < verdict 首次提交）+ lint 重算摘要比对（不一致未标 post_hoc_changed=true 即体检不过）+ runner 揭示后审计（未亮牌判 hard failure）+ post_hoc 三轨不计分从战绩排除；采纳 astra AST-028（迭代合法留痕 vs 揭示前冻结，不 Phase 2 一刀切）；落点偏离：独立 preregistration.json 而非 meta.json（Step 1 冻结纪律不可追加）；三道锁分工 P0-05 输入端/P0-08 规则版本/P2-09 过程端；神华参数反事实五步演示（揭示后改悲观 25%→20% 被检出含参数差异）；顺手修 _git_commit_times/_seal_check 仓库外路径崩溃；第四批起强制；legacy 零改动、12 案基线不动；tests 14.13 段 26 项、套件 777→803 全绿、基线一致；状态 todo → done |

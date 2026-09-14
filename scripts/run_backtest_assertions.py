@@ -31,7 +31,8 @@
     python3 scripts/run_backtest_assertions.py --rerun        # 附带引擎漂移检测
     python3 scripts/run_backtest_assertions.py --baseline b.json --rerun   # 与基线比对
     python3 scripts/run_backtest_assertions.py --lint-verdict <case>/verdict.json
-        # Step 3 落盘体检：codes 注册表/provenance/必填字段/档位自洽（无需 answer.json）
+        # Step 3 落盘体检：codes 注册表/provenance/必填字段/档位自洽
+        # /规则快照/隔离交叉/预注册摘要比对（REQ-P2-09，批次≥3）
 
 退出码：0 全部通过；1 有断言失败或漂移。
 """
@@ -42,10 +43,12 @@ import json
 import os
 import subprocess
 import sys
+from pathlib import Path
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from alert_codes import (ASSERTIONS, ORDINAL_TO_VERDICT, assertion_satisfied,
                          matched_codes, unknown_assertions, unknown_codes)
+import prepare_case as _PC  # noqa: E402（REQ-P2-09 预注册：lint 比对 + runner 审计）
 
 REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 BACKTEST = os.path.join(REPO, "backtest")
@@ -339,6 +342,26 @@ def check_deliverables(case, res):
         res["failures"].append(f"交付物缺失：{missing}")
 
 
+def check_prereg_evidence(case, res):
+    """REQ-P2-09 揭示后审计：参数摘要须与最后一次预注册一致（靶在箭前）。
+
+    与 lint-verdict 的 pre 模式互补：lint 在 Step 3 落盘时比对（此时 verdict
+    尚未提交）；本函数在 runner（Step 4 及之后任意时点）用 audit 模式复查——
+    含 git 时序（注册最后提交 < verdict 首次提交）与摘要重算。verdict 未自标
+    post_hoc_changed 的揭示后改动在此被判违规，防「改完参数不亮牌」。
+    批次 <PREREGISTER_MIN_BATCH 豁免（legacy 基线不动）。
+    """
+    try:
+        batch = int(case["meta"].get("batch") or 0)
+    except (TypeError, ValueError):
+        batch = 0
+    if batch < _PC.PREREGISTER_MIN_BATCH:
+        return
+    issues = _PC.prereg_issues(Path(case["dir"]), audit=True)
+    if issues:
+        res["failures"].append("预注册证据违规（REQ-P2-09）：" + "；".join(issues[:3]))
+
+
 def check_case(case, do_rerun=False):
     v, a = case["verdict"], case["answer"]
     fired = set(v.get("codes") or [])
@@ -356,6 +379,23 @@ def check_case(case, do_rerun=False):
         res["sample_role"] = "unscored"
         res["assert_hits"] = res["assert_misses"] = res["assert_false_fires"] = []
         res["notes"].append("verdict.contaminated=true：隔离失效，三轨不计分，从战绩表排除（REQ-P0-05）")
+        check_deliverables(case, res)
+        _classify_failures(res, a, do_rerun)
+        return res
+
+    # ---- REQ-P2-09：post_hoc_changed 案例不计分 ----
+    # 参数在揭示前冻结（预注册哈希）后被改动且未再注册——结论可能是「调出来
+    # 的」而非「推出来的」。自标 post_hoc_changed 的案例仍留完整档案与根因
+    # 分析，但不进任何分母——战绩可信度优先于战绩好看。
+    if v.get("post_hoc_changed"):
+        res["post_hoc_changed"] = True
+        res["verdict_track"] = "不计分（post_hoc_changed：揭示前冻结被事后改动）"
+        res["false_positive_track"] = "不计分（post_hoc_changed）"
+        res["false_positive"] = res["false_negative"] = False
+        res["sample_role"] = "unscored"
+        res["assert_hits"] = res["assert_misses"] = res["assert_false_fires"] = []
+        res["notes"].append("verdict.post_hoc_changed=true：预注册摘要比对不一致（REQ-P2-09），"
+                            "三轨不计分，从战绩表排除")
         check_deliverables(case, res)
         _classify_failures(res, a, do_rerun)
         return res
@@ -380,6 +420,7 @@ def check_case(case, do_rerun=False):
 
     check_deliverables(case, res)
     check_isolation_evidence(case, res)
+    check_prereg_evidence(case, res)
 
     bad = unknown_codes(fired)
     if bad:
@@ -681,6 +722,20 @@ def lint_verdict(path):
         elif r.returncode == 0 and v.get("contaminated"):
             advisories.append("verdict 标了 contaminated 但 seal-check 通过——确认是否误标")
 
+    # ---- REQ-P2-09 预注册比对（第三批起强制，批次判定同 P0-08）----
+    # 靶在箭前：verdict 落盘时重算 scenarios.json 参数摘要，与最后一次预注册
+    # 比对。不一致而未标 post_hoc_changed → 体检不过（亮牌是唯一出路）。
+    # contaminated 的案例不再叠加要求——已整体隔离，一个隔离标志足够。
+    if enforce_new and not v.get("contaminated"):
+        pre_issues = _PC.prereg_issues(Path(case_dir))
+        if pre_issues and not v.get("post_hoc_changed"):
+            problems.append("预注册比对不一致（REQ-P2-09）但 verdict 未标 "
+                            "`post_hoc_changed: true`：\n      "
+                            + "\n      ".join(pre_issues[:4]))
+        elif pre_issues and v.get("post_hoc_changed"):
+            advisories.append("post_hoc_changed=true：三轨不计分，从战绩表排除（REQ-P2-09）——"
+                              "diff.md 须说明改动动因")
+
     if problems:
         print(f"❌ {path} 落盘体检未通过：")
         for p in problems:
@@ -689,7 +744,7 @@ def lint_verdict(path):
             print(f"   ⚠ {a}")
         return 1
     print(f"✅ {path} 落盘体检通过（codes 注册表/provenance/必填字段/档位自洽"
-          f"{'/规则快照/隔离交叉' if enforce_new else ''}）")
+          f"{'/规则快照/隔离交叉/预注册比对' if enforce_new else ''}）")
     for a in advisories:
         print(f"   ⚠ {a}")
     return 0
@@ -733,7 +788,10 @@ def main():
     results_all = [check_case(c, do_rerun=args.rerun) for c in cases]
     # REQ-P0-05：contaminated 案例从战绩表排除——单独列示，不进任何分母
     contaminated = [r for r in results_all if r.get("contaminated")]
-    results = [r for r in results_all if not r.get("contaminated")]
+    # REQ-P2-09：post_hoc_changed 案例同样排除（揭示前冻结被事后改动）
+    post_hoc = [r for r in results_all if r.get("post_hoc_changed")]
+    results = [r for r in results_all
+               if not r.get("contaminated") and not r.get("post_hoc_changed")]
 
     w = max(len(r["name"]) for r in results_all) + 2
     print(f"{'案例':<{w}} {'档位轨':<34} {'告警轨':<26} {'假阳性轨':<12} {'规则版本':<10} 结果")
@@ -744,6 +802,8 @@ def main():
         rv = (r.get("rules_version") or "-").split("（")[0]
         if r.get("contaminated"):
             ok = "污染排除"
+        elif r.get("post_hoc_changed"):
+            ok = "事后改动排除"
         elif r["regressions"]:
             ok = "回归失败"
         elif r["known"]:
@@ -754,8 +814,11 @@ def main():
     print("-" * (w + 100))
     if contaminated:
         print(f"⛔ {len(contaminated)} 例 contaminated（隔离失效）已从战绩表排除：{[r['name'] for r in contaminated]}")
+    if post_hoc:
+        print(f"⛔ {len(post_hoc)} 例 post_hoc_changed（揭示前冻结被事后改动，REQ-P2-09）"
+              f"已从战绩表排除：{[r['name'] for r in post_hoc]}")
     if not results:
-        print("全部案例均为 contaminated，无可计分案例")
+        print("全部案例均为 contaminated/post_hoc，无可计分案例")
         sys.exit(1)
     clean = sum(1 for r in results if not r["failures"])
     known_only = sum(1 for r in results if r["known"] and not r["regressions"])

@@ -20,6 +20,12 @@ B 档协议 = 双会话 + 文件闸门：答案在 Step 3 verdict commit 之前*
       # 按批次输出隔离执行率（REQ-P0-05 验收指标）
   python3 scripts/prepare_case.py --snapshot-rules
       # 输出规则版本快照 JSON（REQ-P0-08，写入 verdict.json.rules_snapshot）
+  python3 scripts/prepare_case.py --preregister backtest/<ticker>_<date>/
+      # 冻结案例决策参数摘要（REQ-P2-09，verdict 落盘前；靶在箭前画死）
+  python3 scripts/prepare_case.py --preregister backtest/<case>/ --trigger evidence_revision --note "<动因>"
+      # 研究迭代再注册（合法但须留痕，全部历史注册保留）
+  python3 scripts/prepare_case.py --prereg-check backtest/<ticker>_<date>/ [--audit]
+      # 预注册完好性检查：摘要比对 + git 时序（靶在箭前）
 
 密封格式：base64(json)。这不是加密——目的是：
   1. grep/glob 扫工作区时不会把答案明文带进执行上下文；
@@ -40,6 +46,8 @@ from __future__ import annotations
 
 import argparse
 import base64
+import datetime
+import hashlib
 import json
 import re
 import subprocess
@@ -206,8 +214,14 @@ def _status() -> int:
 _ANSWER_FILES = ("answer.json", "answer_source.md", "diff.md")
 
 
-def _git_commit_times(path: str, diff_filter: str | None = None) -> list[int]:
-    """文件的提交时间戳列表（新→旧）。diff_filter='A' 只取新增提交。"""
+def _git_commit_times(path: str | None, diff_filter: str | None = None) -> list[int]:
+    """文件的提交时间戳列表（新→旧）。diff_filter='A' 只取新增提交。
+
+    path=None（案例目录不在仓库内，如测试 tempdir）→ 无 git 时序证据，返回 []
+    ——与「文件在仓库内但从未提交」同款处理，不崩溃。
+    """
+    if path is None:
+        return []
     args = ["log", "--format=%ct"]
     if diff_filter:
         args.append(f"--diff-filter={diff_filter}")
@@ -236,7 +250,13 @@ def _seal_check(case_dir: Path, audit: bool = False) -> int:
         return 1
     name = case_dir.name
     issues = []
-    rel = lambda f: str((case_dir / f).relative_to(REPO_ROOT))  # noqa: E731
+
+    def rel(f):
+        # 案例目录不在仓库内（测试 tempdir）→ None，_git_commit_times 返回 []
+        try:
+            return str((case_dir / f).relative_to(REPO_ROOT))
+        except ValueError:
+            return None
 
     # ── 检查 1（仅 pre 模式）：工作区答案明文 ──
     # 密封库"已被揭示"的判据与本项完全相同（answer_source.md 存在），不再单列。
@@ -424,6 +444,220 @@ def snapshot_rules() -> dict:
     }
 
 
+# ── REQ-P2-09 预注册机器化 ─────────────────────────────────────────
+# 事后调参是回测里最常见也最难察觉的自欺：看到 IRR 差一点没过线，把悲观概率
+# 30% 调成 25%，结论就变了，而且调参者往往真心认为 25% 更合理。预注册 = 在
+# 看到结果前把参数哈希冻结，让「参数是结果前定的」从口头声明变成机器可验的
+# 事实（打靶类比：靶必须在射出那支箭之前画死）。
+#
+# 三道锁的分工（回测"不作弊"的完整闭环）：
+#   P0-05 隔离协议 —— 输入端：官方答案不进入执行上下文
+#   P0-08 规则快照 —— 规则版本：引擎阈值冻结（同批所有案例相同）
+#   P2-09 预注册   —— 过程端：案例自由参数冻结（每案不同的概率/折现率/得分）
+#
+# 设计采纳 astra AST-028 修正（需求原文"Phase 2 即锁死"太机械）：研究迭代中
+# 修正假设是正常研究，区分两种状态——
+#   研究迭代（合法）：--preregister 可多次执行，每次 trigger + note 留痕，
+#                     全部历史注册保留，参数差异逐项可见（射箭前允许换弓）；
+#   揭示前冻结（强制）：最后一次注册的 git 提交必须早于 verdict.json 首次提交
+#                     （靶在箭前），verdict 落盘时重算摘要比对，不一致 →
+#                     verdict.json 须标 post_hoc_changed=true，三轨不计分。
+
+PREREGISTER_MIN_BATCH = 3   # 执行顺序 1→2→4→3→5：第四批先行、第三批随后，同受约束
+PREREG_SPEC_VERSION = 1
+
+# canonical 参数集抽取键（scenarios.json 中分析师自定的决策输入）。
+# 只冻「数字与枚举」——method_note / probability_evidence 等 rationale 文本
+# 不进摘要：措辞改动不改变结论，放进摘要会让哈希对无害编辑脆弱。
+_PREREG_TOP_KEYS = ("moat", "moat_score", "discount_rate", "hold_years",
+                    "intrinsic_value_growth", "industry")
+_PREREG_BLOCK_KEYS = ("discount_rate_derivation", "probability_derivation",
+                      "tail_risk_derivation")
+
+
+def preregistration_parameters(sc: dict) -> dict:
+    """从 scenarios.json 提取 canonical 决策参数集（冻结对象 = 靶心）。
+
+    对应需求三要素：关键变量（moat/moat_score/行业/永续增速/逐情景价值与
+    方法）、情景概率（default_probabilities + 逐情景 probability + 概率推导
+    块）、MoS 门槛（moat_score 驱动平滑门槛；系统级阈值属 rules_snapshot/P0-08
+    职责，不重复冻结）。缺省键跳过（legacy 案例无 P1-04/05 块也合法）。
+    """
+    out = {k: sc[k] for k in _PREREG_TOP_KEYS if sc.get(k) is not None}
+    if sc.get("default_probabilities"):
+        out["default_probabilities"] = sc["default_probabilities"]
+    out["scenarios"] = [
+        {"name": s.get("name"), "value_per_share": s.get("value_per_share"),
+         "probability": s.get("probability"), "method": s.get("method")}
+        for s in (sc.get("scenarios") or [])]
+    for k in _PREREG_BLOCK_KEYS:
+        if sc.get(k) is not None:
+            out[k] = sc[k]
+    return out
+
+
+def preregistration_digest(params: dict) -> str:
+    """canonical JSON → sha256。sort_keys + 紧凑分隔符保证字节级确定性。"""
+    return hashlib.sha256(json.dumps(
+        params, ensure_ascii=False, sort_keys=True,
+        separators=(",", ":")).encode("utf-8")).hexdigest()
+
+
+def _prereg_param_diff(old: dict, new: dict) -> list:
+    """两次注册的参数差异（顶层键 + 逐情景），供迭代留痕与事后审计展示。"""
+    diffs = []
+    for k in sorted(set(old) | set(new)):
+        if old.get(k) != new.get(k):
+            if k == "scenarios" and isinstance(old.get(k), list) and isinstance(new.get(k), list):
+                for i in range(max(len(old[k]), len(new[k]))):
+                    so = old[k][i] if i < len(old[k]) else {}
+                    sn = new[k][i] if i < len(new[k]) else {}
+                    for f in ("name", "value_per_share", "probability", "method"):
+                        if so.get(f) != sn.get(f):
+                            diffs.append(f"scenarios[{i}].{f}: {so.get(f)!r} → {sn.get(f)!r}")
+            else:
+                diffs.append(f"{k}: {old.get(k)!r} → {new.get(k)!r}")
+    return diffs
+
+
+def load_scenarios(case_dir: Path) -> dict:
+    """读案例的 scenarios.json（预注册的单一事实源，RERUN_PARAMS 同款约定）。"""
+    p = case_dir / "data" / "scenarios.json"
+    if not p.exists():
+        raise FileNotFoundError(f"缺 {p}——scenarios.json 是预注册的单一事实源")
+    return json.loads(p.read_text(encoding="utf-8"))
+
+
+def _case_batch(case_dir: Path) -> int:
+    try:
+        meta = json.loads((case_dir / "meta.json").read_text(encoding="utf-8"))
+        return int(meta.get("batch") or 0)
+    except Exception:  # noqa: BLE001
+        return 0
+
+
+def _preregister(case_dir: Path, trigger: str, note: str) -> int:
+    """追加一条预注册记录（靶心冻结）。可多次执行 = 研究迭代留痕。"""
+    if not case_dir.is_dir():
+        print(f"❌ 案例目录不存在：{case_dir}")
+        return 1
+    if trigger != "initial" and not note:
+        print("❌ trigger=evidence_revision 须 --note 留痕（迭代合法、无痕不合法）")
+        return 1
+    try:
+        sc = load_scenarios(case_dir)
+    except FileNotFoundError as exc:
+        print(f"❌ {exc}")
+        return 1
+    params = preregistration_parameters(sc)
+    digest = preregistration_digest(params)
+    prereg_path = case_dir / "preregistration.json"
+    doc = {"case": case_dir.name, "spec_version": PREREG_SPEC_VERSION,
+           "registrations": []}
+    if prereg_path.exists():
+        try:
+            doc = json.loads(prereg_path.read_text(encoding="utf-8"))
+        except Exception as exc:  # noqa: BLE001
+            print(f"❌ preregistration.json 解析失败：{exc}")
+            return 1
+    regs = doc.setdefault("registrations", [])
+    prev = regs[-1] if regs else None
+    regs.append({
+        "registered_at": datetime.datetime.now().astimezone().isoformat(timespec="seconds"),
+        "trigger": trigger, "note": note, "digest": digest, "parameters": params})
+    prereg_path.write_text(
+        json.dumps(doc, ensure_ascii=False, indent=1), encoding="utf-8")
+    print(f"✅ 预注册已写入：{prereg_path}")
+    print(f"   摘要 sha256：{digest}")
+    print(f"   注册号：第 {len(regs)} 次（trigger={trigger}）")
+    if prev and prev.get("digest") == digest:
+        print(f"ℹ 参数与上次注册（{prev.get('registered_at')}）逐位一致")
+    elif prev:
+        print("⚠ 本次注册与上次参数不同（研究迭代留痕，靶心变更逐项可见）：")
+        for d in _prereg_param_diff(prev.get("parameters") or {}, params):
+            print(f"   - {d}")
+    print("下一步（人工）：git add <case>/preregistration.json 单独提交——"
+          "该提交必须早于 verdict commit（--prereg-check 机器核 git 时序）。")
+    return 0
+
+
+def prereg_issues(case_dir, audit: bool = False) -> list:
+    """预注册完好性检查。返回问题清单（空 = 通过）。
+
+    pre 模式（lint / Step 3 落盘时）：文件存在、已 git 提交、参数摘要与
+    scenarios.json 当前值一致；audit 模式（runner / 收官审计）：另验
+    preregistration.json 最后提交早于 verdict.json 首次提交——verdict 落地后
+    追加注册即揭示后改参数。批次 < PREREGISTER_MIN_BATCH 豁免（legacy 基线不动）。
+    """
+    case_dir = Path(case_dir)
+    if not case_dir.is_dir():
+        return [f"案例目录不存在：{case_dir}"]
+    if _case_batch(case_dir) < PREREGISTER_MIN_BATCH:
+        return []
+    prereg_path = case_dir / "preregistration.json"
+    if not prereg_path.exists():
+        return [f"缺 preregistration.json（REQ-P2-09，第{PREREGISTER_MIN_BATCH}批起强制）："
+                f"先 `prepare_case.py --preregister <case>` 并单独提交"]
+    try:
+        doc = json.loads(prereg_path.read_text(encoding="utf-8"))
+    except Exception as exc:  # noqa: BLE001
+        return [f"preregistration.json 解析失败：{exc}"]
+    issues = []
+    regs = doc.get("registrations") or []
+    if not regs:
+        issues.append("preregistration.json 无注册记录")
+    for i, r in enumerate(regs):
+        if r.get("trigger") != "initial" and not r.get("note"):
+            issues.append(f"第 {i + 1} 次注册 trigger={r.get('trigger')} 但无 note（迭代须留痕）")
+        if not r.get("digest") or not isinstance(r.get("parameters"), dict):
+            issues.append(f"第 {i + 1} 次注册缺 digest/parameters（记录不完整）")
+    try:
+        rel = str(prereg_path.relative_to(REPO_ROOT))
+    except ValueError:  # 案例目录不在仓库内（测试/tempdir）→ 无 git 时序证据
+        rel = None
+    p_commits = _git_commit_times(rel) if rel else []  # 新→旧
+    if not p_commits:
+        issues.append("preregistration.json 无 git 提交记录——注册后必须单独提交"
+                      "（靶在箭前的时序证据）")
+    try:
+        cur_params = preregistration_parameters(load_scenarios(case_dir))
+    except FileNotFoundError as exc:
+        issues.append(str(exc))
+        return issues
+    if regs:
+        last = regs[-1]
+        if last.get("digest") != preregistration_digest(cur_params):
+            changed = _prereg_param_diff(last.get("parameters") or {}, cur_params)
+            issues.append("参数摘要与最后一次注册不一致（post_hoc_changed）——差异："
+                          + ("; ".join(changed[:6]) if changed else "结构差异"))
+    if audit:
+        try:
+            v_rel = str((case_dir / "verdict.json").relative_to(REPO_ROOT))
+        except ValueError:
+            v_rel = None
+        v_adds = _git_commit_times(v_rel, "A") if v_rel else []
+        v_first = v_adds[-1] if v_adds else None
+        p_last = p_commits[0] if p_commits else None
+        if v_first is not None and p_last is not None and p_last >= v_first:
+            issues.append("preregistration.json 最后提交不早于 verdict.json 首次提交——"
+                          "注册在 verdict 落地后被追加（揭示后改参数）")
+    return issues
+
+
+def _prereg_check(case_dir: Path, audit: bool = False) -> int:
+    issues = prereg_issues(case_dir, audit=audit)
+    mode = "audit（事后审计，含 git 时序）" if audit else "pre（verdict 落盘时）"
+    if issues:
+        print(f"⛔ 预注册检查失败（{case_dir.name}，模式 {mode}）：")
+        for iss in issues:
+            print(f"   ❌ {iss}")
+        print("\n  verdict.json 须标注 `\"post_hoc_changed\": true`（lint-verdict 会交叉校验）")
+        print("  post_hoc 案例三轨不计分、从战绩表排除（REQ-P2-09）。")
+        return 1
+    print(f"✅ 预注册检查通过（{case_dir.name}，模式 {mode}）")
+    return 0
+
+
 def _isolation_report(min_batch: int = 3) -> int:
     """REQ-P0-05 验收：按批次输出隔离执行率（audit 模式逐案例跑 git 时序检查）。"""
     import io
@@ -486,6 +720,16 @@ def main():
                     help="按批次输出隔离执行率（REQ-P0-05 验收指标）")
     ap.add_argument("--snapshot-rules", action="store_true", dest="snapshot_rules",
                     help="输出当前规则版本快照 JSON（REQ-P0-08，写入 verdict.json）")
+    ap.add_argument("--preregister", metavar="CASE_DIR",
+                    help="冻结案例决策参数摘要（REQ-P2-09，verdict 落盘前）")
+    ap.add_argument("--prereg-check", metavar="CASE_DIR", dest="prereg_check",
+                    help="预注册完好性检查（摘要比对 + git 时序）")
+    ap.add_argument("--trigger", choices=["initial", "evidence_revision"], default="initial",
+                    help="--preregister 的触发类型：initial 初次 / evidence_revision 研究迭代（须配 --note）")
+    ap.add_argument("--note", default="",
+                    help="再注册留痕：本次研究迭代的原因（trigger=evidence_revision 必填）")
+    ap.add_argument("--prereg-audit", action="store_true", dest="prereg_audit",
+                    help="配合 --prereg-check：事后审计模式（追加 git 时序比对）")
     ap.add_argument("--status", action="store_true", help="查看密封库状态")
     args = ap.parse_args()
     if args.seal:
@@ -494,6 +738,11 @@ def main():
         sys.exit(_reveal(Path(args.reveal).resolve()))
     if args.seal_check:
         sys.exit(_seal_check(Path(args.seal_check).resolve(), audit=args.audit))
+    if args.preregister:
+        sys.exit(_preregister(Path(args.preregister).resolve(),
+                              trigger=args.trigger, note=args.note))
+    if args.prereg_check:
+        sys.exit(_prereg_check(Path(args.prereg_check).resolve(), audit=args.prereg_audit))
     if args.isolation_report:
         sys.exit(_isolation_report())
     if args.snapshot_rules:

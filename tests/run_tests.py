@@ -4105,6 +4105,177 @@ check("H 文档接线：卡五卡六正式化 + 方法树两行 + SKILL/PROMPT �
 check("H 占位已清除：『判据待案例锚』不再出现",
       "占位——判据待案例锚" not in _docs107)
 
+print("== 14.13 REQ-P2-09 预注册机器化（靶在箭前画死） ==")
+import prepare_case as PC  # noqa: E402
+import run_backtest_assertions as RBA209  # noqa: E402（与后文 _RBA 同一模块缓存）
+
+_sc209 = PC.load_scenarios(__import__("pathlib").Path(
+    os.path.join(ROOT, "backtest", "601088.SH_2015-12-31")))
+_p209 = PC.preregistration_parameters(_sc209)
+check("A canonical 抽取：决策参数齐全（moat/折现率/概率/三情景）",
+      all(k in _p209 for k in ("moat", "discount_rate", "hold_years",
+                               "intrinsic_value_growth", "default_probabilities"))
+      and len(_p209["scenarios"]) == 3
+      and all(all(f in s for f in ("value_per_share", "probability", "method"))
+              for s in _p209["scenarios"]), str(sorted(_p209.keys())))
+check("A canonical 抽取：rationale 文本不进摘要（method_note/证据串排除）",
+      not any(isinstance(v, str) and ("[E:" in v or len(v) > 120)
+              for v in _p209.values()))
+check("A canonical 抽取：市场数据（price）不进摘要",
+      "price" not in _p209 and "price_source" not in _p209)
+_d209 = PC.preregistration_digest(_p209)
+check("B 摘要确定性：json 往返（键序无关）后摘要不变",
+      PC.preregistration_digest(json.loads(json.dumps(_p209, ensure_ascii=False))) == _d209)
+_p209b = json.loads(json.dumps(_p209, ensure_ascii=False))
+_p209b["default_probabilities"]["悲观"] = 0.20
+_p209b["scenarios"][0]["probability"] = 0.20
+check("B 摘要敏感性：悲观概率 0.25→0.20 摘要必变（事后调参必被检出）",
+      PC.preregistration_digest(_p209b) != _d209)
+_sc209c = json.loads(json.dumps(_sc209, ensure_ascii=False))
+_sc209c["scenarios"][0]["method_note"] = "改了措辞但数字与方法不变"
+check("B 摘要鲁棒性：method_note 措辞改动不影响摘要（无害编辑不误报）",
+      PC.preregistration_digest(PC.preregistration_parameters(_sc209c)) == _d209)
+_diff209 = PC._prereg_param_diff(_p209, _p209b)
+check("B 参数差异定位：概率改动逐项可见",
+      any("scenarios[0].probability" in d for d in _diff209)
+      and any("default_probabilities" in d for d in _diff209), str(_diff209))
+
+with tempfile.TemporaryDirectory() as _td209:
+    _cd209 = os.path.join(_td209, "601088.SH_2015-12-31")
+    os.makedirs(os.path.join(_cd209, "data"))
+    json.dump(_sc209, open(os.path.join(_cd209, "data", "scenarios.json"), "w"),
+              ensure_ascii=False)
+    json.dump({"batch": 4}, open(os.path.join(_cd209, "meta.json"), "w"))
+    _cli = [sys.executable, os.path.join(SCRIPTS, "prepare_case.py")]
+    _r = subprocess.run(_cli + ["--preregister", _cd209], capture_output=True, text=True)
+    check("C 初次注册：exit 0 并写入 preregistration.json",
+          _r.returncode == 0 and os.path.exists(os.path.join(_cd209, "preregistration.json")),
+          _r.stdout[:200])
+    _doc = json.load(open(os.path.join(_cd209, "preregistration.json"), encoding="utf-8"))
+    check("C 注册记录结构：trigger/digest/parameters 三要素齐全",
+          len(_doc["registrations"]) == 1
+          and _doc["registrations"][0]["trigger"] == "initial"
+          and len(_doc["registrations"][0]["digest"]) == 64
+          and _doc["registrations"][0]["digest"] == _d209)
+    _r = subprocess.run(_cli + ["--preregister", _cd209, "--trigger", "evidence_revision"],
+                       capture_output=True, text=True)
+    check("C 研究迭代无 note → 拒绝（迭代合法、无痕不合法）",
+          _r.returncode == 1 and "note" in _r.stdout, _r.stdout[:200])
+    _r = subprocess.run(_cli + ["--preregister", _cd209, "--trigger", "evidence_revision",
+                                "--note", "Phase 3 新证据下修悲观"],
+                       capture_output=True, text=True)
+    check("C 研究迭代带 note → 合法再注册（同参也留痕）",
+          _r.returncode == 0 and "逐位一致" in _r.stdout, _r.stdout[:200])
+    _doc = json.load(open(os.path.join(_cd209, "preregistration.json"), encoding="utf-8"))
+    check("C 第二次注册落盘（trigger=evidence_revision + note）",
+          len(_doc["registrations"]) == 2
+          and _doc["registrations"][1]["trigger"] == "evidence_revision"
+          and "下修" in _doc["registrations"][1]["note"])
+    _r = subprocess.run(_cli + ["--prereg-check", _cd209], capture_output=True, text=True)
+    check("D prereg-check：注册未 git 提交 → 失败（tempdir 无时序证据）",
+          _r.returncode == 1 and "无 git 提交记录" in _r.stdout, _r.stdout[:200])
+    # 揭示后改概率（验收标准：人为改动能被检出）
+    _sct = json.loads(json.dumps(_sc209, ensure_ascii=False))
+    _sct["default_probabilities"]["悲观"] = 0.20
+    for _s in _sct["scenarios"]:
+        if _s["name"] == "悲观":
+            _s["probability"] = 0.20
+    json.dump(_sct, open(os.path.join(_cd209, "data", "scenarios.json"), "w"),
+              ensure_ascii=False)
+    _r = subprocess.run(_cli + ["--prereg-check", _cd209], capture_output=True, text=True)
+    check("D 揭示后改概率 → 检出摘要不一致并给出参数差异",
+          _r.returncode == 1 and "post_hoc_changed" in _r.stdout
+          and "0.25" in _r.stdout and "0.2" in _r.stdout, _r.stdout[:300])
+
+    # ---- lint 交叉校验（完整 batch-4 verdict fixture）----
+    _snap209 = {"skill_commit": "b" * 40, "skill_commit_short": "b" * 7, "dirty": False,
+                "missing": [], "thresholds": {
+                    "discount_rate_default": 0.10, "pessimistic_hurdle_default": 0.0,
+                    "mos_requirement": {"wide": 0.5, "narrow": 0.4}}}
+    _v209 = {"final_verdict": "观察等价格", "verdict_ordinal": 2, "gate1": True,
+             "gate2": False, "codes": ["GATE1_FAIL"],
+             "codes_provenance": {"engine_derived": ["GATE1_FAIL"]},
+             "frozen_before_diff": True, "frozen_at": "2026-09-14",
+             "rules_snapshot": _snap209}
+    _vp209 = os.path.join(_cd209, "verdict.json")
+    json.dump(_v209, open(_vp209, "w"), ensure_ascii=False)
+    _l = subprocess.run([sys.executable, os.path.join(SCRIPTS, "run_backtest_assertions.py"),
+                         "--lint-verdict", _vp209], capture_output=True, text=True)
+    check("E lint：改概率未亮牌 → 体检不过并点名 REQ-P2-09",
+          _l.returncode == 1 and "REQ-P2-09" in _l.stdout
+          and "post_hoc_changed" in _l.stdout, _l.stdout[:300])
+    _v209["post_hoc_changed"] = True
+    json.dump(_v209, open(_vp209, "w"), ensure_ascii=False)
+    _l = subprocess.run([sys.executable, os.path.join(SCRIPTS, "run_backtest_assertions.py"),
+                         "--lint-verdict", _vp209], capture_output=True, text=True)
+    check("E lint：标 post_hoc_changed=true → 通过（advisory 提示不计分）",
+          _l.returncode == 0 and "post_hoc_changed" in _l.stdout, _l.stdout[:300])
+    _v209.pop("post_hoc_changed")
+    json.dump(_v209, open(_vp209, "w"), ensure_ascii=False)
+
+    # ---- runner：post_hoc 排除 + 揭示后审计 ----
+    _case209 = {"name": "prereg_fixture", "dir": _cd209, "meta": {"batch": 4},
+                "verdict": dict(_v209, post_hoc_changed=True),
+                "answer": {"expected_verdict_set": [3, 4], "must_trigger": [],
+                           "known_failures": []}}
+    _res209 = RBA209.check_case(_case209)
+    check("F runner：post_hoc_changed 案例三轨不计分、从战绩排除",
+          _res209.get("post_hoc_changed") and _res209["sample_role"] == "unscored"
+          and "不计分" in _res209["verdict_track"]
+          and not _res209["false_positive"] and not _res209["false_negative"], str(_res209)[:250])
+    _res209b = RBA209.check_case({"name": "prereg_fixture2", "dir": _cd209,
+                                  "meta": {"batch": 4}, "verdict": _v209,
+                                  "answer": _case209["answer"]})
+    check("F runner：未亮牌的揭示后改动 → 预注册证据违规（hard failure）",
+          any("REQ-P2-09" in f for f in _res209b["failures"]), str(_res209b["failures"])[:250])
+    _res209c = {"failures": []}
+    RBA209.check_prereg_evidence({"meta": {"batch": 2}, "dir": _cd209}, _res209c)
+    check("F runner：batch<3 豁免预注册审计（legacy 基线不动）",
+          not _res209c["failures"])
+
+# ---- monkeypatch git 时序：靶在箭前/箭后两种形态 ----
+_orig_gct = PC._git_commit_times
+try:
+    PC._git_commit_times = lambda rel, diff_filter=None: (
+        [100] if (diff_filter == "A" and str(rel).endswith("verdict.json")) else
+        ([50] if str(rel).endswith("preregistration.json") else []))
+    _cdX = os.path.join(ROOT, "backtest", "_TMP_PREREG_2020-12-31")
+    os.makedirs(os.path.join(_cdX, "data"), exist_ok=True)
+    json.dump(_sc209, open(os.path.join(_cdX, "data", "scenarios.json"), "w"), ensure_ascii=False)
+    json.dump({"batch": 4}, open(os.path.join(_cdX, "meta.json"), "w"))
+    json.dump({"case": "_TMP_PREREG_2020-12-31", "spec_version": 1, "registrations": [
+        {"registered_at": "2026-09-14T10:00:00+08:00", "trigger": "initial", "note": "",
+         "digest": _d209, "parameters": _p209}]},
+        open(os.path.join(_cdX, "preregistration.json"), "w"), ensure_ascii=False)
+    _iss = PC.prereg_issues(__import__("pathlib").Path(_cdX), audit=True)
+    check("G git 时序：prereg 最后提交(50) < verdict 首次提交(100) → 通过",
+          not _iss, str(_iss))
+    PC._git_commit_times = lambda rel, diff_filter=None: (
+        [100] if (diff_filter == "A" and str(rel).endswith("verdict.json")) else
+        ([150] if str(rel).endswith("preregistration.json") else []))
+    _iss = PC.prereg_issues(__import__("pathlib").Path(_cdX), audit=True)
+    check("G git 时序：verdict 落地后追加注册(150≥100) → 判揭示后改参数",
+          any("揭示后改参数" in i for i in _iss), str(_iss))
+finally:
+    PC._git_commit_times = _orig_gct
+    shutil.rmtree(_cdX, ignore_errors=True)
+
+# legacy 真实案例豁免：601088（batch 2）无 preregistration.json 也通过
+check("H legacy 案例豁免：batch 2 无 prereg 不报问题（基线不动）",
+      not PC.prereg_issues(__import__("pathlib").Path(
+          os.path.join(ROOT, "backtest", "601088.SH_2015-12-31"))))
+check("H PREREGISTER_MIN_BATCH=3 与 RULES_SNAPSHOT_MIN_BATCH 同款语义",
+      PC.PREREGISTER_MIN_BATCH == RBA209.RULES_SNAPSHOT_MIN_BATCH)
+_PROMPT209 = open(os.path.join(ROOT, "backtest", "PROMPT.md"), encoding="utf-8").read()
+check("H PROMPT 接线：Step 2.7 预注册协议 + post_hoc_changed + 三道锁分工",
+      "Step 2.7" in _PROMPT209 and "--preregister" in _PROMPT209
+      and "post_hoc_changed" in _PROMPT209 and "evidence_revision" in _PROMPT209
+      and "靶必须在射出那支箭之前画死" in _PROMPT209)
+check("H PROMPT 交付物清单含 preregistration.json（单独 commit 早于 verdict）",
+      "preregistration.json" in _PROMPT209)
+check("H lint 体检说明含预注册比对",
+      "预注册摘要比对核对 `post_hoc_changed` 标注" in _PROMPT209)
+
 print("== 15 脚本接入完整性（元测试） ==")
 # 教训：阶段二写了 check_market_snapshot.py、跑通了、验证它能逮住海控存量错误，
 # 但**忘了在 SKILL.md 里引用它**——脚本存在 ≠ agent 会执行。SKILL.md 是 agent
