@@ -248,7 +248,7 @@ verdict 落盘**前**运行 `python3 scripts/prepare_case.py --seal-check backte
 
 **REQ-P0-08 规则版本钉死（第三批起强制）**：verdict.json 须含 `rules_snapshot`（运行 `python3 scripts/prepare_case.py --snapshot-rules` 获取），包括 `skill_commit`（git hash）、`dirty`、`thresholds`（双闸门/情景门禁/排雷/数据门禁/计分的全部模块级阈值，由 `RULES_REGISTRY` 登记）与 `missing`（须为空）。**`dirty=true` 禁止落 verdict**——先提交规则改动再落盘，否则 hash 不代表实际运行的代码，`--lint-verdict` 会拒绝。无此字段的历史案例 runner 标 `rules_version=unknown`；verdict 记录的 commit 与当前 HEAD 不同时标 `drifted`，其 rerun 漂移须与 `python3 scripts/run_backtest_assertions.py --as-of <skill_commit> --case <case>`（临时 worktree 按旧版本重跑）对读，不得直接归为引擎回归。
 
-**落盘后、提交前先体检**：`python3 scripts/run_backtest_assertions.py --lint-verdict <case>/verdict.json`——校验 codes 全部在注册表内（第二批 Zoom 曾杜撰 2 个不存在的告警 ID）、`codes_provenance` 必填（缺失时漂移检测比对降级，第二批神华即缺）、必填字段与档位文案自洽；第三批起还校验 `rules_snapshot` 存在且 `dirty=false`（REQ-P0-08）、反向跑 seal-check 核对 `contaminated` 标注（REQ-P0-05）、预注册摘要比对核对 `post_hoc_changed` 标注（REQ-P2-09）。**体检通过才允许提交**。
+**落盘后、提交前先体检**：`python3 scripts/run_backtest_assertions.py --lint-verdict <case>/verdict.json`——校验 codes 全部在注册表内（第二批 Zoom 曾杜撰 2 个不存在的告警 ID）、`codes_provenance` 必填（缺失时漂移检测比对降级，第二批神华即缺）、必填字段与档位文案自洽；第三批起还校验 `rules_snapshot` 存在且 `dirty=false`（REQ-P0-08）、反向跑 seal-check 核对 `contaminated` 标注（REQ-P0-05）、预注册摘要比对核对 `post_hoc_changed` 标注（REQ-P2-09）；第四批起还校验**档位下探依据**（OBS-META-08）：拒绝(1)/排除(0) 须有注册依据码（P0_V*/红旗≥3/NORM_STRUCTURAL_DECLINE/S8_VALUE_TRAP/TRIGGER_* 等）或人工登记 `negative_verdict_basis={kind,evidence[E:]}`，两者皆无的闸门不过标的只能落「观察等价格」并声明触发价。**体检通过才允许提交**。
 
 **落盘后立即单独提交**：`git add <case>/verdict.json && git commit -m "verdict(<case>): 结论落盘，未读答案"`。git 历史即时序证据，机器可验、事后无法伪造——第一批只有 3/6 案例有自陈的 `frozen_before_diff` 字段，文件 mtime 又会被 git 检出覆盖，「先落盘再看答案」这条纪律没有任何可验证痕迹。**此步完成后才允许进入 Step 4。**
 

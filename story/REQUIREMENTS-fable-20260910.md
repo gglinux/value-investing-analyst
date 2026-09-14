@@ -1,9 +1,9 @@
 # value-investing-analyst 需求清单（REQUIREMENTS）
 
-> 版本：v1.13 · 建立日期：2026-09-10（周四） · 来源：skill 全面评审 + 两批回测复盘
+> 版本：v1.14 · 建立日期：2026-09-10（周四） · 来源：skill 全面评审 + 两批回测复盘
 > 用途：作为 skill 迭代的单一需求事实源。每条需求有唯一 ID、优先级、动因、价值、验收标准与状态，回测批次收官时同步更新状态。
 > 与其他文件的关系：`MAINTENANCE.md` 讲"怎么改"，`backtest/observations.md` 讲"发现了什么"，本文件讲"为什么要做、要做什么、做到什么程度算完"。
-> 进度快照（2026-09-14，v1.13）：34 条需求 = **done 8**（P0-03/07、P1-04/05/07、P2-01/09、P3-03）· **verify 7**（落码完成、只待第四批回测验证：P0-04/05/06/08、P1-01/02/03）· **doing 2**（P0-01、P0-02——各有小项实施待办）· **todo 17**。verify+doing 共 9 条的剩余工作全部指向同一件事：执行第四批回测。
+> 进度快照（2026-09-14，v1.14）：34 条需求 = **done 8**（P0-03/07、P1-04/05/07、P2-01/09、P3-03）· **verify 7**（落码完成、只待第四批回测验证：P0-04/05/06/08、P1-01/02/03）· **doing 2**（P0-01、P0-02——各有小项实施待办）· **todo 17**。verify+doing 共 9 条的剩余工作全部指向同一件事：执行第四批回测。
 
 ---
 
@@ -337,6 +337,7 @@
   - ✅ 验收①（神华双档报告）：三组件透明打分 A=40（十年正利差但当期收窄）+ B=10（成本优势一源硬证据）+ C=+10（三定标 +15、稳定偏变窄 −5）= **60 分**（窄带，落宽/窄边界带 [60,70]）→ `expected_return_moat_score_REQ-P1-03.json` 双档报告自动生成：55 分侧门槛 43.3%/65 分侧门槛 40.0%（触发价 14.42 恰为归档 legacy 触发价——连续性锚实证）；两侧闸门一均未过（MoS 37.7% vs 41.7%），档位维持观察等价格。
   - ✅ 验收②（12 案跳 2 档归零）：操作化为分带边界 ε 穿越（knife-edge 情形，即需求所述"两个同样认真的分析师在边界上分歧"），档位代理 none→1 / 任一闸门不过→2 / 双过→3（核心买入须裁决层按核验强度加码，非评级传导变量）。实测 11 个有情景案例（康美案 Phase 0 排除、无评级天然免疫）× 35/65 两边界 **maxΔ=1**（全部来自 35 分政策边界 none→narrow 的 1↔2，非连续性可消除的档位跳变）；legacy 对照复现神华 窄→宽 2→4 跳 2 档（diff.md 第 42 行问题实证，新机制下归零）。tests 14.9 段 45 项，全套件 649 全绿。
   - ⚠ 遗留：第四批起新案例强制带得分（PROMPT 已写），首个实测案例落地后转 done；references/ 体积红线余量仅 23 字节（153,577/153,600），下次新增文档须先压缩等量。
+  - 📋 第四批候选修法（OBS-META-08，2026-09-14 登记不实施）：**fade 预测期与 moat 档位绑定**——moat-framework 定义 wide = 20 年可维持超额回报，但 DCF 预测期统一 5-10 年后即衰减到 r，moat 得分未传导到分子的持续期。方向非纯放松（wide 延长 / none 缩短），但改 IV 数字，须 REQ-P0-01 假阳性基线 + 红灯规则前置；数值实验表明该修法救不回伊利（3.24× 溢价），只对招行/META 类有边际意义，不得以「救回复利型 miss」为验收目标。
 
 ### REQ-P1-04 折现率与情景概率的证据传导
 - 来源：A2、D
@@ -628,3 +629,4 @@
 | 2026-09-14 | v1.11 | REQ-P0-03/P0-07 收尾关闭（用户裁决：验收口径分层——主底稿 strict、竞对显式豁免）：schema_meta.layered_acceptance + validate_data 1.2b（主底稿 legacy ERROR/竞对无豁免 ERROR/豁免缺五要素 ERROR/合规豁免 WARN 披露）；21 份 legacy 处置（19 竞对 schema_waiver 五要素留痕、NVDA 补 EDGAR 申报日 2026-02-25 升 strict、NFLX 逐实体对照表归豁免）；strict 22→23 全主底稿覆盖；validate_data 顺手修 FY 字符串年份崩溃与竞对表跨实体同比误报（降 WARN）；report-spec 数据附录规范五标记 + verify_report 接线 schema_waiver→validate-summary；crosscheck 条目 source_tier 补录 22 份 80 条（同一关键词表、一致性入测试）；P1-02 investment_income 补录（软银演示副本回填；腾讯 2020-2025 官方公告口径逐年登记、dividend_income 留空不编造），sotp_screen 真实管道实测（软银 distortion=true/腾讯六年 series distortion=false）；references 压缩回红线内（含闸门二决策卡描述过时修正：三项→四参与项）；tests 14.14 段 17 项、套件 806→823 全绿、12 案基线一致；P0-03/P0-07 todo→done |
 | 2026-09-14 | v1.12 | REQ-P2-01 官方答案置信度与修订流程落码：answer.json 新增 confidence（high/medium/low）+ confidence_basis（必填可问责，引用 ANSWERS.md 规则表 H1~L3 条目；批次≥3 缺失硬失败、批次<3 咨询性提示）；acceptable_grades 裁决为镜像字段（与 expected_verdict_set 分叉即 lint 失败，单源纪律，避免 OBS-600660-01 式双声明露馅）；低置信度案例三轨评测照常输出但不进 FP/FN 分母与回归门禁（假阳性仍判定可见、low_conf_failures 单列、notes 指向修订流程、不产生比率字段），fp_fn_summary 增 low_conf 单列 + 分母口径声明（只含高/中置信度）；runner 表格加置信度列 + 低置信度明细段；基线 _fp_fn 快照含 low_conf 段，低置信度新增假阳性相对基线仍红灯（不错买优先不容静默消失）；12 案补齐（high 7/medium 3/low 2——海控、NFLX 为需求正文点名争议案，negative_n=6/positive_n=3、FN 名单只剩茅台+神华）；密封库 18 案超验收范围全部预注（high 12/medium 6）：prepare_case.py --annotate-confidence 解码合并重封 + confidence_history 留痕，预注时点早于任何批次 3-5 verdict——靶在箭前（同 P2-09 反博弈逻辑），已揭示案例拒绝预注（改判=修订流程，无绕过路径）、--seal 覆写保留预注、--reveal/--status 接线显示；ANSWERS.md 置信度规则表（H1~L3）+ 修订流程五步（提出/举证/复核/生效/旧战绩重算）+ 赋值时点纪律 + 批次一二 12 案 inline 标记；PROMPT.md answer 模板、红灯规则低置信度例外路径、FP/FN 报告分母口径同步；tests 13.6 段 44 项（存量第一批战绩断言按验收语义更新：海控 low 出分母 5/6→4/5；13.6 块置于文件末尾避免吞并 13.5 段尾收官闭环/膨胀守卫 8 项）、套件 853→897 全绿、runner 基线一致；P2-01 todo→done |
 | 2026-09-14 | v1.13 | 进度口径校准（用户发起）：落码完成、仅待第四批回测验证的 7 条需求 doing→verify（P0-04/05/06/08、P1-01/02/03，与第 0 节 verify 定义对齐）；P0-01、P0-02 保留 doing（各余小项实施待办：前者第三批对照补入，后者底稿补字段）；修复 P0-03 重复状态行；头部新增进度快照（done 8 / verify 7 / doing 2 / todo 17）；状态修订不改变任何验收条款与 as-built 内容 |
+| 2026-09-14 | v1.14 | 档位下探依据纪律落码（OBS-META-08，用户发起复审 BATCH3 第三节「质量溢价通道缺失」）：结论为问题部分真实但三案根因分裂（招行=闸门一输入层 / META=上探判据空白 OBS-META-01 / 伊利=3.24× 溢价 + 档位词误用：排除 0 应为观察 2 或至多拒绝 1），「护城河只作用于分母」修正为「fade 预测期与 moat 档位无绑定」；候选方案①PE 锚/②MoS 降档否决，③fade-moat 绑定登记 P1-03 第四批候选，④+⑤ 落地。as-built：alert_codes 新注册码 VERDICT_NEGATIVE_TIER_UNSUPPORTED + 档位下探依据集合（EXCLUSION_GROUND_CODES / REDFLAG_EXCLUSION_MIN=3 / REJECTION_GROUND_CODES / NEGATIVE_BASIS_KINDS，人工依据 verdict.negative_verdict_basis{kind,evidence[E:]}）；run_backtest_assertions --lint-verdict 新增 negative_tier_issues（排除须公司层否决、拒绝须价格层等不到，皆无→观察等价格；批次≥4 硬失败、存量咨询）；valuation-guide「往下走同样要依据」条款（等量压缩守 150KB 红线，153,589/153,600）；SKILL.md/PROMPT.md 补注；tests 14.16 段全绿，P0-05 fixture 拒绝→观察；基线零新增假阳性。不触碰任何闸门阈值，非放松性改动。存量咨询暴露：恒大 P0 人工红旗 6 条仅落码 2 条（赋码完整性缺口）、Zoom 拒绝缺依据、伊利官方 [3,4] 疑 L2——移交第四批 |

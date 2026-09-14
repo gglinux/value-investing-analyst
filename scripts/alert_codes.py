@@ -38,6 +38,7 @@
 | `BASERATE_*` | 行业基率锚定（乐观情景天花板） | `check_scenarios.py S10` 自动（INDUSTRY_UNKNOWN/ABOVE_P80 拦截；P80_OVERRIDE 为放行披露） |
 | `DIV_*` | 卡五股息锚门禁（分红可持续性 + 债券替代利差） | `reverse_dcf.py dividend` 自动（BASIS_MISSING/GROWTH_CAP 入口硬拒；PAYOUT_UNCOVERED 退回观察；SPREAD/CONTINUITY 警示） |
 | `DIST_*` | 卡六转困境门禁（周期/结构判别 + 清算下限） | `reverse_dcf.py distress` 自动（STRUCTURED_DECLINE/EQUITY_WIPED_OUT 档位上限；CYCLE_EVIDENCE_MISSING 保守质疑；BELOW_LIQUIDATION 深度价值披露） |
+| `VERDICT_*` | 档位纪律（下探须有依据） | `run_backtest_assertions.py --lint-verdict` 自动（NEGATIVE_TIER_UNSUPPORTED：批次 ≥4 硬失败、存量咨询） |
 
 `P0_*` 合计 6+20+4 = 30 项，与福耀案「0/6+0/20+0/4 = 0/30 误杀」口径一致。
 
@@ -404,7 +405,58 @@ ALERTS = {
         "variant", "key_differences 非空但 variant_perception 缺失或不完整——"
         "两表打架属结构性错误（价格反解差异表必须挂在完整的变异认知块之下，"
         "AST-021 §4.3），报错而非降档"),
+    # ── 档位下探依据（OBS-META-08，2026-09-14）──
+    # 动因：B3-18 伊利 codes 无任何 P0_*/结构性衰退/价值陷阱 cap，能力圈与
+    # 管理层均未否决，却落「排除」(0)——SKILL.md 对排除的定义是排雷失败/红旗≥3/
+    # 能力圈外/管理层不可信；「贵的好公司」在框架语义里是观察或拒绝，不是排除。
+    # 三师以「不收敛下限<无风险利率故观察档失效」下探两档，条款内无此依据。
+    # 官方 [3,4] vs 系统 0 的 −3 档偏差中，至少 1 档是档位词误用而非估值保守。
+    # 本码不放松任何闸门：闸门不过仍最高观察等价格；它只守「往下走要有依据」。
+    "VERDICT_NEGATIVE_TIER_UNSUPPORTED": (
+        "verdict", "拒绝/排除档位缺依据：排除(0) 须有一票否决 / 红旗≥3 / 结构性"
+        "衰退或基期不可用 / 清算穿透 / 价值陷阱 / 能力圈外 / 管理层不可信之一；"
+        "拒绝(1) 另可由触发价不可达 / 期望 IRR<0 且亏损概率>50% / 无护城河支撑。"
+        "两者皆无时闸门不过的标的应为「观察等价格」(2) 并声明触发价——"
+        "「贵的好公司」是观察或拒绝，不是排除（OBS-META-08）"),
 }
+
+
+# ═══════════════════════════════════════════════════════════════════
+# 一之二、档位下探依据集合（lint-verdict 唯一事实源，OBS-META-08）
+# ═══════════════════════════════════════════════════════════════════
+#
+# 排除依据（支撑 ordinal ≤1）：公司层面的否决——不是「贵」。
+EXCLUSION_GROUND_CODES = frozenset({
+    "P0_V1_AUDIT_OPINION", "P0_V2_FRAUD_HISTORY", "P0_V3_PLEDGE_HIGH",
+    "P0_V4_DEPOSIT_LOAN_DOUBLE_HIGH", "P0_V4A_INTEREST_INVERSION",
+    "P0_V5_AUDITOR_CFO_CHURN", "P0_V6_CONTROLLER_TUNNELING",
+    "P0_R21_GOING_CONCERN",           # 持续经营存疑
+    "NORM_STRUCTURAL_DECLINE",        # 结构性衰退
+    "NORM_BASE_UNUSABLE",             # 全期平均亏损，均值路径失效
+    "DIST_STRUCTURED_DECLINE",        # 卡六结构性困境：档位上限排除
+    "DIST_EQUITY_WIPED_OUT",          # 清算穿透
+    "S8_VALUE_TRAP",                  # 价值陷阱 cap ∈ {小仓位试探, 排除}
+    "GROWTH_UNIT_ECONOMICS_UNPROVEN",  # 烧钱不是再投入
+})
+# 红旗计数达线即默认排除（forensic-checklist：≥3 条，除非强反证）
+REDFLAG_EXCLUSION_MIN = 3
+# 拒绝依据（只支撑 ordinal =1）：价格层面的「等不到」——触发价在历史区间之外。
+REJECTION_GROUND_CODES = frozenset({
+    "TRIGGER_OUT_OF_HISTORY", "TRIGGER_LOW_REACHABILITY",
+})
+# 人工登记依据 verdict.json.negative_verdict_basis = {"kind", "evidence"(含 [E:])}
+# 不可算术化的否决只能人工给，但必须挂证据、必须选注册词——与 P0 人工赋码同纪律。
+NEGATIVE_BASIS_KINDS_EXCLUSION = frozenset({
+    "capability_circle",      # 超出能力圈（SKILL Phase 0 第 3 步）
+    "management_untrusted",   # 管理层不可信 → 视同排雷失败（SKILL Phase 5 第 2 条）
+    "phase0_redflags",        # 红旗≥3 但未逐条落码（须写明条数与清单）
+})
+NEGATIVE_BASIS_KINDS_REJECTION = frozenset({
+    "trigger_unreachable",        # 触发价低于历史区间（未跑 trigger_reachability 时人工登记）
+    "negative_expected_return",   # 期望 IRR<0 且亏损概率>50%（valuation-guide 门槛纪律第 4 条）
+    "moat_none",                  # 无护城河：不给买入结论
+})
+NEGATIVE_BASIS_KINDS = NEGATIVE_BASIS_KINDS_EXCLUSION | NEGATIVE_BASIS_KINDS_REJECTION
 
 
 # ═══════════════════════════════════════════════════════════════════

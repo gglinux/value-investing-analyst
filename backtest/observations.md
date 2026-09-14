@@ -573,3 +573,14 @@
 - **处置**：本条只登记不改数。修正底稿数值属案例修订（`cases/pingan_china` 需连带重跑指标与报告），且平安为保险管道案例，不影响 12 案回测基线。**改数前提**：确认该案例是否仍在用；若启用须先修 `unit` 声明或改数值口径，再重跑 `compute_metrics_insurance.py`。
 - **状态**：登记待修（不阻塞 P0-03 验收——哨兵本身已验证有效，这是它的产出而非它的缺陷）。
 
+
+## OBS-META-08 ｜ 「质量溢价通道缺失」复审：三案根因分裂 + 伊利档位词误用（排除 0 应为观察 2 / 至多拒绝 1）+ 档位下探依据纪律落码（2026-09-14，方法论类，不计入第三批 22 条）
+
+- **触发**：用户要求对 BATCH3_FINDINGS.md 第三节 / OBS-META-06「miss 三例全部同向」做真实性综合分析并修复。核心张力沿用 OBS-META-06：保守偏置 = 灾难保险（恒大 −99.2%、长和 −38.1%）+ 复利税（+166%/+449%/+93%），任何修法不得拆掉保险。
+- **结论一【问题部分真实，但被过度归因为单一根因】**：三案根因分裂——①招行 B3-13：闸门一问题（narrow 评级 + ROE 路径下调 → IV 压低），属估值输入层；②META B3-16：小仓位(3)→核心买入(4) 的上探判据空白（OBS-META-01），属档位上限层；③伊利 B3-18：3.24 倍溢价（39.08 vs 基准 12.08）叠加**档位词误用**——verdict codes_note 自承「无 P0 触发、S8 未触发、无注册码等价物」，三师「不收敛下限<无风险利率故观察档失效」在框架内无条款依据；valuation-guide 门槛纪律第 4 条只支撑「排除买入档」（= 拒绝 1）而非「排除」(0)。−3 档中至少 1 档（实为 2 档：正确终判应为观察等价格 2）是登记层误用而非引擎保守。**冻结 verdict 不改，本条为修正声明载体**（OBS-META-05/OBS-600887-02 先例）。
+- **结论二【「护城河只作用于分母」表述不准确】**：moat 通过 g/r 与 fade 假设已进入 IV 分子；真实结构缺陷是 **fade 预测期与 moat 档位无绑定**（moat-framework 定义 wide = 20 年可维持超额回报，但估值预测期统一 5-10 年后即衰减到 r）。数值实验：即便对伊利按 wide 延长 fade 期，IV 亦救不回正面档位（3.24× 溢价远超任何合理 fade 延长的贡献），故该缺陷不能解释伊利 miss，只对招行/META 类有边际意义。OBS-META-06 该句据此修正。
+- **候选方案系统比较**：①PE 交叉锚——违背绝对估值哲学，且伊利 PE 锚仍不给正面档，否；②MoS 降档（wide 25%→20%）——纯放松、对伊利无效、需假阳性基线，否；③fade 期与 moat 绑定——理论正当、非纯放松（wide 延长/none 缩短），但改 IV 数字，须第四批假阳性基线前置，**登记为第四批候选修法**；④档位下探依据纪律机器化——不触碰任何闸门数字，不可能新增假阳性，不违反 PROMPT 修法冻结（非判别逻辑放松），**立即实施**；⑤修正根因表述——本条完成。
+- **④ as-built**：`alert_codes.py` 新增 `VERDICT_NEGATIVE_TIER_UNSUPPORTED` + 「档位下探依据集合」（`EXCLUSION_GROUND_CODES` 7 个 P0_V* / R21 / NORM_STRUCTURAL_DECLINE / NORM_BASE_UNUSABLE / DIST_STRUCTURED_DECLINE / DIST_EQUITY_WIPED_OUT / S8_VALUE_TRAP / GROWTH_UNIT_ECONOMICS_UNPROVEN；`REDFLAG_EXCLUSION_MIN=3`；`REJECTION_GROUND_CODES` 触发价不可达两码；人工依据 `verdict.json.negative_verdict_basis={kind,evidence[E:]}`，kind 分排除类 capability_circle/management_untrusted/phase0_redflags 与拒绝类 trigger_unreachable/negative_expected_return/moat_none）；`run_backtest_assertions.py --lint-verdict` 新增 `negative_tier_issues`：排除(0) 须公司层否决依据、拒绝(1) 须价格层「等不到」依据，两者皆无 → 应为观察等价格(2) 并声明触发价；**批次 ≥4 硬失败、存量咨询**。valuation-guide「四档结论由双闸门唯一决定」条款补「往下走同样要依据」。tests 14.16 节全绿；P0-05 fixture「拒绝+仅 GATE1_FAIL」按新纪律改为观察(2)。基线对读零新增假阳性。
+- **存量实证（咨询模式）**：伊利 排除缺依据 ✗；康美/柯达/鞍钢 排除有依据 ✓；**恒大 排除缺机器依据**——adversarial_check.json 人工红旗 6/6 但 verdict codes 仅落 P0_R9/P0_R11 两码（<3），暴露 **P0 人工赋码完整性缺口**（第四批起须把人工红旗全部落码或登记 `negative_verdict_basis.kind=phase0_redflags`）；Zoom 拒绝缺依据（存量不改）。
+- **移交第四批**：(a) 候选修法③ fade 期与 moat 绑定（需假阳性基线 + 红灯规则前置）；(b) 恒大式 P0 人工红旗落码完整性；(c) 伊利官方 [3,4] 疑为 L2 低置信度，按 REQ-P2-01 修订流程复核；(d) 新纪律为**不放松声明**：不改任何阈值，只要求「拒绝/排除」有据可查，「贵的好公司」是观察或拒绝，不是排除。
+- **状态**：登记；④⑤ 已落地，③ 候选；BATCH3_FINDINGS.md 第三/五节冻结文本不改，由本条承载修正。

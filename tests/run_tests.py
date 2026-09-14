@@ -2402,7 +2402,9 @@ _tmp_case = os.path.join(ROOT, "backtest", "_TMP_TEST_2020-12-31")
 os.makedirs(_tmp_case, exist_ok=True)
 try:
     json.dump({"batch": 4, "replay_date": "2020-12-31"}, open(os.path.join(_tmp_case, "meta.json"), "w"))
-    _v = {"final_verdict": "拒绝", "verdict_ordinal": 1, "gate1": {}, "gate2": {}, "codes": ["GATE1_FAIL"],
+    # 档位取观察等价格(2)：本段只测 P0-05/P0-08 语义；「拒绝 + 仅 GATE1_FAIL」在
+    # OBS-META-08 档位纪律下会被 lint 独立拦截（见 14.15），不能混入此处的判定。
+    _v = {"final_verdict": "观察等价格", "verdict_ordinal": 2, "gate1": {}, "gate2": {}, "codes": ["GATE1_FAIL"],
           "codes_provenance": {"engine_derived": ["GATE1_FAIL"], "manually_recorded": []},
           "frozen_before_diff": True, "frozen_at": "2026-09-11"}
     open(os.path.join(_tmp_case, "diff.md"), "w").write("# test\n")
@@ -5278,6 +5280,192 @@ _m216["meta"] = {"batch": "第三批"}
 _r = _RBA.check_case(_m216)
 check("H meta.batch 非法（非整数）→ 同样硬失败",
       any("meta.batch" in f for f in _r["failures"]), str(_r["failures"]))
+
+
+# ── 14.15 档位下探依据纪律（OBS-META-08，2026-09-14）──
+# 动因：B3-18 伊利 codes 无任何 P0/结构性/cap 码而落「排除」(0)；三师以「不收敛
+# 下限 < 无风险利率故观察档失效」下探两档，条款内无此依据。官方 [3,4] vs 系统 0
+# 的 −3 档偏差里至少 1 档是档位词误用，不是估值保守。本节锁定：
+#   ① 不放松——闸门不过仍最高观察等价格，本检查不触碰闸门（无假阳性可能）；
+#   ② 排除须公司层否决依据、拒绝须价格层「等不到」依据，两者皆无 → 只能观察；
+#   ③ 人工依据必须选注册词 + 挂 [E:]；④ 第四批起硬失败、存量咨询（基线不动）。
+print("\n== 14.16 档位下探依据纪律（OBS-META-08） ==")
+import alert_codes as _AC15  # noqa: E402
+
+check("注册表含 VERDICT_NEGATIVE_TIER_UNSUPPORTED（层 verdict）",
+      _AC15.ALERTS.get("VERDICT_NEGATIVE_TIER_UNSUPPORTED", ("",))[0] == "verdict")
+check("排除依据集合全部为注册代号",
+      not _AC15.unknown_codes(_AC15.EXCLUSION_GROUND_CODES | _AC15.REJECTION_GROUND_CODES),
+      str(_AC15.unknown_codes(_AC15.EXCLUSION_GROUND_CODES | _AC15.REJECTION_GROUND_CODES)))
+check("排除依据含一票否决全集 + 结构性衰退 + 清算穿透 + 价值陷阱",
+      _AC15._FRAUD_VETO <= _AC15.EXCLUSION_GROUND_CODES
+      and {"NORM_STRUCTURAL_DECLINE", "DIST_EQUITY_WIPED_OUT", "S8_VALUE_TRAP"}
+      <= _AC15.EXCLUSION_GROUND_CODES)
+check("排除依据不含任何 GATE*（闸门不过不是排除依据——正是本纪律要堵的）",
+      not any(c.startswith("GATE") for c in _AC15.EXCLUSION_GROUND_CODES | _AC15.REJECTION_GROUND_CODES))
+check("人工依据词表：排除类与拒绝类不相交且并集 = 全集",
+      not (_AC15.NEGATIVE_BASIS_KINDS_EXCLUSION & _AC15.NEGATIVE_BASIS_KINDS_REJECTION)
+      and _AC15.NEGATIVE_BASIS_KINDS_EXCLUSION | _AC15.NEGATIVE_BASIS_KINDS_REJECTION
+      == _AC15.NEGATIVE_BASIS_KINDS)
+check("起始批次 = 4（第四批起硬失败，存量前三批咨询）",
+      _RBA.NEGATIVE_TIER_BASIS_MIN_BATCH == 4)
+
+
+def _nv(ordinal, codes=("GATE1_FAIL", "GATE2_FAIL"), **extra):
+    v = {"final_verdict": _AC15.ORDINAL_TO_VERDICT[ordinal], "verdict_ordinal": ordinal,
+         "codes": list(codes)}
+    v.update(extra)
+    return v
+
+
+# 正向：观察及以上不受本检查约束
+for _o in (2, 3, 4):
+    _i, _g = _RBA.negative_tier_issues(_nv(_o))
+    check(f"ordinal={_o} 不触发（只管往下走）", not _i and not _g)
+# 伊利形态：闸门不过 + 期望 IRR<0 + 亏损概率 100% + 无 P0 → 排除缺依据、拒绝够
+_yili = _nv(0, codes=("M_DILUTION", "NORM_CYCLE_PEAK", "GATE1_FAIL", "GATE2_FAIL",
+                      "GATE2_3_BEAR_FAIL"), moat_rating="narrow", expected_irr=-0.148,
+            scenarios_value_per_share={"loss_probability": 1.0})
+_i, _g = _RBA.negative_tier_issues(_yili)
+check("伊利形态：排除(0) 缺公司层依据 → issue，并点名已有依据只够拒绝",
+      len(_i) == 1 and "排除(0) 缺公司层否决依据" in _i[0] and "只够拒绝(1)" in _i[0]
+      and "VERDICT_NEGATIVE_TIER_UNSUPPORTED" in _i[0], str(_i))
+_yili1 = dict(_yili, verdict_ordinal=1, final_verdict="拒绝")
+_i, _g = _RBA.negative_tier_issues(_yili1)
+check("同形态改拒绝(1) → 通过（期望 IRR<0 ∧ 亏损概率>50% 是门槛纪律第 4 条依据）",
+      not _i and any("门槛纪律第 4 条" in g for g in _g), str((_i, _g)))
+# 亏损概率从 gate2.item4 读取（历史落点兼容）
+_v = _nv(1, moat_rating="narrow", expected_irr=-0.05,
+         gate2={"item4": {"value": 0.6}})
+check("亏损概率可从 gate2.item4.value 读取", not _RBA.negative_tier_issues(_v)[0])
+# 拒绝(1)：闸门不过 + 期望 IRR 为正 → 缺依据（这才是应为观察等价格的形态）
+_i, _g = _RBA.negative_tier_issues(_nv(1, moat_rating="wide", expected_irr=0.08,
+                                       scenarios_value_per_share={"loss_probability": 0.3}))
+check("拒绝(1) 无任何依据（闸门不过 + IRR 为正）→ issue：应为观察等价格并声明触发价",
+      len(_i) == 1 and "拒绝(1) 缺依据" in _i[0] and "观察等价格" in _i[0], str(_i))
+# 拒绝依据：护城河 none（含中文词兼容）/ 触发价不可达
+check("护城河 none → 拒绝有依据", not _RBA.negative_tier_issues(_nv(1, moat_rating="none"))[0])
+check("护城河『无』（中文词）→ 同样识别", not _RBA.negative_tier_issues(_nv(1, moat_rating="无"))[0])
+check("gate1.moat=none → 同样识别",
+      not _RBA.negative_tier_issues(_nv(1, gate1={"moat": "none"}))[0])
+check("TRIGGER_OUT_OF_HISTORY → 拒绝有依据",
+      not _RBA.negative_tier_issues(_nv(1, codes=("GATE1_FAIL", "TRIGGER_OUT_OF_HISTORY")))[0])
+check("护城河 none 只够拒绝、撑不起排除",
+      "只够拒绝(1)" in _RBA.negative_tier_issues(_nv(0, moat_rating="none"))[0][0])
+# 排除依据：一票否决 / 红旗≥3 / 结构性衰退 / cap
+check("P0_V2 一票否决 → 排除有依据",
+      not _RBA.negative_tier_issues(_nv(0, codes=("P0_V2_FRAUD_HISTORY",)))[0])
+check("红旗 3 条 → 排除有依据（forensic-checklist ≥3 默认排除）",
+      not _RBA.negative_tier_issues(_nv(0, codes=(
+          "P0_R1_OCF_PROFIT_DIVERGENCE", "P0_R9_SHORT_DEBT_LONG_ASSET",
+          "P0_R11_FINANCING_VS_RETURN")))[0])
+check("红旗 2 条 → 不够（恒大 B3-17 落码 2 条、人工 6 条即此缺口，见 OBS-META-08）",
+      _RBA.negative_tier_issues(_nv(0, codes=(
+          "P0_R9_SHORT_DEBT_LONG_ASSET", "P0_R11_FINANCING_VS_RETURN")))[0])
+check("NORM_STRUCTURAL_DECLINE → 排除有依据",
+      not _RBA.negative_tier_issues(_nv(0, codes=("NORM_STRUCTURAL_DECLINE",)))[0])
+check("verdict_cap_effective=0（S8 价值陷阱 cap）→ 排除有依据",
+      not _RBA.negative_tier_issues(_nv(0, verdict_cap_effective=0))[0])
+# 人工依据：注册词 + [E:] 纪律
+check("negative_verdict_basis.phase0_redflags 挂 [E:] → 排除有依据",
+      not _RBA.negative_tier_issues(_nv(0, negative_verdict_basis={
+          "kind": "phase0_redflags", "evidence": "红旗 6/6 [E:adversarial_check.json]"}))[0])
+_i, _ = _RBA.negative_tier_issues(_nv(0, negative_verdict_basis={
+    "kind": "phase0_redflags", "evidence": "红旗很多"}))
+check("人工依据缺 [E:] → 不算依据且单独报错", any("缺 [E:]" in x for x in _i), str(_i))
+_i, _ = _RBA.negative_tier_issues(_nv(0, negative_verdict_basis={
+    "kind": "too_expensive", "evidence": "[E:x.json]"}))
+check("人工依据 kind 非注册词（如 too_expensive）→ 报错（「贵」不是否决依据）",
+      any("不在注册词表" in x for x in _i), str(_i))
+_i, _ = _RBA.negative_tier_issues(_nv(0, negative_verdict_basis={
+    "kind": "moat_none", "evidence": "[E:x.json]"}))
+check("拒绝类人工依据（moat_none）撑不起排除(0)", any("只够拒绝(1)" in x for x in _i), str(_i))
+check("拒绝类人工依据（negative_expected_return）撑得起拒绝(1)",
+      not _RBA.negative_tier_issues(_nv(1, negative_verdict_basis={
+          "kind": "negative_expected_return", "evidence": "[E:expected_return.json]"}))[0])
+check("negative_verdict_basis 非对象 → 报错",
+      _RBA.negative_tier_issues(_nv(0, negative_verdict_basis="能力圈外"))[0])
+
+# 存量实证（冻结 verdict 只读）：伊利 = 排除缺依据；康美/柯达/鞍钢 = 有依据；
+# 恒大 = 落码红旗仅 2 条（人工 6 条未逐条落码）→ 缺依据，是本纪律对 P0 人工赋码
+# 完整性的连带要求；NFLX/ZM「拒绝（观察等价格）」复合表述 = 拒绝缺依据。
+def _frozen(case):
+    return json.load(open(os.path.join(ROOT, "backtest", case, "verdict.json"), encoding="utf-8"))
+
+
+check("存量实证：伊利 B3-18 排除(0) 缺依据（本纪律的动因案）",
+      _RBA.negative_tier_issues(_frozen("600887.SH_2013-12-31"))[0])
+check("存量实证：康美 排除(0) 有依据（三 veto + 红旗 3）",
+      not _RBA.negative_tier_issues(_frozen("600518.SH_2017-12-31"))[0])
+check("存量实证：柯达 拒绝(1) 有依据（NORM_BASE_UNUSABLE + none）",
+      not _RBA.negative_tier_issues(_frozen("EK_2011-06-30"))[0])
+check("存量实证：鞍钢 拒绝(1) 有依据（结构性衰退 + 无护城河）",
+      not _RBA.negative_tier_issues(_frozen("000898.SZ_2015-12-31"))[0])
+check("存量实证：恒大 排除(0) 落码红旗 2 条 → 缺依据（人工 6 条须逐条落码或登记 basis）",
+      _RBA.negative_tier_issues(_frozen("3333.HK_2020-06-30"))[0])
+_i, _ = _RBA.negative_tier_issues(_frozen("ZM_2021-10-31"))
+check("存量实证：Zoom『拒绝（观察等价格）』复合表述 = 拒绝缺依据（官方 [1]，靶点是拒绝依据缺失而非档位错）",
+      _i and "拒绝(1) 缺依据" in _i[0], str(_i))
+
+# lint CLI 侧：批次≥4 硬失败 / 存量咨询 / 有依据时 advisory 披露依据
+_SNAP15 = {"skill_commit": "c" * 40, "skill_commit_short": "c" * 7, "dirty": False,
+           "missing": [], "thresholds": {
+               "discount_rate_default": 0.10, "pessimistic_hurdle_default": 0.0,
+               "mos_requirement": {"wide": 0.5, "narrow": 0.4}}}
+
+
+def _lint15(batch, v):
+    with tempfile.TemporaryDirectory() as td:
+        cd = os.path.join(td, "600000.SH_2026-06-30")
+        os.makedirs(os.path.join(cd, "data"))
+        json.dump(_scen315(variant_perception=VP_FULL),
+                  open(os.path.join(cd, "data", "scenarios.json"), "w", encoding="utf-8"),
+                  ensure_ascii=False)
+        json.dump({"batch": batch}, open(os.path.join(cd, "meta.json"), "w"))
+        subprocess.run([sys.executable, os.path.join(SCRIPTS, "prepare_case.py"),
+                        "--preregister", cd], capture_output=True, text=True)
+        v = dict(v, gate1=v.get("gate1", {"pass": False}), gate2=v.get("gate2", {"pass": False}),
+                 codes_provenance={"engine_derived": list(v["codes"])},
+                 frozen_before_diff=True, frozen_at="2026-09-14", rules_snapshot=_SNAP15,
+                 # tempdir 无 git 时序证据，P2-09 必报；亮牌降为 advisory，隔离只测档位纪律
+                 post_hoc_changed=True)
+        vp = os.path.join(cd, "verdict.json")
+        json.dump(v, open(vp, "w", encoding="utf-8"), ensure_ascii=False)
+        return subprocess.run([sys.executable, os.path.join(
+            SCRIPTS, "run_backtest_assertions.py"), "--lint-verdict", vp],
+            capture_output=True, text=True)
+
+
+_l = _lint15(4, _nv(0, moat_rating="narrow", expected_irr=-0.10,
+                    scenarios_value_per_share={"loss_probability": 1.0}))
+check("lint（batch 4）：伊利形态排除(0) → 体检不过，点名 OBS-META-08",
+      _l.returncode == 1 and "- 排除(0) 缺公司层否决依据" in _l.stdout
+      and "OBS-META-08" in _l.stdout, _l.stdout[-400:])
+_l = _lint15(4, _nv(1, moat_rating="narrow", expected_irr=-0.10,
+                    scenarios_value_per_share={"loss_probability": 1.0}))
+check("lint（batch 4）：同形态拒绝(1) → 通过并 advisory 披露依据",
+      _l.returncode == 0 and "⚠ 档位 拒绝 依据：" in _l.stdout, _l.stdout[-400:])
+_l = _lint15(4, _nv(1, moat_rating="wide", expected_irr=0.08))
+check("lint（batch 4）：拒绝(1) 无依据 → 体检不过（应为观察等价格）",
+      _l.returncode == 1 and "- 拒绝(1) 缺依据" in _l.stdout, _l.stdout[-400:])
+_l = _lint15(4, _nv(2, moat_rating="wide", expected_irr=0.08))
+check("lint（batch 4）：观察等价格(2) → 不触发",
+      _l.returncode == 0 and "OBS-META-08" not in _l.stdout, _l.stdout[-300:])
+_l = _lint15(3, _nv(0, moat_rating="narrow", expected_irr=-0.10,
+                    scenarios_value_per_share={"loss_probability": 1.0}))
+check("lint（batch 3 存量）：排除缺依据只咨询不阻塞（冻结基线不动）",
+      _l.returncode == 0 and "⚠ 排除(0) 缺公司层否决依据" in _l.stdout, _l.stdout[-400:])
+check("lint 通过行在 batch≥4 标注『档位下探依据』",
+      "/档位下探依据）" in _lint15(4, _nv(2)).stdout)
+# 不放松的机器证明：本检查对 ordinal ≥2 的任何 verdict 不产生 problems，
+# 也不读取任何闸门阈值——源码级断言。
+_RUNNER15 = open(os.path.join(SCRIPTS, "run_backtest_assertions.py"), encoding="utf-8").read()
+_fn15 = _RUNNER15[_RUNNER15.index("def negative_tier_issues"):_RUNNER15.index("def lint_verdict")]
+check("negative_tier_issues 源码不引用任何 MoS/闸门阈值（纯档位纪律，非判别逻辑放松）",
+      not re.search(r"mos_requirement|margin_of_safety|floor_hurdle|pessimistic_hurdle|"
+                    r"GATE1_PASS|GATE2_PASS", _fn15))
+check("negative_tier_issues 入口即对 ordinal>1 短路",
+      "if not isinstance(ordn, int) or ordn > 1:\n        return [], []" in _fn15)
 
 
 print()

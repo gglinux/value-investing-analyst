@@ -40,6 +40,7 @@
     python3 scripts/run_backtest_assertions.py --lint-verdict <case>/verdict.json
         # Step 3 落盘体检：codes 注册表/provenance/必填字段/档位自洽
         # /规则快照/隔离交叉/预注册摘要比对（REQ-P2-09，批次≥3）
+        # /档位下探依据（OBS-META-08，批次≥4：拒绝/排除须有依据码或人工登记）
 
 退出码：0 全部通过；1 有断言失败或漂移。
 """
@@ -54,7 +55,10 @@ from pathlib import Path
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from alert_codes import (ASSERTIONS, ORDINAL_TO_VERDICT, assertion_satisfied,
-                         matched_codes, unknown_assertions, unknown_codes)
+                         matched_codes, unknown_assertions, unknown_codes,
+                         EXCLUSION_GROUND_CODES, REJECTION_GROUND_CODES,
+                         REDFLAG_EXCLUSION_MIN, NEGATIVE_BASIS_KINDS,
+                         NEGATIVE_BASIS_KINDS_EXCLUSION)
 import check_scenarios as CS  # noqa: E402（REQ-P3-03：五字段校验唯一实现，回测侧不另写一套）
 import prepare_case as _PC  # noqa: E402（REQ-P2-09 预注册：lint 比对 + runner 审计）
 
@@ -74,6 +78,11 @@ FN_RATE_TARGET = 0.40
 # REQ-P0-05 / P0-08：隔离机器检查与规则版本快照从第几批起强制。
 # 执行顺序 1→2→4→3→5，故"下一执行批次"是第四批；第三批因排在第四批之后同样受约束。
 RULES_SNAPSHOT_MIN_BATCH = 3
+
+# OBS-META-08 档位纪律：拒绝/排除须有依据码或人工登记依据，否则闸门不过的标的
+# 只能是「观察等价格」。第四批起硬失败；存量（≤3 批）只提示不阻塞——伊利 B3-18
+# 即该形态的实证（无 P0/结构性/cap 码而落排除），冻结文本不改，由 OBS 承载修正。
+NEGATIVE_TIER_BASIS_MIN_BATCH = 4
 
 # REQ-P2-01 官方答案置信度。规则表与修订流程见 backtest/ANSWERS.md。
 #   high / medium —— 进主指标（FP/FN 分母、战绩计数、回归门禁）
@@ -783,6 +792,98 @@ def print_fp_fn_summary(s):
         print("    分母口径：上述 FP/FN/弃权率只含高/中置信度案例——规则调整不对争议标签负责")
 
 
+def _loss_probability_of(v):
+    """从 verdict.json 多个历史落点读亏损概率（顶层 / scenarios 块 / gate2 ④）。"""
+    for cand in (v.get("loss_probability"),
+                 (v.get("scenarios_value_per_share") or {}).get("loss_probability")
+                 if isinstance(v.get("scenarios_value_per_share"), dict) else None,
+                 ((v.get("gate2") or {}).get("item4") or {}).get("value")
+                 if isinstance(v.get("gate2"), dict) else None):
+        if isinstance(cand, (int, float)):
+            return float(cand)
+    return None
+
+
+def _moat_word_of(v):
+    m = v.get("moat_rating")
+    g1 = v.get("gate1") if isinstance(v.get("gate1"), dict) else {}
+    for w in (m, g1.get("moat"), g1.get("moat_rating")):
+        if isinstance(w, str) and w.strip():
+            w = w.strip().lower()
+            return {"无": "none", "窄": "narrow", "宽": "wide"}.get(w, w)
+    return None
+
+
+def negative_tier_issues(v):
+    """档位下探依据校验（OBS-META-08）——返回 (issues, grounds)。
+
+    只在 verdict_ordinal ≤1 时工作。**不放松任何闸门**：闸门不过的标的最高仍是
+    观察等价格；本函数守的是相反方向——从观察(2)再往下走到拒绝(1)/排除(0)，
+    每一步都要有条款依据，否则就是「贵」被写成了「烂」。
+
+    排除(0) 依据（公司层否决，任一即可）：
+      EXCLUSION_GROUND_CODES 之一 / P0_R* 红旗 ≥ REDFLAG_EXCLUSION_MIN /
+      verdict_cap_effective ≤1 / negative_verdict_basis.kind ∈ 排除类人工依据。
+    拒绝(1) 依据（价格层「等不到」，任一即可，排除依据亦可）：
+      REJECTION_GROUND_CODES 之一 / 护城河 none / 期望 IRR<0 且亏损概率>50%
+      （valuation-guide 门槛纪律第 4 条，从 verdict 数字自动判定）/
+      negative_verdict_basis.kind ∈ 拒绝类人工依据。
+    人工依据必须挂 [E:] 且 kind 取注册词——与 P0 人工赋码同纪律。
+    """
+    ordn = v.get("verdict_ordinal")
+    if not isinstance(ordn, int) or ordn > 1:
+        return [], []
+    fired = set(v.get("codes") or [])
+    issues, ex_grounds, rj_grounds = [], [], []
+
+    ex_grounds += sorted(fired & EXCLUSION_GROUND_CODES)
+    redflags = sorted(c for c in fired if c.startswith("P0_R"))
+    if len(redflags) >= REDFLAG_EXCLUSION_MIN:
+        ex_grounds.append(f"红旗 {len(redflags)} 条 ≥ {REDFLAG_EXCLUSION_MIN}")
+    cap = v.get("verdict_cap_effective")
+    if isinstance(cap, int) and cap <= 1:
+        ex_grounds.append(f"verdict_cap_effective={cap}（{ORDINAL_TO_VERDICT.get(cap)}）")
+
+    rj_grounds += sorted(fired & REJECTION_GROUND_CODES)
+    if _moat_word_of(v) == "none":
+        rj_grounds.append("护城河 none：不给买入结论")
+    eirr, lp = v.get("expected_irr"), _loss_probability_of(v)
+    if isinstance(eirr, (int, float)) and lp is not None and eirr < 0 and lp > 0.5:
+        rj_grounds.append(f"期望 IRR {eirr:.1%}<0 且亏损概率 {lp:.0%}>50%（门槛纪律第 4 条）")
+
+    basis = v.get("negative_verdict_basis")
+    if basis is not None:
+        if not isinstance(basis, dict):
+            issues.append("negative_verdict_basis 须为对象 {kind, evidence}")
+        else:
+            kind, ev = basis.get("kind"), basis.get("evidence") or ""
+            if kind not in NEGATIVE_BASIS_KINDS:
+                issues.append(f"negative_verdict_basis.kind『{kind}』不在注册词表 "
+                              f"{sorted(NEGATIVE_BASIS_KINDS)}——不可算术化的否决只能人工给，"
+                              "但必须选注册词（与 P0 人工赋码同纪律）")
+            elif "[E:" not in ev:
+                issues.append(f"negative_verdict_basis({kind}) 缺 [E:] 证据指针——裸依据禁止")
+            elif kind in NEGATIVE_BASIS_KINDS_EXCLUSION:
+                ex_grounds.append(f"negative_verdict_basis.{kind}")
+            else:
+                rj_grounds.append(f"negative_verdict_basis.{kind}")
+
+    if ordn == 0 and not ex_grounds:
+        hint = ("；已有拒绝级依据 " + "、".join(rj_grounds) + "——只够拒绝(1)，撑不起排除(0)"
+                if rj_grounds else "")
+        issues.append(
+            "排除(0) 缺公司层否决依据（一票否决 / 红旗≥3 / 结构性衰退 / 清算穿透 / "
+            "价值陷阱 cap / 能力圈外 / 管理层不可信均无）——「贵的好公司」是观察或拒绝，"
+            "不是排除；闸门不过本身只支撑「观察等价格」(2)" + hint
+            + "（VERDICT_NEGATIVE_TIER_UNSUPPORTED，OBS-META-08）")
+    elif ordn == 1 and not (ex_grounds or rj_grounds):
+        issues.append(
+            "拒绝(1) 缺依据（触发价不可达 / 护城河 none / 期望 IRR<0 且亏损概率>50% / "
+            "人工登记 negative_verdict_basis 均无）——闸门不过本身只支撑「观察等价格」(2)，"
+            "须声明触发价而非拒绝（VERDICT_NEGATIVE_TIER_UNSUPPORTED，OBS-META-08）")
+    return issues, ex_grounds + rj_grounds
+
+
 def lint_verdict(path):
     """Step 3 落盘体检——answer.json 尚不存在时，单验 verdict.json。
 
@@ -921,6 +1022,18 @@ def lint_verdict(path):
                     advisories.append("变异认知五字段不完整（REQ-P3-03）：档位已被 "
                                       "cap 在「观察等价格」——" + "；".join(_vpi[:3]))
 
+    # ---- OBS-META-08 档位下探依据（第四批起强制；存量咨询）----
+    # 与 P3-03 方向相反：P3-03 守「往上走要有变异认知」，这里守「往下走要有依据」。
+    # 伊利 B3-18 无任何 P0/结构性/cap 码而落排除(0)，三师以「不收敛下限<无风险
+    # 利率故观察档失效」下探两档——条款内无此依据。放松性改动零：闸门不过的
+    # 标的仍最高观察等价格，本检查不触碰任何闸门数字，也不可能新增假阳性。
+    _nt_issues, _nt_grounds = negative_tier_issues(v)
+    if _nt_issues:
+        (problems if batch >= NEGATIVE_TIER_BASIS_MIN_BATCH else advisories).extend(_nt_issues)
+    elif _nt_grounds and v.get("verdict_ordinal") in (0, 1):
+        advisories.append(f"档位 {ORDINAL_TO_VERDICT.get(v.get('verdict_ordinal'))} 依据："
+                          + "、".join(_nt_grounds[:4]))
+
     if problems:
         print(f"❌ {path} 落盘体检未通过：")
         for p in problems:
@@ -929,7 +1042,8 @@ def lint_verdict(path):
             print(f"   ⚠ {a}")
         return 1
     print(f"✅ {path} 落盘体检通过（codes 注册表/provenance/必填字段/档位自洽"
-          f"{'/规则快照/隔离交叉/预注册比对' if enforce_new else ''}）")
+          f"{'/规则快照/隔离交叉/预注册比对' if enforce_new else ''}"
+          f"{'/档位下探依据' if batch >= NEGATIVE_TIER_BASIS_MIN_BATCH else ''}）")
     for a in advisories:
         print(f"   ⚠ {a}")
     return 0
