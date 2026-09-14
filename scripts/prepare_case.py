@@ -584,9 +584,9 @@ def _preregister(case_dir: Path, trigger: str, note: str) -> int:
 def prereg_issues(case_dir, audit: bool = False) -> list:
     """预注册完好性检查。返回问题清单（空 = 通过）。
 
-    pre 模式（lint / Step 3 落盘时）：文件存在、已 git 提交、参数摘要与
-    scenarios.json 当前值一致；audit 模式（runner / 收官审计）：另验
-    preregistration.json 最后提交早于 verdict.json 首次提交——verdict 落地后
+    pre 模式（lint / Step 3 落盘时）：文件存在、已 git 提交且工作区无未提交
+    改动、参数摘要与 scenarios.json 当前值一致；audit 模式（runner / 收官审计）：
+    另验 preregistration.json 最后提交早于 verdict.json 首次提交——verdict 落地后
     追加注册即揭示后改参数。批次 < PREREGISTER_MIN_BATCH 豁免（legacy 基线不动）。
     """
     case_dir = Path(case_dir)
@@ -619,6 +619,12 @@ def prereg_issues(case_dir, audit: bool = False) -> list:
     if not p_commits:
         issues.append("preregistration.json 无 git 提交记录——注册后必须单独提交"
                       "（靶在箭前的时序证据）")
+    elif rel and _git(["status", "--porcelain", "--", rel]).stdout.strip():
+        # 有历史提交 ≠ 最后一次注册已提交：摘要比对读工作区文件（regs[-1] 与
+        # 篡改后参数吻合）、时序闸门只看最后提交（仍箭前）——未提交的工作区
+        # 改动对两把锁均不可见，是揭示后改参数的绕过通道（2026-09-14 审查实证）。
+        issues.append("preregistration.json 有未提交改动——最后一次注册未单独提交，"
+                      "工作区注册内容无时序证据（须 git 提交后重审）")
     try:
         cur_params = preregistration_parameters(load_scenarios(case_dir))
     except FileNotFoundError as exc:
