@@ -571,14 +571,22 @@ def check_case(case, do_rerun=False):
     conf = a.get("confidence")
     res["answer_confidence"] = conf
     try:
-        _batch = int(case["meta"].get("batch") or 0)
+        _batch_raw = case["meta"].get("batch")
+        _batch = int(_batch_raw) if _batch_raw is not None else None
     except (TypeError, ValueError):
-        _batch = 0
+        _batch = None
     if conf is None:
         msg = ("answer 缺 confidence（REQ-P2-01，规则表与修订流程见 ANSWERS.md）——"
                "缺失按高置信度计分；要排除主指标必须显式标 low 并给 confidence_basis")
-        (res["failures"] if _batch >= ANSWER_CONFIDENCE_MIN_BATCH
-         else res["notes"]).append(msg)
+        if _batch is None:
+            # 2026-09-14 审查修订：batch 元数据缺失不可充当硬校验的绕行道——
+            # 反博弈约束在"批次≥3 强制"上，批次不可判定时必须按失败处理，
+            # 否则删一行 meta.batch 就能把第 3 批案例洗回咨询性路径。
+            res["failures"].append(
+                msg + "；另：meta.batch 缺失/非法，无法判定是否达强制批次——按失败处理")
+        else:
+            (res["failures"] if _batch >= ANSWER_CONFIDENCE_MIN_BATCH
+             else res["notes"]).append(msg)
     elif conf not in CONFIDENCE_LEVELS:
         res["failures"].append(f"answer.confidence={conf!r} 非法"
                                f"（合法取值 {list(CONFIDENCE_LEVELS)}，REQ-P2-01）")
@@ -1056,9 +1064,15 @@ def main():
                 b, s = set(base.get(k, [])), set(snap.get(k, []))
                 if b != s:
                     diffs.append(f"  {k}: 新增 {sorted(s - b)} / 消失 {sorted(b - s)}")
-            # 门禁口径：主指标假阳性 ∪ 低置信度假阳性（后者不计率、只守门）
+            # 门禁口径：主指标假阳性 ∪ 低置信度假阳性（后者不计率、只守门）。
+            # 2026-09-14 审查修订：比对基数必须同时减去基线登记的
+            # low_conf_false_positives——基线写入 snap_meta 时存了该字段，
+            # 回读却不认，会让基线已收录的低置信度假阳性在每次运行都被
+            # 误判为"新增"（永久红灯，违背"只对新增负责"的门禁语义）。
             gate_fp = set(fpfn["false_positives"]) | set(fpfn.get("low_conf_false_positives") or [])
-            new_fp = sorted(gate_fp - set(base_meta.get("false_positives") or []))
+            known_fp = (set(base_meta.get("false_positives") or [])
+                        | set(base_meta.get("low_conf_false_positives") or []))
+            new_fp = sorted(gate_fp - known_fp)
             if new_fp:
                 diffs.append(f"  ⛔ 假阳性轨相对基线新增：{new_fp}（红灯规则：直接否决，不得抵扣）")
                 low_new = [c for c in new_fp if c in set(fpfn.get("low_conf_false_positives") or [])]

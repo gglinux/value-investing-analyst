@@ -5186,6 +5186,38 @@ check("G PROMPT 红灯规则接入低置信度例外路径",
       "低置信度答案（`confidence=low`）不豁免本规则" in _PROMPT)
 
 
+# H. 基线文件实物断言 + batch 元数据反绕行（2026-09-14 审查修订）
+# G 段的"基线快照含 low_conf 段"只 grep runner 源码——源码有此逻辑 ≠
+# assertion_baseline.json 已刷新。此处直接断言基线实物，防止快照再次
+# 陈旧（P2-01 as-built 曾声称基线含 low_conf 段而实际文件没有，即此盲区）。
+_base = json.load(open(os.path.join(ROOT, "backtest", "assertion_baseline.json"),
+                       encoding="utf-8"))
+_bfp = _base.get("_fp_fn") or {}
+check("H 基线 _fp_fn 实物含 low_conf 段（非仅源码字符串）",
+      "low_conf_cases" in _bfp and "low_conf_false_positives" in _bfp, str(sorted(_bfp)))
+check("H 基线 _fp_fn 实物：false_negatives 不含低置信度案（新口径分母）",
+      not ({"601919.SH_2021-07-31", "NFLX_2016-12-31"} & set(_bfp.get("false_negatives") or [])),
+      str(_bfp.get("false_negatives")))
+check("H 基线 _fp_fn 实物：low_conf_cases = 海控 + Netflix",
+      set(_bfp.get("low_conf_cases") or []) == {"601919.SH_2021-07-31", "NFLX_2016-12-31"},
+      str(_bfp.get("low_conf_cases")))
+check("H 基线代号快照覆盖 12 案（重生成未丢案例）",
+      len([k for k in _base if not k.startswith("_")]) == 12, str(len(_base)))
+# batch 元数据缺失不可充当硬校验绕行道：删 meta.batch 不能把批次≥3 案例
+# 洗回咨询性路径（2026-09-14 审查修订的行为锁定）。
+_m216 = _mkc216("no_meta_batch", [1, 2], 1, confidence=None)
+_m216["meta"] = {}
+_r = _RBA.check_case(_m216)
+check("H 缺 confidence 且 meta.batch 缺失 → 硬失败（不可绕行）",
+      any("缺 confidence" in f and "meta.batch" in f for f in _r["failures"]),
+      str(_r["failures"]))
+_m216 = _mkc216("bad_meta_batch", [1, 2], 1, confidence=None)
+_m216["meta"] = {"batch": "第三批"}
+_r = _RBA.check_case(_m216)
+check("H meta.batch 非法（非整数）→ 同样硬失败",
+      any("meta.batch" in f for f in _r["failures"]), str(_r["failures"]))
+
+
 print()
 if FAILED:
     print(f"结果：{len(FAILED)} 项失败 → {FAILED}")
