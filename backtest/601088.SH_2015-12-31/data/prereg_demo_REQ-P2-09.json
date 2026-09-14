@@ -1,0 +1,43 @@
+{
+ "requirement": "REQ-P2-09 预注册机器化",
+ "demo_case": "601088.SH_2015-12-31（神华 2015-12，batch 2 legacy 案例参数做反事实演示——本演示在 tempdir 中进行，不改动任何真实案例文件）",
+ "story": "打靶类比：射箭前允许调整姿势换弓（研究迭代留痕），靶必须在射出那支箭之前画死（揭示前冻结）。五步演示：① 初次注册（靶心画死）→ ② 发现新证据再注册（合法迭代留痕）→ ③ 揭示后改悲观概率 25%→20% 且未再注册（先看答案再改答卷）→ ④ prereg-check 检出并给出参数差异 → ⑤ lint-verdict 拦截，标 post_hoc_changed=true 才放行且三轨不计分",
+ "steps": [
+  {
+   "step": 1,
+   "action": "prepare_case.py --preregister（研究定稿，verdict 落盘前）",
+   "exit": 0,
+   "stdout": "✅ 预注册已写入：/private/var/folders/8z/5s25gy49629d_jzn8pnf8rk00000gn/T/tmpp7lhceel/601088.SH_2015-12-31/preregistration.json\n   摘要 sha256：c2ef631b884a6c1bbacde88c661a469a1abf2acf9f12eb6d3da044053ca623a4\n   注册号：第 1 次（trigger=initial）\n下一步（人工）：git add <case>/preregistration.json 单独提交——该提交必须早于 verdict commit（--prereg-check 机器核 git 时序）。"
+  },
+  {
+   "step": 2,
+   "action": "再注册 --trigger evidence_revision --note（研究迭代合法、留痕）",
+   "exit": 0,
+   "stdout": "✅ 预注册已写入：/private/var/folders/8z/5s25gy49629d_jzn8pnf8rk00000gn/T/tmpp7lhceel/601088.SH_2015-12-31/preregistration.json\n   摘要 sha256：4891c7d2828fc982bfedea72706436694be007ced379f298e135afa8d69046ba\n   注册号：第 2 次（trigger=evidence_revision）\n⚠ 本次注册与上次参数不同（研究迭代留痕，靶心变更逐项可见）：\n   - discount_rate: 0.1 → 0.11\n下一步（人工）：git add <case>/preregistration.json 单独提交——该提交必须早于 verdict commit（--prereg-check 机器核 git 时序）。"
+  },
+  {
+   "step": 3,
+   "action": "揭示后（Phase 4+）改悲观概率 25%→20%，未再注册 → --prereg-check",
+   "exit": 1,
+   "stdout": "⛔ 预注册检查失败（601088.SH_2015-12-31，模式 pre（verdict 落盘时））：\n   ❌ preregistration.json 无 git 提交记录——注册后必须单独提交（靶在箭前的时序证据）\n   ❌ 参数摘要与最后一次注册不一致（post_hoc_changed）——差异：default_probabilities: {'悲观': 0.25, '基准': 0.5, '乐观': 0.25} → {'悲观': 0.2, '基准': 0.5, '乐观': 0.25}; scenarios[0].probability: 0.25 → 0.2\n\n  verdict.json 须标注 `\"post_hoc_changed\": true`（lint-verdict 会交叉校验）\n  post_hoc 案例三轨不计分、从战绩表排除（REQ-P2-09）。"
+  },
+  {
+   "step": "4a",
+   "action": "lint-verdict：改参数未亮牌 → 体检不过",
+   "exit": 1,
+   "stdout": "❌ /var/folders/8z/5s25gy49629d_jzn8pnf8rk00000gn/T/tmpp7lhceel/601088.SH_2015-12-31/verdict.json 落盘体检未通过：\n   - 预注册比对不一致（REQ-P2-09）但 verdict 未标 `post_hoc_changed: true`：\n      preregistration.json 无 git 提交记录——注册后必须单独提交（靶在箭前的时序证据）\n      参数摘要与最后一次注册不一致（post_hoc_changed）——差异：default_probabilities: {'悲观': 0.25, '基准': 0.5, '乐观': 0.25} → {'悲观': 0.2, '基准': 0.5, '乐观': 0.25}; scenarios[0].probability: 0.25 → 0.2"
+  },
+  {
+   "step": "4b",
+   "action": "lint-verdict：标 post_hoc_changed=true → 放行但三轨不计分",
+   "exit": 0,
+   "stdout": "✅ /var/folders/8z/5s25gy49629d_jzn8pnf8rk00000gn/T/tmpp7lhceel/601088.SH_2015-12-31/verdict.json 落盘体检通过（codes 注册表/provenance/必填字段/档位自洽/规则快照/隔离交叉/预注册比对）\n   ⚠ post_hoc_changed=true：三轨不计分，从战绩表排除（REQ-P2-09）——diff.md 须说明改动动因"
+  }
+ ],
+ "verification": {
+  "acceptance": "需求验收标准『人为在 Phase 4 后改动概率能被检出』——满足",
+  "evidence": "step 3 exit=1 且输出参数差异 default_probabilities.悲观 0.25→0.2 与 scenarios[0].probability 0.25→0.2；step 4a lint 拒绝（未亮牌）；step 4b 亮牌后放行（advisory：三轨不计分）",
+  "iteration_vs_tamper": "step 2 合法迭代（折现率 10%→11%，带 note 再注册）与 step 3 非法改动（概率 25%→20%，无 note 无再注册）的判别 = 是否再注册留痕；研究迭代不禁止、不可见才禁止",
+  "three_locks": "P0-05 管答案不泄漏（输入端）/ P0-08 管规则版本（引擎阈值）/P2-09 管案例自由参数（过程端）——回测『不作弊』的完整闭环"
+ }
+}

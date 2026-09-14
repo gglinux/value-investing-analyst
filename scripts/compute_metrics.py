@@ -661,6 +661,13 @@ def compute(data, market_cap=None):
         if ni is not None and da is not None and mc is not None:
             oe = ni + da - mc - (wc or 0.0)
 
+        # ---- REQ-P1-02：经营性 OE 与 look-through 分列（持仓型控股）----
+        # annual 行可选字段：investment_income（投资收益+公允价值变动损益——
+        # 重估推高与减值压低同一字段）、dividend_income（从被投企业收到的分红，
+        # 即 look-through 收益）。缺字段=不适用（经营主导型），存在性前置。
+        inv_inc = get(r, "investment_income")
+        operating_oe = (oe - inv_inc) if (oe is not None and inv_inc is not None) else None
+
         fcf = ocf - capex if (ocf is not None and capex is not None) else None
         # 真实 FCF 区间：悲观=全部 capex 视同维持（fcf），乐观=扩张性 capex 视为可裁量再投资（ocf−mc）
         fcf_optimistic = (ocf - mc) if (ocf is not None and mc is not None) else None
@@ -676,6 +683,9 @@ def compute(data, market_cap=None):
             "gross_margin": safe_div(get(r, "gross_profit"), rev),
             "net_margin": safe_div(ni, rev),
             "owner_earnings": oe,
+            "investment_income": inv_inc,
+            "dividend_income": get(r, "dividend_income"),
+            "operating_oe": operating_oe,
             "capex_total": capex,
             "maintenance_capex_used": mc,
             "growth_capex_used": growth_part,
@@ -1036,6 +1046,69 @@ def compute(data, market_cap=None):
                 "market_cap 的单位错位（亿/百万混淆）是最常见原因，"
                 "请先核对 market_cap ≈ 股价 × 股本 是否自洽，再谈估值")
 
+    # ---- REQ-P1-02：经营性 OE 与 look-through 收益分列（持仓型控股失真防护）----
+    # 动因（OBS-2019-06-01 软银案）：投资收益/公允价值重估主导净利润时，OE 与
+    # owner yield 被投资组合波动淹没（重估推高与减值压低同病——软银 FY2018
+    # owner yield 21.1% 对股息率 0.43% 是数学不可能；腾讯 2023 减值年是反向同病），
+    # 旧引擎既不识别也不分列，M_UNIT_SUSPECT 反而被虚高的 owner yield 骗过。
+    has_inv_fields = any(s.get("investment_income") is not None
+                         or s.get("dividend_income") is not None for s in series)
+    sotp_screen = {"applicable": has_inv_fields}
+    if has_inv_fields:
+        inv_rows = []
+        for s in series:
+            ii, ni = s.get("investment_income"), s.get("net_income")
+            shr = abs(ii) / abs(ni) if (ii is not None and ni not in (None, 0)) else None
+            inv_rows.append({"year": s["year"], "investment_income": ii,
+                             "investment_income_share": shr,
+                             "operating_oe": s.get("operating_oe"),
+                             "dividend_income": s.get("dividend_income")})
+        latest = inv_rows[-1]
+        last3 = [r for r in inv_rows[-3:] if r["investment_income_share"] is not None]
+        dist_latest = latest["investment_income_share"] is not None \
+            and latest["investment_income_share"] >= 0.5
+        dist_hist = sum(1 for r in last3
+                        if r["investment_income_share"] >= 0.3) >= 2
+        distortion = dist_latest or dist_hist
+        if dist_latest:
+            _basis = (f"最新年投资收益/重估占净利润 "
+                      f"{latest['investment_income_share']:.0%} ≥50%")
+        elif dist_hist:
+            _basis = "近 3 年 ≥2 年占比 ≥30%（持续性污染而非单年事件）"
+        else:
+            _basis = None
+        sotp_screen.update({
+            "investment_income_latest": latest["investment_income"],
+            "investment_income_share_latest": latest["investment_income_share"],
+            "operating_oe_latest": latest["operating_oe"],
+            "look_through_income_latest": latest["dividend_income"],
+            "distortion": bool(distortion),
+            "distortion_basis": _basis,
+            "share_series": {str(r["year"]): r["investment_income_share"]
+                             for r in inv_rows if r["investment_income_share"] is not None},
+            "channel_hint": "SOTP（reverse_dcf.py sotp，company-types 卡四）",
+            "note": "operating_oe 仅剔除投资收益维度（税前/税后混合口径的量级估计，"
+                    "非精确值）；并表错位维度（少数股东应担的子公司现金流与 D&A）"
+                    "须由 SOTP 结构化持仓表处理——两个污染维度分开治理"
+                    "（OBS-2019-06-01 的三类失真来源各归其位）",
+        })
+        if distortion:
+            _dir = "推高" if (latest["investment_income"] or 0) >= 0 else "压低"
+            alerts.add(
+                "M_OWNER_YIELD_CONSOLIDATION_DISTORTION",
+                f"并表/重估污染警报：投资收益与公允价值变动占净利润比重主导"
+                f"（{_basis}，最新年 {_dir}利润）——OE 与 owner yield 被投资组合"
+                f"波动淹没，经营性盈利能力被掩盖（重估推高型：owner yield 虚高，"
+                f"如软银 FY2018 的 21.1% vs 股息率 0.43%；减值压低型：主业稳定而"
+                f"利润下滑，如腾讯 2018/2023）。OE 通道结论不进档位裁决，估值改走"
+                f"SOTP 通道（reverse_dcf.py sotp），经营性 OE 与 look-through 收益"
+                f"分列见 sotp_screen 块")
+    else:
+        sotp_screen["note"] = (
+            "底稿无 investment_income/dividend_income 字段——经营主导型（正确阴性）"
+            "或持仓型公司字段未登记。投资收益占利润比重大的公司须补字段以启用"
+            "分列（REQ-P1-02 交付物；字段语义见 valuation-guide SOTP 通道纪律）")
+
     return {
         "company": data.get("company"), "ticker": data.get("ticker"),
         "currency": data.get("currency"), "unit": data.get("unit"),
@@ -1044,6 +1117,7 @@ def compute(data, market_cap=None):
         "normalization": normalization,
         "capital_allocation": alloc,
         "owner_yield": owner_yield,
+        "sotp_screen": sotp_screen,
         "chart_series": chart_series,
         "alerts": alerts.messages,
         "alert_codes": alerts.codes,

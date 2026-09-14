@@ -17,5 +17,7 @@
   "multiple_driven_return": null,
   "outcome_note": "iPhone 首次同比下滑、市场认定硬件无护城河，伯克希尔同期建仓；4×131.46/93.74 = 5.61x（含 1:4 拆股还原）",
   "answer_source": "PROMPT 第七节 + diff.md 第 33 行",
-  "case": "AAPL_2016-04-30"
+  "case": "AAPL_2016-04-30",
+  "confidence": "high",
+  "confidence_basis": "H1：事后 5 年 5.61x（含 1:4 拆股还原）+ 伯克希尔同期建仓独立佐证；单一档位 {4} 且数值口径可复核"
 }

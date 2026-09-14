@@ -221,6 +221,18 @@ must_trigger 在密封时才写入）。
 
 两条机器化纪律（第三批起强制，即下一执行批次第四批起）：① Phase 0 必须跑 `python3 scripts/forensic_screen.py <financials> --as-of <回放时点> -o data/forensic.json`，`--as-of` 保证只用当日已发布年报（`publish_date` 驱动），其输出的 `P0_*` 码原样进 `verdict.json.codes` 并标 `engine_derived`——人工登记的排雷命中若脚本未命中，须在 `diff.md` 说明是字段缺失（`insufficient_data`）还是条款未算术化；② 闸门二按 `reverse_dcf.py` 的 `gate2.pass`（四项参与判定）落 `GATE2_*` 码，护城河反推门槛 `GATE2_1_IRR_FAIL` 是诊断码、不构成闸门二不过的理由。
 
+**成长股通道（REQ-P1-01，第三批起强制）**：判型为再投入子型（当期 OE 被增长性资本开支压低）时，估值必须走 `python3 scripts/reverse_dcf.py growth`（成熟期稳态利润×到达概率折回，用法与三段式见 references/growth-framework.md 第三半节），其 `GROWTH_*` 码以 `engine_derived` 进 `verdict.json.codes`；单元经济未证（`GROWTH_UNIT_ECONOMICS_UNPROVEN`，exit 2）即通道不适用，按标准 OE 管道走并在 diff.md 登记。通道档位上限恒为小仓位试探（终值结构性主导纪律），基准/乐观情景 method 登记 `growth_terminal_backcast`。
+
+**持仓型控股 SOTP 通道（REQ-P1-02，第三批起强制）**：判型为隐蔽资产/控股子型（卡四），或 `compute_metrics.py` 输出 `sotp_screen.distortion=true`（投资收益/重估占净利润主导，`M_OWNER_YIELD_CONSOLIDATION_DISTORTION`——底稿 annual 行登记 `investment_income`/`dividend_income` 字段后自动产出）时，估值必须走 `python3 scripts/reverse_dcf.py sotp`：先建结构化持仓表（标的/持股比例/估值方法/变现折价率/流动性/[E:] 六要素，`--holdings-file`，模板见 backtest/9984.T_2019-06-30 data/sotp_holdings_REQ-P1-02.json），净债用母公司本体口径、控股折价挂基率带（`--holding-profile`）。其 `SOTP_*` 码以 `engine_derived` 进 `verdict.json.codes`；持仓表六要素不全（`SOTP_HOLDINGS_TABLE_INVALID`，exit 2）即通道不适用，按 Phase 0 规则终止分部估值、不降级估算。持仓占 equity NAV ≥50%（`SOTP_HOLDINGS_DOMINATED`）时 OE 通道结论不进档位裁决、通道档位上限小仓位试探；基准/乐观情景 method 登记 `sotp`、悲观登记 `sotp_asset_floor`（独立方法，分部按可变现价值）。
+
+**护城河定量得分（REQ-P1-03，第四批起强制）**：Phase 3 护城河结论必须给 0~100 定量得分（三组件：A 超额回报证据/B 源硬度/C 定标与趋势修正，各挂 [E:]，量表见 references/moat-framework.md 第二节半），scenarios.json 登记 `moat_score`/`moat_score_basis`/`moat_sources` 三字段（S1b 校验），expected-return 加 `--moat-score` 走平滑 MoS 门槛（35→50%/65→40%/100→25%，分带边界连续、带内 ≥ 阶跃值——连续化不是放松）。评级词必须等于得分分带投影（≥65 wide/≥35 narrow/<35 none，`MOAT_SCORE_WORD_MISMATCH` 硬拒绝）；得分落边界带（边界 ±5 分）时 `MOAT_BOUNDARY_BAND_DUAL` 以 `engine_derived` 进 `verdict.json.codes`，报告双档并列并标注「结论对护城河判断敏感」。存量前三批案例不回填得分（legacy 词路径合法、基线不动）。
+
+**折现率与概率的证据传导（REQ-P1-04，第四批起强制）**：scenarios.json 登记两块（均须 rationale_ref 挂 [E:]，check_scenarios S7c 校验）：① `discount_rate_derivation`——行业档（stable/standard/cyclical/financials/speculative_growth/holding_complex 白名单）× Rf 分层表与 `discount_rate` 一致性（`DR_STRATIFIED_RATE_MISMATCH` 硬拒：premium 档须按分层值重算三情景估值），`market` 字段把不收敛下限门槛切市场校准（CN 6%/HK 5%/US 5%/JP 3%）；② `probability_derivation`——护城河得分 + 变异认知（weak/neutral/strong）+ 红队悲观概率 → 概率映射（锚 65→30/50/20 规范默认；红队=max() 下界且不可被论证突破），采用值偏离映射 ≤2pp 免论、≤10pp 须 deviation_rationale 挂 [E:]（`PROB_DERIVATION_MISMATCH`/`OUT_OF_RANGE` 硬拒）。引擎自动输出传导链与 ±10pp 敏感性表；`PROB_SENSITIVITY_TIER_FLIP` 以 `engine_derived` 进 `verdict.json.codes`。verdict.json 登记 `discount_rate_rationale_ref` 与 `probability_rationale_ref`（引擎 derivation 块转写）。模板见 backtest/601088.SH_2015-12-31/data/prob_derivation_REQ-P1-04.json 与 backtest/AAPL_2016-04-30/data/dr_derivation_REQ-P1-04.json；存量冻结案例不回填（基线不动）。
+
+**尾部风险单列与基率锚定（REQ-P1-05，第四批起强制）**：scenarios.json 登记 `tail_risk_derivation`（forensic_score/arithmetic_coverage 取自 forensic_screen.py 实测输出、governance ∈ good/normal/poor、loss_tail ∈[−1,0) 缺省归零、rationale_ref 挂 [E:]）——期望 IRR 加第四项 `(1−p_tail)×Σpᵢ·IRRᵢ + p_tail×loss_tail`，p_tail 由 `map_tail_probability` 纯映射（锚 0→1%/5→10%/20→30% + 治理修正 + 覆盖率地板），**不可采用偏离**（把"公司可能归零"论证没=自欺）；闸门二①'④按尾部口径重判，拖累 ≥2pct 触发 `TAIL_DRAG_MATERIALIZES`。同时登记 `industry` + 乐观情景 `growth_assumption`：超行业基率 p80（references/base-rates.md）无 Phase 4.5 [E:] 支撑即被 S10 拦截（`BASERATE_OPTIMISTIC_ABOVE_P80`）。康美反事实演示：backtest/600518.SH_2017-12-31/data/tail_expected_return_REQ-P1-05.json（账面 15.2% → 含尾部 −22.8%）。
+
+**两卡补齐（REQ-P1-07，第五批起强制）**：缓慢增长（卡五）与转困境（卡六）不再是占位——卡五走 `reverse_dcf.py dividend`（股息锚+债券替代利差 ≥3pct+**FCF 覆盖门禁**：覆盖 <1 即分红吃老本、类债论证不成立，双汇 2016/2018=0.63/0.68 实证）；卡六走 `reverse_dcf.py distress`（周期/结构五项判别清单——技术替代一票结构性、周期性须四条件同时成立；清算下限作悲观地板 method=`liquidation_floor`；结构性禁均值回复+档位上限排除，现价 < 清算下限×0.8 深度价值档除外）。验收锚：双汇 2019-06 独立复现官方档位 2、神华 2015 周期性判别+清算地板 5.58、柯达 2011 技术替代一票+清算权益 −34 亿→排除（2012-01 破产实证）。
+
 **时点纪律（REQ-P0-06，第三批起强制）**：底稿 `meta.data_vintage` 与每行 `publish_date` 都不得晚于 `meta.json.replay_date`；`validate_data.py` 自动读同目录 `meta.json` 取回放时点做行级校验（不再靠路径名猜）。确属「文献时点晚于事实时点」的历史事实回取，在 `meta.point_in_time_waiver = {reason, affected_years}` 显式豁免并在报告数据附录带 `data-appendix="point-in-time-waiver"` 披露；用了重述值必须在该行 `restated_from = {<字段>: {original, reason}}` 登记原值与原因（两者缺一即 ERROR），报告附录带 `data-appendix="restatements"`。`data_vintage` 不得早于任何一行 `publish_date`（把 vintage 填成截断日、行级发布日留空的底稿会被一致性检查拦下）。
 
 **源冲突裁决（REQ-P0-07，第三批起强制）**：`crosscheck_official.py --audit`（A/港股）或 EDGAR 模式（美股）按三级阈值比对：命门 >1% 阻断、资产负债表 >3% 告警、其他 >5% 登记，以 tier 更高的源为准（tier 由 `crosscheck[].source_tier` 或 source 文本推断）。差异用 `--write` 落盘到底稿 `crosscheck_conflicts`，报告数据附录带 `data-appendix="source-conflicts"` 列出差异表（`verify_report.py` 校验）。豁免必须是五要素结构 `{adopted_value, adopted_source, rejected_value, rejected_source, reason}`。
@@ -228,12 +240,15 @@ must_trigger 在密封时才写入）。
 **Step 2.5 — 隔离检查（REQ-P0-05，第三批起强制）**
 verdict 落盘**前**运行 `python3 scripts/prepare_case.py --seal-check backtest/<case>/`。pre 模式检查三项：① 工作区无答案明文（answer.json/answer_source.md/diff.md）；② git 时序（meta.json 首次 commit < verdict.json 首次 commit < answer 文件首次 commit，且 verdict 在 answer 落地后不得再有修改提交）；③ ANSWERS.md 第三/四/五批段落无该案例明文（按别名反查，不按 ticker 子串）。任一命中 → verdict.json 打 `"contaminated": true`，runner 三轨不计分、从战绩表排除。`--lint-verdict` 会反向核对：seal-check 失败而未标 contaminated 即体检不过——`contaminated` 不再靠自觉。事后审计用 `--seal-check <case> --audit`（只看 git 时序，answer 文件此时理应存在）；批次执行率用 `--isolation-report`。
 
+**Step 2.7 — 预注册（REQ-P2-09，第四批起强制）**
+研究定稿后、落盘 verdict 前运行 `python3 scripts/prepare_case.py --preregister backtest/<case>/`：对 scenarios.json 的决策参数（护城河档/得分、折现率及推导块、三情景概率及推导块、尾部推导块、行业、逐情景价值与方法——只冻数字与枚举，rationale 文本不进摘要）生成 canonical 摘要，追加注册记录到 `preregistration.json` 并**单独提交**，该提交必须早于 verdict commit（`--prereg-check` 机器核 git 时序；重注册后同样必须单独提交——注册文件有未提交改动时 pre/audit 检查一律不过）。**研究迭代合法、留痕可见**：发现新证据修正假设可再注册（`--trigger evidence_revision --note "<动因>"`，无 note 拒绝），全部历史注册与参数差异保留——射箭前允许调整姿势换弓，但靶必须在射出那支箭之前画死。verdict 落盘时 `--lint-verdict` 重算摘要比对：不一致而未标 `post_hoc_changed: true` 即体检不过；runner 审计（`--prereg-check --audit`）对未自标的揭示后改动判「预注册证据违规」；post_hoc 案例三轨不计分、从战绩表排除。三道锁分工：P0-05 管答案不泄漏（输入端）、P0-08 管规则版本（引擎阈值）、P2-09 管案例自由参数（过程端）。
+
 **Step 3 — 落盘存档结论 + 时序存证**
 把以下内容写入 `verdict.json`：`final_verdict` 与 `verdict_ordinal`（档位序数）、闸门一/闸门二结果、`codes`（本次触发的全部告警代号，取自 `scripts/alert_codes.py` 注册表）、`codes_provenance`（区分 engine_derived 与 manually_recorded）、三情景每股价值、期望年化 IRR、`frozen_before_diff: true` 与 `frozen_at`。
 
 **REQ-P0-08 规则版本钉死（第三批起强制）**：verdict.json 须含 `rules_snapshot`（运行 `python3 scripts/prepare_case.py --snapshot-rules` 获取），包括 `skill_commit`（git hash）、`dirty`、`thresholds`（双闸门/情景门禁/排雷/数据门禁/计分的全部模块级阈值，由 `RULES_REGISTRY` 登记）与 `missing`（须为空）。**`dirty=true` 禁止落 verdict**——先提交规则改动再落盘，否则 hash 不代表实际运行的代码，`--lint-verdict` 会拒绝。无此字段的历史案例 runner 标 `rules_version=unknown`；verdict 记录的 commit 与当前 HEAD 不同时标 `drifted`，其 rerun 漂移须与 `python3 scripts/run_backtest_assertions.py --as-of <skill_commit> --case <case>`（临时 worktree 按旧版本重跑）对读，不得直接归为引擎回归。
 
-**落盘后、提交前先体检**：`python3 scripts/run_backtest_assertions.py --lint-verdict <case>/verdict.json`——校验 codes 全部在注册表内（第二批 Zoom 曾杜撰 2 个不存在的告警 ID）、`codes_provenance` 必填（缺失时漂移检测比对降级，第二批神华即缺）、必填字段与档位文案自洽；第三批起还校验 `rules_snapshot` 存在且 `dirty=false`（REQ-P0-08），并反向跑 seal-check 核对 `contaminated` 标注（REQ-P0-05）。**体检通过才允许提交**。
+**落盘后、提交前先体检**：`python3 scripts/run_backtest_assertions.py --lint-verdict <case>/verdict.json`——校验 codes 全部在注册表内（第二批 Zoom 曾杜撰 2 个不存在的告警 ID）、`codes_provenance` 必填（缺失时漂移检测比对降级，第二批神华即缺）、必填字段与档位文案自洽；第三批起还校验 `rules_snapshot` 存在且 `dirty=false`（REQ-P0-08）、反向跑 seal-check 核对 `contaminated` 标注（REQ-P0-05）、预注册摘要比对核对 `post_hoc_changed` 标注（REQ-P2-09）。**体检通过才允许提交**。
 
 **落盘后立即单独提交**：`git add <case>/verdict.json && git commit -m "verdict(<case>): 结论落盘，未读答案"`。git 历史即时序证据，机器可验、事后无法伪造——第一批只有 3/6 案例有自陈的 `frozen_before_diff` 字段，文件 mtime 又会被 git 检出覆盖，「先落盘再看答案」这条纪律没有任何可验证痕迹。**此步完成后才允许进入 Step 4。**
 
@@ -333,7 +348,7 @@ commit 必须早于答案文件落地的 commit（B 档下即 `answer_source.md`
 
 4. **假阳性成本**：读取第九节**假阳性轨**的统计结果——「官方期望拒绝/观察，系统给出小仓位试探或核心买入」的案例数。若 ≥1，须定位是哪一道闸门放行、放行依据的证据强度是否真的达标。放松性改动实施后本项**必须为 0**，否则按第九节**红灯规则**回滚。
    **注意**：若本批案例结构中不存在「看起来该买、实际该拒」的样本，须明确写出「本批无法暴露假阳性」，**不得以本项为 0 作为系统无假阳性的证据**——第一批 6 案例中 4 个是明确的该拒/该排雷样本，假阳性在结构上不可能暴露，而 REPORT.md 曾据此宣称「0 反向错误」。**第四批即为此结构性缺口而设**：在第四批基线建立之前，本项的 0 一律只能表述为「未被检验」，不得表述为「无假阳性」。
-   **FP/FN 双向报告（REQ-P0-01，第四批起每批必填）**：直接引用 runner 输出的 `[FP/FN 双向统计]` 段，分行陈述假阳性率（分母 = 官方期望 <3 的负向样本）、假阴性率（分母 = 官方期望 ≥3 的正向样本）、弃权率、假阳性对照红灯命中率。目标区间 **FP ≤10%、FN ≤40%**（`run_backtest_assertions.py` 的 `FP_RATE_TARGET` / `FN_RATE_TARGET`，调整须同步本节并登记动因）。两个比率**不得合并为单一数字**，也不得用一侧的改善解释另一侧的恶化。累计口径（全部已执行批次）与本批口径各报一次。
+   **FP/FN 双向报告（REQ-P0-01，第四批起每批必填）**：直接引用 runner 输出的 `[FP/FN 双向统计]` 段，分行陈述假阳性率（分母 = 官方期望 <3 的负向样本）、假阴性率（分母 = 官方期望 ≥3 的正向样本）、弃权率、假阳性对照红灯命中率。**分母只含高/中置信度案例**（REQ-P2-01）：`confidence=low` 的案例单列于 runner 的 `[低置信度答案]` 段，不进上述任何比率——规则调整不对争议标签负责。目标区间 **FP ≤10%、FN ≤40%**（`run_backtest_assertions.py` 的 `FP_RATE_TARGET` / `FN_RATE_TARGET`，调整须同步本节并登记动因）。两个比率**不得合并为单一数字**，也不得用一侧的改善解释另一侧的恶化。累计口径（全部已执行批次）与本批口径各报一次。
 
 ## 八之二、批次收官闭环（每批跑完后的标准流程，第三批起生效）
 
@@ -412,6 +427,8 @@ OBS 在本批是**复现了**（达门槛，进入第 4 步）、**阴性对照�
   "must_not_trigger": ["VALUE_TRAP"],
   "known_failures": [],
   "fp_control": false,
+  "confidence": "high",
+  "confidence_basis": "H1：事后事实已验证且支撑区间共同语义（规则表见 ANSWERS.md 专节）",
   "actual_3y_total_return": 0.42,
   "actual_5y_total_return": 1.15,
   "earnings_driven_return": 0.60,
@@ -434,6 +451,24 @@ OBS 在本批是**复现了**（达门槛，进入第 4 步）、**阴性对照�
 否则会用容易的样本稀释对照难度。runner 同时按 `expected_verdict_set` 自动给每个案例贴
 样本角色：`negative`（期望最高 <3）/ `positive`（期望最低 ≥3）/ `mixed`（跨 3）/
 `unscored`，FP 率与 FN 率的分母分别是 negative 与 positive 的案例数。
+
+### 置信度字段（REQ-P2-01）
+
+`answer.json` 必须携带 `confidence`（`high` / `medium` / `low`）与 `confidence_basis`
+（引用 ANSWERS.md 置信度规则表条目编号 H1-H2/M1-M3/L1-L3 + 事实依据；第
+3 批起缺失即 lint 失败，缺失按高置信度计分——不允许靠漏填把案例静默丢出分母）。
+`acceptable_grades` 不设独立取值：`expected_verdict_set` 即可接受档位区间，
+镜像字段若出现必须与之完全一致。
+
+**赋值时点纪律**：密封批次的置信度已在 verdict 存在之前预注进 payload（靶在箭前，
+`--reveal` 一并揭示，揭示会话**不得改动**）；未预注的密封案在揭示时按规则表赋值
+且 `confidence_basis` 须以「揭示时赋值」开头；已揭示案例改置信度 = 答案修订，
+走 ANSWERS.md 修订流程五步（提出/举证/复核/生效/旧战绩重算）。
+
+**计分语义**：`low` 案例三轨仍评测、仍进基线代号比对，但不进 FP/FN 分母、战绩
+计数与回归门禁，在 `[低置信度答案]` 段单独列示——规则调整只对高/中置信度案例
+负责，系统不为拟合争议标签破坏原则。其假阳性**仍触发基线红灯**（不错买优先），
+例外路径只有修订流程立案，且改动先回滚。
 
 ### 断言 ID 铁律
 
@@ -486,6 +521,9 @@ OBS 在本批是**复现了**（达门槛，进入第 4 步）、**阴性对照�
 - 判定方式：改动前后各跑一次 `--rerun --baseline`，比较假阳性轨案例集合。
 - 例外流程：无自动例外。若确信该假阳性属答案争议（官方期望本身可辩），须先在
   `observations.md` 立案、修正 `answer.json` 并说明依据，改动本身仍须回滚等待重跑。
+  **低置信度答案（`confidence=low`）不豁免本规则**——其假阳性同样触发红灯，
+  runner 会标注「低置信度答案，例外路径 = 修订流程」；禁止用「标个 low」代替回滚
+  （REQ-P2-01，修订流程见 ANSWERS.md 专节）。
 - 假阳性轨不接受 `known_failures` 登记豁免。其余两轨的已知失败可登记不阻塞，
   假阳性一旦出现即为红灯——这是与另两轨的**不对称设计**，是刻意的。
 
@@ -506,6 +544,7 @@ python3 scripts/run_backtest_assertions.py --rerun --baseline backtest/assertion
 ## 十、交付物清单
 
 - `backtest/<ticker>_<date>/meta.json`（Step 1 跑前冻结，**不含答案**）
+- `backtest/<ticker>_<date>/preregistration.json`（Step 2.7 预注册冻结，REQ-P2-09，含全部迭代注册历史，**单独 commit 且早于 verdict commit**）
 - `backtest/<ticker>_<date>/report.html`（完整报告，过 `verify_report.py`）
 - `backtest/<ticker>_<date>/verdict.json`（Step 3 结论落盘，含 `codes` / `verdict_ordinal` / `frozen_before_diff`，**单独 commit**）
 - `backtest/<ticker>_<date>/answer.json`（Step 4 才创建，答案与断言）

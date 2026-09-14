@@ -1,0 +1,23 @@
+{
+ "channel": "dividend_anchor",
+ "dps": 1.45,
+ "dps_basis": "双汇 TTM 实付口径：2018-12-07 除息特别分红 0.90 + 2019-04-22 除息年度分红 0.55 = 1.45 元/股 [E:dividends_000895_2019.json records_by_report_period]",
+ "div_growth": 0.01,
+ "discount_rate": 0.1,
+ "value_per_share": 16.27222222222222,
+ "static_dividend_yield": 0.058256327842507026,
+ "payback_years": 17.165517241379312,
+ "rf_10y": 0.0317,
+ "spread_vs_rf": 0.026556327842507027,
+ "equity_premium_min": 0.03,
+ "spread_ok": false,
+ "payout_fcf_ratio": 0.68,
+ "payout_basis": "2018 年度 (OCF 5194.8 − capex 515.2)/分红总额 6856.3 = 0.68 [E:financials_000895_2019.json annual 2018]；2016 年同口径 0.63——连续覆盖不足",
+ "continuity_years": 21,
+ "verdict": "observe",
+ "codes": [
+  "DIV_PAYOUT_UNCOVERED",
+  "DIV_SPREAD_INSUFFICIENT"
+ ],
+ "verdict_note": "门禁未全过（见 codes）——股息锚当前口径不足以支撑类债买入"
+}

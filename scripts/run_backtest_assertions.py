@@ -22,6 +22,13 @@
    分别算假阳性率与假阴性率，并对 `fp_control=true` 的假阳性对照案例统计
    红灯命中率。负向样本为 0 时假阳性率输出「未被检验」而非 0。基线文件附带
    `_fp_fn` 段，`--baseline` 比对时假阳性集合相对基线新增即红灯。
+4. **答案置信度单列**（REQ-P2-01）：`answer.json` 的 `confidence`
+   （high/medium/low）为低（low）的案例——官方标签本身有争议——三轨仍完整
+   评测但**单独统计、不计入主指标**（FP/FN 分母、战绩计数、回归门禁），
+   规则调整只对高/中置信度案例负责。两处刻意保留：低置信度案例仍进基线
+   代号比对（引擎回归防护与答案质量无关），其假阳性仍触发基线红灯（例外
+   唯一路径 = ANSWERS.md 修订流程立案）。confidence 缺失按高置信度计分
+   （防止靠漏填字段静默丢案例）。
 
 ## 用法
 
@@ -31,7 +38,8 @@
     python3 scripts/run_backtest_assertions.py --rerun        # 附带引擎漂移检测
     python3 scripts/run_backtest_assertions.py --baseline b.json --rerun   # 与基线比对
     python3 scripts/run_backtest_assertions.py --lint-verdict <case>/verdict.json
-        # Step 3 落盘体检：codes 注册表/provenance/必填字段/档位自洽（无需 answer.json）
+        # Step 3 落盘体检：codes 注册表/provenance/必填字段/档位自洽
+        # /规则快照/隔离交叉/预注册摘要比对（REQ-P2-09，批次≥3）
 
 退出码：0 全部通过；1 有断言失败或漂移。
 """
@@ -42,10 +50,13 @@ import json
 import os
 import subprocess
 import sys
+from pathlib import Path
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from alert_codes import (ASSERTIONS, ORDINAL_TO_VERDICT, assertion_satisfied,
                          matched_codes, unknown_assertions, unknown_codes)
+import check_scenarios as CS  # noqa: E402（REQ-P3-03：五字段校验唯一实现，回测侧不另写一套）
+import prepare_case as _PC  # noqa: E402（REQ-P2-09 预注册：lint 比对 + runner 审计）
 
 REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 BACKTEST = os.path.join(REPO, "backtest")
@@ -63,6 +74,14 @@ FN_RATE_TARGET = 0.40
 # REQ-P0-05 / P0-08：隔离机器检查与规则版本快照从第几批起强制。
 # 执行顺序 1→2→4→3→5，故"下一执行批次"是第四批；第三批因排在第四批之后同样受约束。
 RULES_SNAPSHOT_MIN_BATCH = 3
+
+# REQ-P2-01 官方答案置信度。规则表与修订流程见 backtest/ANSWERS.md。
+#   high / medium —— 进主指标（FP/FN 分母、战绩计数、回归门禁）
+#   low          —— 官方标签本身有争议：三轨仍评测但单独统计、不进主指标
+# 缺失 confidence 的案例按高置信度计分——统计完整性优先，不允许靠漏填
+# 字段把 inconvenient 的案例静默丢出分母（要排除必须显式标 low 并给出依据）。
+CONFIDENCE_LEVELS = ("high", "medium", "low")
+ANSWER_CONFIDENCE_MIN_BATCH = 3
 
 # 重跑引擎所需的逐案参数（三类键独立可选，改动它等于改动案例本身，须走案例
 # 修订而非脚本调参）：
@@ -364,6 +383,26 @@ def check_deliverables(case, res):
         res["failures"].append(f"交付物缺失：{missing}")
 
 
+def check_prereg_evidence(case, res):
+    """REQ-P2-09 揭示后审计：参数摘要须与最后一次预注册一致（靶在箭前）。
+
+    与 lint-verdict 的 pre 模式互补：lint 在 Step 3 落盘时比对（此时 verdict
+    尚未提交）；本函数在 runner（Step 4 及之后任意时点）用 audit 模式复查——
+    含 git 时序（注册最后提交 < verdict 首次提交）与摘要重算。verdict 未自标
+    post_hoc_changed 的揭示后改动在此被判违规，防「改完参数不亮牌」。
+    批次 <PREREGISTER_MIN_BATCH 豁免（legacy 基线不动）。
+    """
+    try:
+        batch = int(case["meta"].get("batch") or 0)
+    except (TypeError, ValueError):
+        batch = 0
+    if batch < _PC.PREREGISTER_MIN_BATCH:
+        return
+    issues = _PC.prereg_issues(Path(case["dir"]), audit=True)
+    if issues:
+        res["failures"].append("预注册证据违规（REQ-P2-09）：" + "；".join(issues[:3]))
+
+
 def check_case(case, do_rerun=False):
     v, a = case["verdict"], case["answer"]
     fired = set(v.get("codes") or [])
@@ -381,6 +420,23 @@ def check_case(case, do_rerun=False):
         res["sample_role"] = "unscored"
         res["assert_hits"] = res["assert_misses"] = res["assert_false_fires"] = []
         res["notes"].append("verdict.contaminated=true：隔离失效，三轨不计分，从战绩表排除（REQ-P0-05）")
+        check_deliverables(case, res)
+        _classify_failures(res, a, do_rerun)
+        return res
+
+    # ---- REQ-P2-09：post_hoc_changed 案例不计分 ----
+    # 参数在揭示前冻结（预注册哈希）后被改动且未再注册——结论可能是「调出来
+    # 的」而非「推出来的」。自标 post_hoc_changed 的案例仍留完整档案与根因
+    # 分析，但不进任何分母——战绩可信度优先于战绩好看。
+    if v.get("post_hoc_changed"):
+        res["post_hoc_changed"] = True
+        res["verdict_track"] = "不计分（post_hoc_changed：揭示前冻结被事后改动）"
+        res["false_positive_track"] = "不计分（post_hoc_changed）"
+        res["false_positive"] = res["false_negative"] = False
+        res["sample_role"] = "unscored"
+        res["assert_hits"] = res["assert_misses"] = res["assert_false_fires"] = []
+        res["notes"].append("verdict.post_hoc_changed=true：预注册摘要比对不一致（REQ-P2-09），"
+                            "三轨不计分，从战绩表排除")
         check_deliverables(case, res)
         _classify_failures(res, a, do_rerun)
         return res
@@ -405,6 +461,7 @@ def check_case(case, do_rerun=False):
 
     check_deliverables(case, res)
     check_isolation_evidence(case, res)
+    check_prereg_evidence(case, res)
 
     bad = unknown_codes(fired)
     if bad:
@@ -533,6 +590,44 @@ def check_case(case, do_rerun=False):
             "answer 含事后回报数值但缺 price_basis 口径声明"
             "（收益计算唯一合法口径=等比后复权，见 data-sourcing.md 复权口径纪律）")
 
+    # ---- REQ-P2-01：官方答案置信度 schema ----
+    # 置信度是「标签本身的可靠度」，与系统表现无关；赋值时点纪律（密封批次
+    # 须在 verdict 存在前预注）与规则表见 ANSWERS.md。缺失按高置信度计分。
+    conf = a.get("confidence")
+    res["answer_confidence"] = conf
+    try:
+        _batch_raw = case["meta"].get("batch")
+        _batch = int(_batch_raw) if _batch_raw is not None else None
+    except (TypeError, ValueError):
+        _batch = None
+    if conf is None:
+        msg = ("answer 缺 confidence（REQ-P2-01，规则表与修订流程见 ANSWERS.md）——"
+               "缺失按高置信度计分；要排除主指标必须显式标 low 并给 confidence_basis")
+        if _batch is None:
+            # 2026-09-14 审查修订：batch 元数据缺失不可充当硬校验的绕行道——
+            # 反博弈约束在"批次≥3 强制"上，批次不可判定时必须按失败处理，
+            # 否则删一行 meta.batch 就能把第 3 批案例洗回咨询性路径。
+            res["failures"].append(
+                msg + "；另：meta.batch 缺失/非法，无法判定是否达强制批次——按失败处理")
+        else:
+            (res["failures"] if _batch >= ANSWER_CONFIDENCE_MIN_BATCH
+             else res["notes"]).append(msg)
+    elif conf not in CONFIDENCE_LEVELS:
+        res["failures"].append(f"answer.confidence={conf!r} 非法"
+                               f"（合法取值 {list(CONFIDENCE_LEVELS)}，REQ-P2-01）")
+    elif not str(a.get("confidence_basis") or "").strip():
+        res["failures"].append("answer 缺 confidence_basis（REQ-P2-01：置信度必须可问责，"
+                               "依据须引用 ANSWERS.md 规则表条目或事后数据口径）")
+    # acceptable_grades 是 REQ-P2-01 原文的字段名——「可接受档位区间」语义已由
+    # expected_verdict_set 承载（鞍钢 {1,2}/神华 {3,4} 即区间标签），双字段并存
+    # 只允许互为镜像（OBS-600660-01 双声明漂移教训：两份各自自洽、合起来才露馅）。
+    _ag = a.get("acceptable_grades")
+    if _ag is not None and sorted(_ag) != sorted(a.get("expected_verdict_set") or []):
+        res["failures"].append(
+            f"acceptable_grades={_ag} 与 expected_verdict_set={a.get('expected_verdict_set')}"
+            " 不一致（REQ-P2-01 单源纪律：expected_verdict_set 即可接受档位区间，"
+            "镜像字段不得分叉）")
+
     # ---- 已知失败 vs 新增回归 ----
     # 茅台档位轨未命中是第一批**记录在案**的真实假阴性（`backtest/REPORT.md` 元问题 3）。
     # 若把它一并算作红灯，本脚本就永远是红的、无法当回归门禁用。故 answer.json 可登记
@@ -547,11 +642,27 @@ def check_case(case, do_rerun=False):
         msg = f"假阳性轨红灯：{res['false_positive_track']}"
         res["failures"].append(msg)
         res["regressions"].append(msg)
+
+    # ---- REQ-P2-01：低置信度答案 → 单独统计，不计入主指标 ----
+    # 与 contaminated/post_hoc 的整体排除不同：低置信度案例仍完整评测三轨
+    # （供 [低置信度答案] 段单独列示），仍参与基线代号比对（引擎回归防护与
+    # 答案质量无关），但不进 FP/FN 分母、不产生回归红灯——规则调整只对
+    # 高/中置信度案例负责，系统不为拟合争议标签破坏原则。
+    # 刻意保留的例外：低置信度案例的假阳性仍触发**基线门禁**（见 main 的
+    # new_fp 比对）——「不错买优先」不容静默消失，争议标签的假阳性唯一
+    # 例外路径是 ANSWERS.md 修订流程立案裁决，且改动本身仍先回滚。
+    if conf == "low":
+        res["low_confidence"] = True
+        res["low_conf_failures"] = list(res["failures"])
+        res["regressions"] = []
+        res["notes"].append(
+            "answer.confidence=low（REQ-P2-01）：三轨已评测但单独统计、不计入主指标——"
+            "本案不作为规则调整的依据案例；档位/断言争议走 ANSWERS.md 修订流程（五步）")
     return res
 
 
-def fp_fn_summary(results):
-    """REQ-P0-01：批次级假阳性 / 假阴性双向统计。
+def fp_fn_summary(results, low_conf_results=None):
+    """REQ-P0-01：批次级假阳性 / 假阴性双向统计；REQ-P2-01：低置信度单列。
 
     只在样本角色明确的案例上计算（见 check_case 的 sample_role）：
       fp_rate = 假阳性数 / 负向样本数（官方期望 <3 的案例）
@@ -559,6 +670,11 @@ def fp_fn_summary(results):
       abstain_rate = 档位=2 的案例 / 全部有档位的案例（系统弃权率，健康度体温计）
     负向样本数为 0 时 fp_rate 为 None——此时**不得**把「0 假阳性」表述为「无假阳性」，
     只能表述为「未被检验」（PROMPT 第八节元问题 4 的硬约束）。
+
+    REQ-P2-01：low_conf_results（confidence=low 的案例）**不进任何比率分母**——
+    有噪声的标签会把系统训偏，主指标只对高/中置信度案例负责。低置信度案例
+    的假阳性/假阴性以名单形式单列（low_conf_* 字段）：不计入比率，但供
+    基线门禁与 [低置信度答案] 段消费——被排除的是统计权重，不是可见性。
     """
     neg = [r for r in results if r.get("sample_role") == "negative"]
     pos = [r for r in results if r.get("sample_role") == "positive"]
@@ -568,6 +684,7 @@ def fp_fn_summary(results):
     abst = [r["name"] for r in scored if r.get("abstained")]
     ctrl = [r for r in results if r.get("fp_control")]
     ctrl_hit = [r["name"] for r in ctrl if r.get("fp_control_redlight_hit")]
+    low = list(low_conf_results or [])
     out = {
         "negative_n": len(neg), "positive_n": len(pos), "scored_n": len(scored),
         "false_positives": fps, "false_negatives": fns, "abstained": abst,
@@ -577,6 +694,12 @@ def fp_fn_summary(results):
         "fp_rate_target": FP_RATE_TARGET, "fn_rate_target": FN_RATE_TARGET,
         "fp_control_n": len(ctrl), "fp_control_redlight_hits": ctrl_hit,
         "fp_control_redlight_hit_rate": (len(ctrl_hit) / len(ctrl)) if ctrl else None,
+        # REQ-P2-01：低置信度单列（只记名单不算比率——它们不是主指标的样本）
+        "low_conf_n": len(low),
+        "low_conf_cases": [r["name"] for r in low],
+        "low_conf_false_positives": [r["name"] for r in low if r.get("false_positive")],
+        "low_conf_false_negatives": [r["name"] for r in low if r.get("false_negative")],
+        "low_conf_abstained": [r["name"] for r in low if r.get("abstained")],
     }
     if out["fp_rate"] is not None and out["fn_rate"] is not None and out["fp_rate"] > 0:
         out["fp_fn_ratio"] = out["fn_rate"] / out["fp_rate"]
@@ -615,6 +738,16 @@ def print_fp_fn_summary(s):
     else:
         print("  假阳性对照案例：0（fp_control=true 的 answer 尚无）——"
               "放松性改动前须先建立对照，见 PROMPT 第五之二节")
+    # REQ-P2-01：分母口径声明 + 低置信度单列（不计入上述任何比率）
+    if s.get("low_conf_n"):
+        extra = []
+        if s.get("low_conf_false_positives"):
+            extra.append(f"假阳性 {s['low_conf_false_positives']}（计入基线门禁、不计入上述比率）")
+        if s.get("low_conf_false_negatives"):
+            extra.append(f"假阴性 {s['low_conf_false_negatives']}")
+        print(f"  低置信度答案（REQ-P2-01，单列不计分）：{s['low_conf_n']} 例 → {s['low_conf_cases']}"
+              + ("；其中 " + "；".join(extra) if extra else ""))
+        print("    分母口径：上述 FP/FN/弃权率只含高/中置信度案例——规则调整不对争议标签负责")
 
 
 def lint_verdict(path):
@@ -706,6 +839,55 @@ def lint_verdict(path):
         elif r.returncode == 0 and v.get("contaminated"):
             advisories.append("verdict 标了 contaminated 但 seal-check 通过——确认是否误标")
 
+    # ---- REQ-P2-09 预注册比对（第三批起强制，批次判定同 P0-08）----
+    # 靶在箭前：verdict 落盘时重算 scenarios.json 参数摘要，与最后一次预注册
+    # 比对。不一致而未标 post_hoc_changed → 体检不过（亮牌是唯一出路）。
+    # contaminated 的案例不再叠加要求——已整体隔离，一个隔离标志足够。
+    if enforce_new and not v.get("contaminated"):
+        pre_issues = _PC.prereg_issues(Path(case_dir))
+        if pre_issues and not v.get("post_hoc_changed"):
+            problems.append("预注册比对不一致（REQ-P2-09）但 verdict 未标 "
+                            "`post_hoc_changed: true`：\n      "
+                            + "\n      ".join(pre_issues[:4]))
+        elif pre_issues and v.get("post_hoc_changed"):
+            advisories.append("post_hoc_changed=true：三轨不计分，从战绩表排除（REQ-P2-09）——"
+                              "diff.md 须说明改动动因")
+
+    # ---- REQ-P3-03 变异认知硬化（第三批起强制；与 check_scenarios S12 同源）----
+    # 回测侧口径：cap 生效（五字段不完整，或新批次缺块）时 verdict_ordinal
+    # 必须 ≤2——否则就是「机器锁观察、verdict 仍写买入」：底稿正确不等于
+    # 结论正确，这道闸守的是最终档位。五字段校验直接复用 CS 的唯一实现，
+    # 两处口径永不漂移。
+    _scen_fp = sorted(glob.glob(os.path.join(case_dir, "data", "scenarios*.json")))
+    if _scen_fp:
+        try:
+            with open(_scen_fp[0], encoding="utf-8") as _f:
+                _scen_d = json.load(_f)
+        except (OSError, ValueError):
+            _scen_d = {}
+        if _scen_d:
+            _snap_fp = sorted(glob.glob(os.path.join(case_dir, "data",
+                                                     "market_snapshot*.json")))
+            _adate = CS._analysis_date(_scen_d, _snap_fp[0] if _snap_fp else None)
+            _vpi, _vp_present = CS.variant_perception_issues(_scen_d, _adate)
+            _cap = bool(_vpi) or (not _vp_present
+                                  and batch >= CS.VARIANT_PERCEPTION_MIN_BATCH)
+            if not _vp_present and batch >= CS.VARIANT_PERCEPTION_MIN_BATCH:
+                problems.append(
+                    f"scenarios 缺 variant_perception 块（REQ-P3-03，第 "
+                    f"{CS.VARIANT_PERCEPTION_MIN_BATCH} 批起强制，schema 见 "
+                    "check_scenarios.py 头 docstring）——答不出五字段就只能给观察")
+            elif _cap:
+                _ord = v.get("verdict_ordinal")
+                if _ord is not None and _ord > 2:
+                    problems.append(
+                        f"变异认知 cap 生效（REQ-P3-03）但 verdict_ordinal={_ord}"
+                        f"（{ORDINAL_TO_VERDICT.get(_ord)}）——五字段不完整时档位"
+                        f"上限为「观察等价格」(2)。问题：{'；'.join(_vpi[:3])}")
+                else:
+                    advisories.append("变异认知五字段不完整（REQ-P3-03）：档位已被 "
+                                      "cap 在「观察等价格」——" + "；".join(_vpi[:3]))
+
     if problems:
         print(f"❌ {path} 落盘体检未通过：")
         for p in problems:
@@ -714,7 +896,7 @@ def lint_verdict(path):
             print(f"   ⚠ {a}")
         return 1
     print(f"✅ {path} 落盘体检通过（codes 注册表/provenance/必填字段/档位自洽"
-          f"{'/规则快照/隔离交叉' if enforce_new else ''}）")
+          f"{'/规则快照/隔离交叉/预注册比对' if enforce_new else ''}）")
     for a in advisories:
         print(f"   ⚠ {a}")
     return 0
@@ -758,37 +940,58 @@ def main():
     results_all = [check_case(c, do_rerun=args.rerun) for c in cases]
     # REQ-P0-05：contaminated 案例从战绩表排除——单独列示，不进任何分母
     contaminated = [r for r in results_all if r.get("contaminated")]
-    results = [r for r in results_all if not r.get("contaminated")]
+    # REQ-P2-09：post_hoc_changed 案例同样排除（揭示前冻结被事后改动）
+    post_hoc = [r for r in results_all if r.get("post_hoc_changed")]
+    # REQ-P2-01：低置信度答案单独统计，不进主指标（FP/FN 分母、战绩计数、
+    # 回归门禁）——但保留在基线代号比对池（引擎回归防护与答案质量无关）
+    low_conf = [r for r in results_all if r.get("low_confidence")]
+    results = [r for r in results_all
+               if not r.get("contaminated") and not r.get("post_hoc_changed")
+               and not r.get("low_confidence")]
+    baseline_pool = results + low_conf
 
+    _CONF_CN = {"high": "高", "medium": "中", "low": "低"}
     w = max(len(r["name"]) for r in results_all) + 2
-    print(f"{'案例':<{w}} {'档位轨':<34} {'告警轨':<26} {'假阳性轨':<12} {'规则版本':<10} 结果")
-    print("-" * (w + 100))
+    print(f"{'案例':<{w}} {'档位轨':<34} {'告警轨':<26} {'假阳性轨':<12} {'置信':<4} {'规则版本':<10} 结果")
+    print("-" * (w + 104))
     for r in results_all:
         at = f"命中{len(r.get('assert_hits', []))} 漏{len(r.get('assert_misses', []))} 误触发{len(r.get('assert_false_fires', []))}"
         fp = "假阳性" if r.get("false_positive") else "-"
         rv = (r.get("rules_version") or "-").split("（")[0]
+        cf = _CONF_CN.get(r.get("answer_confidence"), "-")
         if r.get("contaminated"):
             ok = "污染排除"
+        elif r.get("post_hoc_changed"):
+            ok = "事后改动排除"
+        elif r.get("low_confidence"):
+            ok = "低置信度不计分"
         elif r["regressions"]:
             ok = "回归失败"
         elif r["known"]:
             ok = "已知失败"
         else:
             ok = "通过"
-        print(f"{r['name']:<{w}} {r.get('verdict_track', '-'):<34} {at:<26} {fp:<12} {rv:<10} {ok}")
-    print("-" * (w + 100))
+        print(f"{r['name']:<{w}} {r.get('verdict_track', '-'):<34} {at:<26} {fp:<12} {cf:<4} {rv:<10} {ok}")
+    print("-" * (w + 104))
     if contaminated:
         print(f"⛔ {len(contaminated)} 例 contaminated（隔离失效）已从战绩表排除：{[r['name'] for r in contaminated]}")
+    if post_hoc:
+        print(f"⛔ {len(post_hoc)} 例 post_hoc_changed（揭示前冻结被事后改动，REQ-P2-09）"
+              f"已从战绩表排除：{[r['name'] for r in post_hoc]}")
+    if low_conf:
+        print(f"ℹ {len(low_conf)} 例低置信度答案（REQ-P2-01）单独统计、不计入主指标："
+              f"{[r['name'] for r in low_conf]}——明细见 [低置信度答案] 段")
     if not results:
-        print("全部案例均为 contaminated，无可计分案例")
+        print("全部案例均为 contaminated/post_hoc/低置信度，无可计分案例")
         sys.exit(1)
     clean = sum(1 for r in results if not r["failures"])
     known_only = sum(1 for r in results if r["known"] and not r["regressions"])
     regressed = [r for r in results if r["regressions"]]
     fps = [r["name"] for r in results if r.get("false_positive")]
-    print(f"{clean}/{len(results)} 全绿" +
-          (f"，{known_only} 已知失败（登记在 answer.json known_failures）" if known_only else "") +
-          (f"，{len(regressed)} 回归失败" if regressed else ""))
+    print(f"{clean}/{len(results)} 全绿"
+          + (f"（另有 {len(low_conf)} 例低置信度单独列示，REQ-P2-01）" if low_conf else "")
+          + (f"，{known_only} 已知失败（登记在 answer.json known_failures）" if known_only else "")
+          + (f"，{len(regressed)} 回归失败" if regressed else ""))
     # 三轨分行陈述，禁止合并为单一战绩数字（PROMPT.md 第九节权重纪律）
     scored = sum(1 for r in results if r.get("false_positive_track", "").startswith(("无假阳性", "假阳性")))
     if fps:
@@ -800,8 +1003,22 @@ def main():
         print("假阳性轨：未被检验（本轮无『官方期望拒绝/观察』的可判定案例）"
               "——不得表述为『无假阳性』。")
 
-    fpfn = fp_fn_summary(results)
+    fpfn = fp_fn_summary(results, low_conf_results=low_conf)
     print_fp_fn_summary(fpfn)
+
+    # REQ-P2-01：低置信度答案明细——单独统计的「单独」就是这里：每案给出
+    # 置信度依据与三轨结果，供人工裁决（修订流程的「提出」入口）。
+    if low_conf:
+        print("\n[低置信度答案明细]（REQ-P2-01：规则调整不对争议标签负责；"
+              "档位/断言争议走 ANSWERS.md 修订流程五步）")
+        for r in low_conf:
+            a = next(c["answer"] for c in cases if c["name"] == r["name"])
+            print(f"  {r['name']}（{a.get('confidence')}）：{a.get('confidence_basis', '')}")
+            print(f"     档位轨：{r.get('verdict_track', '-')}"
+                  f"｜假阳性轨：{r.get('false_positive_track', '-')}"
+                  f"｜样本角色：{r.get('sample_role', '-')}")
+            for f in (r.get("low_conf_failures") or [])[:3]:
+                print(f"     ⚠ {f}")
 
     # REQ-P0-08 规则版本汇总 / REQ-P0-05 隔离执行率（第 RULES_SNAPSHOT_MIN_BATCH 批起）
     versions = {}
@@ -837,6 +1054,7 @@ def main():
     payload = {"results": results_all, "clean": clean, "known_only": known_only,
                "regressed": [r["name"] for r in regressed], "total": len(results),
                "contaminated": [r["name"] for r in contaminated],
+               "low_confidence": [r["name"] for r in low_conf],
                "rules_versions": versions,
                "fp_fn": fpfn}
     if args.output:
@@ -845,15 +1063,22 @@ def main():
         print(f"\n已写入 {args.output}")
 
     if args.baseline:
-        snap = {r["name"]: r["fired"] for r in results}
+        # 基线代号比对池含低置信度案例（REQ-P2-01）：引擎回归防护与答案质量
+        # 无关——NFLX/海控的冻结 codes 是引擎行为的事实，不随标签争议失效。
+        snap = {r["name"]: r["fired"] for r in baseline_pool}
         # REQ-P0-01：基线附带 FP/FN 轨指标快照（下划线键，不参与代号集合比对）。
         # 放松性改动前后比较 _fp_fn.false_positives 集合，新增 ≥1 即红灯。
+        # REQ-P2-01：低置信度案例的假阳性**保留在门禁里**（low_conf_false_positives
+        # 并入新增比对）——被排除的是统计权重，不是「不错买优先」的红灯本身；
+        # 争议标签的唯一例外路径是 ANSWERS.md 修订流程立案，改动仍先回滚。
         snap_meta = {"fp_rate": fpfn["fp_rate"], "fn_rate": fpfn["fn_rate"],
                      "abstain_rate": fpfn["abstain_rate"],
                      "false_positives": fpfn["false_positives"],
                      "false_negatives": fpfn["false_negatives"],
                      "fp_control_n": fpfn["fp_control_n"],
-                     "fp_control_redlight_hit_rate": fpfn["fp_control_redlight_hit_rate"]}
+                     "fp_control_redlight_hit_rate": fpfn["fp_control_redlight_hit_rate"],
+                     "low_conf_cases": fpfn["low_conf_cases"],
+                     "low_conf_false_positives": fpfn["low_conf_false_positives"]}
         if os.path.exists(args.baseline):
             base = json.load(open(args.baseline, encoding="utf-8"))
             base_meta = base.get("_fp_fn") or {}
@@ -864,9 +1089,21 @@ def main():
                 b, s = set(base.get(k, [])), set(snap.get(k, []))
                 if b != s:
                     diffs.append(f"  {k}: 新增 {sorted(s - b)} / 消失 {sorted(b - s)}")
-            new_fp = sorted(set(fpfn["false_positives"]) - set(base_meta.get("false_positives") or []))
+            # 门禁口径：主指标假阳性 ∪ 低置信度假阳性（后者不计率、只守门）。
+            # 2026-09-14 审查修订：比对基数必须同时减去基线登记的
+            # low_conf_false_positives——基线写入 snap_meta 时存了该字段，
+            # 回读却不认，会让基线已收录的低置信度假阳性在每次运行都被
+            # 误判为"新增"（永久红灯，违背"只对新增负责"的门禁语义）。
+            gate_fp = set(fpfn["false_positives"]) | set(fpfn.get("low_conf_false_positives") or [])
+            known_fp = (set(base_meta.get("false_positives") or [])
+                        | set(base_meta.get("low_conf_false_positives") or []))
+            new_fp = sorted(gate_fp - known_fp)
             if new_fp:
                 diffs.append(f"  ⛔ 假阳性轨相对基线新增：{new_fp}（红灯规则：直接否决，不得抵扣）")
+                low_new = [c for c in new_fp if c in set(fpfn.get("low_conf_false_positives") or [])]
+                if low_new:
+                    diffs.append(f"     其中 {low_new} 为低置信度答案（REQ-P2-01）——仍触发红灯；"
+                                 "唯一例外路径：按 ANSWERS.md 修订流程立案裁决，改动本身先回滚等待重跑")
             if diffs:
                 print("\n与基线不一致：")
                 print("\n".join(diffs))

@@ -62,7 +62,7 @@ import sys
 from datetime import date, datetime, timedelta
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from schema_meta import validate_full  # noqa: E402
+from schema_meta import layered_acceptance, validate_full  # noqa: E402
 # REQ-P0-07 阈值与豁免格式单点定义在 crosscheck_official（生产端），本文件（消费端）只 import，
 # 避免两处 TOL 各自漂移。
 from crosscheck_official import (TOL, TOL_BALANCE_SHEET, TOL_OTHER,  # noqa: E402,F401
@@ -192,6 +192,13 @@ def main():
     _se, _sw = validate_full(data, args.input)
     errors += _se
     warns += _sw
+
+    # 1.2b 分层验收（REQ-P0-03，用户裁决 2026-09-14）：主底稿 strict、竞对显式豁免。
+    # 原验收「全部迁移并通过」对竞对底稿不可达（免原文核对纪律 → 溯源锚无从取得），
+    # 但无声 legacy 必须禁止——豁免要显式且可问责（见 schema_meta.layered_acceptance）。
+    _se03, _sw03 = layered_acceptance(data)
+    errors += _se03
+    warns += _sw03
 
     # 1.5 前视偏差防线：年报数据必须记录发布日（publish_date），复盘校准时
     # 按发布日截断"当时市场知道什么"——2025 年报 3 月底才发布，1 月的分析不该用它。
@@ -360,30 +367,45 @@ def main():
     # 合理化为"未申报"写进 manifest，异常没有触发人工复核，数据等级从 A 静默降 B）===
     data_dir = os.path.dirname(os.path.abspath(args.input))
     manifest = load_manifest(data_dir)
-    max_year = int(rows[-1].get("year"))
+    # 年份取值健壮性：竞对逐实体对照表等非标准行的 year 可能是 "FY2016" 这类
+    # 字符串——解析失败时跳过该行取数而不是让整个校验崩溃（退出码 3 是脚本 bug
+    # 信号，不该被数据形态差异触发）。
+    _int_years = []
+    for _r in rows:
+        try:
+            _int_years.append(int(_r.get("year")))
+        except (TypeError, ValueError):
+            continue
+    if not _int_years:
+        warns.append("年度覆盖哨兵：annual 行无可用整数年份（疑为逐实体对照表等"
+                     "非标准底稿），跳过年度覆盖/时效类校验")
+        max_year = None
+    else:
+        max_year = max(_int_years)
     wait = issuer_wait_days(data)
-    expected = max_year
     today = date.today()
-    for cand in range(max_year, max_year + 2):
-        if annual_deadline(cand, data.get("fiscal_year_end"), wait) <= today:
-            expected = cand
-    if expected > max_year:
-        exemption = (manifest or {}).get("official_filing_missing") or {}
-        exempt_years = exemption.get("years", exemption.get("year"))
-        if isinstance(exempt_years, int):
-            exempt_years = [exempt_years]
-        exempt_hit = isinstance(exempt_years, list) and expected in exempt_years
-        msg = (f"年度覆盖哨兵(A1)：底稿最新年报年 {max_year}，"
-               f"{expected} 年报法定申报死线（+{wait}天）已过——"
-               "底稿缺该年年报数据。若公司已延迟申报，请在 manifest.json 登记 "
-               '`official_filing_missing`（year/years + reason）；'
-               "否则严禁以季度加总/上年数据充当年报年报年")
-        if args.skip_crosscheck:
-            warns.append(msg + "（竞对底稿降级为警告）")
-        elif exempt_hit:
-            warns.append(msg + f"（manifest 已登记豁免: {exemption.get('reason', '无原因说明')}）")
-        else:
-            errors.append(msg)
+    if max_year is not None:
+        expected = max_year
+        for cand in range(max_year, max_year + 2):
+            if annual_deadline(cand, data.get("fiscal_year_end"), wait) <= today:
+                expected = cand
+        if expected > max_year:
+            exemption = (manifest or {}).get("official_filing_missing") or {}
+            exempt_years = exemption.get("years", exemption.get("year"))
+            if isinstance(exempt_years, int):
+                exempt_years = [exempt_years]
+            exempt_hit = isinstance(exempt_years, list) and expected in exempt_years
+            msg = (f"年度覆盖哨兵(A1)：底稿最新年报年 {max_year}，"
+                   f"{expected} 年报法定申报死线（+{wait}天）已过——"
+                   "底稿缺该年年报数据。若公司已延迟申报，请在 manifest.json 登记 "
+                   '`official_filing_missing`（year/years + reason）；'
+                   "否则严禁以季度加总/上年数据充当年报年报年")
+            if args.skip_crosscheck:
+                warns.append(msg + "（竞对底稿降级为警告）")
+            elif exempt_hit:
+                warns.append(msg + f"（manifest 已登记豁免: {exemption.get('reason', '无原因说明')}）")
+            else:
+                errors.append(msg)
 
     # === A3 一次性损益哨兵：interim 累计净利超上年全年 85% 或同比 >100%，
     # spike_notes 必须剖析一次性成分（GOOG H1'26 净利 > FY2025 全年为触发原型）===
@@ -520,6 +542,10 @@ def main():
                 warns.append(f"{y}: |经营现金流|({ocf}) > 收入×2，量级异常，请复核")
 
         # 4. 突变检测
+        # 竞对降级：逐实体对照表按年排序后相邻行可能是不同公司（NFLX 对照表：
+        # Disney/Comcast/Fox 交错），跨实体"同比"无意义；且竞对不进估值管线，
+        # 突变只是对照锚的提示而非待估公司数据错误。降为 WARN 与 A1/覆盖率哨兵同款。
+        _spike_as_error = not (data.get("is_peer") or args.skip_crosscheck)
         notes = data.get("spike_notes", {}) or {}
         for i in range(1, len(rows)):
             prev, cur = rows[i - 1], rows[i]
@@ -532,8 +558,12 @@ def main():
                 if abs(chg) > SPIKE_THRESHOLD:
                     key = f"{y}.{k}"
                     if key not in notes:
-                        errors.append(f"{y}: `{k}` 同比变动 {chg:+.0%} 超过 ±50%，"
-                                      f"spike_notes 缺少 `{key}` 的原因标注（业务变化或数据修正）")
+                        _m = (f"{y}: `{k}` 同比变动 {chg:+.0%} 超过 ±50%，"
+                              f"spike_notes 缺少 `{key}` 的原因标注（业务变化或数据修正）")
+                        if _spike_as_error:
+                            errors.append(_m)
+                        else:
+                            warns.append(_m + "（竞对底稿降级为警告）")
 
     # 5. 双源交叉验证（银行命门科目改：营业收入/归母净利润；实业：收入/归母净利润/经营现金流/股本）
     if args.skip_crosscheck:

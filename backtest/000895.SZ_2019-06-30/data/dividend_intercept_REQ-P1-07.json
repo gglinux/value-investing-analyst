@@ -1,0 +1,23 @@
+{
+ "channel": "dividend_anchor",
+ "dps": 2.0,
+ "dps_basis": "合成演示（卡五假阳性形态）：TTM 实付 2.0 元/股 [E:REQ-P1-07 合成拦截演示，参数形态取自高股息陷阱典型画像]",
+ "div_growth": 0.02,
+ "discount_rate": 0.1,
+ "value_per_share": 25.5,
+ "static_dividend_yield": 0.08,
+ "payback_years": 12.5,
+ "rf_10y": 0.03,
+ "spread_vs_rf": 0.05,
+ "equity_premium_min": 0.03,
+ "spread_ok": true,
+ "payout_fcf_ratio": 0.5,
+ "payout_basis": "最近年度 (OCF−capex)/分红 = 0.5——分红一半靠消耗存量现金 [E:REQ-P1-07 合成拦截演示]",
+ "continuity_years": 3,
+ "verdict": "observe",
+ "codes": [
+  "DIV_PAYOUT_UNCOVERED",
+  "DIV_CONTINUITY_SHORT"
+ ],
+ "verdict_note": "门禁未全过（见 codes）——股息锚当前口径不足以支撑类债买入"
+}

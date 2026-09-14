@@ -1,8 +1,9 @@
 # value-investing-analyst 需求清单（REQUIREMENTS）
 
-> 版本：v1.1 · 建立日期：2026-09-10（周四） · 来源：skill 全面评审 + 两批回测复盘
+> 版本：v1.13 · 建立日期：2026-09-10（周四） · 来源：skill 全面评审 + 两批回测复盘
 > 用途：作为 skill 迭代的单一需求事实源。每条需求有唯一 ID、优先级、动因、价值、验收标准与状态，回测批次收官时同步更新状态。
 > 与其他文件的关系：`MAINTENANCE.md` 讲"怎么改"，`backtest/observations.md` 讲"发现了什么"，本文件讲"为什么要做、要做什么、做到什么程度算完"。
+> 进度快照（2026-09-14，v1.13）：34 条需求 = **done 8**（P0-03/07、P1-04/05/07、P2-01/09、P3-03）· **verify 7**（落码完成、只待第四批回测验证：P0-04/05/06/08、P1-01/02/03）· **doing 2**（P0-01、P0-02——各有小项实施待办）· **todo 17**。verify+doing 共 9 条的剩余工作全部指向同一件事：执行第四批回测。
 
 ---
 
@@ -144,7 +145,6 @@
 - 验收：现有 12 个回测案例与 11 个 cases 底稿全部迁移并通过校验；人为注入一次单位错误（亿元填成万元）能被拦截；schema 正式文档化（见 REQ-P4-02）。
 - 涉及文件：`scripts/validate_data.py`、`references/data-sourcing.md`、`backtest/*/data/`、`cases/*/data/`
 - 依赖：无
-- 状态：**doing**（2026-09-11 schema 模块 + strict 哨兵升级 + 跨文件比对完成，存量 51% 已迁移、平安待修单位后 recheck）
 - 进展：
   - ✅ 新建 `scripts/schema_meta.py`：受控词表（单位可换算为乘数、ISO 4217 币种、会计准则枚举），三档校验强度（strict / standard / legacy），文件级 `meta` 块 + `field_overrides` 例外机制。
   - ✅ 量纲哨兵重写为跨字段交叉锚（每股收入 / 净利率 / 市销率 / 资产周转率四锚），43 份底稿全量扫描零误伤，首次实战命中平安底稿单位错位（OBS-SCHEMA-01）。
@@ -156,6 +156,13 @@
   - ✅ `tests/run_tests.py` 14.5 段行为测试 8 项：茅台 strict 基线自洽、注入 `shares_unit=万股` strict 报 ERROR / legacy 降 WARN、waiver 豁免、has_locator 正反例、strict 无锚 source_ref ERROR、福耀快照↔底稿基线通过、底稿 ×100 后 SNAPSHOT_FIN_PS 拦截。
   - ✅ 审查修订（2026-09-11 三版）：① **双源一致性校验**——迁移「只增不改」使顶层 `unit`/`currency`/`accounting_standard` 与 meta 块并存，而计算端（compute_metrics 市值换算）读顶层、校验端读 meta，审查实测注入分歧（顶层亿元 vs meta百万）0 错误 0 警告，正是 OBS-600660-01「两份声明各自自洽」的新形态；现 `top_meta_conflicts()` 对能确证的分歧无条件 ERROR（同义放行：million↔百万、US GAAP↔US-GAAP；自由文本不判不猜）。② **量纲哨兵锚一/锚二遍历全部年度行**（原只查最新年，漏历史行数值错位），命中聚合为一条并附年份范围——全部行越界=声明错位、个别行越界=该行录入错，处置方式不同；平安 12/12 年聚合 1 条并自动定性「声明错位」，43 份底稿全量扫描零新增误伤。③ `migrate_schema.py` 退出码：partial/demoted → 1（原无条件 0，作收官门禁时 21 份遗留也假通过）。tests 14.5 新增 6 项行为测试，套件 513 → 519 全绿。
   - ⏳ 待办：21 份竞对/案例底稿补齐 source_ref / data_vintage 后升 strict（主底稿仅剩 NVDA 缺 data_vintage）；平安底稿修正单位声明后 `--recheck --write`（数值疑为万元口径而声明百万，改 meta 声明侧即可、不动历史数值）；schema 文档化（REQ-P4-02）；**验收口径需用户裁决**：验收条款写「全部迁移并通过」，但 16 份竞对底稿按现行纪律可免原文核对，建议把验收改成分层口径（主底稿 strict、竞对底稿显式豁免），否则本条无法关闭。
+- 状态：**done**（2026-09-14 收尾：**用户裁决验收口径 = 主底稿 strict、竞对显式豁免**，据此关闭）
+- 收尾进展（2026-09-14）：
+  - ✅ 分层验收落码：`schema_meta.layered_acceptance()` + `validate_data.py` 1.2b 接线——主底稿停留 legacy → ERROR；竞对停留 legacy 无 `meta.schema_waiver` → ERROR（禁止无声 legacy）；豁免缺五要素（scope/reason/covers/decided_by/date）→ ERROR（豁免必须可问责）；合规豁免 → WARN 并要求报告 validate-summary 段披露。
+  - ✅ 21 份 legacy 处置：19 份竞对显式豁免（`schema_waiver=peer_traceability`，reason 写明免原文核对纪律与不进估值管线）；NVDA 主底稿补 `data_vintage=2026-02-25`（FY2026 10-K EDGAR 0001045810-26-000021 申报日，官方文件索引核实）升 strict；NFLX 竞对照表初判可升 strict、复核发现是逐实体形态（annual 行按 entity 记 FYyyyy、非标准单公司底稿 schema）改归豁免——strict 22→23（全部主底稿 strict，竞对豁免是地板不是天花板）。
+  - ✅ cases 侧 15 份补 `is_peer: true`（与 backtest 侧约定对齐）；顺手修复 validate_data 对 "FY2016" 字符串年份崩溃（退出码 3）与竞对表跨实体同比误报（spike 检查对 is_peer 降级 WARN，与 A1/覆盖率哨兵同款）。
+  - ✅ tests 14.14 段 17 项（分层四态/存量零无声 legacy/竞对 CLI 全通过/年报年份健壮性），套件 806→823 全绿；12 案基线一致、假阳性 0 新增。
+  - ⏳ 遗留移交：schema 正式文档化归 REQ-P4-02；平安底稿单位声明修正（历史 case 数据不动裁决下改 meta 声明侧）仍待用户点头执行。
 
 ### REQ-P0-04 双闸门第二维度换源
 - 来源：A2、D
@@ -166,7 +173,7 @@
 - 验收：在第一、二批 12 个案例上重跑，有效门槛回到名义门槛 ±5% 内；正向错过数下降且假阳性案例（REQ-P0-01）不新增放行。（2026-09-11 修订：原「有效门槛 ±5%」因 ① 降级为诊断而失效且从未实测——新口径下期望值唯一约束为 ①' IRR ≥ r，其安全边际等价 ≈0%，有效门槛**结构性**回到名义门槛 25%/40%，A/B 神华翻正（IRR 17.8% 介于 r=10% 与旧有效门槛 21.8% 之间）为实证；正向错过下降已验证（神华 fail→pass），假阳性不新增 A/B 0/7、待第四批正式验证。）
 - 涉及文件：`scripts/reverse_dcf.py`、`scripts/check_scenarios.py`、`references/valuation-guide.md`
 - 依赖：REQ-P0-01（需假阳性对照验证不放松）、与 REQ-P1-03 联合设计
-- 状态：**doing**（2026-09-11 四项参与判定落码 + A/B 回归门接入，待第四批假阳性对照验证后 done）
+- 状态：**verify**（2026-09-11 四项参与判定落码 + A/B 回归门接入，待第四批假阳性对照验证后 done）
 - 进展：
   - ✅ 一版（2026-09-11 上午）：组合判定从「三项全过」改为「②不收敛下限 + ③悲观 IRR 两项独立检验全过」，①护城河反推门槛降为诊断。审查发现两处硬伤：`evaluable` 仍按三项算与 `pass` 口径矛盾；期望 IRR 失去任何下限，理论上 IRR < r（买在价值之上）也能过闸。
   - ✅ 二版（2026-09-11 审查修订）：闸门二 = 四项参与判定 `participating_checks = [expected_irr_floor, no_convergence_floor, pessimistic_irr, loss_probability]`——①' 期望 IRR ≥ 折现率 r（硬下限，非门槛）、② ≥6%、③ ≥0、④ 亏损概率 ≤30%（`--loss-prob-hurdle`，此前只写在文档"核心买入追加下行约束"里、引擎不判）；① 护城河反推门槛与 `effective_hurdle` 均标 `diagnostic_only`，basis 文案改为「诊断口径，不构成当前门槛」；`evaluable`/`missing_inputs` 按参与项算。新告警码 `GATE2_1B_IRR_BELOW_R`、`GATE2_4_LOSS_PROB_FAIL` 已注册。
@@ -189,7 +196,7 @@
 - 验收：人为构造一次污染样本可被检出；第三批起隔离执行率报告为 100% 且机器可验证。
 - 涉及文件：`scripts/prepare_case.py`、`backtest/PROMPT.md`、`scripts/run_backtest_assertions.py`
 - 依赖：无
-- 状态：**doing**（2026-09-11 审查后二次落码：pre/audit 双模式 + 消费端接入完成，待第四批案例执行验证 100% 执行率）
+- 状态：**verify**（2026-09-11 审查后二次落码：pre/audit 双模式 + 消费端接入完成，待第四批案例执行验证 100% 执行率）
 - 进展：
   - ✅ `prepare_case.py --seal-check <case_dir>`（pre 模式，verdict 落盘前）：① 工作区无答案明文；② git 时序（meta 首次 < verdict 首次 < answer 首次，且 verdict 在 answer 落地后无修改提交）；③ ANSWERS.md 密封批次段落按**别名反查**无明文（原版 ticker 子串匹配：福特 `F` 假阳性、中石油假阴性，已修）。原"检查②密封已揭示"与①判据相同，已合并。
   - ✅ `--seal-check <case> --audit`（事后审计模式）：只看 git 时序、不把 answer 文件存在当污染——原版在 Step 4 之后对任何案例必报污染，事后无法统计执行率。
@@ -208,7 +215,7 @@
 - 验收：现有回测案例全部通过时点校验或明确标注例外；`PROMPT.md` 新增时点纪律条款。
 - 涉及文件：`scripts/validate_data.py`、`backtest/PROMPT.md`、`references/data-sourcing.md`
 - 依赖：REQ-P0-03
-- 状态：**doing**（2026-09-11 审查后二次落码：行级校验 + 一致性 + 豁免出口 + 存量 12 案全部通过；待 PROMPT 时点条款在第四批验证）
+- 状态：**verify**（2026-09-11 审查后二次落码：行级校验 + 一致性 + 豁免出口 + 存量 12 案全部通过；待 PROMPT 时点条款在第四批验证）
 - 进展：
   - ✅ `validate_data.py` 1.5b 重写：回放时点取 `--replay-date` > 同目录 `meta.json.replay_date` > 路径名（原版只靠路径字串猜）；文件级 `data_vintage ≤ replay_date`；**行级** `publish_date ≤ replay_date`（原版漏此项，NFLX 2014 行取自 FY2016 10-K 照样进估值）；一致性 `data_vintage ≥ max(publish_date)`（拦"vintage 填成截断日、行级发布日留空"）；临近回放年份缺 `publish_date` 升 ERROR（久远年份 WARN、竞对底稿 WARN）。
   - ✅ 显式豁免出口 `meta.point_in_time_waiver = {reason, affected_years, retroactive?}`：无豁免 ERROR，有豁免降 WARN 并要求报告披露。用户裁决"历史 case 数据不动"，因此必须有例外机制。
@@ -227,7 +234,7 @@
 - 验收：注入一次 3% 的命门科目差异能被阻断；差异表出现在报告数据附录。
 - 涉及文件：`references/data-sourcing.md`、`scripts/crosscheck_official.py`、`scripts/check_data_sources.py`
 - 依赖：REQ-P0-03
-- 状态：**doing**（2026-09-11 审查后二次落码：三级阈值与源优先级真正参与判定、差异表两模式统一并落盘、3% 注入验收通过；待报告模板补数据附录段）
+- 状态：**done**（2026-09-11 审查后二次落码：三级阈值与源优先级真正参与判定、差异表两模式统一并落盘、3% 注入验收通过；2026-09-14 数据附录规范与存量 source_tier 补录收尾）
 - 进展：
   - ✅ `data-sourcing.md` 第九节重写：源优先级带 `source_tier` key；命门科目扩展至 cash / interest_bearing_debt / total_debt（需求正文点名）；五要素结构化豁免格式；差异表落盘位置与 verify_report 校验方式。
   - ✅ `crosscheck_official.py`：`tol_for()` 三级阈值分级（原版 `TOL_BALANCE_SHEET`/`TOL_OTHER` 是无人引用的死常量）；`source_tier()` 由显式字段或 source 文本推断 tier，冲突时以 tier 更高的源为准并在差异表写 `adopted_side`；EDGAR 模式与 `--audit` 模式走同一 `judge()` 裁决函数（原版差异表只在 EDGAR 模式生成，A 股路径没有）；crosscheck 条目登记的任何数值科目都参与比对；`--write` 把差异表落盘到底稿 `crosscheck_conflicts`；legacy 纯文本 crosscheck（双汇）从抛异常改为计错提示。
@@ -236,6 +243,11 @@
   - ✅ `verify_report.py`：底稿含非空 `crosscheck_conflicts`（或结构化豁免含 `rejected_value`）而报告缺 `data-appendix="source-conflicts"` → FAIL。
   - ✅ 验收「注入 3% 命门差异能被阻断」：`tests/run_tests.py` 14.3 对茅台底稿注入 revenue +3% / total_assets +4%，`--audit` 退出码 1、差异表 ⛔阻断 + ⚠告警、validate_data 同步阻断、五要素豁免后解除；共 11 项行为测试。
   - ⏳ 待办：`references/report-spec.md`（或报告模板）补「数据附录」段落规范与 `data-appendix` 标记示例；存量 A 股底稿的 crosscheck 条目补 `source_tier`。
+- 状态：**done**（2026-09-14 收尾：两项待办完成，验收条款全部满足）
+- 收尾进展（2026-09-14）：
+  - ✅ `report-spec.md` 新增「数据附录规范」：五个 `data-appendix` 标记（data-sources / validate-summary / source-conflicts / restatements / point-in-time-waiver）各自的内容、何时必填与校验方一表定案；`verify_report.py` 接线——任一底稿登记 `meta.schema_waiver`（REQ-P0-03 竞对豁免）而报告缺 `data-appendix="validate-summary"` → FAIL（豁免披露强制进报告）。
+  - ✅ 存量 crosscheck 条目 `source_tier` 补录：22 份底稿 80 条全覆盖，键名由 `crosscheck_official.source_tier()` 同一关键词表推断（edgar_xbrl/cninfo_pdf/hkex_pdf/company_ir/westock/ifind/research_report/wind_screenshot/web_search/media），附 `source_tier_note` 留痕；显式键与推断函数一致性入测试锁定（同一事实源，裁决行为零变化）。
+  - ✅ 验收闭环：「注入 3% 命门差异能被阻断」此前已实测（14.3 段 11 项）；「差异表出现在报告数据附录」由 verify_report 门禁 + 数据附录规范定义共同达成。待第四批首个完整报告实测披露段（执行项，非开发项）。
 
 ### REQ-P0-08 规则版本钉死
 - 来源：A3、C
@@ -246,7 +258,7 @@
 - 验收：任一历史案例可按其记录的版本重跑并复现原档位。
 - 涉及文件：`scripts/prepare_case.py`、`scripts/run_backtest_assertions.py`、`scripts/reverse_dcf.py`、`backtest/*/verdict.json`
 - 依赖：无
-- 状态：**doing**（2026-09-11 审查后二次落码：阈值 null 修复 + RULES_REGISTRY + --as-of worktree 实现 + lint/runner 消费端；待第四批首个带快照的 verdict 验证复现）
+- 状态：**verify**（2026-09-11 审查后二次落码：阈值 null 修复 + RULES_REGISTRY + --as-of worktree 实现 + lint/runner 消费端；待第四批首个带快照的 verdict 验证复现）
 - 进展：
   - ✅ 实测 bug 修复：原快照 `discount_rate_default` / `pessimistic_hurdle_default` 为 `null`——`reverse_dcf.py` 没有这两个模块常量，默认值藏在 argparse 里被 `getattr(..., None)` 静默吞掉。现提为 `DEFAULT_DISCOUNT_RATE` 等 7 个模块常量、argparse 引用之，快照记录的与引擎实际用的是同一个对象。
   - ✅ `prepare_case.RULES_REGISTRY`：(快照键, 模块, 属性) 单点登记 24 项 + `forensic_screen.TH_*` 动态全收 + 派生 IRR 门槛；属性缺失记入 `missing` 并 stderr 警告，不再"看起来完整"。
@@ -268,9 +280,20 @@
 - 价值：让系统对成长股既能说"买"也能说"不买"，并且两者都有依据。单位经济（LTV/CAC、边际贡献率）是区分"再投入"和"烧钱"的唯一可量化标准，这一维度加进来后，Netflix 和乐视在框架内会得到相反的结论，而不是同样的"观察"。
 - 交付物：`growth-framework.md` 补齐单位经济（LTV/CAC、边际贡献率）、渗透率天花板、成熟期利润率反推三段式；`reverse_dcf.py` 新增 `--mode growth`，以成熟期稳态利润 × 到达概率 折回替代当期 OE。到达概率与基率表（REQ-P1-05）挂钩。
 - 验收：Netflix 案例缺口 ≤1 档；至少 2 个新成长股案例作锚（正向与假阳性各一）。
-- 涉及文件：`references/company-types.md` 卡四、`references/growth-framework.md`、`references/valuation-guide.md`、`scripts/reverse_dcf.py`
+- 涉及文件：`references/company-types.md` 卡四、`references/growth-framework.md`、`references/valuation-guide.md`、`scripts/reverse_dcf.py`（注：需求原文「卡四」系旧编号——成长/再投入型现行为卡二，卡四现为隐蔽资产；已按现行编号落码）
 - 依赖：REQ-P0-04、REQ-P1-05
-- 状态：todo
+- 状态：**verify**（2026-09-11 通道落码 + Netflix 验收演示完成，缺口 2→1 档；2 个新案例锚待批次执行）
+- 进展：
+  - ✅ `growth-framework.md` 新增「第三半：成熟态三段式与成长股估值通道」：①单位经济（规模化边际贡献率 + LTV/CAC，第一道门）②渗透率天花板（成熟会员/用户 × 成熟 ARPU 自下而上，禁止增速外推当天花板）③成熟期利润率反推（单元经济法首选 / 同业成熟态法，禁止当期利润率外推）④到达概率与基率锚（联合概率 ≤ 收入基率锚；多情景混算的条件/无条件概率语义——无条件混合到达概率 = Σ 情景概率 × 条件 p）。
+  - ✅ `reverse_dcf.py` 新增 `growth` 子命令（subparsers 的 dest 即 mode，与需求 `--mode growth` 一致）：成熟期稳态 OE × 终局倍数（Gordon 恒作交叉核对，分歧 >30% 强制双口径并列）折回 N 年 × 到达概率 + 失败残值；**反解「现价隐含到达概率」**（成长通道形态的反向 DCF）；基率锚机器反查（`REVENUE_CAGR_BASE_RATES` 与 valuation-guide 基率表同源，`--base-rates-file` 为 REQ-P1-05 预留接管接口）；护栏与 forward-value 同源（永续上限 / r-g 间距 / 正基期 / 成熟态与到达概率双 [E:] 强制）。
+  - ✅ 六个 `GROWTH_*` 告警码注册（alert_codes.py 新增 growth 层）：`UNIT_ECONOMICS_UNPROVEN`（exit 2 硬拒绝——Netflix 与乐视型分道的第一道门）、`ARRIVAL_PROB_UNANCHORED`（裸概率禁止，与 S7 同源）、`ARRIVAL_PROB_ABOVE_BASERATE`（越锚警示须论证例外）、`PRICE_IMPLIES_CERTAIN_ARRIVAL`（隐含 p ≥100% 透支）、`IMPLIED_VS_BASERATE_GAP`（市场 vs 框架的赔率分歧显式化）、`TERMINAL_DOMINATED`（结构性终值主导，档位上限依据）。
+  - ✅ 通道三纪律：单元经济未证即通道拒绝服务（禁止调高 p/倍数让烧钱公司"看起来值钱"）；**档位上限恒为小仓位试探**（通道价值 100% 来自成熟期终值折回，与终值纪律一致）；到达概率不得高于基率锚。引擎输出档位带建议（透支→拒绝 / 价格 ≤ 概率加权价值→试探候选 / 其余→观察等价格），最终档位仍由双闸门与裁决层定——与既有哲学一致。
+  - ✅ 接线五处：company-types 卡二估值通道 cell（旧「通道失语披露级处理」条文废除）、valuation-guide 方法树行 + 通道纪律段、SKILL.md Phase 4 一行指针（体积红线内）、backtest/PROMPT.md Step 2 机器化纪律（第三批起强制）、check_scenarios `DCF_METHODS` 注册 `growth_terminal_backcast`（基准/乐观可用；悲观禁用，S2 照拦——下行估计必须独立）。
+  - ✅ **验收「Netflix 缺口 ≤1 档」达成**：成长通道对照轨落盘 `backtest/NFLX_2016-12-31/data/growth_{value,scenarios,expected_return}_REQ-P1-01.json`（冻结底稿 scenarios.json/verdict.json 未动，文件名避开 runner 的 `scenarios*` glob）。基准 32.91（成熟态 300M 会员×$10×20% OE×20x×p=0.25 基率锚取等值）/ 乐观 94.92（350M×$11×24%×24x×p=0.40 条件概率，越锚已论证披露）/ 悲观 1.48（原案 worst_year_margin 独立方法逐字保留，失败残值同源）。check_scenarios 0 错 0 警通过；expected-return 闸门二四项全灭 → 档位上限「观察等价格」；通道档位带=观察等价格（单元经济已证 + 隐含到达概率 96% <100%）。**档位 1（拒绝）→2（观察等价格），缺口 2→1 档**。语言质变：从「131x OE 无解、现价 9.0× 基准价值、无语言可说」到「现价隐含到达概率 96%（Gordon 口径 141%）vs 基率锚 25%——市场比框架乐观 3.8 倍」的显式赔率分歧，且该分歧可证伪（单元经济证据深化或价格回落即重估）。
+  - ✅ 判别力锚定（不错买方向）：乐视型（贡献利润率 ≤0）在通道入口即被拒（tests 锁定 exit 2）；通道不放松任何下行输入——悲观 1.48、亏损概率 80%、悲观年化 −29.3% 原样呈现。这是「通道建设而非阈值放松」：BATCH2 第八节指定的修复方向。
+  - ✅ `tests/run_tests.py` 新增 14.7 段 29 项行为测试（终值/折回/概率加权数学、极端值反推自洽 MC=PV⇒p=1、单元经济双判据硬拒绝、裸概率拒绝、基率查表五形态、NFLX 验收形态端到端含隐含概率与档位带、Gordon 口径透支、越锚警示、check_scenarios 正反接线、六码注册、文档接入）；全套件 558 项全绿；`--rerun --baseline` 12 案代号集合与基线一致、假阳性轨 0 新增。
+  - ⏳ 待办：验收条款「至少 2 个新成长股案例作锚（正向与假阳性各一）」待批次执行——建议正向：亚马逊 2010-12-31 或拼多多 2018-06-30（OE 极小 + 单元经济已证形态，注意 BATCH2 第七节提示 Meta 2022 有巨额 OE、走标准通道大概率不复现）；假阳性：乐视 2015-05（已在 PROMPT 假阳性对照替补池，放行路径=成长叙事）——建议入第五批（类型卡阈值锚批）与通道判别力复验同批执行。
+  - 📌 设计说明：官方期望 {3,4} 中的档位 3 在基率锚约束下**刻意不可达**——需 p>25% 或倍数>20x，通道不给（防拟合答案，REQ-P0-08 纪律）；该残差移交 REQ-P1-04（概率证据传导）与 REQ-P1-05（基率表建成后的到达概率校准）跟踪。基率表挂钩接口已就绪（`--base-rates-file` + 引擎内置表标注 REQ-P1-05 接管）。
 
 ### REQ-P1-02 持仓型控股 SOTP 通道
 - 来源：D
@@ -279,9 +302,22 @@
 - 价值：让持仓型公司可分析。这类公司在港股和美股大市值标的中占比很高（腾讯、软银、伯克希尔、Prosus、复星）。做完后经营性 OE 与 look-through 价值分列，投资者能看清"我买的是什么"。
 - 交付物：底稿新增结构化持仓表（标的、持股比例、估值方法、折价率、流动性）；`compute_metrics.py` 区分经营性 OE 与 look-through 收益；`reverse_dcf.py` 新增 `--mode sotp`，控股折价作为显式参数。
 - 验收：软银、腾讯案例重跑后经营性 OE 与投资组合价值分列；控股折价参数有行业基率引用。
-- 涉及文件：`references/company-types.md` 卡三、`scripts/compute_metrics.py`、`scripts/reverse_dcf.py`
+- 涉及文件：`references/company-types.md` 卡三、`scripts/compute_metrics.py`、`scripts/reverse_dcf.py`（注：需求原文「卡三」系旧编号——隐蔽资产/控股子型现行为卡四，卡三现为周期；已按现行编号落码，与 REQ-P1-01 的卡四/卡二编号漂移同源）
 - 依赖：REQ-P0-03
-- 状态：todo
+- 状态：**verify**（2026-09-11 通道落码 + 软银/腾讯双验收锚完成；2026-09-14 sotp_screen 已在真实管道实测常驻（软银 distortion=true/腾讯 distortion=false）；案例库内持仓型新案例锚待批次执行）
+- 进展：
+  - ✅ `reverse_dcf.py` 新增 `sotp` 子命令（subparsers 的 dest 即 mode，与需求 `--mode sotp` 一致）：三段式 `可投资价值 = [Σ(持仓归属毛值×变现折价) + 经营业务价值 − 母公司净债] × (1−控股折价)`；**反解"现价隐含控股折价"** `implied = 1 − 市值/equity NAV`（SOTP 形态的反向 DCF）；两层折价显式分工（持仓级变现折价管"这笔资产卖得回几成"，整体控股折价管"钱在别人手里再打几折"）——替代 `--add-back/--deduct` 手工补丁。
+  - ✅ 结构化持仓表 schema（交付物①）：六要素（标的/持股比例/估值方法/变现折价率/流动性/[E:] 证据）不全即**通道拒绝服务（exit 2）**；估值方法白名单五档（market_price/fair_value_disclosed/private_estimate/book_value/dcf_segment）+ 流动性分级五档（listed_major/listed_stake/private_fund/private_co/illiquid）；`gross_value` 语义=按持股比例折算后的归属毛值（stake_pct 仅披露不参与计算，防双重折算）。
+  - ✅ 净债口径门（并表错位防线）：`--net-debt-basis ∈ {parent_standalone, consolidated}` 显式声明；合并口径触发 `SOTP_NET_DEBT_CONSOLIDATION_BASIS`（软银案 alternative_treatment 教训：持仓按持股计价而净债用合并口径=双重计入少数股东应担债务）。
+  - ✅ 控股折价挂行业基率带（交付物③）：`HOLDING_DISCOUNT_BANDS` 四档（亚洲多元化控股无收敛机制 30-50%【软银 2016-2019 实证】/ 上市持仓主导无收敛 20-40% / 有收敛机制 5-20% / 经营主导+投资副轮 0-15%），`--holding-profile` 机器对照，低于下界触发 `SOTP_DISCOUNT_BELOW_BASE_RATE`（比历史实证更乐观须论证）；`--discount-bands-file` 为 REQ-P1-05 预留接管接口。
+  - ✅ `compute_metrics.py` 区分经营性 OE 与 look-through 收益（交付物②）：annual 行可选字段 `investment_income`（投资收益+公允价值变动，重估推高与减值压低同字段）/ `dividend_income`（从被投企业收到的分红）；自动产出 `sotp_screen` 块（经营性 OE / look-through / 占比序列 / channel_hint）；**双向失真识别**：最新年占比 ≥50% 或近 3 年 ≥2 年 ≥30% → `M_OWNER_YIELD_CONSOLIDATION_DISTORTION`（OBS-2019-06-01 候选名落码——owner yield 21.1% vs 股息率 0.43% 的数学不可能首次被机器识别；腾讯 2023 减值年为反向同病）。缺字段=not applicable（经营主导型正确阴性，存在性前置）。
+  - ✅ 六+1 告警码注册（SOTP_* 层 + M_OWNER_YIELD_CONSOLIDATION_DISTORTION），官方 must_trigger 两项「治理折价」「非经营资产主导」的注册表等价物补全（软银案 answer.json 登记的能力缺口）。
+  - ✅ 通道结构纪律：持仓占 equity NAV ≥50% 即非经营资产主导（`SOTP_HOLDINGS_DOMINATED`）——OE 通道结论不进档位裁决 + 档位上限小仓位试探（与成长通道终值纪律同源）；无收敛机制的折价不是便宜（价值陷阱 SOTP 形态：兑现押在普通股东无法触发的治理行动上）；经营主导形态（<50%）通道只做分列、档位由标准双闸门定。
+  - ✅ 接线五处：company-types 卡四正常化/估值通道 cell（含底稿字段登记指引）、valuation-guide 方法树行 + SOTP 通道纪律段（五条纪律 + 双验收锚）、SKILL.md Phase 4 一行指针（体积红线内）、backtest/PROMPT.md Step 2 机器化纪律段（第三批起强制，含持仓表模板指引）、check_scenarios `DCF_METHODS["sotp"]` 描述更新（与 sotp_asset_floor 上下行不同源说明）。
+  - ✅ **验收「软银重跑分列」达成**：`backtest/9984.T_2019-06-30/data/` 新增三文件（冻结底稿未动，命名避开 runner 的 `financials_*`/`metrics_*`/`scenarios*` glob）——①`sotp_holdings_REQ-P1-02.json`（结构化持仓表交付物实例，由 business_drivers sotp_holdings 六要素化）②`sotp_value_REQ-P1-02.json`（通道输出：毛 NAV 29,490,000 − 净债 6,200,000 = equity NAV 23,290,000 ×(1−40%) → **每股 6,630 ≈ 原案 ADJ3 的 6,633**（±0.5%，原案 23.3 万亿四舍五入）；隐含折价 53.2% 与底稿 nav_discount 53% 一致；档位带「观察等价格」= 官方 {1,2} 且管线实际档位 2；codes：HOLDINGS_DOMINATED（持仓 100%+ 主导）+ IMPLIED_DISCOUNT_GAP（隐含 53% vs 采用 40%，分歧 13pct——正是原案 gate1 多锚稳健性的机器化：边际 ≥40% 需折价 ≤14%，历史带之外））③`sotp_demo_financials_REQ-P1-02.json` + `sotp_screen_REQ-P1-02.json`（compute_metrics 分列演示：投资收益占比 92.3% → distortion 首次真实触发；**经营性 OE 990,011**（剔除 VF/Delta 重估 1,302,838 后，与 ADJ1 证据 A 的量级对应）/ **look-through 收益 2,051,422**（分红收入）分列；并表 D&A 错位维度的处理边界在 note 披露——两个污染维度分开治理）。
+  - ✅ **验收「腾讯重跑分列」达成**：`cases/tencent/data/` 新增 `sotp_holdings_REQ-P1-02.json` + `sotp_value_REQ-P1-02.json`——经营+投资双轮形态：持仓 671,220（上市 9 折 438,480 + 非上市 6 折 232,740）+ 经营 DCF 3,590,630（forward-value 正常化 OE 219,013×g5%）+ 净现金 58,200 = equity NAV 4,320,050；持仓占比 16% <50% → 经营主导不越权（无 DOMINATED 码、档位带=标准双闸门裁定）；控股折价 10% 落 operating_with_portfolio 带 [0-15%] 内（回购注销+分拆提供部分收敛机制）；每股 464.27 HKD（fx 1.087）。
+  - ✅ `tests/run_tests.py` 新增 14.8 段 46 项行为测试（三段式数学、六要素四形态硬拒绝、折价未挂 [E:] 拒绝、净债合并口径告警、折价越带、隐含折价极端值反推 MC=NAV⇒0 / MC=NAV/2⇒50%、软银端到端含 6,633 复现与隐含 53%、腾讯分列与不越权、sotp_screen 双向失真（重估推高/减值压低）+ 经营主导阴性对照 + 软银真实数据、七码注册、分层命名表、五处文档接入、check_scenarios 接线）；全套件 558 → **604 项全绿**；`--rerun --baseline` 12 案代号集合与基线一致、假阳性轨 0 新增。
+  - ⏳ 待办：案例库内持仓型**新**案例锚（伯克希尔/Prosus/复星类，正向与假阳性各一）待批次执行——建议入第五批与 P1-01 成长通道案例锚同批（彼时 sotp 通道判别力可复验）；存量底稿（软银 financials、腾讯 financials）补 `investment_income`/`dividend_income` 字段使 sotp_screen 在真实管道常驻（当前为演示副本，按「历史 case 数据不动」纪律未改冻结底稿）。→ **2026-09-14 已补录**：软银三年 investment_income + 2018 dividend_income 自演示副本回填（值与 [E:] 注逐字同源）；腾讯 2020-2025 investment_income 按官方业绩公告原文逐年登记（2021 及以前「其他收益淨額」旧列报 / 2022 起新列报「投資收益/(虧損)淨額及其他」，口径分界在 data_notes 登记；2021=149,467 占归母 66.5% 与公告叙述吻合），dividend_income 留空——腾讯年报不单列从被投企业收到分红，不编造。compute_metrics 实测：软银 distortion=true（FY2018 重估占净利 92%）+ look-through 到位；腾讯 sotp_screen 六年 share_series、distortion=false（近年投资收益不占主导，诚实结果）。sotp_screen 已在真实管道常驻，本待办关闭；新案例锚仍待第五批。
 
 ### REQ-P1-03 护城河评级连续化
 - 来源：A2、D
@@ -292,7 +328,14 @@
 - 验收：神华案例边界带双档报告可生成；12 个案例中评级变动 1 级导致档位跳 2 级的情况为 0。
 - 涉及文件：`references/moat-framework.md`、`scripts/reverse_dcf.py`、`references/report-spec.md`
 - 依赖：与 REQ-P0-04 联合设计
-- 状态：todo
+- 状态：**verify**（2026-09-11 三项交付物与两项验收全部达成；第四批首个带得分案例实测后转 done）
+- 进展：
+  - ✅ 设计（与 REQ-P0-04 联合）：护城河得分 0~100（三组件：A 超额回报证据 0~50 / B 源硬度 0~30 / C 定标与趋势修正 −10~+20，各挂 [E:]），评级词降级为得分的分带投影（≥65 wide / ≥35 narrow / <35 none），词表与 S1 校验兼容不变。平滑 MoS 门槛 = 分段线性（35 分→50%、65 分→40%、100 分→25%），**分带边界连续**（65 分两侧都是 40%）+ **带内处处 ≥ legacy 阶跃常数**（仅锚点相等）——通道建设而非阈值放松，与 REQ-P0-08 纪律同源。闸门二①诊断门槛随平滑 MoS 派生；none（<35 分）为政策边界（不给买入结论），由双档披露而非连续性消除。
+  - ✅ 落码：`reverse_dcf.py` 新增 `mos_requirement_from_score`/`moat_word_from_score`/`moat_boundary_band` 纯函数 + `expected-return --moat-score/--moat-score-basis/--moat-sources`（scenarios.json 三字段同源读取）；裸分数硬拒绝 `MOAT_SCORE_BASIS_MISSING`、词≠投影硬拒绝 `MOAT_SCORE_WORD_MISMATCH`、边界带（边界 ±5 分）自动双档报告并列 ±5 分两侧门槛/闸门一/触发价/档位建议 + `MOAT_BOUNDARY_BAND_DUAL`。**legacy 词路径字节级不变**（无得分时不新增输出键、门槛走旧常数）——12 案基线不动（`--rerun --baseline` 实证一致）。
+  - ✅ 接线：`check_scenarios.py` S1b（得分可选字段校验：区间/投影/[E:]）；`prepare_case.py` 快照注册表补 `MOAT_SCORE_WIDE_MIN/NARROW_MIN`；moat-framework 第二节半（量表+纪律）、report-spec ②c（决策卡得分卡 + `data-moat-score`/`data-moat-boundary` 标记）、valuation-guide 闸门一默认标准节、SKILL.md Phase 3/Phase 4.5、PROMPT Step 2（第四批起强制带得分）。
+  - ✅ 验收①（神华双档报告）：三组件透明打分 A=40（十年正利差但当期收窄）+ B=10（成本优势一源硬证据）+ C=+10（三定标 +15、稳定偏变窄 −5）= **60 分**（窄带，落宽/窄边界带 [60,70]）→ `expected_return_moat_score_REQ-P1-03.json` 双档报告自动生成：55 分侧门槛 43.3%/65 分侧门槛 40.0%（触发价 14.42 恰为归档 legacy 触发价——连续性锚实证）；两侧闸门一均未过（MoS 37.7% vs 41.7%），档位维持观察等价格。
+  - ✅ 验收②（12 案跳 2 档归零）：操作化为分带边界 ε 穿越（knife-edge 情形，即需求所述"两个同样认真的分析师在边界上分歧"），档位代理 none→1 / 任一闸门不过→2 / 双过→3（核心买入须裁决层按核验强度加码，非评级传导变量）。实测 11 个有情景案例（康美案 Phase 0 排除、无评级天然免疫）× 35/65 两边界 **maxΔ=1**（全部来自 35 分政策边界 none→narrow 的 1↔2，非连续性可消除的档位跳变）；legacy 对照复现神华 窄→宽 2→4 跳 2 档（diff.md 第 42 行问题实证，新机制下归零）。tests 14.9 段 45 项，全套件 649 全绿。
+  - ⚠ 遗留：第四批起新案例强制带得分（PROMPT 已写），首个实测案例落地后转 done；references/ 体积红线余量仅 23 字节（153,577/153,600），下次新增文档须先压缩等量。
 
 ### REQ-P1-04 折现率与情景概率的证据传导
 - 来源：A2、D
@@ -303,7 +346,7 @@
 - 验收：每个案例的折现率与概率在 `verdict.json` 中有 `rationale_ref`；敏感性表显示概率 ±10pp 对档位的影响。
 - 涉及文件：`references/valuation-guide.md`、`scripts/reverse_dcf.py`、`scripts/check_scenarios.py`
 - 依赖：REQ-P1-03
-- 状态：todo
+- 状态：done（as-built：分层折现率 r = max(10% 纪律下限, 10Y国债+4pct) + 行业溢价（六档，Damodaran 相对排序校准，分层只向上、10% 下限不动）；概率映射 `map_scenario_probabilities` 分段线性锚 35→(35/50/15)、65→(30/50/20)、100→(25/50/25) + 变异认知 weak +5pp/strong −5pp + 红队悲观概率 max() 下界同时约束映射值与采用值（保守不对称）；采用值偏离映射 ≤2pp 免论、2~10pp 须 deviation_rationale 挂 [E:]、>10pp 硬拒；±10pp 敏感性表（翻档触发 PROB_SENSITIVITY_TIER_FLIP）；DR 一致性门禁（声明分层值 ≠ discount_rate 即硬拒）；floor 门槛分市场 CN 6%/HK 5%/US 5%/JP 3%（P0-04③ 移交项一并处理）；S7c 校验 + S7 豁免链；七码 DR_*/PROB_*；神华概率传导演示（期望 IRR 16.60%、悲观 25%→30% 红队下界吸收）+ AAPL 校准（standard 档 10%、US floor 5%）+ 门禁拦截演示；无 derivation 块走旧路径零新增键，12 案基线字节级不动；tests 14.10 段 50 项、套件 699 全绿、基线一致）
 
 ### REQ-P1-05 尾部风险单列与基率锚定
 - 来源：A2
@@ -314,7 +357,7 @@
 - 验收：基率表覆盖回测案例涉及的全部行业；违反基率上限的情景被 `check_scenarios.py` 拦截。
 - 涉及文件：`references/valuation-guide.md`、`references/base-rates.md`（新）、`scripts/reverse_dcf.py`、`scripts/check_scenarios.py`
 - 依赖：REQ-P0-02
-- 状态：todo
+- 状态：done（as-built：期望 IRR 公式第四项 `(1−p_tail)×Σpᵢ·IRRᵢ + p_tail×loss_tail` 落码，p_tail 由 `map_tail_probability` 纯映射（排雷得分分段线性锚 0→1%/5→10%/20→30% + 治理修正 poor +3pp/good −0.5pp + 黑天鹅地板 1% + 覆盖率地板 5%——**不可采用偏离**，允许把"公司可能归零"论证没=允许自欺）；闸门二①'④按尾部口径重判，拖累 ≥2pct 触发 TAIL_DRAG_MATERIALIZES；康美反事实演示（真实排雷 score 21/覆盖率 36.4%/poor → p_tail 33%，账面三情景全正回报 15.2% → −22.8%、亏损概率 0→33%、闸门二不过）；行业基率表 INDUSTRY_GROWTH_BASE_RATES 覆盖 12 案全部行业（p50/p80，Damodaran 相对排序校准）；check_scenarios S10 拦截乐观增速超 p80（无 [E:] 支撑硬拒、有支撑放行披露）+ S11 尾部块结构校验；五码 TAIL_*/BASERATE_*；base-rates.md 统一三张基率表参考；references 等量压缩（余 78 字节）；legacy 无块零新增键、12 案基线不动；tests 14.11 段 45 项、套件 744 全绿、基线一致）
 
 ### REQ-P1-06 无标签滚动回测轨
 - 来源：A3、C
@@ -336,7 +379,7 @@
 - 验收：六卡全部有可运行通道与至少 2 个案例。
 - 涉及文件：`references/company-types.md`、`references/valuation-guide.md`
 - 依赖：REQ-P1-01
-- 状态：todo
+- 状态：done（as-built：卡五股息锚通道 `reverse_dcf.py dividend`——Gordon-DDM（股息增速 ≤3% 硬拒）+ 回本年数 + 债券替代利差（≥3pct 权益补偿）+ **FCF 覆盖门禁**（<1 即分红吃老本、类债论证不成立→退回观察）；卡六 `reverse_dcf.py distress`——周期/结构五项判别清单（技术替代一票=结构性；周期性须全行业∧价格分位<0.3∧无替代∧份额未丢同时成立，证据不足按结构性质疑）+ 清算价值下限（现金全额+非现金×折价(须[E:])−负债；为负=DIST_EQUITY_WIPED_OUT）作悲观地板（method=liquidation_floor 进独立方法白名单）+ 结构性禁均值回复/档位上限排除（现价<清算下限×0.8 深度价值档唯一例外）。十一码 DIV_*/DIV_PAYOUT_BORDERLINE/DIST_*（2026-09-14 审查修订：DIV_PAYOUT_BORDERLINE原已发出但漏注册，补注册 + dividend/distress 两分支补 unknown_codes 硬校验，与 expected-return/growth/sotp 同纪律）。四个验收演示全部锚定已有官方答案：双汇 2019-06（正向——覆盖 0.68+利差 2.66% 双门禁→observe，独立复现官方档位 2）；合成拦截（股息率 8% 诱惑被覆盖 0.5 拆穿）；神华 2015-12（正向——cyclical 判别通过+清算地板 5.58，与官方 {3,4} 相容）；柯达 2011-06（假阳性——技术替代一票+清算权益 −34 亿→excluded，与官方 1 一致，2012-01 破产实证）。六卡占位全清除；references 等量压缩（余 111 字节）；legacy 零改动、12 案基线不动；tests 14.12 段 33 项、套件 744→777 全绿、基线一致）
 
 ---
 
@@ -351,7 +394,7 @@
 - 验收：现有 12 个答案全部补齐置信度；低置信度案例在战绩表中单独统计不计入主指标。
 - 涉及文件：`backtest/ANSWERS.md`、`backtest/PROMPT.md`、`backtest/*/answer.json`
 - 依赖：REQ-P0-08
-- 状态：todo
+- 状态：**done**（as-built：`confidence`（high/medium/low）+ `confidence_basis`（必填、可问责、引用 ANSWERS.md 规则表条目 H1~L3）落码——批次 ≥3 缺失为硬失败、批次 <2 缺失为咨询性提示；`acceptable_grades` 裁决为**镜像字段**而非独立字段（与 `expected_verdict_set` 分叉即 lint 失败，避免 OBS-600660-01 式双声明露馅）；低置信度案例三轨评测照常输出但**不进 FP/FN 分母与回归门禁**（假阳性仍判定可见、`low_conf_failures` 单列、notes 指向修订流程），`fp_fn_summary` 新增 low_conf 单列字段且不产生比率；runner 表格加置信度列 + 分母口径声明 + 低置信度明细段；基线 `_fp_fn` 快照含 low_conf 段，低置信度新增假阳性相对基线仍红灯（不错买优先不容静默消失）。12 案补齐（high 7 / medium 3 / low 2——海控、NFLX 为需求正文点名争议案）；**密封库 18 案已超验收范围全部预注**（high 12 / medium 6，`--annotate-confidence` 解码合并重封 + confidence_history 留痕，预注时点早于任何批次 3-5 verdict——靶在箭前，已揭示案例拒绝预注、改判只能走修订流程）。ANSWERS.md 规则表 + 修订流程五步（提出/举证/复核/生效/旧战绩重算）+ 赋值时点纪律；PROMPT.md answer 模板、红灯规则低置信度例外路径、FP/FN 报告分母口径同步。验收达成：negative_n=6 / positive_n=3（低置信度出分母），FN 名单只剩茅台+神华。tests 13.6 段 44 项、套件 853→897 全绿、runner 基线一致。2026-09-14 审查修订：①基线 `_fp_fn` 实为旧口径快照（fn_rate=0.75、false_negatives 含 NFLX、无 low_conf 字段，as-built 原声明与实物不符）——删除重生成，代号集合与旧基线零差异，`_fp_fn` 刷新为新口径（fn_rate=2/3、FN 只剩茅台+神华、含 low_conf_cases/low_conf_false_positives）；②门禁回读补豁免——new_fp 比对基数同时减去基线 `low_conf_false_positives`（原只减 false_positives，基线已收录的低置信度假阳性会被永久误判"新增"红灯）；③tests 13.6 新增 H 段 6 项——基线**实物文件**断言（原 G 段只 grep runner 源码，实物陈旧逃过测试即此盲区）+ meta.batch 缺失/非法硬失败断言；④meta.batch 缺失不可充当硬校验绕行道（原按 batch=0 走咨询性路径，现按失败处理）。套件 897→903 全绿、plain 比对与基线一致。遗留（既有、非本次引入）：`--rerun --baseline` 在纯提交态即 exit 1（茅台档位/福耀/EK/ZM 四案引擎代号漂移，ZM known_failures 为空未登记）——同日立案处置（方案 A）：根因为 ec6983e（P0-04 闸门二三项→四项参与判定，commit 自注"历史 case 数据未动"）后老 verdict 未重跑、新码未登记，且新城/鞍钢/软银三案已登记而此四案遗漏；冲突复核（福耀/ZM 闸门断言 None 不约束；EK GATE2_UNRATED→两条 FAIL 方向仍与 expected_gate2=False 一致；茅台冻结时点闸门二三项制下过、四项制下重跑不过=口径分叉，plain 断言仍用冻结 verdict 不受影响）后，四案 answer.json known_failures 登记 engine_drift（茅台 ['verdict_track','engine_drift']，福耀/EK/ZM ['engine_drift']）。`--rerun --baseline` 复跑 exit 0、12 案代号集合与基线零差异、假阳性 0 新增，套件 903 全绿）
 
 ### REQ-P2-02 持有期回测
 - 来源：A3、C
@@ -439,7 +482,7 @@
 - 验收：人为在 Phase 4 后改动概率能被检出。
 - 涉及文件：`scripts/prepare_case.py`、`backtest/PROMPT.md`
 - 依赖：REQ-P0-05
-- 状态：todo
+- 状态：done（as-built：采纳 astra AST-028 修正——不按原文"Phase 2 一刀切锁死"，区分研究迭代与揭示前冻结：`--preregister` 可多次执行、每次 trigger+note 留痕（evidence_revision 无 note 拒绝）、全部历史注册与参数差异保留（射箭前允许换弓），靶在箭前由 git 时序保证（preregistration.json 最后提交 < verdict.json 首次提交，audit 模式机核；2026-09-14 审查修订：另核 preregistration.json 工作区清洁（pre/audit 双模式）——实证绕过路径：揭示后改参+重注册不提交，摘要比对读工作区文件、时序闸门只看最后提交，两把锁均看不到未提交改动，清洁检查封死；提交后路径仍由时序闸门拦截）。冻结对象为 scenarios.json 的 canonical 决策参数集（moat/moat_score/折现率及推导块/三情景概率及推导块/尾部推导块/行业/逐情景价值与方法——只冻数字与枚举，rationale 文本不进摘要防无害编辑误报；系统级阈值归 rules_snapshot/P0-08，两者互补）。落点偏离：哈希写入独立 `preregistration.json` 而非 meta.json——meta 是 Step 1 冻结文件、"写入后不得修改"，追加会破坏该纪律且 git 时序闸门需要独立提交记录。三处接线：`--lint-verdict` 重算摘要比对（不一致未标 post_hoc_changed 即体检不过，contaminated 已标者不叠加要求）；runner `check_prereg_evidence` 对 batch≥3 案例揭示后审计（未亮牌的改动判 hard failure）；post_hoc 案例三轨不计分、从战绩表排除（与 contaminated 同款）。顺手修复：`_git_commit_times`/`_seal_check` 对仓库外路径（测试 tempdir）从崩溃降级为无时序证据。验收演示 backtest/601088.SH_2015-12-31/data/prereg_demo_REQ-P2-09.json（神华参数反事实五步：注册→合法迭代留痕→揭示后改悲观 25%→20% 被检出含参数差异→lint 拦截/亮牌放行）。第四批起强制（PREREGISTER_MIN_BATCH=3 同 RULES_SNAPSHOT_MIN_BATCH 语义）；legacy 零改动、12 案基线不动；tests 14.13 段 26 项、套件 777→803 全绿、基线一致）
 
 ---
 
@@ -476,7 +519,7 @@
 - 验收：人为清空一个字段后无法生成 ≥3 档报告。
 - 涉及文件：`SKILL.md` Phase 4.5、`scripts/prepare_case.py`、`scripts/check_scenarios.py`
 - 依赖：无
-- 状态：todo
+- 状态：done（as-built 2026-09-14，按 `story/DESIGN-REQ-P3-03-AST-021-20260914.md` 实施需求1，裁决①采纳其建议方案 (b)：降档放行 + 三条防走形 + `--strict-variant` 开关。**数据结构**：`variant_perception` 五字段块进 scenarios.json——market_view 须含量化锚（现价隐含 X% 或 consensus 数值）、my_view 非空、why_market_wrong 与 verification 须挂 [E:]、check_by 须为晚于分析日的 ISO 日期（分析日取 scenarios as_of/analysis_date 或快照 fetched_at 的 ISO 日期，均无则只查格式）；「缺」= 键不存在/null/空串/纯空白四态一律。schema 说明段写 check_scenarios.py 头 docstring（references/ 仅 60B 余量不新开文档）。**三处校验点共用唯一实现 `variant_perception_issues()`**：① check_scenarios.py 新增 S12 段——不完整写 `verdict_cap=观察等价格`(ordinal 2) + 披露码 VARIANT_PERCEPTION_INCOMPLETE_CAP，默认降档放行（答不出是体面的合法结论，硬拒绝反而诱导凑字段；报告仍可交付、首屏须披露）；② run_backtest_assertions `--lint-verdict`——cap 生效时 verdict_ordinal>2 判 FAIL（守「底稿正确≠结论正确」）；③ verify_report.py——报告声明 ≥3 档而底稿 cap 生效判 FAIL，且强制首屏披露标记 `data-verdict-cap="variant-perception"`（对齐核验徽章同屏纪律，不得只写附录）。**cap 合并规则显式落地**：多 cap 源（S8 价值陷阱/S12 变异认知）取 min 序数，S8=排除(0) 与 S12=观察(2) 同 hit 取排除。**存量兼容两层**：块存在才校验（legacy 零新增消息）+ `VARIANT_PERCEPTION_MIN_BATCH=3`（同 RULES_SNAPSHOT/PREREGISTER 批次语义）起新案例缺块即报错，防「干脆不写块绕过全部校验」。**AST-021 咬合点预埋**：key_differences 非空而块不完整/缺失 → 硬报错 VARIANT_PERCEPTION_CONFLICT（两表打架是结构性错误非「答不出」，为价格反解差异表先占位）。SKILL.md Phase 4.5 加一行机器门禁指针（42,368B < 45KB 红线）。**基线不动**：12 回测案例重跑 S12 零新增消息、退出码不变；回放断言与 assertion_baseline 代号集合一致；10 实盘 cases 零回溯。顺手更新：tests 14.13 的 batch-4 lint fixture 按新协议补合规 variant_perception 块。tests 新增 14.15 段 24 项（覆盖设计稿 §3.5 全部 10 项负向用例 + lint/verify_report/strict/双 cap 合并/批次语义对齐），套件 823→847 全绿。验收演示：人为清空 market_view 后——S12 锁 cap=观察(2)、lint 拒 ordinal=4、verify_report 拒报告「核心买入/小仓位试探」声明，三道闸各拦一层，无法生成 ≥3 档报告。**P2 旁路修复（2026-09-14 实施后审查，设计文档裁决④）**：初版 `variant_perception` 不在预注册冻结集——被 cap 后揭示前补齐五字段可无痕解锁且不触发 post_hoc_changed（绕过 P2-09 靶在箭前）。已修：`variant_perception_gate`（五字段判定状态 ok/missing/no_anchor/no_evidence + check_by 全值；「晚于分析日」为相对判定不入 gate，check_by 全值冻结已覆盖）条件进 `preregistration_parameters`——措辞编辑不改状态 digest 不变（rationale 修改自由保留），空→填/去 [E:]/改 check_by/块从无到有均触发摘要变须亮牌。冻结哲学分界从「是否文本」改为「是否门禁输入」：method_note 不影响 verdict 计算故不冻，variant_perception 决定 cap 故冻判定状态。14.13 fixture 按新摘要算法重算；14.15 追加 6 项 P2 用例，套件 853 全绿；存量 12 案零回溯（无块案例 digest 不变，assertion_baseline 一致））
 
 ### REQ-P3-04 诚实边界声明模板化
 - 来源：B3
@@ -572,3 +615,15 @@
 | 2026-09-10 | v1.2 | REQ-P0-01 基础设施落地：runner FP/FN 双向统计 + `fp_control` 字段 + 基线 `_fp_fn` 段 + PROMPT 执行顺序 1→2→4→3→5 + 对照替补池；状态 todo → doing |
 | 2026-09-11 | v1.3 | REQ-P0-02 审查修订三版：V4A 复合判据（双高形态 ∧ 币种×年份存款基准 ∧ 融资成本一半）+ `phase0_arithmetic` 取数兜底 + `--deposit-rate` 覆盖；康美真实数据首次命中，负样本零误杀 |
 | 2026-09-11 | v1.3 | REQ-P0-04 三版审查修订：交付物/验收按 as-built 改写（换源候选维度未建、实际为"去同源化 + 下行约束落码"，外部锚移交 REQ-P1-05/P2-06）；新增存量 12 案 rerun + 基线重建 + 神华档位重判待办；茅台"被 ③ 拦"修正为 ①' ③ 双拦（valuation-guide 同步） |
+| 2026-09-11 | v1.4 | REQ-P1-01 成长股通道落码：growth-framework 三段式 + reverse_dcf `growth` 模式（成熟期稳态利润×到达概率折回 + 现价隐含到达概率反解 + 基率锚挂钩）+ 六个 GROWTH_* 告警码 + 五处接线；Netflix 验收演示档位 1→2、缺口 2→1 档；tests 14.7 段 29 项、套件 558 全绿、基线一致；状态 todo → doing（2 个新案例锚待批次执行） |
+| 2026-09-11 | v1.5 | REQ-P1-02 持仓型控股 SOTP 通道落码：reverse_dcf `sotp` 模式（持仓表六要素+经营业务−母公司净债 ×(1−控股折价) + 现价隐含控股折价反解 + 折价基率带四档）+ compute_metrics `sotp_screen`（经营性 OE / look-through 分列 + 双向失真识别 M_OWNER_YIELD_CONSOLIDATION_DISTORTION，OBS-2019-06-01 候选方向落码）；软银验收锚每股 6,630≈原案 6,633、隐含折价 53% 一致、经营性 OE 990,011 与 look-through 2,051,422 分列；腾讯经营+投资双轮分列（持仓 16% 不越权）；六+1 告警码 + 五处接线；tests 14.8 段 46 项、套件 604 全绿、基线一致；状态 todo → doing（新案例锚待批次执行） |
+| 2026-09-11 | v1.6 | REQ-P1-03 护城河评级连续化落码：moat-framework 第二节半三组件评分（A 超额回报/B 源硬度/C 定标与趋势，0~100）+ reverse_dcf 平滑 MoS 门槛（35→50%/65→40%/100→25%，分带边界连续、带内 ≥ legacy 常数）+ 边界带（±5 分）自动双档报告（MOAT_BOUNDARY_BAND_DUAL）+ 裸分数/词≠投影硬拒绝 + S1b 校验 + legacy 词路径字节兼容；神华验收锚 60 分双档报告（65 分侧触发价 14.42=归档 legacy 值，连续性锚实证）、12 案边界 ε 穿越 maxΔ=1（legacy 对照复现神华 2→4 跳 2 档）；tests 14.9 段 45 项、套件 649 全绿、基线一致；状态 todo → doing（第四批首个带得分案例实测后 done） |
+| 2026-09-11 | v1.7 | REQ-P1-04 折现率与概率证据传导落码：分层折现率（r = max(10%, 10Y+4pct) + 行业溢价六档，分层只向上）+ 概率映射公式（分段线性锚 35/65/100 + 变异认知 ±5pp + 红队悲观概率 max() 下界保守不对称）+ 偏离区间门禁（≤2pp 免论 / 2~10pp [E:] / >10pp 硬拒）+ ±10pp 敏感性表与翻档码 + DR 一致性门禁 + floor 门槛分市场（CN 6%/HK 5%/US 5%/JP 3%，P0-04③ 移交项）+ S7c 校验与 S7 豁免链 + 七码；神华期望 IRR 16.60% 传导演示、AAPL 校准、门禁拦截演示；references 体积等量压缩（余 92 字节）；legacy 无 derivation 块零新增键、12 案基线不动；tests 14.10 段 50 项、套件 699 全绿、基线一致；状态 todo → done |
+| 2026-09-12 | v1.8 | REQ-P1-05 尾部风险单列与基率锚定落码：期望 IRR 第四项 p_tail×loss_tail（map_tail_probability 纯映射：得分锚 0/5/20→1%/10%/30% + 治理修正 + 双地板，不可采用偏离）+ 行业增速基率表覆盖 12 案行业 + S10 乐观超 p80 拦截（[E:] 支撑放行披露）+ S11 尾部块校验 + 五码；康美反事实演示 15.2%→−22.8%（真实排雷 score 21）；base-rates.md 三表统一参考；references 等量压缩；tests 14.11 段 45 项、套件 744 全绿、基线一致；状态 todo → done |
+| 2026-09-12 | v1.9 | REQ-P1-07 缓慢增长与转困境两卡补齐落码：卡五股息锚通道（Gordon-DDM+债券替代利差+FCF 覆盖门禁，双汇 2019 覆盖 0.68 实证）+ 卡六判别清单与清算下限（技术替代一票、周期性四条件、清算权益穿透→排除，柯达 2011 实证）+ 十码 DIV_*/DIST_* + liquidation_floor 进独立方法白名单；四演示锚定官方答案（双汇档位 2 复现/神华 {3,4} 相容/柯达档位 1 一致/合成拦截）；六卡占位清除；tests 14.12 段 33 项、套件 777 全绿、基线一致；状态 todo → done |
+| 2026-09-14 | v1.9.1 | 审查修订：注册表补 DIV_PAYOUT_BORDERLINE（覆盖 1.0~1.2 贴线警示，原引擎发出、测试锁定但漏注册——'十码'实为十一码）；reverse_dcf.py dividend/distress 两分支补 unknown_codes 硬校验，堵注册表纪律对两条新通道的缺位；套件 777 全绿不变 |
+| 2026-09-14 | v1.10 | REQ-P2-09 预注册机器化落码：--preregister canonical 参数摘要（moat/折现率及推导/三情景概率及推导/尾部推导/行业/逐情景价值方法，只冻数字与枚举）+ 研究迭代留痕（evidence_revision 须 note）+ 靶在箭前 git 时序（prereg 最后提交 < verdict 首次提交）+ lint 重算摘要比对（不一致未标 post_hoc_changed=true 即体检不过）+ runner 揭示后审计（未亮牌判 hard failure）+ post_hoc 三轨不计分从战绩排除；采纳 astra AST-028（迭代合法留痕 vs 揭示前冻结，不 Phase 2 一刀切）；落点偏离：独立 preregistration.json 而非 meta.json（Step 1 冻结纪律不可追加）；三道锁分工 P0-05 输入端/P0-08 规则版本/P2-09 过程端；神华参数反事实五步演示（揭示后改悲观 25%→20% 被检出含参数差异）；顺手修 _git_commit_times/_seal_check 仓库外路径崩溃；第四批起强制；legacy 零改动、12 案基线不动；tests 14.13 段 26 项、套件 777→803 全绿、基线一致；状态 todo → done |
+| 2026-09-14 | v1.10.1 | 审查修订：封死预注册绕过路径（揭示后改参+重注册不提交——摘要比对读工作区、git 时序闸门只看最后提交，未提交改动对两把锁均不可见，已用 mock 时序探针实证）：prereg_issues 对 preregistration.json 增加 git status 工作区清洁检查（pre/audit 双模式生效，有历史提交但最后一次注册未提交即报 issue）；提交后路径仍由时序闸门拦截，诚实全流程零误伤（探针三路径验证）；tests 14.13 段 26→29 项、套件 803→806（当次实跑 798 过 + 8 败均属并发进行中的 validate_data 门禁改动，与本修订无关）；PROMPT Step 2.7 同步清洁要求 |
+| 2026-09-14 | v1.11 | REQ-P0-03/P0-07 收尾关闭（用户裁决：验收口径分层——主底稿 strict、竞对显式豁免）：schema_meta.layered_acceptance + validate_data 1.2b（主底稿 legacy ERROR/竞对无豁免 ERROR/豁免缺五要素 ERROR/合规豁免 WARN 披露）；21 份 legacy 处置（19 竞对 schema_waiver 五要素留痕、NVDA 补 EDGAR 申报日 2026-02-25 升 strict、NFLX 逐实体对照表归豁免）；strict 22→23 全主底稿覆盖；validate_data 顺手修 FY 字符串年份崩溃与竞对表跨实体同比误报（降 WARN）；report-spec 数据附录规范五标记 + verify_report 接线 schema_waiver→validate-summary；crosscheck 条目 source_tier 补录 22 份 80 条（同一关键词表、一致性入测试）；P1-02 investment_income 补录（软银演示副本回填；腾讯 2020-2025 官方公告口径逐年登记、dividend_income 留空不编造），sotp_screen 真实管道实测（软银 distortion=true/腾讯六年 series distortion=false）；references 压缩回红线内（含闸门二决策卡描述过时修正：三项→四参与项）；tests 14.14 段 17 项、套件 806→823 全绿、12 案基线一致；P0-03/P0-07 todo→done |
+| 2026-09-14 | v1.12 | REQ-P2-01 官方答案置信度与修订流程落码：answer.json 新增 confidence（high/medium/low）+ confidence_basis（必填可问责，引用 ANSWERS.md 规则表 H1~L3 条目；批次≥3 缺失硬失败、批次<3 咨询性提示）；acceptable_grades 裁决为镜像字段（与 expected_verdict_set 分叉即 lint 失败，单源纪律，避免 OBS-600660-01 式双声明露馅）；低置信度案例三轨评测照常输出但不进 FP/FN 分母与回归门禁（假阳性仍判定可见、low_conf_failures 单列、notes 指向修订流程、不产生比率字段），fp_fn_summary 增 low_conf 单列 + 分母口径声明（只含高/中置信度）；runner 表格加置信度列 + 低置信度明细段；基线 _fp_fn 快照含 low_conf 段，低置信度新增假阳性相对基线仍红灯（不错买优先不容静默消失）；12 案补齐（high 7/medium 3/low 2——海控、NFLX 为需求正文点名争议案，negative_n=6/positive_n=3、FN 名单只剩茅台+神华）；密封库 18 案超验收范围全部预注（high 12/medium 6）：prepare_case.py --annotate-confidence 解码合并重封 + confidence_history 留痕，预注时点早于任何批次 3-5 verdict——靶在箭前（同 P2-09 反博弈逻辑），已揭示案例拒绝预注（改判=修订流程，无绕过路径）、--seal 覆写保留预注、--reveal/--status 接线显示；ANSWERS.md 置信度规则表（H1~L3）+ 修订流程五步（提出/举证/复核/生效/旧战绩重算）+ 赋值时点纪律 + 批次一二 12 案 inline 标记；PROMPT.md answer 模板、红灯规则低置信度例外路径、FP/FN 报告分母口径同步；tests 13.6 段 44 项（存量第一批战绩断言按验收语义更新：海控 low 出分母 5/6→4/5；13.6 块置于文件末尾避免吞并 13.5 段尾收官闭环/膨胀守卫 8 项）、套件 853→897 全绿、runner 基线一致；P2-01 todo→done |
+| 2026-09-14 | v1.13 | 进度口径校准（用户发起）：落码完成、仅待第四批回测验证的 7 条需求 doing→verify（P0-04/05/06/08、P1-01/02/03，与第 0 节 verify 定义对齐）；P0-01、P0-02 保留 doing（各余小项实施待办：前者第三批对照补入，后者底稿补字段）；修复 P0-03 重复状态行；头部新增进度快照（done 8 / verify 7 / doing 2 / todo 17）；状态修订不改变任何验收条款与 as-built 内容 |

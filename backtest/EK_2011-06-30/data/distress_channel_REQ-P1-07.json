@@ -1,0 +1,52 @@
+{
+ "channel": "distress",
+ "discrimination": {
+  "channel": "distress",
+  "checklist": {
+   "revenue_decline_years": {
+    "value": 9,
+    "points_to": "structured"
+   },
+   "industry_wide_decline": {
+    "value": "no",
+    "points_to": "structured"
+   },
+   "tech_substitution": {
+    "value": "yes",
+    "points_to": "structured"
+   },
+   "price_percentile": {
+    "value": 0.5,
+    "points_to": "neutral"
+   },
+   "market_share_trend": {
+    "value": "losing",
+    "points_to": "structured"
+   }
+  },
+  "verdict": "structured",
+  "key_reason": "技术替代一票：产品被淘汰，均值回复不会发生",
+  "codes": [
+   "DIST_STRUCTURED_DECLINE"
+  ],
+  "verdict_note": "结构性困境：禁用均值回复正常化，档位上限排除（除非现价 < 清算下限×0.8 的深度价值档）"
+ },
+ "liquidation_floor": {
+  "cash": 1624.0,
+  "non_cash_assets": 4615.0,
+  "haircut": 0.5,
+  "liquidation_residual": -3382.5,
+  "equity_wiped_out": true,
+  "floor_per_share": 0.0,
+  "floor_note": "清算口径股东所得为负（按 0 封顶）——股东在清算顺序中一无所有，任何价格都没有安全边际（DIST_EQUITY_WIPED_OUT）"
+ },
+ "price": 3.58,
+ "deep_value_signal": false,
+ "gate_cap": "excluded",
+ "decline_basis": "柯达 2011-06：①收入 2001-2010 十年中九年下滑（12976→7187 百万美元，−45%）[E:financials_EK_2011Q1.json annual]；②技术替代一票——数码影像淘汰胶卷（2005 年后传统业务萎缩不可逆，行业整体转向数码但柯达转型失败）[E:financials_EK_2011Q1.json data_notes]；③传统胶卷价格无周期低分位（需求消失型，非周期型降价）；④份额丢失（数码相机市场被佳能/索尼/尼康占据，柯达无拳头数码产品）",
+ "haircut_basis": "非现金资产 50% 折价：专利/设备/应收组合（2011-06 专利估值争议大，后续 2012-13 破产拍卖实际回收约 5.27 亿美元佐证折价的量级正确）[E:financials_EK_2011Q1.json annual 2010]",
+ "codes": [
+  "DIST_STRUCTURED_DECLINE",
+  "DIST_EQUITY_WIPED_OUT"
+ ]
+}

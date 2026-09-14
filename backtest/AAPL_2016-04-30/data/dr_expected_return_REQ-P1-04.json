@@ -1,0 +1,139 @@
+{
+  "price": 93.74,
+  "hold_years": 5,
+  "discount_rate": 0.1,
+  "dividend_yield": 0.0226,
+  "dividend_share_of_return": 0.22599999999999998,
+  "scenarios": [
+    {
+      "name": "悲观",
+      "probability": 0.3,
+      "value_per_share": 91.53,
+      "value_per_share_terminal": 147.40998030000006,
+      "value_is_non_positive": false,
+      "total_return": 0.5725408608918292,
+      "annualized_irr": 0.09476369769116277
+    },
+    {
+      "name": "基准",
+      "probability": 0.5,
+      "value_per_share": 162.04,
+      "value_per_share_terminal": 260.9670404000001,
+      "value_is_non_positive": false,
+      "total_return": 1.7839453851077458,
+      "annualized_irr": 0.2272474608423638
+    },
+    {
+      "name": "乐观",
+      "probability": 0.2,
+      "value_per_share": 192.18,
+      "value_per_share_terminal": 309.5078118000001,
+      "value_is_non_positive": false,
+      "total_return": 2.3017688478771086,
+      "annualized_irr": 0.26984096456243467
+    }
+  ],
+  "expected_value_per_share": 146.91500000000002,
+  "expected_value_per_share_terminal": 236.6080766500001,
+  "expected_total_return": 1.5240887203968434,
+  "expected_annualized_irr": 0.19602103264101767,
+  "expected_annualized_irr_basis": "probability_weighted_of_per_scenario_irr",
+  "expected_total_return_basis": "on_expected_value_do_not_annualize_for_gate2",
+  "gate2_decision_field": "expected_annualized_irr",
+  "jensen_gap_vs_annualized_total": 0.007409215379243106,
+  "expected_annualized_irr_incl_div": 0.19602103264101767,
+  "pessimistic_irr": 0.09476369769116277,
+  "pessimistic_value_per_share": 91.53,
+  "pessimistic_equity_wiped_out": false,
+  "has_non_positive_scenario": false,
+  "loss_probability": 0.0,
+  "expected_downside_given_loss": null,
+  "probability_weighted_downside": 0.0,
+  "index_hurdle": 0.09,
+  "beats_index": true,
+  "excess_vs_index": 0.10602103264101767,
+  "hurdle_above_discount_rate": false,
+  "gate2": {
+    "moat": "wide",
+    "consistency_expected_irr": {
+      "value": 0.19602103264101767,
+      "hurdle": 0.16514622515369348,
+      "hurdle_derivation": "由闸门一安全边际要求 25% 反推：(1+r)×(1/(1−MoS))^(1/H)−1",
+      "pass": true,
+      "basis": "自洽性校验，非独立证据——期望值口径下与闸门一互为单调函数，共享同一个 V0 与同一份模型误差。不达标而安全边际达标 ⇒ 情景离散度或概率赋值有问题"
+    },
+    "no_convergence_floor": {
+      "value": 0.0926,
+      "dividend_yield": 0.0226,
+      "intrinsic_value_growth": 0.07,
+      "hurdle": 0.05,
+      "pass": true,
+      "basis": "独立信息——完全不含 V0/P 比值。回答『折价永不收敛时我实际赚什么』：= 股息率 + 内在价值增速。安全边际很大而此值很低 = 回报全押在『市场哪天承认我对』，这是价值陷阱的定量特征"
+    },
+    "pessimistic_irr": {
+      "value": 0.09476369769116277,
+      "hurdle": 0.0,
+      "pass": true,
+      "basis": "独立信息——回答『错了会怎样』。前提是悲观情景由独立方法推导（清算/PB底/历史最差年，见 check_scenarios.py S2）；若悲观值只是基准调低增速，本项退化为自洽性校验的换算"
+    },
+    "expected_irr_floor": {
+      "value": 0.19602103264101767,
+      "hurdle": 0.1,
+      "pass": true,
+      "basis": "最低机会成本——期望 IRR 不得低于折现率 r（P=V0 时 IRR=r）。与闸门一不重复计价：闸门一要求折价 25%/40%，本项只要求概率加权后不比买在公允价值差"
+    },
+    "loss_probability": {
+      "value": 0.0,
+      "hurdle": 0.3,
+      "pass": true,
+      "basis": "独立信息——亏损情景的概率质量。③看最坏情景多深，本项看多大概率落入亏损，二者不可互推（valuation-guide 第四步半核心买入下行约束）"
+    },
+    "independent_checks": [
+      "no_convergence_floor",
+      "pessimistic_irr",
+      "loss_probability"
+    ],
+    "participating_checks": [
+      "expected_irr_floor",
+      "no_convergence_floor",
+      "pessimistic_irr",
+      "loss_probability"
+    ],
+    "diagnostic_only": [
+      "consistency_expected_irr"
+    ],
+    "evaluable": true,
+    "pass": true,
+    "missing_inputs": [],
+    "consistency_check_diagnostic": "①护城河反推门槛达标（与参与判定的检验一致）",
+    "effective_hurdle": {
+      "nominal_margin_of_safety_required": 0.25,
+      "base_scenario_irr": 0.2272474608423638,
+      "expected_irr_weighted": 0.19602103264101767,
+      "pessimistic_drag_pct": 0.031226428201346135,
+      "base_irr_needed_to_clear": 0.19637265335503962,
+      "effective_margin_of_safety_required": 0.3429006480622654,
+      "gap_vs_nominal_pct": 0.09290064806226539,
+      "status": "diagnostic_only",
+      "basis": "【诊断口径，不构成当前门槛】若沿用旧「三项全过」口径，使①护城河反推门槛刚好通过所需的折价率。REQ-P0-04 后①不参与判定，本数只用于量化情景离散度的代价并解释旧口径下的假阴性（茅台/神华）。当前闸门二对期望值的唯一要求是 ≥ 折现率 r（expected_irr_floor）"
+    },
+    "codes": [
+      "GATE2_PASS",
+      "GATE_EFFECTIVE_HURDLE_GAP"
+    ]
+  },
+  "gate2_decision_note": "闸门二判定看 gate2.pass（participating_checks 全过：期望 IRR ≥ r、不收敛下限 ≥ 6%、悲观 IRR ≥ 0、亏损概率 ≤ 30%；护城河反推门槛为诊断项）。beats_index 保留仅作机会成本对照展示，不再单独决定档位——它与安全边际同源",
+  "note": "IRR=(1+r)×(V0/P)^(1/H)−1：内在价值随时间以折现率增值，已隐含分红+留存增值全部股东回报，股息不再叠加（叠加即重复计算）；折现率 r=10.0% 是 IRR 的下限（P=V0 时 IRR=r），门槛须设在 r 之上才构成有效约束；下行指标（悲观 IRR/亏损概率/亏损跌幅）不可由安全边际单调推出，是闸门二独立信息来源",
+  "discount_rate_derivation": {
+    "floor": 0.1,
+    "rf_10y": null,
+    "industry_tier": "standard",
+    "industry_premium": 0.0,
+    "rate": 0.1,
+    "formula": "max(10% 纪律下限, 10Y国债+4pct) + 行业溢价",
+    "source": "行业档校准参考 Damodaran(NYU Stern) 行业股权资本成本相对排序，取整偏保守；分层只向上、10% 下限不动",
+    "rationale_ref": "消费电子+服务生态的成熟现金牛（2016 年净利率约 21%、PE TTM 10.3）→ 宽基 standard 档（行业溢价 0）；市场 US：机会成本对照美债/美股，floor 门槛校准 5%（10Y UST+2~3pct 中枢）[E:market_snapshot_AAPL_2016Q2.json]",
+    "market": "US",
+    "floor_hurdle_market": 0.05
+  }
+}

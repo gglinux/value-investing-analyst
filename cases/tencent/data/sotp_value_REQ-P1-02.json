@@ -1,0 +1,79 @@
+{
+  "mode": "sotp",
+  "holdings_table": {
+    "source": "cases/tencent/data/sotp_holdings_REQ-P1-02.json",
+    "as_of": "2026-08-28",
+    "currency": "CNY",
+    "unit": "million",
+    "items_count": 2
+  },
+  "net_debt": -58200.0,
+  "holdings_detail": [
+    {
+      "name": "上市投资组合（公允价值）",
+      "stake_pct": null,
+      "valuation_method": "fair_value_disclosed",
+      "liquidity": "listed_stake",
+      "gross_value": 487200.0,
+      "liquidity_haircut": 0.9,
+      "adjusted_value": 438480.0,
+      "evidence": "2025 年报披露的上市投资公允价值合计，变现折价 9 折（大额减持市场冲击）[E:cases/tencent/data/valuation.json investment_portfolio]",
+      "note": "原案保守口径 0.9 / 红队 0.7 双轨"
+    },
+    {
+      "name": "非上市投资组合（账面价值）",
+      "stake_pct": null,
+      "valuation_method": "book_value",
+      "liquidity": "private_co",
+      "gross_value": 387900.0,
+      "liquidity_haircut": 0.6,
+      "adjusted_value": 232740.0,
+      "evidence": "2025 年报非上市投资账面价值，变现折价 6 折（私募估值水分+流动性）[E:cases/tencent/data/valuation.json investment_portfolio]",
+      "note": "账面已低于公允的保守兜底；红队 4 折对照"
+    }
+  ],
+  "portfolio_gross_value": 875100.0,
+  "portfolio_net_value": 671220.0,
+  "operating_value": 3590630.0,
+  "equity_nav": 4320050.0,
+  "holding_discount": 0.1,
+  "investable_value": 3888045.0,
+  "holdings_share_of_equity_nav": 0.15537320169905441,
+  "holdings_share_note": "持仓净价值占 equity NAV 比重：≥50% 即『非经营资产主导』形态（OBS-2019-06-01 候选判据的通道内实现）——OE 通道结论不进档位裁决，档位上限锁小仓位试探",
+  "operating_value_basis": "经营业务 DCF：正常化 OE 219,013 百万 CNY（原案双轨保守轨，2023 投资减值年拉低均值的口径）、g=5%、r=10%、tg=2.5%、10 年，forward-value 引擎输出 3,590,630 [E:cases/tencent/data/valuation.json normalization + forward-value]",
+  "holding_discount_basis": "经营主导+投资副轮基率带 [0-15%] 内取 10%：组合占市值仅 ~16%、估值主体是经营业务；持续大额回购注销（2024 1120 亿/2025 约 1300 亿 HKD）+ 分拆上市提供部分收敛机制，但治理折价仍非零（投资决策自由裁量）[E:cases/tencent/data/valuation.json cross_validation 回购支撑]",
+  "base_rate_band": {
+    "profile": "operating_with_portfolio",
+    "label": "经营主导+投资副轮：投资组合占市值 <25%，估值主体是经营业务",
+    "range": [
+      0.0,
+      0.15
+    ],
+    "evidence": "经营主导型通常仅对组合施加变现折价（腾讯案口径：上市9折/非上市6折），控股折价小带",
+    "discount_in_band": true,
+    "hook": "REQ-P1-05：references/base-rates.md 建成后由 --discount-bands-file 接管（当前为引擎内置带）"
+  },
+  "implied": {
+    "market_cap": 3811730.0,
+    "implied_holding_discount": 0.11766530479971293,
+    "note": "反解 implied = 1 − 市值/equity NAV：市场按多大控股折价交易。与采用折价分歧 ≥10pct 即 SOTP_IMPLIED_DISCOUNT_GAP——若市场折价持续，可投资价值≈现价（无安全边际）"
+  },
+  "value_per_share": 427.10998734833123,
+  "value_per_share_quote_ccy": 464.268556247636,
+  "fx": 1.087,
+  "sensitivity": {
+    "holding_discount_pm10pct": [
+      379.65332208740557,
+      474.56665260925695
+    ],
+    "note": "折价率是 SOTP 结论的最大摆动因子——±10pct 敏感性是valuation-guide 多元集团纪律的强制项"
+  },
+  "verdict_band": {
+    "cap": null,
+    "suggestion": "标准双闸门裁定",
+    "reasons": "经营业务占 equity NAV 主导：本通道只做『经营性价值与投资组合分列』（防 add-back 补丁化），档位由标准双闸门与裁决层确定，通道不加额外上限",
+    "codes": [],
+    "note": "引擎建议档位带，最终档位由双闸门与裁决层确定；持仓主导（≥50% equity NAV）形态通道档位上限恒为小仓位试探——价值主体是资产变现而非经营复利，与终值纪律同源"
+  },
+  "codes": []
+}

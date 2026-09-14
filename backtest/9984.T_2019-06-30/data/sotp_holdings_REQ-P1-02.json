@@ -1,0 +1,70 @@
+{
+  "_note": "REQ-P1-02 交付物①实例：结构化持仓表（标的/持股比例/估值方法/变现折价率/流动性/证据六要素）。由 backtest/9984.T_2019-06-30 data/business_drivers_9984_2019.json 的 sotp_holdings（半结构化）转换为通道 schema——原冻结底稿未改动。基准情景口径：变现折价率全 1.0（基准=盈利能力持平的资产加总，变现摩擦与治理折价合并进整体控股折价 40%，与原案 ADJ3 口径一致）；悲观情景对应 sotp_asset_floor 的独立分项折价（见 scenarios.json，不经本表）。",
+  "case": "9984.T_2019-06-30",
+  "as_of": "2019-06-28",
+  "currency": "JPY",
+  "unit": "million",
+  "items": [
+    {
+      "name": "SoftBank Corp（9434.T 国内电信）",
+      "stake_pct": 66.49,
+      "valuation_method": "market_price",
+      "gross_value": 11020000,
+      "liquidity": "listed_stake",
+      "liquidity_haircut": 1.0,
+      "evidence": "回放日收盘 ¥1,399.5（东财 secid=176.9434）× 11,845,652,700 股 × 66.49%（IPO 后集团间接持股，q4fy2018 官方）[E:business_drivers_9984_2019.json sotp_holdings]",
+      "note": "IPO 发行价 ¥1,500，2019-06 市价仍低 7%——指数效应可能高估清算价值"
+    },
+    {
+      "name": "阿里巴巴（BABA.N）",
+      "stake_pct": 25.9,
+      "valuation_method": "market_price",
+      "gross_value": 12480000,
+      "liquidity": "listed_stake",
+      "liquidity_haircut": 1.0,
+      "evidence": "2019-06-28 收盘 $173.11 × 总股本约 25.8 亿股 × 25.9% × 107.8 JPY/USD [E:business_drivers_9984_2019.json sotp_holdings]",
+      "note": "部分在 mandatory exchangeable trust 结构内（预付远期交割实证可行但有市场冲击）；离岸变现税务 10-20% 争议区间"
+    },
+    {
+      "name": "Sprint（S.N）",
+      "stake_pct": 84.4,
+      "valuation_method": "market_price",
+      "gross_value": 2380000,
+      "liquidity": "listed_stake",
+      "liquidity_haircut": 1.0,
+      "evidence": "2019-06-28 收盘约 $6.4 × 约 40.9 亿股 × 84.4%（q4fy2018 减值测试口径）× 107.8 [E:business_drivers_9984_2019.json sotp_holdings]",
+      "note": "价格受合并套利扭曲：获批≈T-Mobile 映射 2.4 万亿；失败独立价值 1.0-1.5 万亿（净债 $400 亿+亏损）——公允区间极宽"
+    },
+    {
+      "name": "雅虎日本（4689.T）",
+      "stake_pct": 43.4,
+      "valuation_method": "market_price",
+      "gross_value": 710000,
+      "liquidity": "listed_stake",
+      "liquidity_haircut": 1.0,
+      "evidence": "2019-06-28 收盘 ¥316 × 5,151,629,615 股 × 43.4%（交易前直接+SBGJ 口径）[E:business_drivers_9984_2019.json sotp_holdings]",
+      "note": "2019-05-08 交易：9434 举债认购雅日新股+雅日回购集团持股——集团换现金但 9434 少数股东分担比例下降，关联交易特征"
+    },
+    {
+      "name": "Vision Fund / Delta Fund 组合（含 ARM）",
+      "stake_pct": null,
+      "valuation_method": "fair_value_disclosed",
+      "gross_value": 2400000,
+      "liquidity": "private_fund",
+      "liquidity_haircut": 1.0,
+      "evidence": "持仓公允价值合计 $72.3bn（2019-03-31，q4fy2018 Portfolio 表）× 软银出资比例线性近似 28/91 × 107.8 [E:business_drivers_9984_2019.json sotp_holdings]",
+      "note": "线性近似偏乐观：第三方优先回报 7% hurdle 与 GP 分成使软银经济利益低于线性比例，真实价值区间 1.5-2.4 万亿——基准用线性上界，保守方向由悲观情景 VF −25% 承担"
+    },
+    {
+      "name": "其他（鹰队/Brightstar/直接投资/Arm China 权益法等）",
+      "stake_pct": null,
+      "valuation_method": "private_estimate",
+      "gross_value": 500000,
+      "liquidity": "illiquid",
+      "liquidity_haircut": 1.0,
+      "evidence": "保守量级估计 0.5 万亿日元（无可直接引用市价）[E:business_drivers_9984_2019.json sotp_holdings]",
+      "note": "精度低；source_level D"
+    }
+  ],
+  "net_debt_note": "母公司本体净债 6,200,000 百万（官方 NAV 口径：合并净债 11,826,588 剔除 Sprint/雅日/ARM/VF 自身净债与预付远期负债 730,601 后的中间估计）——经 --net-debt 传入，parent_standalone 基准 [E:business_drivers_9984_2019.json sotp_holdings.net_debt]"
+}

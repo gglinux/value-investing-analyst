@@ -1,0 +1,70 @@
+{
+  "company": "康美药业",
+  "ticker": "600518.SH",
+  "currency": "CNY",
+  "demo_note": "REQ-P1-05 验收演示（反事实）：康美在真实流程中于 Phase 0 被 V4/V4A 双 veto 排除（forensic_screen.py 实测 score 21、算术覆盖率 36.4%），从未走到估值阶段。本底稿演示的是『假如只看账面利润、排雷失守』的世界观——账面三情景全是正回报（这正是造假账的危险之处：账面上没有亏损情景），尾部风险一列（p_tail 33% × 归零），期望 IRR 从 15.2% 翻到 -22.8%、亏损概率从 0% 到 33%、闸门二不过。这是『不错买』应有的数学形态（REQ-P1-05 需求原文）。",
+  "industry": "pharma",
+  "price": 22.36,
+  "price_source": "2017-12-29 收盘价（多重锚定仲裁值）[E:market_snapshot_600518_2017.json]",
+  "moat": "narrow",
+  "moat_note": "反事实演示档位：按 2017 时点公开账面口径（账面 ROE 约 10-13%、中药饮片+贸易网络叙事）给窄档。后被证伪——账面利润本身含七年 OCF/净利 51.2% 的背离（P0_R1 命中），账面 ROE 不可作护城河证据 [E:financials_600518_2017Q3.json]",
+  "discount_rate": 0.1,
+  "discount_rate_note": "纪律下限 max(10%, 10Y国债3.9%+4pct)=10%（2017 时点）[E:market_snapshot_600518_2017.json]",
+  "hold_years": 5,
+  "dividend_yield": 0.009,
+  "dividend_yield_source": "账面口径：2016 年度每 10 股派 0.78 元（含税）/现价 22.36 = 0.35%…按 2015-2017 三年均值口径约 0.9%（演示取值，分红率本身受账面利润污染）[E:financials_600518_2017Q3.json]",
+  "dividend_yield_basis": "annual_plan",
+  "intrinsic_value_growth": 0.06,
+  "iv_growth_evidence": "账面世界观：2014-2016 账面归母净利 CAGR 约 18%，饮片产能扩张+智慧药房叙事下保守取 6%（演示值；账面增速本身是被 P0_R1 命中的背离利润，不可作增长证据）[E:financials_600518_2017Q3.json]",
+  "default_probabilities": {
+    "悲观": 0.3,
+    "基准": 0.5,
+    "乐观": 0.2
+  },
+  "tail_risk_derivation": {
+    "forensic_score": 21,
+    "arithmetic_coverage": 0.364,
+    "governance": "poor",
+    "loss_tail": -1.0,
+    "rationale_ref": "forensic_screen.py 实测（--as-of 2017-12-31）：V4 存贷双高（现金占比 49.8%/有息负债占比 37.6%）+ V4A 利率倒挂（利息收益率 0.84% < 存款基准 1.5% < 融资成本 4.86% 一半）双 veto、R1 利润现金流背离（连续三年 NI>1.5×OCF）→ score 21=veto×10×2+redflag×1；治理 poor：实控人后续被查、财务重述（2019 年爆雷 299 亿货币资金会计差错）[E:financials_600518_2017Q3.json][E:/tmp/km_forensic.json]",
+    "loss_tail_note": "尾部态=造假曝光后的股权价值：2019-2020 实际路径为跌停链+ST+退市整理，归零口径（-100%）是保守下界而非夸张"
+  },
+  "scenarios": [
+    {
+      "name": "悲观",
+      "value_per_share": 18.84,
+      "probability": 0.3,
+      "method": "pb_trough",
+      "method_note": "独立路径（不走 DCF）：历史 PB 低分位 3.0 倍 × 当期每股净资产 6.28 元（2017Q3 归母净资产 310.53 亿/股本 49.47 亿）= 18.84 元。账面世界观下 PB 已到历史低位——但净资产本身是造假最大科目（货币资金虚增），此值是『账面为真』前提下的下界 [E:financials_600518_2017Q3.json]",
+      "method_inputs": {
+        "trough_pb": 3.0,
+        "bvps": 6.28,
+        "trough_pb_evidence": "不复权口径。样本：2015-09-15 股灾低点 12.27 元（期间最低价）/当时 BPS 4.83 元（2015 年报归母净资产 238.9 亿/49.47 亿股）= PB 2.54；2012-01 大熊市低点 12.5 元/当时 BPS 4.32 = PB 2.89；2017-06-01 调整低点 17.20 元/BPS 6.11 = PB 2.82。三年样本均值 2.75，演示取 3.0 偏保守 [E:financials_600518_2017Q3.json][E:market_snapshot_600518_2017.json]"
+      },
+      "stressed_assumptions": [
+        "valuation_multiple",
+        "margin"
+      ],
+      "probability_evidence": "[E:financials_600518_2017Q3.json] 账面世界观：中药材贸易+医院扩容叙事遇冷、两票制压缩流通环节利润",
+      "non_operating_addback_per_share": 0.0
+    },
+    {
+      "name": "基准",
+      "value_per_share": 30.0,
+      "probability": 0.5,
+      "method": "dcf_owner_earnings",
+      "method_note": "账面世界观正向 DCF（演示）：账面 2017E 归母约 40 亿、按账面 OCF 折现…注意账面 OCF 本身被 P0_R1 命中（七年 NI/OCF 背离 51.2%），本情景展示的正是『账面三情景都好看』的欺骗形态 [E:financials_600518_2017Q3.json]",
+      "probability_evidence": "[E:financials_600518_2017Q3.json] 账面世界观：饮片放量+智慧药房按计划推进",
+      "non_operating_addback_per_share": 0.0
+    },
+    {
+      "name": "乐观",
+      "value_per_share": 42.0,
+      "probability": 0.2,
+      "method": "dcf_owner_earnings",
+      "method_note": "账面世界观牛市情景（演示）：账面利润率维持+全国网络铺开，38 倍 PE 上限约 0.79 EPS×53 倍=42 元 [E:financials_600518_2017Q3.json]",
+      "probability_evidence": "[E:financials_600518_2017Q3.json] 账面世界观：中药配方颗粒放量+消费品化叙事兑现",
+      "non_operating_addback_per_share": 0.0
+    }
+  ]
+}

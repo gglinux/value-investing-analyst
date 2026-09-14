@@ -1,0 +1,304 @@
+{
+  "price": 14.97,
+  "hold_years": 5,
+  "discount_rate": 0.1,
+  "dividend_yield": 0.0494,
+  "dividend_share_of_return": 0.494,
+  "scenarios": [
+    {
+      "name": "悲观",
+      "probability": 0.3,
+      "value_per_share": 10.43,
+      "value_per_share_terminal": 16.797619300000004,
+      "value_is_non_positive": false,
+      "total_return": 0.12208545758183065,
+      "annualized_irr": 0.023305213532334612
+    },
+    {
+      "name": "基准",
+      "probability": 0.5,
+      "value_per_share": 24.04,
+      "value_per_share_terminal": 38.71666040000001,
+      "value_is_non_positive": false,
+      "total_return": 1.5862832598530399,
+      "annualized_irr": 0.20930324363999508
+    },
+    {
+      "name": "乐观",
+      "probability": 0.2,
+      "value_per_share": 30.92,
+      "value_per_share_terminal": 49.79696920000002,
+      "value_is_non_positive": false,
+      "total_return": 2.3264508483633946,
+      "annualized_irr": 0.2717338236223559
+    }
+  ],
+  "expected_value_per_share": 21.333,
+  "expected_value_per_share_terminal": 34.35700983000001,
+  "expected_total_return": 1.2950574368737482,
+  "expected_annualized_irr": 0.1659899506041691,
+  "expected_annualized_irr_basis": "probability_weighted_of_per_scenario_irr",
+  "expected_total_return_basis": "on_expected_value_do_not_annualize_for_gate2",
+  "gate2_decision_field": "expected_annualized_irr",
+  "jensen_gap_vs_annualized_total": 0.014762108906440252,
+  "expected_annualized_irr_incl_div": 0.1659899506041691,
+  "pessimistic_irr": 0.023305213532334612,
+  "pessimistic_value_per_share": 10.43,
+  "pessimistic_equity_wiped_out": false,
+  "has_non_positive_scenario": false,
+  "loss_probability": 0.0,
+  "expected_downside_given_loss": null,
+  "probability_weighted_downside": 0.0,
+  "index_hurdle": 0.09,
+  "beats_index": true,
+  "excess_vs_index": 0.0759899506041691,
+  "hurdle_above_discount_rate": false,
+  "gate2": {
+    "moat": "narrow",
+    "consistency_expected_irr": {
+      "value": 0.1659899506041691,
+      "hurdle": 0.2252065964631671,
+      "hurdle_derivation": "由闸门一安全边际要求 42% 反推：(1+r)×(1/(1−MoS))^(1/H)−1",
+      "pass": false,
+      "basis": "自洽性校验，非独立证据——期望值口径下与闸门一互为单调函数，共享同一个 V0 与同一份模型误差。不达标而安全边际达标 ⇒ 情景离散度或概率赋值有问题"
+    },
+    "no_convergence_floor": {
+      "value": 0.0694,
+      "dividend_yield": 0.0494,
+      "intrinsic_value_growth": 0.02,
+      "hurdle": 0.06,
+      "pass": true,
+      "basis": "独立信息——完全不含 V0/P 比值。回答『折价永不收敛时我实际赚什么』：= 股息率 + 内在价值增速。安全边际很大而此值很低 = 回报全押在『市场哪天承认我对』，这是价值陷阱的定量特征"
+    },
+    "pessimistic_irr": {
+      "value": 0.023305213532334612,
+      "hurdle": 0.0,
+      "pass": true,
+      "basis": "独立信息——回答『错了会怎样』。前提是悲观情景由独立方法推导（清算/PB底/历史最差年，见 check_scenarios.py S2）；若悲观值只是基准调低增速，本项退化为自洽性校验的换算"
+    },
+    "expected_irr_floor": {
+      "value": 0.1659899506041691,
+      "hurdle": 0.1,
+      "pass": true,
+      "basis": "最低机会成本——期望 IRR 不得低于折现率 r（P=V0 时 IRR=r）。与闸门一不重复计价：闸门一要求折价 25%/40%，本项只要求概率加权后不比买在公允价值差"
+    },
+    "loss_probability": {
+      "value": 0.0,
+      "hurdle": 0.3,
+      "pass": true,
+      "basis": "独立信息——亏损情景的概率质量。③看最坏情景多深，本项看多大概率落入亏损，二者不可互推（valuation-guide 第四步半核心买入下行约束）"
+    },
+    "independent_checks": [
+      "no_convergence_floor",
+      "pessimistic_irr",
+      "loss_probability"
+    ],
+    "participating_checks": [
+      "expected_irr_floor",
+      "no_convergence_floor",
+      "pessimistic_irr",
+      "loss_probability"
+    ],
+    "diagnostic_only": [
+      "consistency_expected_irr"
+    ],
+    "evaluable": true,
+    "pass": true,
+    "missing_inputs": [],
+    "consistency_check_diagnostic": "①护城河反推门槛未达（诊断项，不阻塞闸门二，须在报告中显著披露——期望 IRR 低于 16.5%/21.8% 通常意味着情景离散度大或概率赋值偏悲观，值得人工复核）",
+    "effective_hurdle": {
+      "nominal_margin_of_safety_required": 0.41666666666666663,
+      "base_scenario_irr": 0.20930324363999508,
+      "expected_irr_weighted": 0.1659899506041691,
+      "pessimistic_drag_pct": 0.043313293035825984,
+      "base_irr_needed_to_clear": 0.2685198894989931,
+      "effective_margin_of_safety_required": 0.5096829215899663,
+      "gap_vs_nominal_pct": 0.09301625492329968,
+      "status": "diagnostic_only",
+      "basis": "【诊断口径，不构成当前门槛】若沿用旧「三项全过」口径，使①护城河反推门槛刚好通过所需的折价率。REQ-P0-04 后①不参与判定，本数只用于量化情景离散度的代价并解释旧口径下的假阴性（茅台/神华）。当前闸门二对期望值的唯一要求是 ≥ 折现率 r（expected_irr_floor）"
+    },
+    "codes": [
+      "GATE2_PASS",
+      "GATE2_1_IRR_FAIL",
+      "GATE_EFFECTIVE_HURDLE_GAP",
+      "MOAT_BOUNDARY_BAND_DUAL"
+    ]
+  },
+  "gate2_decision_note": "闸门二判定看 gate2.pass（participating_checks 全过：期望 IRR ≥ r、不收敛下限 ≥ 6%、悲观 IRR ≥ 0、亏损概率 ≤ 30%；护城河反推门槛为诊断项）。beats_index 保留仅作机会成本对照展示，不再单独决定档位——它与安全边际同源",
+  "note": "IRR=(1+r)×(V0/P)^(1/H)−1：内在价值随时间以折现率增值，已隐含分红+留存增值全部股东回报，股息不再叠加（叠加即重复计算）；折现率 r=10.0% 是 IRR 的下限（P=V0 时 IRR=r），门槛须设在 r 之上才构成有效约束；下行指标（悲观 IRR/亏损概率/亏损跌幅）不可由安全边际单调推出，是闸门二独立信息来源",
+  "moat_score": {
+    "score": 60.0,
+    "word": "narrow",
+    "sources": [
+      "成本优势"
+    ],
+    "sources_count": 1,
+    "score_basis": "三组件评分（moat-framework 第二节半）：A 超额回报证据 40/50——2005-2014 十年 ROIC−WACC 正利差（全周期 ROIC 均值约16% vs WACC 10%），但 2015 当期利差收窄近零（煤价腰斩年仍为行业最后盈利者）[E:metrics_601088_2015.json][E:scenarios.json moat_note]；B 源硬度 10/30——成本优势一源硬证据：自产煤单位成本 116.4 元/吨 vs 行业 90% 亏损面（成本曲线前 20% 分位）+ 进攻者尸检（同业资本开支周期性进攻全亏：中煤归母净利率 1.09%/陕煤 2.31%/兖煤 3.57% vs 神华 14.8%）[E:segments_601088_2015.json][E:financials_peer_601898.json][E:financials_peer_600188.json]；C 定标与趋势修正 +10/−10~+20——成本曲线前 20% 分位 +5、自有铁路-港口-航运一体化闭环 +5、份额趋势向上（竞对坍缩 80-90% vs 神华回撤 31%）+5、趋势稳定偏变窄 −5 [E:business_drivers_601088_2015.json][E:qualitative_601088_2015.json]。合计 60 分 → 窄带，落在宽/窄边界带 [60,70]",
+    "mos_requirement": 0.41666666666666663,
+    "mos_requirement_function": "平滑分段线性（35→50%，65→40%，100→25%），带内 ≥ legacy 常数，分带边界连续（REQ-P1-03）",
+    "legacy_requirement": 0.4,
+    "gate2_diagnostic_hurdle": 0.2252065964631671,
+    "gate1_margin_of_safety": 0.37728785357737105,
+    "gate1_pass": false,
+    "gate1_trigger_price": 14.023333333333333,
+    "boundary_band": {
+      "in_band": true,
+      "edge": 65,
+      "edge_name": "narrow/wide",
+      "band": [
+        60.0,
+        70.0
+      ],
+      "adjacent_words": [
+        "narrow",
+        "wide"
+      ],
+      "halfwidth": 5.0
+    },
+    "dual_report": {
+      "trigger": "得分 60.0 落在 narrow/wide 边界带 [60.0, 70.0]（边界 65 ±5 分）",
+      "rows": [
+        {
+          "score_side": 55.0,
+          "word": "narrow",
+          "mos_requirement": 0.43333333333333335,
+          "gate1_pass": false,
+          "gate2_pass": true,
+          "trigger_price": 13.622666666666666,
+          "tier_suggestion": "观察等价格（触发价 13.62）"
+        },
+        {
+          "score_side": 65.0,
+          "word": "wide",
+          "mos_requirement": 0.4,
+          "gate1_pass": false,
+          "gate2_pass": true,
+          "trigger_price": 14.424,
+          "tier_suggestion": "观察等价格（触发价 14.42）"
+        }
+      ],
+      "sensitivity_note": "结论对护城河判断敏感：±5 分的评分分歧即可把闸门一门槛在 40.0%~43.3% 之间移动——两个同样认真的分析师可能给出不同档位。双档并列披露优于强行定档；本案最该花研究精力的判断就是护城河得分",
+      "mandated_by": "REQ-P1-03（moat-framework 第二节半边界带纪律）"
+    }
+  },
+  "probability_derivation": {
+    "moat_score": 60.0,
+    "variant_perception": "strong",
+    "red_team_pessimistic": 0.3,
+    "rationale_ref": "传导链三输入：①护城河得分 60（moat_score_basis 三组件评分，P1-03 同源）[E:expected_return_moat_score_REQ-P1-03.json]；②变异认知 strong——反向 DCF 反解现价隐含 10 年 OE 年增速 -4.03% vs 我方基准情景正增长（价格是最诚实的一致预期，分歧明确且量化）[E:scenarios.json implied_growth_note]；③红队最强空头=煤价长期低位+新能源替代+上网电价下调的结构性走弱世界观，但成本曲线前 20% 分位使神华为全行业最后倒下者（2014 年同业 90% 亏损面下仍 14.8% 净利率），空头世界观成立概率约 30%（破产归零概率极低，故为悲观权重下界而非清算情景）[E:consensus_601088_2015.json][E:segments_601088_2015.json]",
+    "deviation_rationale": null,
+    "mapped_probabilities": {
+      "悲观": 0.3,
+      "基准": 0.5083333333333333,
+      "乐观": 0.19166666666666668
+    },
+    "adopted_probabilities": {
+      "悲观": 0.3,
+      "基准": 0.5,
+      "乐观": 0.2
+    },
+    "deviations": {
+      "悲观": 0.0,
+      "基准": -0.008333,
+      "乐观": 0.008333
+    },
+    "transmission_chain": [
+      [
+        "基线（得分映射）",
+        {
+          "悲观": 0.308333,
+          "乐观": 0.191667,
+          "基准": 0.5
+        }
+      ],
+      [
+        "变异认知 strong（-5%）",
+        {
+          "悲观": 0.258333
+        }
+      ],
+      [
+        "红队悲观概率下界 max(→30%)",
+        {
+          "悲观": 0.3
+        }
+      ]
+    ],
+    "anchors": {
+      "35": "35/50/15",
+      "65": "30/50/20（规范默认）",
+      "100": "25/50/25"
+    },
+    "adjustable_ranges": {
+      "variant_perception": "±5pp（作用于悲观权重）",
+      "red_team": "max() 下界（只允许更悲观）",
+      "pessimistic_clamp": "[20%,60%]",
+      "adoption_deviation": "采用值偏离映射 ≤2% 免论证；≤10% 须 [E:] 论证；超限硬拒"
+    },
+    "sensitivity_pm10pp": {
+      "rows": [
+        {
+          "shift": -0.1,
+          "valid": true,
+          "probabilities": {
+            "悲观": 0.19999999999999998,
+            "基准": 0.6000000000000001,
+            "乐观": 0.2
+          },
+          "expected_annualized_irr": 0.18458975361493515,
+          "loss_probability": 0,
+          "gate2_pass": true,
+          "gate2_checks": {
+            "expected_irr_floor": true,
+            "no_convergence_floor": true,
+            "pessimistic_irr": true,
+            "loss_probability": true
+          },
+          "tier_suggestion": "观察等价格"
+        },
+        {
+          "shift": 0.0,
+          "valid": true,
+          "probabilities": {
+            "悲观": 0.3,
+            "基准": 0.49999999999999994,
+            "乐观": 0.2
+          },
+          "expected_annualized_irr": 0.1659899506041691,
+          "loss_probability": 0,
+          "gate2_pass": true,
+          "gate2_checks": {
+            "expected_irr_floor": true,
+            "no_convergence_floor": true,
+            "pessimistic_irr": true,
+            "loss_probability": true
+          },
+          "tier_suggestion": "观察等价格"
+        },
+        {
+          "shift": 0.1,
+          "valid": true,
+          "probabilities": {
+            "悲观": 0.4,
+            "基准": 0.39999999999999997,
+            "乐观": 0.2
+          },
+          "expected_annualized_irr": 0.14739014759340305,
+          "loss_probability": 0,
+          "gate2_pass": true,
+          "gate2_checks": {
+            "expected_irr_floor": true,
+            "no_convergence_floor": true,
+            "pessimistic_irr": true,
+            "loss_probability": true
+          },
+          "tier_suggestion": "观察等价格"
+        }
+      ],
+      "tier_flip": false,
+      "tier_flip_code": null,
+      "note": "悲观权重 ±10pp 档位不动——结论对概率摆动稳健",
+      "mandated_by": "REQ-P1-04 验收条款（概率 ±10pp 对档位的影响）"
+    }
+  }
+}

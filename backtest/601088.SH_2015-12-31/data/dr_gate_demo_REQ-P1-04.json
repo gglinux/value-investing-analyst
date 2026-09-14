@@ -1,0 +1,108 @@
+{
+ "company": "中国神华",
+ "ticker": "601088.SH / 1088.HK",
+ "currency": "CNY",
+ "price": 14.97,
+ "price_source": "2015-12-31 A股收盘价 [E:market_snapshot_601088_2015.json]",
+ "moat": "narrow",
+ "moat_note": "窄护城河：全周期ROIC均值16%（5年均值15.98%）显著高于10%资本成本，且在2011-2015煤价腰斩周期中为全行业唯一保持双位数归母净利率的公司（2014年14.8% vs 中煤1.1%/兖煤3.6%/陕煤2.3%）[E:metrics_601088_2015.json][E:segments_601088_2015.json]；但商品价格接受者（煤炭分部利润占比39%仍与煤价强联动）、政策变量（上网电价/限产/资源税）压制其定价权，不评宽。闸门一要求MoS≥40%、期望IRR门槛21.8%。",
+ "discount_rate": 0.1,
+ "discount_rate_note": "纪律下限 max(10%, 10Y国债2.82%+4pct)=10% [E:market_snapshot_601088_2015.json]",
+ "hold_years": 5,
+ "dividend_yield": 0.0494,
+ "dividend_yield_source": "FY2014每股股息0.74元/现价14.97元=4.94%（A股TTM口径）[E:market_snapshot_601088_2015.json]；H股口径7.25%（未扣税）",
+ "intrinsic_value_growth": 0.02,
+ "iv_growth_evidence": "基准情景内在价值长期增速2%（名义）：煤炭销量平台期（公司主动限产，2015年目标404百万吨同比-10.4%）+发电/运输占比提升的结构性增长+约2%价格通胀；2005-2014每股收益CAGR为9.6%但含超级周期水分，2009-2014销量CAGR约8%仍在但煤价零增长假设下取2%为保守值 [E:business_drivers_601088_2015.json][E:metrics_601088_2015.json]",
+ "default_probabilities": {
+  "悲观": 0.25,
+  "基准": 0.5,
+  "乐观": 0.25
+ },
+ "scenarios": [
+  {
+   "name": "悲观",
+   "value_per_share": 10.43,
+   "probability": 0.25,
+   "method": "worst_year_margin",
+   "method_note": "独立路径（全程不走DCF）：历史最差年利润率×当期收入×危机期倍数。最差年=2014（净利率14.82%，真实压力年：商品煤售价同比-10.1%、年末秦港Q5500平仓价520元/吨同比-15.45%、全行业大面积亏损——中煤归母净利率1.09%、陕煤2.31%、兖煤3.57%）；当期收入取2015E约1,750亿元（2015三季报累计1,314.46亿元+Q4季节性，公司2015年收入目标2,100亿但前三季实际-31%远逊目标）；危机期倍数8倍（2015年A股神华实际波动区间对应PE 7.0-10.6倍，取低端）。S2b机器重算=0.1482×175,000×8/19,890=10.43元。交叉验证：pb_trough法0.88×（2015-08-26低点12.96元/每股净资产14.67元）×14.67=12.9元，worst_year口径更保守 [E:financials_601088_2015.json][E:metrics_601088_2015.json][E:financials_peer_601898.json][E:market_snapshot_601088_2015.json]",
+   "method_inputs": {
+    "worst_year": 2014,
+    "worst_margin": 0.1482,
+    "revenue_m": 175000,
+    "crisis_multiple": 8,
+    "shares_m": 19890,
+    "worst_year_stress_evidence": "2014年煤价单边下行：神华商品煤综合售价351.4元/吨同比-10.1%，年末秦港Q5500平仓价520元/吨较2013年末615元/吨降15.45%，全国煤炭工业亏损面超70%，同行中煤能源归母净利同比-88%、兖州煤业-80%（2014年报与同业年报）[E:business_drivers_601088_2015.json][E:financials_peer_601898.json][E:financials_peer_600188.json]"
+   },
+   "stressed_assumptions": [
+    "margin",
+    "revenue",
+    "valuation_multiple"
+   ],
+   "probability_evidence": "[E:consensus_601088_2015.json] 2015年1-2月销量-44%/-20%、三季报归母-44.1%显示景气仍在探底；供给侧无出清迹象（2015年末环渤海指数372元/吨仍为历史最低、连续下跌），煤价在低位持续2-3年的概率约25%",
+   "non_operating_addback_per_share": 0.0
+  },
+  {
+   "name": "基准",
+   "value_per_share": 24.04,
+   "probability": 0.5,
+   "method": "dcf_owner_earnings",
+   "method_note": "中周期商品价格归一化（SKILL纪律卡5：商品公司用中周期价格而非利润率均值）——基期OE=37,500百万的推导：2014年归母36,807（售价351.4元/吨、秦港均价530）+煤价中枢回归：中周期秦港锚570元/吨（2008-2015八年均值625、2011-2015五年均值612、2013-2015三年均值510的保守取值）→实现售价+0.66×40=+26.4元/吨（弹性0.66由2013→2014年秦港-10.2%/神华实现售价-10.1%标定）→煤炭税前+11,300；发电分部内部燃料成本+2,028税前；2016年1月1日燃煤上网电价平均下调3分/千瓦时（发改委2015-12-30公告，截断前已知）-6,000税前；自产煤单位成本+2.5%/年的成本粘性-2,000税前；合计归母+约700→37,500。折现率10%、永续增速2%、10年期DCF：V=24.04元/股（终值占比47%）。对照：margin-avg口径正常化55,512被否——2007-2011超级周期利润率污染均值，趋势检验判结构性恶化（rho=-0.92）[E:metrics_601088_2015.json][E:business_drivers_601088_2015.json][E:consensus_601088_2015.json][E:fv_base.json]",
+   "probability_evidence": "[E:consensus_601088_2015.json] 环渤海指数2015-12-30报收372元/吨处历史极低位（较2011年峰值853元/吨-56%），秦港5500大卡2008-2015年均价625元/吨表明当前价格低于任何可观察长期均值约40%；供给出清虽无时间表，但全行业现金成本区（秦港<400元/吨）不可长期持续——价格向570元/吨中枢回归是基准假设而非乐观假设",
+   "non_operating_addback_per_share": 0.0
+  },
+  {
+   "name": "乐观",
+   "value_per_share": 30.92,
+   "probability": 0.25,
+   "method": "dcf_owner_earnings",
+   "method_note": "中周期锚上移至2008-2015八年均价625元/吨且煤电联动部分恢复电价：基期OE=45,000百万（煤炭税前+26,870、发电燃料-4,815、电价-6,000、成本粘性-2,500→归母+8,340）；增速2.5%（发电+运输占比提升与集团资产注入：2014年报披露2019年6月30日前启动收购神华集团14项未上市资产方案、已启动约3,500兆瓦清洁燃煤机组收购）[E:business_drivers_601088_2015.json][E:segments_601088_2015.json][E:fv_bull.json]",
+   "probability_evidence": "[E:consensus_601088_2015.json] 供给侧收缩（神华2015年主动限产10%+全行业资本开支2013年起连续下滑）+进口煤受2015年关税恢复与人民币贬值抑制，价格修复快于预期的概率约25%",
+   "non_operating_addback_per_share": 0.0
+  }
+ ],
+ "sensitivity": {
+  "note": "估值最敏感两假设：①中周期煤价锚（±20%：570→456/684元/吨）②永续增速（±1pct）",
+  "coal_anchor_pm20": "锚570→456时OE≈33,600→V=21.5元；锚684时OE≈41,500→V=26.6元",
+  "terminal_growth_pm1": "g=1%时V≈22.2元；g=3%时V≈26.6元（基准OE 37,500）"
+ },
+ "h_share_crosscheck": {
+  "note": "H股（1088.HK）2015-12-31收盘12.18港元=10.20元人民币（中间价0.83778）[E:market_snapshot_601088_2015.json]",
+  "mos_h": 0.576,
+  "note2": "同一基准内在价值24.04元下，H股安全边际57.6%≥40%且期望IRR约27%≥21.8%——双闸均过；A股37.7%<40%不过。A/H溢价46.7%使工具选择本身构成收益差"
+ },
+ "non_operating_note": "OE口径为归母净利+折旧摊销-维持性capex（已扣利息），直接对权益现金流折现，与市值同口径；公司净负债377.67亿元（现金435.02亿-有息负债812.69亿），无非经营资产加回 [E:financials_601088_2015.json]",
+ "chart": {
+  "names": [
+   "悲观",
+   "基准",
+   "乐观"
+  ],
+  "values_per_share": [
+   10.43,
+   24.04,
+   30.92
+  ],
+  "price_a": [
+   14.97
+  ],
+  "price_h_cny": [
+   10.204
+  ],
+  "values_per_share_price": [
+   10.204,
+   14.97,
+   10.43,
+   24.04,
+   30.92
+  ]
+ },
+ "implied_growth_note_value": -0.0403,
+ "implied_growth_note": "反向DCF：现价市值281,550百万元，以当期OE 36,807百万元为基期（折现率10%、永续0%、10年）反解得隐含10年OE年增速-4.03%（reverse_dcf.py implied-growth 输出）",
+ "_note": "REQ-P1-04 门禁演示副本：登记 discount_rate_derivation（cyclical 档）但保留冻结案的 discount_rate 0.10——演示分层表一致性的硬拒绝（DR_STRATIFIED_RATE_MISMATCH）。正确用法（第四批新案例）：按分层值 11% 重算三情景估值并同步 discount_rate。原冻结底稿未改动。",
+ "discount_rate_derivation": {
+  "industry_tier": "cyclical",
+  "rf_10y": 0.0282,
+  "market": "CN",
+  "rationale_ref": "煤炭/电力周期资源行业 → cyclical 档（行业溢价 +1pct）；Rf=10Y 国债 2.82%（2015-12-31）[E:market_snapshot_601088_2015.json discount_rate_note]"
+ }
+}

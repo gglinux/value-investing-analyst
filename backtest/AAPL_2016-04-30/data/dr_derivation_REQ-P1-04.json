@@ -1,0 +1,67 @@
+{
+ "company": "苹果",
+ "ticker": "AAPL",
+ "currency": "USD",
+ "backtest_note": "2016-04-30 回放（backtest/PROMPT.md 第一批案例2）：price=93.74；假设仅用截止截断日已披露信息（FY2015 10-K + FY2016 Q2 10-Q filed 2016-04-27）；巴菲特建仓 2016-05-16 才媒体披露，不进入信息集。估值参数沿用 2016-05-13 回放同构方法；唯一口径修正：净现金 add-back 155,556→153,056M（补计长期债务当期部分 2,500M，见底稿 net_cash_reconciliation_note）",
+ "price": 93.74,
+ "moat": "wide",
+ "discount_rate": 0.1,
+ "hold_years": 5,
+ "dividend_yield": 0.0226,
+ "dividend_yield_basis": "ttm_paid",
+ "intrinsic_value_growth": 0.07,
+ "iv_growth_evidence": "FY2013-FY2016 股本 CAGR 约 −5.3%/年（回购注销），2016-04-27（财报/10-Q 同步公告）宣布回购加速至 500 亿美元/年 + 股息上调 10%[E:market_snapshot_AAPL_2016Q2.json][E:financials_AAPL_2016Q2.json]；每股内在价值增速≈OE 长期增速+股本收缩≈7%",
+ "non_operating_assets_note": "净现金 153,056M USD（现金+证券 232,928 − 债务 79,872（含 LTD 当期 2,500），FY2016 Q2 10-Q 官方值）= 27.62 USD/股；仅基准/乐观 DCF 情景加回，悲观用 PE 倍数法（市场定价已含现金）",
+ "default_probabilities": {
+  "悲观": 0.3,
+  "基准": 0.5,
+  "乐观": 0.2
+ },
+ "scenarios": [
+  {
+   "name": "悲观",
+   "value_per_share": 91.53,
+   "probability": 0.3,
+   "method": "worst_year_margin",
+   "method_note": "实证压力年净利率(FY2013 21.7%，利润增长恐慌期实际低点)×当期收入(FY2015 233,715M)×危机期倍数 10x(FY2013 同期自身历史底部 PE 9.5-10x)[E:financials_AAPL_2016Q2.json]；口径修正：原取 FY2007 的 14.6% 为序列最早年、iPhone 发布前的 Mac+iPod 阶段，非危机形态（S2c）。修正后 margin 与 multiple 同取自 FY2013，口径统一",
+   "method_inputs": {
+    "worst_margin": 0.217,
+    "revenue_m": 233715.0,
+    "crisis_multiple": 10,
+    "shares_m": 5540.886,
+    "worst_year": 2013,
+    "worst_year_stress_evidence": "FY2013 为信息集内唯一可指认的压力期——利润增长恐慌（净利同比首次转负、自身历史底部 PE 9.5-10x）；净利率自 FY2012 峰值 26.67% 降至 FY2013 的 21.67% [E:financials_AAPL_2016Q2.json]"
+   },
+   "stressed_assumptions": [
+    "margin",
+    "multiple",
+    "iphone_cycle"
+   ],
+   "probability_evidence": "[E:financials_AAPL_2016Q2.json] FY16Q2 收入 −12.8%、iPhone 首次双位数下滑、大中华区 −26%；若 iPhone7 周期再度落空且无新品接力，利润率向历史均值回归"
+  },
+  {
+   "name": "基准",
+   "value_per_share": 162.04,
+   "probability": 0.5,
+   "method": "dcf_owner_earnings",
+   "method_note": "基期 OE 53,394（净利率 22.8% 中性区间，compute_metrics ALERT 判定结构性改善不向下正常化）×10 年增速 3% fade 至 2.5%（服务业务 FY16Q2 +20% 抵消 iPhone 成熟）+净现金 27.62/股，r=10%[E:workpapers/aapl_fwd_base.json]",
+   "non_operating_addback_per_share": 27.62,
+   "probability_evidence": "[E:financials_AAPL_2016Q2.json] 服务收入高增、10 亿装机生态锁定、iPhone7 换机周期在途、公司以真金白银回购注销加速"
+  },
+  {
+   "name": "乐观",
+   "value_per_share": 192.18,
+   "probability": 0.2,
+   "method": "dcf_owner_earnings",
+   "method_note": "增速 8% fade（iPhone7 超级周期+服务+新品类期权）+净现金 27.62/股[E:workpapers/aapl_fwd_opt.json]",
+   "non_operating_addback_per_share": 27.62,
+   "probability_evidence": "[E:financials_AAPL_2016Q2.json] 换机需求积压+新兴市场渗透率仍低"
+  }
+ ],
+ "_note": "REQ-P1-04 演示副本：登记 discount_rate_derivation（standard 档，无 Rf 时下限取 10% 纪律值 → 10% 与声明一致）+ market=US → 不收敛下限门槛按市场校准 6%→5%（P0-04③ 口径噪声修复：门槛语义=跑赢本市场低风险替代，而非沿用 CNY 语境的 6%）。原冻结底稿未改动。",
+ "discount_rate_derivation": {
+  "industry_tier": "standard",
+  "market": "US",
+  "rationale_ref": "消费电子+服务生态的成熟现金牛（2016 年净利率约 21%、PE TTM 10.3）→ 宽基 standard 档（行业溢价 0）；市场 US：机会成本对照美债/美股，floor 门槛校准 5%（10Y UST+2~3pct 中枢）[E:market_snapshot_AAPL_2016Q2.json]"
+ }
+}

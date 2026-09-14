@@ -16,11 +16,11 @@ SKILL.md 只保留数据分级与降级协议的原则；**源能力矩阵、强
 
 | 源 | 形态 | 授权 | 覆盖 | 本 skill 中的定位 |
 |---|---|---|---|---|
-| **westock-data**（腾讯自选股）| 平级 skill，`node <skill目录>/scripts/index.js <子命令>` | **免费、无需 key**，需 Node ≥ 18 + 网络 | A股/港股/美股/日韩股 + ETF/指数/板块/期货/外汇/可转债；三表财报、行情、K线、一致预期、研报、公告、股东、分红、事件、龙虎榜、产业链图谱、宏观 | **推荐默认**。已实证四条管道（美股 NVDA 系 / A股伊利 / 港股泡泡玛特+腾讯 / A股银行招行）。命中其能力域时禁止用 web_search 替代 |
-| **SEC EDGAR** | 官方 HTTP JSON API | 免费、免鉴权（需 User-Agent 头）| 美股全历史 XBRL 财务事实、10-K/10-Q/20-F/6-K 原文 | **美股永久兜底且仍算 A 级**。`scripts/extract_edgar_annual.py` 直连。命门科目双源核对首选 |
+| **westock-data**（腾讯自选股）| 平级 skill，`node <skill目录>/scripts/index.js <子命令>` | **免费无 key**，Node ≥ 18 + 网络 | A股/港股/美股/日韩股 + ETF/指数/期货/外汇；三表财报、行情、K线、一致预期、研报、公告、股东、分红、龙虎榜、宏观 | **推荐默认**。已实证四管道（NVDA/伊利/泡泡玛特+腾讯/招行）。命中其能力域禁用 web_search 替代 |
+| **SEC EDGAR** | 官方 HTTP JSON API | 免费免鉴权（需 User-Agent）| 美股全历史 XBRL 事实、10-K/10-Q/20-F/6-K 原文 | **美股永久兜底仍算 A 级**。`extract_edgar_annual.py` 直连，命门双源核对首选 |
 | **巨潮资讯网** | 官方网站 | 免费 | A股年报原文 PDF、处罚记录、问询函 | **A股命门科目双源核对强制走它**（原文优先于任何接口）|
 | **港交所披露易** | 官方网站 | 免费 | 港股年报/公告原文、合股供股配售史 | **港股原文核对 + 老千股特征排查** |
-| **ifind-finance-data**（同花顺）| 平级 skill，安装见[官方指南](https://mcp.51ifind.com/gwstatic/static/ds_web/ifind-mcp-web/skills/SKILL_INSTALL_GUIDE.md) | **付费**，需自备 key 写入 `mcp_config.json`（[密钥管理](https://mcp.51ifind.com)）| A股/港股/美股行情财报、行业与宏观 | **可选增强**，不作默认。有 key 时优先用于补 A 股 capex/D&A 与银行专属科目；无 key 完全不影响主流程 |
+| **ifind-finance-data**（同花顺）| 平级 skill（[安装指南](https://mcp.51ifind.com/gwstatic/static/ds_web/ifind-mcp-web/skills/SKILL_INSTALL_GUIDE.md)）| **付费**，key 写 `mcp_config.json` | A股/港股/美股行情财报、行业宏观 | **可选增强**：有 key 时补 A 股 capex/D&A 与银行科目；无 key 不影响主流程 |
 | **机构研报** | B 级二手 | — | 历史 capex 序列、行业数据、竞争格局 | 补接口缺口。**只取事实，不取评级与目标价** |
 | **web_search / web-fetch** | C 级兜底 | — | 媒体报道、访谈、行业新闻 | 仅作旁证，必须标来源链接。**影响结论的核心判断禁止只靠 C 级** |
 
@@ -36,7 +36,7 @@ SKILL.md 只保留数据分级与降级协议的原则；**源能力矩阵、强
    | A股 | 巨潮年报 PDF（非结构化）| **人工转录 + `--audit` 体检完整性** |
    | 港股 | 披露易年报 PDF（非结构化）| 同上 |
 
-   美股必须机器核对的理由：手抄进 `crosscheck` 与手填进 `annual` 的值来自同一次阅读，比对的是"我抄得一致吗"而不是"接口对不对"——同人同眼，看错年份不会被发现。EDGAR 有结构化 XBRL，能真正独立取数，就不该退回人工。
+   美股必须机器核对：手抄 `crosscheck` 与手填 `annual` 出自同一次阅读，比的是"抄得一致吗"而非"接口对不对"。EDGAR 有 XBRL 能真正独立取数，不该退回人工。
 
    **A4 规则**：强制科目的官方值为空＝该科目实际未被交叉核对，**直接报错**而非告警（`shares_diluted` 是每股序列的分母，未核对会线性缩放整个估值与安全边际）。确无法取得时写 `crosscheck_exempt` 显式豁免并进报告披露。
 
@@ -63,14 +63,14 @@ SKILL.md 只保留数据分级与降级协议的原则；**源能力矩阵、强
 | 伊利 | `dividend_yield_ttm` | 5.14 | 5.14%（百分数，另给了 `_frac` 消歧） |
 | 英伟达 | `dividend_yield_ttm_pct` | 0.13 | **0.13%**，不是 13% |
 
-闸门二的**价值不收敛下限 = 股息率 + 内在价值增速**把股息率当加数直接参与判定——英伟达的 0.13% 若被读成 13%，闸门二直接自动过闸。这是典型的「算得出数、不报错、无痕迹」静默错误，因此升级为门禁：`check_scenarios.py` S9 要求 `dividend_yield` 必须是小数且 ≤20%；传 `--snapshot` 时与快照归一化值交叉核对（容差 5%）。归一化规则（`normalize_yield`）：后缀是强证据，裸字段值 > 0.20 判为百分数误填并标记**歧义**——脚本会归一但同时告警，要求分析师用后缀显式消歧。
+闸门二的**价值不收敛下限 = 股息率 + 内在价值增速**把股息率当加数直接参与判定——英伟达的 0.13% 若被读成 13%，闸门二直接自动过闸。「算得出数、不报错、无痕迹」的静默错误，故升级为门禁：`check_scenarios.py` S9 要求 `dividend_yield` 必须是小数且 ≤20%；传 `--snapshot` 时与快照归一化值交叉核对（容差 5%）。归一化规则（`normalize_yield`）：后缀是强证据；裸值 >0.20 判为百分数误填并标**歧义**——脚本归一但告警，要求后缀显式消歧。
 
 ## 六、信息覆盖度强制动作
 
-0. **搬运完整性（最隐蔽的一类事故）**：抽取产物拿到了、底稿却没搬进去——比"数据源没有"更危险，因为分析师以为自己有。事故原型：GOOG 与 TSM 的 raw 抽取产物 9 个年度全都成功抓到 `assets`/`liabilities`/`equity`，但底稿只有 1 年有值，三表勾稽覆盖率仅 18% 而入口校验照样打印"通过"（已验证可补齐：从 raw 回填后覆盖率 91%，回填年度全部通过勾稽——数据本身是好的，只是从未被验证过）。纪律：凡有抽取中间产物，必须跑 `scripts/check_transcription.py` 比对；建稿脚本化优先于手工转录。附带发现：`cash` 在底稿通常取"现金+短期投资"（`cash_sti`），这是估值正确口径，不要为"过校验"改成狭义口径。
+0. **搬运完整性（最隐蔽的事故）**：抽取产物拿到了、底稿却没搬进去——比"数据源没有"更危险，因为分析师以为自己有。事故原型：GOOG/TSM 的 raw 产物 9 个年度全抓到，底稿却只有 1 年有值，勾稽覆盖率 18% 而入口校验照打"通过"（raw 回填后 91%——数据是好的，只是从未被验证）。纪律：凡有抽取中间产物必须跑 `check_transcription.py` 比对；建稿脚本化优先。附带：`cash` 取"现金+短期投资"（`cash_sti`）是估值口径，不要为过校验改狭义。
 1. **分部数据只认财报原文**：`data/segments.json` 的分部收入必须从年报/20-F 的**分部报告附注**提取（A 级，登记 filings 文件名+页码）；接口主营构成与新闻转述只作交叉验证。五维定性一半论断压在分部数据上，这里降级等于全楼地基降级。
-2. **对立面检索（Phase 0 排雷强制步）**：逐项检索 `公司名 + 做空报告/财务造假/监管处罚/集体诉讼/审计意见`，命中进排雷清单评估；未命中也要在 manifest 登记"对立面检索已做、无发现"（`adversarial_check`，含检索日期与结论；validate_data 无痕迹即告警——纯文档纪律没有执行力，10 个归档案例只有 1 个留了痕）。
-3. **信息时效检查**：分析日距最新财报披露日超过 100 天时（validate_data 会提示），强制核对最新季报/盈利预告是否有未消化的剧变（腾讯 AI capex +176% 是季中爆出的教训），核对结果写入 manifest 的 `latest_quarter_checked`。
+2. **对立面检索（Phase 0 排雷强制步）**：逐项检索 `公司名 + 做空报告/财务造假/监管处罚/集体诉讼/审计意见`，命中进排雷清单评估；未命中也要在 manifest 登记"对立面检索已做、无发现"（`adversarial_check`，含检索日期与结论；validate_data 无痕迹即告警——纯文档纪律没有执行力，归档案例 10 中只 1 留痕）。
+3. **信息时效检查**：距最新财报披露超 100 天时（validate_data 会提示），强制核对最新季报/盈利预告有无未消化的剧变（腾讯 AI capex +176% 的教训），结果写入 manifest 的 `latest_quarter_checked`。
 4. **来源措辞要精确**：`crosscheck.source` 里官方原文标识（10-K/20-F/年报/EDGAR/巨潮/披露易/XBRL）是强证据；混入"接口/加总/估算"会触发警告。写"20-F p.45 表 3"这类定位，不写"20-F 披露接口值"。
 
 ## 七、各市场实操与踩坑
@@ -81,14 +81,14 @@ SKILL.md 只保留数据分级与降级协议的原则；**源能力矩阵、强
   - 全历史 XBRL 财务事实：`https://data.sec.gov/api/xbrl/companyfacts/CIK{10位CIK}.json`
   - CIK 查询：`https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&company=<名称>&output=atom`
   - 请求需带 User-Agent 头（任意联系方式格式），无需鉴权。
-- 踩坑：companyfacts 早年 capex 标签可能缺失（NVDA FY2016-2021），需回 10-K 原文合并现金流量表补，原文存档 `data/filings/`；财年错位公司（NVDA 1月末、AVGO 10月末）在竞对对比图必须脚注注明；少数股东权益（AVGO NCI）导致三表勾稽失败时 `total_equity` 用含 NCI 口径；`publish_date` 用 filing date。
-- **中概美股（PDD 实证）**：Futu 通道字段完整（Sales/NetIncome/CFO/Capex/FreeCF 全可用，无需手工补 capex）；**币种双重口径**——`DisclosureCurrency=CNY` 但 `ShowCurrency=USD`（百万美元），需按汇率与 20-F 人民币值反向核对；**现金口径差异**——接口 `CashShorttermInvestment` 宽于披露口径（PDD：接口 710 亿 vs 披露 630 亿），报告必须统一到披露口径并注明；**利息收入剔除**——平台型现金牛的利息/投资收益占税前利润比重高（PDD 19%），巴菲特视角估值应从经营 OE 中剔除；**爬坡期正常化失真**——早年亏损公司（PDD 2019-2020）的全期净利率均值被拉低，双轨呈现并披露。
+- 踩坑：companyfacts 早年 capex 标签可能缺失（NVDA FY2016-2021），回 10-K 原文补（存档 `data/filings/`）；财年错位（NVDA 1月末、AVGO 10月末）竞对图须脚注；AVGO NCI 致勾稽失败时 `total_equity` 用含 NCI 口径；`publish_date` 用 filing date。
+- **中概美股（PDD 实证）**：Futu 通道字段完整（Sales/NetIncome/CFO/Capex/FreeCF 可用）；**币种双口径**（`DisclosureCurrency=CNY`/`ShowCurrency=USD`）须按汇率与 20-F 人民币值反核；**现金口径**接口宽于披露（PDD 710 亿 vs 630 亿），统一到披露口径；**利息收入剔除**（PDD 占税前 19%，从经营 OE 剔除）；**爬坡期正常化失真**（早年亏损拉低全期均值，双轨披露）。
 
 ### A股（已实证：海天链路 + 伊利全流程）
 
 - `westock-data` 三表可直接建底稿：income/balance/cashflow 全拉，报告期取 12-31 年报行，单位元→百万。
-- 踩坑：**权益科目必须用 `TotalShareholderEquity`（含少数股东），不能用 `SEWithoutMI`（归母）**，否则三表勾稽过不了——但回报率与估值只认归母，底稿另存 `roe_parent`/`bvps_parent`；**TotalAssets 缺失**，用 `TotalLiability + TotalShareholderEquity` 推导（伊利实测误差 <0.1%）；**capex 无独立科目**（现金流量表只有净额 NetInvestCashFlow），从年报现金流量表原文（巨潮 PDF）或研报历史序列补，标 B 级，补不到时 `compute_metrics` 会用 D&A 兜底并进 warnings，**须在报告中确认披露**；接口缺摊薄股本明细同样从年报补；字段名与港股不同（归母净利 `NPParentCompanyOwners`、经营现金流 `NetOperateCashFlow`、营业成本 `OperatingCost`），营收字段完整（`OperatingRevenue`）；`publish_date` 用接口 `InfoPublDate`。
-- **减值年必须标注**：含大额一次性减值的年份（伊利 2024 年 52.3 亿）必须在 spike_notes 说明"还原后真实增长"，否则次年高增长会被突变检测误报、估值基期被低基数扭曲。成熟公司 spike 标注约 18 条，IPO 高增长公司 40+ 条。
+- 踩坑：**权益科目用 `TotalShareholderEquity`（含少数股东）而非 `SEWithoutMI`**（否则勾稽过不了），回报率与估值只认归母（另存 `roe_parent`/`bvps_parent`）；**TotalAssets 缺失**用 `TotalLiability+TotalShareholderEquity` 推导（误差<0.1%）；**capex 无独立科目**（只有净额 NetInvestCashFlow），从年报原文（巨潮 PDF）或研报序列补、标 B 级，补不到时 `compute_metrics` 用 D&A 兜底进 warnings（须报告确认披露）；缺摊薄股本同样从年报补；字段名与港股不同（归母净利 `NPParentCompanyOwners`/经营现金流 `NetOperateCashFlow`/营业成本 `OperatingCost`），营收完整（`OperatingRevenue`）；`publish_date` 用 `InfoPublDate`。
+- **减值年必须标注**：大额一次性减值年份（伊利 2024 年 52.3 亿）须在 spike_notes 说明"还原后真实增长"，否则次年高增长被突变检测误报、基期被低基数扭曲。成熟公司 spike 约 18 条，IPO 高增长 40+ 条。
 - 命门科目双源核对强制走巨潮年报原文；处罚记录与问询函也查巨潮。
 
 ### A股银行（招行全链路验证）
@@ -105,12 +105,12 @@ SKILL.md 只保留数据分级与降级协议的原则；**源能力矩阵、强
 
 - **H 股/红筹币种口径**：报告币种可能与交易币种不同（`fx_basis` 必填）；老千股特征查频繁合股/供股/配售史（披露易 www1.hkexnews.hk 检索公告史）。
 - **营收字段可能缺失**：港股接口利润/现金流/资产字段完整，但部分公司营收字段为空（腾讯 OperatingRevenue/Sales 均无；泡泡玛特正常）——从财报手工补齐并标 A 级。
-- **港币口径陷阱**：港股接口所有利润表/资产负债表科目为港币（按期末汇率从人民币折算），与披露人民币值差约 10%。用「接口值 ÷ 当年末汇率」反推，年报公告交叉验证误差 <1%。
+- **港币口径陷阱**：港股接口利润表/资产负债表科目为港币（期末汇率从人民币折算），与披露人民币值差约 10%——「接口值 ÷ 当年末汇率」反推，年报公告交叉验证误差 <1%。
 - **D&A 缺失**：港股接口无折旧摊销独立科目，从业绩公告"重大非现金开支"部分取三项叠加（物业厂房设备折旧+使用权资产折旧+无形资产摊销）。
-- **IPO 公司历史 spike 密集**：泡泡玛特 2018-2020 年营收/净利/经营现金流同比变动普遍超 50%，需在 `spike_notes` 逐条标注，工作量是成熟公司的 3 倍。
+- **IPO 公司历史 spike 密集**：泡泡玛特 2018-2020 同比变动普遍超 50%，`spike_notes` 逐条标注，工作量是成熟公司 3 倍。
 - **周期高位警报在消费股同样适用**：泡泡玛特 2025 净利率 34.4% 是全期均值 21.5% 的 1.60 倍，引擎自动判周期高位并强制正常化（92 亿而非峰值 128 亿）——消费股爆款周期的标准形态。
 - **"经营+投资"双轮公司**：腾讯投资组合 8751 亿 CNY——DCF 只评估经营业务，组合按折价（上市 9 折/非上市 6 折，或更保守 7/4 折）单独加回（`reverse_dcf.py --add-back/--deduct`）。
-- **投资减值年扭曲均值**：2023 年归母 1152 亿（投资组合公允下修+联营减值）vs Non-IFRS 1577 亿——spike_notes 必须标注，IFRS/Non-IFRS 双口径差异要披露。
+- **投资减值年扭曲均值**：腾讯 2023 归母 1152 亿（公允下修+联营减值）vs Non-IFRS 1577 亿——spike_notes 须标注，双口径差异披露。
 - **AI 资本开支陡增期 FCF 失真**：2026Q2 FCF 转负 -138 亿（capex +176%），剔除算力预付款后 +376 亿——报告需双重口径披露，避免"FCF 崩塌"误读。
 - **回购是重要估值支撑**：腾讯 2024 年回购 1120 亿 HKD、2025 年约 1300 亿——持续大额回购注销在估值中应作为显性因素。
 
@@ -136,7 +136,7 @@ SKILL.md 只保留数据分级与降级协议的原则；**源能力矩阵、强
 
 | 科目类型 | 阈值 | 处置 |
 |---|---|---|
-| **命门科目**（revenue / net_income / ocf / shares_diluted，外加 cash / interest_bearing_debt / total_debt） | >1% | **阻断**（`crosscheck_official.py` 退出码 1，`validate_data.py` ERROR）。确认为口径差异时在 `crosscheck_exempt` 写五要素结构化豁免并在报告披露 |
+| **命门科目**（revenue / net_income / ocf / shares_diluted，外加 cash / interest_bearing_debt / total_debt） | >1% | **阻断**（`crosscheck_official.py` 退出码 1，`validate_data.py` ERROR）；确认口径差异时在 `crosscheck_exempt` 写五要素豁免并披露 |
 | 资产负债表科目（total_assets / total_equity / total_liabilities / goodwill / inventory / receivables 等） | >3% | **告警**并登记差异表进报告附录 |
 | 其他科目 | >5% | **登记**进差异表 |
 
@@ -145,7 +145,7 @@ crosscheck 条目中登记的**任何**数值科目都参与分级比对，不�
 **裁决动作**：
 - 发现差异后，以 tier 更高的源为准更新底稿。豁免必须是结构化五要素：`"crosscheck_exempt": {"<field>": {"adopted_value", "adopted_source", "rejected_value", "rejected_source", "reason"}}`——纯字符串豁免仍被接受（legacy）但每次运行都会提示迁移。
 - 差异表（含已裁决与未裁决）由 `crosscheck_official.py --write` 落盘到底稿 `crosscheck_conflicts`（字段：year / field / annual_value / official_value / annual_tier / official_tier / diff_pct / severity / adopted_side / resolved / resolution）。
-- 报告「数据附录」节须列出差异表并带机器标记 `data-appendix="source-conflicts"`；底稿含非空 `crosscheck_conflicts`（或结构化豁免中有 `rejected_value`）而报告缺该标记时，`verify_report.py` 直接 FAIL。同理，含 `restated_from` 的底稿须带 `data-appendix="restatements"`，含 `meta.point_in_time_waiver` 的须带 `data-appendix="point-in-time-waiver"`（REQ-P0-06）。
+- 报告侧披露统一走 `data-appendix` 机器标记（差异表/重述/时点豁免/validate-summary 五类、何时必填、verify_report 机核规则）——清单见 `report-spec.md` 数据附录规范，此处不重复。
 
 ## 十、新增数据源的接入清单
 
