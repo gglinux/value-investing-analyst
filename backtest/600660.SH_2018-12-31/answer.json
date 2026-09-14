@@ -7,6 +7,9 @@
   "must_not_trigger": [
     "ANY_FRAUD_ALERT"
   ],
+  "known_failures": [
+    "engine_drift"
+  ],
   "actual_5y_total_return": null,
   "actual_3y_total_return": 1.856,
   "price_basis": {

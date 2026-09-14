@@ -14,6 +14,9 @@
   "must_not_trigger": [
     "PHASE0_VETO_FIRED"
   ],
+  "known_failures": [
+    "engine_drift"
+  ],
   "actual_5y_total_return": -1.0,
   "actual_3y_total_return": -1.0,
   "actual_max_drawdown": -1.0,

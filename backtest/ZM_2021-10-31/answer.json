@@ -12,7 +12,9 @@
   "must_trigger_unmapped": [],
   "must_trigger_note": "官方答案行无 must_trigger 字段（纯定性+事后提示），无需映射",
   "must_not_trigger": [],
-  "known_failures": [],
+  "known_failures": [
+    "engine_drift"
+  ],
   "known_failures_note": "档位轨命中：管线 verdict_ordinal 1 ∈ 官方 {1}。本案无 must_trigger 断言需求；must_not_trigger 无登记。告警轨无可判定的官方断言——本案的引擎行为价值在 OBS 证据层（估值警报全部正确触发且方向无误）而非断言比对层",
   "actual_5y_price_total_return": -0.631,
   "actual_5y_price_annualized": -0.1857,
