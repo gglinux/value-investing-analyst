@@ -4923,6 +4923,116 @@ check("P2 修复·gate 状态分类与 S12 判定同源（cs.variant_perception_
       ["field_status"]["market_view"] == "no_anchor"
       and cs.variant_perception_gate({}) == {"present": False})
 
+print("== 14.17 引擎输入校验加固（AST-001/002/004，第四批开跑前）==")
+# 预检文档 §3 复现的 4 项确定性错误（PREFLIGHT-BATCH4-20260915）——假阳性
+# 基线是所有放松性改动的解冻条件，基线必须在算术正确的引擎上建立，
+# 否则基线里混进的是 bug 不是证据。本组每条都是失败复现测试
+# （AST-012 的最小落地：修一条固化一条，防同一个错误换种写法再来）。
+
+# ① 非法概率：-0.3/1.1/0.2（和恰为 1）曾可过闸门二④「亏损概率 ≤30%」
+p = run(["expected-return", "--price", "100", "--hold-years", "5",
+         "--scenarios", "悲观:60:-0.3,基准:110:1.1,乐观:150:0.2"])
+check("① 非法概率被 expected-return 拒绝（和=1 不代表分布合法）",
+      p.returncode != 0 and "越出 [0,1]" in (p.stderr or ""),
+      (p.stderr or p.stdout)[:160])
+p = run(["expected-return", "--price", "100", "--hold-years", "5",
+         "--scenarios", "悲观:60:0.3,基准:110:0.5,乐观:150:0.2"])
+check("① 合法概率仍通过（回归保护）", p.returncode == 0, (p.stderr or "")[:120])
+
+_badscen = json.loads(json.dumps(GOOD))
+_badscen["scenarios"][0]["probability"] = -0.3
+_badscen["scenarios"][1]["probability"] = 1.1
+_badscen["scenarios"][2]["probability"] = 0.2
+with tempfile.TemporaryDirectory() as _td:
+    _fpb = os.path.join(_td, "badscen.json")
+    json.dump(_badscen, open(_fpb, "w", encoding="utf-8"))
+    _, _errs, _, _ = cs.check(_fpb, None)
+check("① check_scenarios S1 拦截越界概率（与 reverse_dcf 双闸同源）",
+      any("越出 [0,1]" in e for e in _errs), " ".join(_errs)[:160])
+
+
+# ② 零税率：tax_rate: 0 曾被 `or` 静默替换成 25%（NOPAT/ROIC 系统性低估）
+def _mk_tax_rows():
+    _rows = []
+    for _i, _m in enumerate([0.10, 0.11, 0.12]):
+        _rev = 1000.0 * (1.05 ** _i)
+        _rows.append({"year": 2015 + _i, "revenue": _rev, "net_income": _m * _rev,
+                      "ebit": _m * _rev * 1.3, "gross_profit": 0.5 * _rev,
+                      "d_and_a": 0.05 * _rev, "capex": 0.08 * _rev,
+                      "wc_change": 0.005 * _rev, "ocf": _m * _rev + 0.05 * _rev,
+                      "total_equity": 0.5 * _rev, "total_debt": 0.1 * _rev,
+                      "cash": 0.05 * _rev, "shares_diluted": 100.0})
+    return _rows
+
+
+_tax_base = {"company_type": "工业", "annual": _mk_tax_rows()}
+_r_default = cm.compute(json.loads(json.dumps(_tax_base)))          # 缺省 → 25%
+_r_zero = cm.compute(json.loads(json.dumps(dict(_tax_base, tax_rate=0.0))))
+check("② tax_rate 缺省时仍用 DEFAULT_TAX=25%（回归保护）",
+      abs(_r_default["series"][0]["nopat"]
+          - _tax_base["annual"][0]["ebit"] * 0.75) < 1e-6,
+      str(_r_default["series"][0]["nopat"]))
+check("② tax_rate: 0 不再被静默替换成 25%（NOPAT=EBIT）",
+      abs(_r_zero["series"][0]["nopat"]
+          - _tax_base["annual"][0]["ebit"]) < 1e-6,
+      str(_r_zero["series"][0]["nopat"]))
+
+
+# ③ 非正预测期：--years 0 / -3 曾可产出「预测期 -3 年」的完整估值
+p0 = run(["forward-value", "--base-oe", "1000", "--growth", "0.10", "--years", "0"])
+pn = run(["forward-value", "--base-oe", "1000", "--growth", "0.10", "--years", "-3"])
+check("③ forward-value --years 0 被拒",
+      p0.returncode != 0 and "--years" in (p0.stderr or ""),
+      (p0.stderr or "")[:120])
+check("③ forward-value --years -3 被拒",
+      pn.returncode != 0 and "--years" in (pn.stderr or ""),
+      (pn.stderr or "")[:120])
+p = run(["implied-growth", "--market-cap", "10000", "--base-oe", "1000",
+         "--years", "0"])
+check("③ implied-growth --years 0 同样被拒", p.returncode != 0,
+      (p.stderr or "")[:120])
+p = run(["forward-value", "--base-oe", "1000", "--growth", "0.10", "--years", "10"])
+check("③ 合法 --years 仍通过（回归保护）", p.returncode == 0, (p.stderr or "")[:120])
+
+
+# ④a as-of 前缀过滤：未来年度行曾可改写历史年基准（as_of 出现 0 次）
+with tempfile.TemporaryDirectory() as td:
+    _fp = os.path.join(td, "asof.json")
+    _rows_ext = _mk_tax_rows() + [
+        {"year": 2022, "revenue": 1500.0, "net_income": 180.0, "ebit": 234.0,
+         "gross_profit": 750.0, "d_and_a": 75.0, "capex": 120.0,
+         "wc_change": 7.5, "ocf": 255.0, "total_equity": 750.0,
+         "total_debt": 150.0, "cash": 75.0, "shares_diluted": 100.0}]
+    json.dump({"company_type": "工业", "annual": _rows_ext},
+              open(_fp, "w", encoding="utf-8"))
+    pr = subprocess.run([sys.executable, os.path.join(SCRIPTS, "compute_metrics.py"),
+                         _fp, "--as-of", "2019-06-30"],
+                        capture_output=True, text=True)
+    check("④a --as-of 运行成功", pr.returncode == 0, (pr.stderr or "")[:150])
+    if pr.returncode == 0:
+        _out = json.loads(pr.stdout)
+        _years = [r["year"] for r in _out["series"]]
+        check("④a --as-of 剔除时点后财年行（2022 行不入 hist 口径）",
+              2022 not in _years and max(_years) <= 2018, str(_years))
+        check("④a provenance 登记 as_of",
+              (_out.get("provenance") or {}).get("as_of") == "2019-06-30")
+
+# ④b 负扩张支出：衰退年 capex < 估算维持性 → 欠维护风险披露（非静默配平）
+_rows_rec = []
+for _i in range(8):
+    _rev = 1000.0 * (1.05 ** _i) * (0.6 if _i == 7 else 1.0)
+    _rows_rec.append({"year": 2015 + _i, "revenue": _rev,
+                      "net_income": 0.10 * _rev, "ebit": 0.13 * _rev,
+                      "gross_profit": 0.5 * _rev, "d_and_a": 0.05 * _rev,
+                      "capex": (0.02 if _i == 7 else 0.08) * _rev,
+                      "wc_change": 0.005 * _rev, "ocf": 0.15 * _rev,
+                      "total_equity": 0.5 * _rev, "total_debt": 0.1 * _rev,
+                      "cash": 0.05 * _rev, "shares_diluted": 100.0})
+_r_rec = cm.compute({"company_type": "工业", "annual": _rows_rec})
+check("④b 负扩张支出触发欠维护风险披露",
+      any("欠维护" in _w for _w in _r_rec["warnings"]),
+      " ".join(_w for _w in _r_rec["warnings"] if "扩张" in _w)[:160])
+
 print("== 15 脚本接入完整性（元测试） ==")
 # 教训：阶段二写了 check_market_snapshot.py、跑通了、验证它能逮住海控存量错误，
 # 但**忘了在 SKILL.md 里引用它**——脚本存在 ≠ agent 会执行。SKILL.md 是 agent

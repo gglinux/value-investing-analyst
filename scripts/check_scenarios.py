@@ -629,6 +629,16 @@ def check(path, metrics_path=None, snapshot_path=None, strict_variant=False):
     psum = sum(float(s.get("probability", 0)) for s in scen)
     if abs(psum - 1.0) > 1e-6:
         errors.append(f"S1 概率之和为 {psum:.4f}，必须等于 1")
+    # AST-001（第四批前加固）：和=1 不代表分布合法（-0.3/1.1/0.2 曾可过闸）。
+    # 与 reverse_dcf expected-return 入口的双闸同源——本侧此前只报
+    # 「概率偏离默认须挂 [E:]」，挂上证据指针即可放行非法分布。
+    for s in scen:
+        _p = float(s.get("probability", 0))
+        if not (0.0 <= _p <= 1.0):
+            errors.append(
+                f"S1 情景 `{s.get('name', '?')}` 概率 {_p:.4f} 越出 [0,1]"
+                "（PROB_DERIVATION_OUT_OF_RANGE）——负概率让闸门二④"
+                "「亏损概率 ≤30%」恒判通过，挂 [E:] 指针也不能放行非法分布")
     for s in scen:
         if s.get("value_per_share") is None or s.get("name") is None:
             errors.append(f"S1 情景 {s.get('name', '?')} 缺 name/value_per_share")

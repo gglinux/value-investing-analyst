@@ -48,6 +48,7 @@ import argparse
 import json
 import os
 import math
+import re
 import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
@@ -584,7 +585,11 @@ def compute(data, market_cap=None):
             "金融股请按 references/metric-playbook.md 的银行/保险专属指标集手工建底稿"
             "（净息差/不良率/拨备覆盖率 或 EV/NBV/综合成本率），估值按 valuation-guide 金融股方法树。"
         )
-    tax = data.get("tax_rate") or DEFAULT_TAX
+    # AST-002（第四批前加固）：缺值与零值必须分离——`or` 会把免税/递延税
+    # 资产充足的底稿（tax_rate: 0）静默替换成 25%，NOPAT/ROIC 系统性低估，
+    # 对真实零税率标的整个回报链失真。
+    _tax = data.get("tax_rate")
+    tax = _tax if _tax is not None else DEFAULT_TAX
     rows = sorted(data.get("annual", []), key=lambda r: r["year"])
     if len(rows) < 3:
         raise SystemExit("错误：年度数据不足 3 年，无法计算长期指标。请先补齐数据底稿。")
@@ -656,6 +661,15 @@ def compute(data, market_cap=None):
         else:
             mc = None
         growth_part = (capex - mc) if (capex is not None and mc is not None) else None
+        if growth_part is not None and growth_part < 0:
+            # AST-002/004（第四批前加固）：负扩张支出=公司 capex 低于估算的维持性
+            # 水平——这是欠维护风险信号，不得被当作『扩张为负』静默配平进
+            # FCF 区间乐观端的改善。衰退年 deferred 的维护投入会在后续年度
+            # 以更高的恢复性 capex 回来，报告须单列披露。
+            warnings.append(
+                f"{year}: 扩张性 capex 为负（{growth_part:.1f}，总 capex 低于估算"
+                f"维持性 {mc:.1f}）——欠维护风险：衰退年 deferred 维护会在后续"
+                "年度以更高恢复性 capex 回来，报告须披露而非配平")
 
         oe = None
         if ni is not None and da is not None and mc is not None:
@@ -1208,10 +1222,30 @@ def main():
                          " 则从快照读取市值（单一事实源，免手抄）；②执行量纲等式校验"
                          "（A/H 分部优先，容差 10%，WARN 级——拦 10 倍量纲错位，"
                          "不拦快照日/传参日的正常日期漂移）")
+    ap.add_argument("--as-of", default=None, metavar="YYYY-MM-DD",
+                    help="时点边界（AST-004）：只采用财年 < 时点年份的 annual 行"
+                         "——年报在财年结束数月后才发布，财年 ≥ 时点年份=当时不可见。"
+                         "防止未来年度行改写历史年基准（capex/收入比中位数等 hist "
+                         "口径此前用全部行计算，as_of 在本脚本中曾出现 0 次）。"
+                         "回放/复盘时点重算必传；缺省时信任底稿已自行截断")
     args = ap.parse_args()
 
     with open(args.input, "r", encoding="utf-8") as f:
         data = json.load(f)
+
+    # ---- AST-004：as-of 前缀过滤（未来年度不得进入 hist 口径）----
+    if args.as_of:
+        m = re.match(r"^(\d{4})(?:-\d{2}-\d{2})?$", args.as_of.strip())
+        if not m:
+            raise SystemExit(f"错误：--as-of 须为 YYYY-MM-DD 或 YYYY（收到 {args.as_of!r}）")
+        as_of_year = int(m.group(1))
+        _before = len(data.get("annual") or [])
+        data["annual"] = [r for r in (data.get("annual") or [])
+                          if int(r.get("year", 0)) < as_of_year]
+        _dropped = _before - len(data["annual"])
+        if _dropped:
+            print(f"[AS-OF] 剔除 {_dropped} 行财年 ≥{as_of_year} 的 annual 行"
+                  f"（--as-of {args.as_of}：该财年年报在时点尚未发布）", file=sys.stderr)
 
     # ---- 单位归一：--market-cap-million 固定百万，引擎内部换算到底稿单位 ----
     # compute() 的 OE/市值派生值全部在底稿单位下运算，market_cap 必须同单位。
@@ -1264,6 +1298,7 @@ def main():
         "market_cap_internal_unit": (data.get("unit") if market_cap_internal
                                       is not None else None),
         "snapshot": args.snapshot,
+        "as_of": args.as_of,
     }
     if eq_warnings:
         result["warnings"] = sorted(set(result["warnings"]) | set(eq_warnings))

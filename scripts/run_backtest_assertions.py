@@ -84,6 +84,13 @@ RULES_SNAPSHOT_MIN_BATCH = 3
 # 即该形态的实证（无 P0/结构性/cap 码而落排除），冻结文本不改，由 OBS 承载修正。
 NEGATIVE_TIER_BASIS_MIN_BATCH = 4
 
+# REQ-P0-01 防白跑门禁（第四批前加固）：批次 ≥4 若 fp_control=true 的对照案例
+# 为 0，直接红灯终止。fp_control 是假阳性基线的载体，而基线是所有放松性改动
+# （fade 期绑定修法、MoS 降档等）的解冻条件——第四批建档时漏标 fp_control，
+# 跑完了仍然拿不到基线（fp_control_n=0），等于白跑一批。跑前强制比跑后
+# 才发现便宜一个批次的成本。存量批次（≤3）不受影响。
+FP_CONTROL_MIN_BATCH = 4
+
 # REQ-P2-01 官方答案置信度。规则表与修订流程见 backtest/ANSWERS.md。
 #   high / medium —— 进主指标（FP/FN 分母、战绩计数、回归门禁）
 #   low          —— 官方标签本身有争议：三轨仍评测但单独统计、不进主指标
@@ -1162,6 +1169,19 @@ def main():
 
     fpfn = fp_fn_summary(results, low_conf_results=low_conf)
     print_fp_fn_summary(fpfn)
+
+    # REQ-P0-01 防白跑门禁：假阳性专项批次（≥FP_CONTROL_MIN_BATCH）若
+    # fp_control=true 的对照案例为 0，直接红灯——漏标属登记完整性缺口，
+    # 补 answer.json 的 fp_control 字段后重跑，而非跑完才发现拿不到基线。
+    _b4 = [c for c in cases
+           if int(c["meta"].get("batch") or 0) >= FP_CONTROL_MIN_BATCH]
+    if _b4 and fpfn["fp_control_n"] == 0:
+        print(f"\n⛔ 假阳性对照缺失：第 ≥{FP_CONTROL_MIN_BATCH} 批的案例表共 "
+              f"{len(_b4)} 案，fp_control=true 的对照为 0——PROMPT 第五之二节要求"
+              "第四批 6 案全部标 fp_control（PROMPT 第 455 行字段定义）。"
+              "本批跑完无法建立假阳性基线（放松性改动的解冻条件），白跑一批。"
+              "请在建档/answer.json 补齐 fp_control 字段后重跑（FP_CONTROL_MISSING）")
+        sys.exit(1)
 
     # REQ-P2-01：低置信度答案明细——单独统计的「单独」就是这里：每案给出
     # 置信度依据与三轨结果，供人工裁决（修订流程的「提出」入口）。

@@ -1008,6 +1008,15 @@ def expected_return(price, scenarios, hold_years, index_hurdle=0.09,
     total_p = sum(s["probability"] for s in scenarios)
     if abs(total_p - 1.0) > 1e-6:
         raise SystemExit(f"错误：三情景概率之和为 {total_p:.4f}，必须等于 1")
+    # AST-001（第四批前加固）：和=1 不代表分布合法——单值须落在 [0,1]。
+    # 实测 -0.3/1.1/0.2（和恰为 1）曾被接受，『亏损概率 -30%』让闸门二④
+    # 「亏损概率 ≤30%」恒判 ✓ 通过——挂 [E:] 证据指针也救不了非法分布。
+    _bad = [s for s in scenarios if not (0.0 <= float(s["probability"]) <= 1.0)]
+    if _bad:
+        raise SystemExit(
+            "错误：情景概率越出 [0,1]：" + "；".join(
+                f"{s['name']}={float(s['probability']):.4f}" for s in _bad)
+            + "——负概率/超 1 概率使期望 IRR、亏损概率等全部输出失去数学意义")
     if price <= 0:
         raise SystemExit("错误：现价必须为正")
     if not isinstance(hold_years, int) or hold_years < 1:
@@ -2135,6 +2144,14 @@ def main():
     p7.add_argument("-o", "--output", help="输出 JSON 路径")
 
     args = ap.parse_args()
+
+    # AST-001（第四批前加固）：非正预测期让 DCF 退化为纯终值公式（占比 100%），
+    # 实测 --years 0 / --years -3 曾可产出『预测期 -3 年』的完整估值。
+    if args.mode in ("implied-growth", "forward-value") and args.years < 1:
+        raise SystemExit(
+            f"错误：--years 须为 ≥1 的正整数（收到 {args.years}）。"
+            "非正预测期下估值完全由永续终值构成，『预测期 0/-3 年的估值』"
+            "没有任何解释力——终值占比警告不能替代源头拒绝")
 
     if args.mode == "expected-return":
         price, hold_years = args.price, args.hold_years
