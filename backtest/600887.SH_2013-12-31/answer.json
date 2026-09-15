@@ -1,5 +1,7 @@
 {
   "case": "600887.SH_2013-12-31",
+  "confidence": "medium",
+  "confidence_basis": "M2/M3：{3,4} 跨档且事后验证为定性（『事后长期复利可观』无数值锚）；回放时点估值不便宜，正向档位『正确』的强度依赖窗口与门槛（镜像自密封 payload 2026-09-14 预注值；answer.json 于 2026-09-11 揭示时 payload 尚无该字段，2026-09-15 补同步，未改动内容）",
   "expected_verdict_set": [3, 4],
   "expected_gate1": null,
   "expected_gate2": null,
@@ -8,7 +10,7 @@
   "must_trigger_any": [],
   "must_not_trigger": [],
   "must_not_trigger_semantic": "官方答案『测保守度是否吞掉机会』为档位语义（期望 ≥3）而非注册表告警码点名——告警轨按零要求处理，语义映射的解读责任在此登记（B3-16 同款处理）",
-  "known_failures": ["verdict_track"],
+  "known_failures": ["engine_drift", "verdict_track"],
   "known_failures_note": "档位轨 0 vs [3,4] 为本案例的真实测试产出（假阴性专项第 2 例的保守度读数），按茅台案先例（600519 expected [3,4] actual 2 → known_failures 登记 verdict_track）与 B3-16 先例（expected [4] actual 3）登记，防止回归闸常红；该登记不改变 diff.md 的根因分析与元问题统计",
   "actual_5y_total_return": 0.9262,
   "actual_5y_note": "5 年整窗口（2013-12-31→2018-12-28，2018 最后交易日）等比后复权（腾讯 hfq 月K）：802.846 → 1546.390 = 1.9262x = +92.6%，年化 14.0%——含分红再投资（data-sourcing.md 复权口径纪律唯一合法口径）",

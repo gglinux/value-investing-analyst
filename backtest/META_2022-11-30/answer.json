@@ -1,5 +1,7 @@
 {
   "case": "META_2022-11-30",
+  "confidence": "high",
+  "confidence_basis": "H1：事后 2 年 4.9x 已行情复核（117.05→570.99 美元，口径留痕）；极端悲观情绪下的正向标签与纪律同向，must_not_trigger 约束明确（镜像自密封 payload 2026-09-14 预注值；answer.json 于 2026-09-11 揭示时 payload 尚无该字段，2026-09-15 补同步，未改动内容）",
   "expected_verdict_set": [4],
   "expected_gate1": true,
   "expected_gate2": true,

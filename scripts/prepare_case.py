@@ -545,7 +545,10 @@ def snapshot_rules() -> dict:
 #                     （靶在箭前），verdict 落盘时重算摘要比对，不一致 →
 #                     verdict.json 须标 post_hoc_changed=true，三轨不计分。
 
-PREREGISTER_MIN_BATCH = 3   # 执行顺序 1→2→4→3→5：第四批先行、第三批随后，同受约束
+PREREGISTER_MIN_BATCH = 4   # 与 PROMPT.md Step 2.7 原文对齐（REQ-P2-09 第四批起强制）。
+                            # 2026-09-15 用户裁决：一版误写 3 属追溯生效（批三 09-11 执行早于
+                            # 09-14 落码），批三 6 案豁免并在 observations.md 登记规则版本漂移
+                            # 留痕（OBS-META-09），不改 verdict、不补 post_hoc 注册。
 PREREG_SPEC_VERSION = 1
 
 # canonical 参数集抽取键（scenarios.json 中分析师自定的决策输入）。

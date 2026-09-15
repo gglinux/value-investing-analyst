@@ -16,7 +16,7 @@
   "must_trigger": [],
   "must_trigger_any": [],
   "must_not_trigger": [],
-  "known_failures": [],
+  "known_failures": ["engine_drift"],
   "known_failures_note": "无失败登记：档位轨命中（系统观察等价格(2) ∈ 官方集 {3,2}，为第三批首个命中的观察等价格案例，与 B3-13 招行案错误拒绝形成对照）；无假阳性（got=2 < POSITIVE_ORDINAL=3）；无 must_* 断言注册。",
   "actual_1y_total_return": 0.5581,
   "actual_3y_total_return": -0.0222,

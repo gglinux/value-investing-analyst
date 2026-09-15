@@ -228,7 +228,8 @@
    "revenue": 41990.69,
    "net_income": 1717.21,
    "ocf": 2408.54,
-   "shares_diluted": 1598.65
+   "shares_diluted": 1598.65,
+   "source_tier": "edgar_xbrl"
   },
   {
    "year": 2011,
@@ -236,7 +237,8 @@
    "revenue": 37451.37,
    "net_income": 1809.22,
    "ocf": 3670.38,
-   "shares_diluted": 1598.65
+   "shares_diluted": 1598.65,
+   "source_tier": "edgar_xbrl"
   },
   {
    "year": 2010,
@@ -244,7 +246,8 @@
    "revenue": 29665.0,
    "net_income": 777.2,
    "ocf": 1474.57,
-   "shares_diluted": 799.32
+   "shares_diluted": 799.32,
+   "source_tier": "edgar_xbrl"
   },
   {
    "year": 2008,
@@ -252,7 +255,8 @@
    "revenue": 21658.59,
    "net_income": -1687.45,
    "ocf": 182.58,
-   "shares_diluted": 799.32
+   "shares_diluted": 799.32,
+   "source_tier": "edgar_xbrl"
   }
  ],
  "crosscheck_method": "各年报 PDF 原文/摘要'主要会计数据'表逐项转录；2010-2012 经 2012 年报对比列双源互证；2008-2010 经 2010 年报摘要与 2008 年报双源；9M13 三季报原文；发布日以巨潮/上交所披露时间为准",
@@ -294,5 +298,23 @@
   "price_source": "腾讯行情 web.ifzq.gtimg.cn 日K/月K fqt=0（东财 push2his 沙箱不可达，登记于 manifest）",
   "balance_sheet_extracts": "d_and_a/cash/total_debt/interest_expense/wc_change 五字段：2008 年报(巨潮 52003545) 2010 年报(59371130 含 2009 对比列) 2012 年报(62439793 含 2011 对比列) 合并现金流量表补充资料+合并资产负债表逐项提取，A 级；wc_change = −(存货减少+经营性应收减少+经营性应付增加) 即营运资本占用变动(增加为正)；interest_expense 为利润表财务费用净额近似(2010/2011 净收入为负——利息收入>支出，对 NOPAT 影响 <0.5%)；total_debt = 短期借款+一年内到期非流动负债+长期借款+应付债券(各年应付债券均空白——伊利无存续转债，佐证 financing_events 勘误)"
  },
- "dilution_note": "annual 行 shares_diluted 以期末股本登记（无 A 级加权摊薄口径单列）；稀释 EPS 与基本 EPS 差异（2011: 1.06 vs 1.13、2012: 1.00 vs 1.07）主因股票期权激励的潜在股份（假定行权法），2013 年内行权 172,056,022 股落地（三季报 A 级，@6.49 元）；伊利无存续可转债（2011/2012 年报应付债券科目均空白）；每股估值统一使用 2013Q3 末股本 2,042.91 百万股（三季报合并资产负债表 A 级直读），口径归一登记于 spike_notes"
+ "dilution_note": "annual 行 shares_diluted 以期末股本登记（无 A 级加权摊薄口径单列）；稀释 EPS 与基本 EPS 差异（2011: 1.06 vs 1.13、2012: 1.00 vs 1.07）主因股票期权激励的潜在股份（假定行权法），2013 年内行权 172,056,022 股落地（三季报 A 级，@6.49 元）；伊利无存续可转债（2011/2012 年报应付债券科目均空白）；每股估值统一使用 2013Q3 末股本 2,042.91 百万股（三季报合并资产负债表 A 级直读），口径归一登记于 spike_notes",
+ "meta": {
+  "schema_version": 2,
+  "unit": "百万",
+  "currency": "CNY",
+  "basis": "consolidated",
+  "period_type": "annual",
+  "data_vintage": "2013-04-26",
+  "source_ref": "伊利股份2012年年报（上交所/巨潮 62439793）",
+  "field_overrides": {},
+  "notes": [
+   "data_vintage：由 crosscheck/publish_date 最晚日期推断",
+   "source_ref：取自 crosscheck[0].source",
+   "basis=consolidated / period_type=annual 为存量底稿统一口径（annual 区块）",
+   "standard=CAS 依据底稿自带 accounting_standard 声明（2026-09-15 清账补齐，OBS-META-09 配套）"
+  ],
+  "migrated_by": "scripts/migrate_schema.py",
+  "standard": "CAS"
+ }
 }

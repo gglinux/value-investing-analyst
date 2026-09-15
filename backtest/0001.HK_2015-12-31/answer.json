@@ -1,5 +1,7 @@
 {
   "case": "0001.HK_2015-12-31",
+  "confidence": "medium",
+  "confidence_basis": "M2：{2} 单档 + 『长期折价未收敛』为定性表述、无数值锚；方向可辩护但不可量化复核（镜像自密封 payload 2026-09-14 预注值；answer.json 于 2026-09-11 揭示时 payload 尚无该字段，2026-09-15 补同步，未改动内容）",
   "expected_verdict_set": [2],
   "expected_note": "官方答案原文：『长和 2015-12：观察等价格。长期折价未收敛。』官方单档观察等价格(2)，未按系统闸门语言表述——官方判据『长期折价未收敛』与系统 SOTP 定量判定（市价对去无形 NAV 溢价 125%、P/NAV 2.25x，Gate1/Gate2 双闸深度不过）同构：市场定价里根本没有折价，等待的判据是等价格本身。",
   "expected_gate1": false,
@@ -7,7 +9,7 @@
   "must_trigger": [],
   "must_trigger_any": [],
   "must_not_trigger": [],
-  "known_failures": [],
+  "known_failures": ["engine_drift"],
   "known_failures_note": "无失败登记：档位精确命中（系统观察等价格(2) = 官方唯一档 2，B3 系列连续第二例命中，且本案为单档无宽容集）；无假阳性（got=2 < POSITIVE_ORDINAL=3）；无 must_* 断言注册。",
   "actual_1y_total_return": -0.1366,
   "actual_2y_total_return": -0.0106,

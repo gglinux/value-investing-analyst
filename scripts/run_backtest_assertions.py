@@ -153,6 +153,16 @@ RERUN_PARAMS = {
     # provenance.market_cap_million=null 为证）。
     "META_2022-11-30": {"moat": "wide", "iv_growth": "0.06"},
     "3333.HK_2020-06-30": {"moat": "none", "iv_growth": "0.0"},
+    # B3-13/B3-14/B3-15/B3-18 补登（2026-09-15，同 B3-16/17 先例：--rerun 模式下
+    # 四案反推未配置被跳过，GATE 族码全部来自揭示时代注记，漂移检测空转）。
+    # 值抄自各案 scenarios.json（单一事实源）。伊利另传 market_cap_million
+    # 79837.28（抄自冻结 metrics provenance）：其 engine_derived 含市值依赖码
+    # M_UNIT_SUSPECT，不传则该码假性消失（与本注释块顶部的政策一致）。
+    "600036.SH_2014-12-31": {"moat": "narrow", "iv_growth": "0.045"},
+    "601318.SH_2018-12-31": {"moat": "narrow", "iv_growth": "0.06"},
+    "0001.HK_2015-12-31": {"moat": "narrow", "iv_growth": "0.0"},
+    "600887.SH_2013-12-31": {"moat": "narrow", "iv_growth": "0.03",
+                             "market_cap_million": 79837.28},
 }
 
 

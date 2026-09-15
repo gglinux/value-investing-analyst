@@ -178,6 +178,12 @@ ALERTS = {
     # 分红除权影响、与当年 BPS 不可比，系统性低估谷底 PB 约 15-20%（福耀案实证：
     # 初版取 2.0-2.2，按不复权价重建后真实区间为 1.66-2.46）。
     "S2D_TROUGH_PB_BASIS": ("scenarios", "pb_trough 的谷底 PB 缺口径声明（不复权/前复权、BPS 时点）或未标注为期间最低点"),
+    # OBS-META-04（B3-17 恒大）：倍数底法（pe_trough_multiple/pb_trough）隐含
+    # 「公司继续经营、市场仍给倍数」前提。信用崩塌路径下股权价值趋零，倍数底
+    # 不存在——恒大悲观 3.90 HKD（−68.6%）vs 实际 −99.2%（2021 违约 → 2025-08
+    # 除牌 0.163），方向正确、幅度严重不足。门禁只要求「声明股权下限=0 的边界」
+    # 与「亏损概率不得低于信用风险暗示」，不改任何估值数字与阈值（非放松性改动）。
+    "S2F_CREDIT_COLLAPSE_FLOOR": ("scenarios", "信用风险主体（现金短债比 <1 / 刚性现金承诺 / 红旗≥3）用倍数底法做悲观情景，未登记 equity_floor_zero 边界声明，或 loss_probability 未反映违约路径"),
     "S3_STRESS_SUFFICIENCY": ("scenarios", "压力项 ≥2 且不得只压增速"),
     "S4_DISPERSION": ("scenarios", "离散度哨兵：悲观/基准 > 0.85"),
     "S5_NON_OPERATING_STRESS": ("scenarios", "非经营资产悲观折价未比基准更狠"),

@@ -1,4 +1,10 @@
 {
+  "0001.HK_2015-12-31": [
+    "GATE1_FAIL",
+    "GATE2_1_IRR_FAIL",
+    "GATE2_FAIL",
+    "TRIGGER_OUT_OF_HISTORY"
+  ],
   "000895.SZ_2019-06-30": [
     "GATE1_FAIL",
     "GATE2_1_IRR_FAIL",
@@ -24,6 +30,26 @@
     "NORM_DUAL_TRACK",
     "NORM_MARGIN_SHAPE",
     "NORM_STRUCTURAL_DECLINE"
+  ],
+  "3333.HK_2020-06-30": [
+    "GATE1_FAIL",
+    "GATE2_2_FLOOR_FAIL",
+    "GATE2_3_BEAR_FAIL",
+    "GATE2_FAIL",
+    "GATE2_UNRATED",
+    "M_DIVIDEND_ILLUSION",
+    "NORM_CYCLE_TROUGH",
+    "NORM_MARGIN_SHAPE",
+    "P0_R11_FINANCING_VS_RETURN",
+    "P0_R9_SHORT_DEBT_LONG_ASSET",
+    "S9_DIVIDEND_YIELD_DIMENSION"
+  ],
+  "600036.SH_2014-12-31": [
+    "GATE1_FAIL",
+    "GATE2_1_IRR_FAIL",
+    "GATE2_3_BEAR_FAIL",
+    "GATE2_FAIL",
+    "TRIGGER_REACHABLE"
   ],
   "600518.SH_2017-12-31": [
     "M_DILUTION",
@@ -56,6 +82,19 @@
     "M_FCF_QUALITY",
     "NORM_MARGIN_SHAPE"
   ],
+  "600887.SH_2013-12-31": [
+    "GATE1_FAIL",
+    "GATE2_1_IRR_FAIL",
+    "GATE2_2_FLOOR_FAIL",
+    "GATE2_3_BEAR_FAIL",
+    "GATE2_FAIL",
+    "M_DILUTION",
+    "M_SHARE_INFLATION",
+    "M_UNIT_SUSPECT",
+    "NORM_CYCLE_PEAK",
+    "NORM_DUAL_TRACK",
+    "NORM_MARGIN_SHAPE"
+  ],
   "601088.SH_2015-12-31": [
     "GATE1_FAIL",
     "GATE2_1_IRR_FAIL",
@@ -69,6 +108,12 @@
     "NORM_MARGIN_SHAPE",
     "SNAPSHOT_LEGACY_SCHEMA",
     "TRIGGER_REACHABLE"
+  ],
+  "601318.SH_2018-12-31": [
+    "GATE1_FAIL",
+    "GATE2_1_IRR_FAIL",
+    "GATE2_FAIL",
+    "TRIGGER_OUT_OF_HISTORY"
   ],
   "9984.T_2019-06-30": [
     "GATE1_FAIL",
@@ -97,6 +142,14 @@
     "NORM_BASE_UNUSABLE",
     "NORM_MARGIN_SHAPE",
     "S5_NON_OPERATING_STRESS"
+  ],
+  "META_2022-11-30": [
+    "GATE1_PASS",
+    "GATE2_PASS",
+    "GATE_EFFECTIVE_HURDLE_GAP",
+    "M_DILUTION",
+    "M_SHARE_INFLATION",
+    "NORM_MARGIN_SHAPE"
   ],
   "ZM_2021-10-31": [
     "GATE1_FAIL",
@@ -144,10 +197,12 @@
   "_fp_fn": {
     "fp_rate": 0.0,
     "fn_rate": 0.6666666666666666,
-    "abstain_rate": 0.4444444444444444,
+    "abstain_rate": 0.4666666666666667,
     "false_positives": [],
     "false_negatives": [
+      "600036.SH_2014-12-31",
       "600519.SH_2015-08-31",
+      "600887.SH_2013-12-31",
       "601088.SH_2015-12-31"
     ],
     "fp_control_n": 0,

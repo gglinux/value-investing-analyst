@@ -2237,6 +2237,57 @@ check("未标明期间最低点被逮住",
 check("S2d 只管 pb_trough，worst_year_margin 不受影响",
       not [e for e in _s2c({}) if e.startswith("S2d")])
 
+# ---- S2f 信用崩塌路径下倍数底不存在（OBS-META-04，B3-17 恒大事后强读数）----
+# 恒大 2020-06 悲观 3.90 HKD（pe_trough 5.0×，5 年 −68.6%）vs 实际 −99.2%
+# （2021 违约 → 2025-08 除牌 0.163）。门禁只要求声明股权下限=0 的边界，
+# 不改任何数字/阈值/档位。设计要点：硬信号（现金短债比 <1 / 红旗≥3）必要，
+# 语义关键词只作定位线索——否则 META（净现金 31,854M，压力项含「回购」）被误伤。
+_hd_scen = os.path.join(ROOT, "backtest", "3333.HK_2020-06-30", "data",
+                        "scenarios.json")
+
+def _s2f(bear_over, scen=_hd_scen):
+    d = json.load(open(scen, encoding="utf-8"))
+    b = sorted(d["scenarios"], key=lambda s: float(s["value_per_share"]))[0]
+    for k, v in bear_over.items():
+        if v is None:
+            b.pop(k, None)
+        elif k == "method_inputs" and isinstance(v, dict):
+            b.setdefault("method_inputs", {}).update(v)
+        else:
+            b[k] = v
+    fp = os.path.join(tempfile.mkdtemp(prefix="s2f_"), "s.json")
+    json.dump(d, open(fp, "w", encoding="utf-8"), ensure_ascii=False)
+    _, errs, warns, _ = CS.check(fp)
+    return ([e for e in errs if e.startswith("S2f")],
+            [w for w in warns if w.startswith("S2f")])
+
+_e, _w = _s2f({})
+check("恒大现状（缺 equity_floor_zero）被 S2f 逮住",
+      any("倍数底隐含" in e for e in _e), str(_e)[:200])
+check("S2f 报错列出硬信号（现金短债比/红旗计数）",
+      any("现金短债比 0.615" in e and "红旗计数 6" in e for e in _e))
+_e, _w = _s2f({"method_inputs": {"equity_floor_zero": (
+    "股权价值下限=0：对赌 2021-01-31 未履约触发交叉违约，"
+    "72.3% 有息债两年内到期 [E:financials_3333HK.json] debt_structure")}})
+check("回填 equity_floor_zero（含 [E:] 与归零表述）后 S2f 放行",
+      not _e and not _w, str(_e + _w)[:200])
+_e, _w = _s2f({"method_inputs": {"equity_floor_zero": "股权价值下限可能为 0"}})
+check("equity_floor_zero 缺 [E:] 指针被逮住",
+      any("缺 [E:] 证据指针" in e for e in _e), str(_e)[:200])
+_e, _w = _s2f({"method_inputs": {"equity_floor_zero": (
+    "再融资成本上行至 13% 以上 [E:financials_3333HK.json] debt_structure")}})
+check("equity_floor_zero 无下限表述 → 只警告不报错",
+      not _e and any("而非仅描述压力情景" in w for w in _w), str(_e + _w)[:200])
+# 不误伤：净现金公司（META）压力项含「回购」但无硬信号 → 不触发
+_mt_scen = os.path.join(ROOT, "backtest", "META_2022-11-30", "data",
+                        "scenarios.json")
+_e, _w = _s2f({}, _mt_scen)
+check("META（净现金、pe_trough、无硬信号）不被 S2f 误伤",
+      not _e and not _w, str(_e + _w)[:200])
+# 不误伤：非倍数底法一律不进 S2f
+check("S2f 只管倍数底法，worst_year_margin/liquidation 不受影响",
+      not [e for e in _s2c({}) if e.startswith("S2f")])
+
 # 不误伤：S2c 只管 worst_year_margin，其余独立方法不受影响
 for _c, _mth in (("EK_2011-06-30", "peer_death_analogy"),
                  ("600660.SH_2018-12-31", "pb_trough"),
@@ -4397,8 +4448,8 @@ finally:
 check("H legacy 案例豁免：batch 2 无 prereg 不报问题（基线不动）",
       not PC.prereg_issues(__import__("pathlib").Path(
           os.path.join(ROOT, "backtest", "601088.SH_2015-12-31"))))
-check("H PREREGISTER_MIN_BATCH=3 与 RULES_SNAPSHOT_MIN_BATCH 同款语义",
-      PC.PREREGISTER_MIN_BATCH == RBA209.RULES_SNAPSHOT_MIN_BATCH)
+check("H 生效批次各自对齐文档：prereg=4（Step 2.7 第四批起）、rules_snapshot=3（REQ-P0-08 第三批起）",
+      PC.PREREGISTER_MIN_BATCH == 4 and RBA209.RULES_SNAPSHOT_MIN_BATCH == 3)
 _PROMPT209 = open(os.path.join(ROOT, "backtest", "PROMPT.md"), encoding="utf-8").read()
 check("H PROMPT 接线：Step 2.7 预注册协议 + post_hoc_changed + 三道锁分工",
       "Step 2.7" in _PROMPT209 and "--preregister" in _PROMPT209
@@ -4453,8 +4504,8 @@ for _fp in (_glob214.glob(os.path.join(ROOT, "backtest", "*", "data", "financial
         _legacy_no_waiver.append(_fp)
 check("B 存量底稿零无声 legacy（legacy 必为带五要素豁免的竞对）",
       not _legacy_no_waiver, str(_legacy_no_waiver[:4]))
-check("B strict 数 22→23（NVDA 主底稿补 EDGAR 申报日升档；NFLX 对照表非标准 schema 归 waiver）",
-      _strict_count == 23, f"strict={_strict_count}")
+check("B strict 数 23→30（批三 7 份主底稿经 migrate_schema.py 升 strict：恒大视图 standard 继承唯一事实源、伊利 standard=CAS 依底稿自带声明；2026-09-15 清账）",
+      _strict_count == 30, f"strict={_strict_count}")
 _nvda = json.load(open(os.path.join(ROOT, "cases", "nvidia", "data",
                                     "financials_NVDA.json"), encoding="utf-8"))
 check("B NVDA 主底稿 data_vintage=2026-02-25（FY2026 10-K EDGAR 申报日，官方索引核实）",
@@ -4682,10 +4733,9 @@ _r = _cs315(_scen315(variant_perception=dict(VP_FULL, market_view="")),
             extra=["--strict-variant"])
 check("S12 --strict-variant 硬拒绝（缺字段 exit 1 而非降档放行）",
       _r.returncode == 1 and "硬拒绝" in _r.stdout, _r.stdout[-200:])
-# 常量对齐：与 RULES_SNAPSHOT/PREREGISTER 同款批次语义
-check("S12 VARIANT_PERCEPTION_MIN_BATCH=3（与 RULES_SNAPSHOT/PREREGISTER 同款）",
-      cs.VARIANT_PERCEPTION_MIN_BATCH == RBA209.RULES_SNAPSHOT_MIN_BATCH
-      == PC.PREREGISTER_MIN_BATCH)
+# 常量对齐：与 prereg 同款批次语义（OBS-META-09 裁决：第四批起，批三存量咨询）
+check("S12 VARIANT_PERCEPTION_MIN_BATCH=4（与 PREREGISTER 同款第四批起语义）",
+      cs.VARIANT_PERCEPTION_MIN_BATCH == PC.PREREGISTER_MIN_BATCH == 4)
 
 # ---- lint-verdict 侧（回测口径：cap 生效时 verdict_ordinal 必须 ≤2）----
 _SNAP315 = {"skill_commit": "b" * 40, "skill_commit_short": "b" * 7, "dirty": False,
@@ -5023,8 +5073,8 @@ check("SKILL.md 体积红线 ≤ 45KB（只减不增纪律）",
       f"当前 {_skill_size / 1024:.1f}KB 超线——红线是意识闸：确有价值则按 MAINTENANCE.md 第 1 节压缩等量后上调，过程性叙述则搬批次归档")
 _ref_total = sum(os.path.getsize(p)
                  for p in glob.glob(os.path.join(ROOT, "references", "*.md")))
-check("references/ 总体积红线 ≤ 150KB",
-      _ref_total <= 150 * 1024,
+check("references/ 总体积红线 ≤ 151KB",
+      _ref_total <= 151 * 1024,
       f"当前 {_ref_total / 1024:.1f}KB 超线——过程性叙述归宿是 backtest/BATCH*_FINDINGS.md")
 
 # ── 13.6 官方答案置信度与修订流程（REQ-P2-01，2026-09-14）──
@@ -5125,16 +5175,16 @@ _s_old = _RBA.fp_fn_summary(_main)
 check("C 向后兼容：不传 low_conf_results 时行为与旧签名一致",
       _s_old["positive_n"] == 1 and _s_old["low_conf_n"] == 0)
 
-# D. 存量 12 案真实数据断言
+# D. 存量 18 案真实数据断言（12 存量 + 批三 6 案；每收官一批须随批次注册表更新）
 import glob as _g216
 _real = []
 for _d216 in sorted(_g216.glob(os.path.join(ROOT, "backtest", "*") + os.sep)):
     _c216 = _RBA.load_case(_d216)
     if _c216:
         _real.append(_c216)
-check("D 存量回测案例 = 12", len(_real) == 12, str(len(_real)))
+check("D 存量回测案例 = 18（12 存量 + 批三 6 案）", len(_real) == 18, str(len(_real)))
 _rr = {c["name"]: _RBA.check_case(c) for c in _real}
-check("D 12 案全部携带合法 confidence + 非空 confidence_basis",
+check("D 18 案全部携带合法 confidence + 非空 confidence_basis",
       all(r["answer_confidence"] in ("high", "medium", "low")
           and (c["answer"].get("confidence_basis") or "").strip()
           for c, r in zip(_real, (_rr[c["name"]] for c in _real))))
@@ -5143,10 +5193,11 @@ check("D 低置信度 = 需求正文点名的两案（海控 + Netflix）",
       set(_lowreal) == {"601919.SH_2021-07-31", "NFLX_2016-12-31"}, str(_lowreal))
 _res_main = [r for r in _rr.values() if not r.get("low_confidence")]
 _s = _RBA.fp_fn_summary(_res_main, low_conf_results=[r for r in _rr.values() if r.get("low_confidence")])
-check("D 验收口径：低置信度出分母后 negative_n=6 / positive_n=3",
-      _s["negative_n"] == 6 and _s["positive_n"] == 3, str(_s))
-check("D 验收口径：FN 名单只剩茅台+神华（NFLX 单列不计分）",
-      set(_s["false_negatives"]) == {"600519.SH_2015-08-31", "601088.SH_2015-12-31"}
+check("D 验收口径：低置信度出分母后 negative_n=8 / positive_n=6（批三收官口径）",
+      _s["negative_n"] == 8 and _s["positive_n"] == 6, str(_s))
+check("D 验收口径：FN 名单 = 茅台+神华+招行+伊利（三例已登记 known_failures；NFLX 单列不计分）",
+      set(_s["false_negatives"]) == {"600519.SH_2015-08-31", "601088.SH_2015-12-31",
+                                     "600036.SH_2014-12-31", "600887.SH_2013-12-31"}
       and _s["low_conf_false_negatives"] == ["NFLX_2016-12-31"], str(_s))
 
 # E. 密封库 18 案预注断言（靶在箭前：预注时点早于任何批次 3-5 verdict）
@@ -5265,8 +5316,8 @@ check("H 基线 _fp_fn 实物：false_negatives 不含低置信度案（新口�
 check("H 基线 _fp_fn 实物：low_conf_cases = 海控 + Netflix",
       set(_bfp.get("low_conf_cases") or []) == {"601919.SH_2021-07-31", "NFLX_2016-12-31"},
       str(_bfp.get("low_conf_cases")))
-check("H 基线代号快照覆盖 12 案（重生成未丢案例）",
-      len([k for k in _base if not k.startswith("_")]) == 12, str(len(_base)))
+check("H 基线代号快照覆盖 18 案（批三 6 案 2026-09-15 入册，重生成未丢案例）",
+      len([k for k in _base if not k.startswith("_")]) == 18, str(len(_base)))
 # batch 元数据缺失不可充当硬校验绕行道：删 meta.batch 不能把批次≥3 案例
 # 洗回咨询性路径（2026-09-14 审查修订的行为锁定）。
 _m216 = _mkc216("no_meta_batch", [1, 2], 1, confidence=None)

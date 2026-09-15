@@ -165,6 +165,7 @@ _S_PREFIX_TO_CODE = [
     ("S2c", "S2C_WORST_YEAR_NOT_STRESS"),
     ("S2d", "S2D_TROUGH_PB_BASIS"),
     ("S2e", "S_DISCOUNT_RATE_FLOOR"),
+    ("S2f", "S2F_CREDIT_COLLAPSE_FLOOR"),
     # S10/S11/S12 必须排在 S1 之前（前缀首次匹配，"S10-IND" 会被 "S1" 吞掉）
     ("S12b", "VARIANT_PERCEPTION_CONFLICT"),
     ("S12", "VARIANT_PERCEPTION_INCOMPLETE_CAP"),
@@ -235,9 +236,11 @@ E_PTR = re.compile(r"\[E:[^\]]+\]")
 
 # ── S12 变异认知硬化（REQ-P3-03，Phase 4.5 门禁层）──
 # 「答不出就只能观察」从 SKILL.md 纪律进机器门禁。cap 语义对齐 S8：上限而非错误。
-VARIANT_PERCEPTION_MIN_BATCH = 3   # 第 3 批起（与 RULES_SNAPSHOT/PREREGISTER 同款
-                                   # 批次语义）scenarios 必须登记 variant_perception 块，
-                                   # 否则新案例干脆不写块就绕过全部校验
+VARIANT_PERCEPTION_MIN_BATCH = 4   # 2026-09-15 裁决（OBS-META-09）：一版写 3 属追溯生效
+                                   # （批三 09-11 执行早于 09-14 落码，且 PROMPT 无"第三批起"
+                                   # 文档锚点）。与 prereg（PROMPT Step 2.7 第四批起）同款批次
+                                   # 语义：第四批起 scenarios 必须登记 variant_perception 块，
+                                   # 否则新案例干脆不写块就绕过全部校验；批三存量 cap 咨询不阻塞。
 VARIANT_FIELDS = ("market_view", "my_view", "why_market_wrong",
                   "verification", "check_by")
 VARIANT_CAP = "观察等价格"           # 五字段不完整时的档位上限（ordinal 2）
@@ -748,7 +751,85 @@ def check(path, metrics_path=None, snapshot_path=None, strict_variant=False):
                 'S2d `trough_pb_evidence` 未标明价格样本为期间最低点：'
                 '福耀案初版曾误引当年上涨段价格当作谷底')
 
-    # ---- S2c 最差年必须是实证压力年（阶段四，茅台+苹果两案例硬证据）----    # `worst_year_margin` 原实现只重算算术、不问 worst_margin 从哪来，于是它
+    # ---- S2f 信用崩塌路径下倍数底不存在（OBS-META-04，B3-17 恒大事后强读数）----
+    # 倍数底法（pe_trough_multiple / pb_trough）隐含一个从未被写明的前提：
+    # **公司继续经营、市场仍愿意给它一个倍数**。信用崩塌路径下这个前提失效——
+    # 股权在清偿顺序末位，违约后趋零，「历史最低分位倍数」不是底。
+    #   恒大 2020-06：悲观 3.90 HKD = pe_trough 5.0× × eps 0.78（5 年 −68.6%），
+    #   实际 2021 违约 → 2025-08 除牌 0.163 HKD（−99.2%）。方向正确、幅度差 30pct。
+    #   同案 method_note 自己写了「若对赌以股份结算每股再降 1/3」却未叠加进主值。
+    # 门禁边界（刻意窄，非放松性改动也非收紧数字）：**只要求声明，不改任何数字、
+    # 不改任何阈值、不影响任何档位**。
+    #   ① 不强制把悲观值改成 0——排除档不依赖情景精度（恒大档位由红旗线+双闸门
+    #      +moat=none 三路独立收敛），强制归零会在「有信用风险但未违约」的标的上
+    #      制造虚假的深度下行，反而污染观察/买入档；
+    #   ② 只要求 method_inputs 登记 `equity_floor_zero` 边界声明（股权下限=0 的
+    #      可能性 + 触发条件 + [E:] 指针），把「倍数底的前提」显式化；
+    #   ③ 触发条件只取 scenarios 内已有的机器可判信号，不新增任何数据管线。
+    # 方向不对称说明为什么它长期未被发现：排除档上悲观失真无裁决后果，但同一盲区
+    # 出现在**观察/买入档**时，悲观值就是安全边际本体——30pct 的幅度缺口直接等于
+    # 下行保护虚高。
+    if m in ("pe_trough_multiple", "pb_trough"):
+        # 触发采用「硬信号必要 + 语义信号加强」的双层结构。只用关键词会误伤：
+        # META B3-16 悲观情景压力项写「回购收缩+现金不分配」，含「回购」二字却是
+        # 净现金 31,854M 的公司——把它判成信用风险主体是纯噪声。因此：
+        #   硬信号（任一即可，必要条件）：现金短债比 <1 / 红旗计数 ≥3；
+        #   语义信号（可选，只进报错文本作定位线索，不单独触发）。
+        # 两者都取自 scenarios 内已有文本，不新增数据管线。
+        _blob = f"{bear.get('probability_evidence') or ''} {_mn or ''}"
+        _hard_hits, _soft_hits = [], []
+        _m_csd = re.search(r"现金短债比\s*[:：]?\s*(\d+(?:\.\d+)?)", _blob)
+        if _m_csd:
+            try:
+                if float(_m_csd.group(1)) < 1.0:
+                    _hard_hits.append(f"现金短债比 {_m_csd.group(1)} < 1")
+            except ValueError:
+                pass
+        _m_rf = re.search(r"红旗\s*(\d+)\s*/\s*\d+", _blob)
+        if _m_rf:
+            try:
+                if int(_m_rf.group(1)) >= 3:
+                    _hard_hits.append(f"红旗计数 {_m_rf.group(1)} ≥ 3")
+            except ValueError:
+                pass
+        _CREDIT_KEYS = ("refinanc", "再融资", "违约", "default", "对赌",
+                        "偿债", "挤兑", "交叉违约", "刚性现金")
+        _stressed_raw = bear.get("stressed_assumptions") or []
+        if isinstance(_stressed_raw, list):
+            for _s in _stressed_raw:
+                _st = str(_s)
+                if any(k in _st.lower() or k in _st for k in _CREDIT_KEYS):
+                    _soft_hits.append(f"压力项「{_st[:40]}」")
+                    break
+        info["s2f_credit_signals"] = _hard_hits + _soft_hits
+        if _hard_hits:
+            _mi2 = bear.get("method_inputs") or {}
+            _floor = _mi2.get("equity_floor_zero")
+            _floor_txt = ("" if _floor is None else
+                          (" ".join(str(v) for v in _floor.values())
+                           if isinstance(_floor, dict) else str(_floor)))
+            if not _floor_txt.strip():
+                errors.append(
+                    f"S2f 悲观情景用倍数底法（`{m}`）但标的存在信用崩塌信号"
+                    f"（{'；'.join(_hard_hits + _soft_hits)}）——倍数底隐含「公司继续经营、"
+                    f"市场仍给倍数」前提，违约路径下股权价值趋零、倍数底不存在。"
+                    f"必须在 `method_inputs.equity_floor_zero` 登记边界声明："
+                    f"①股权价值下限=0 的可能性；②触发该路径的具体条件"
+                    f"（违约/交叉违约/对赌以股份结算等）；③[E:] 指针。"
+                    f"本门禁不要求改悲观值，只要求把前提写明——恒大 2020-06 实证："
+                    f"悲观 −68.6% vs 实际 −99.2%，30pct 缺口全部来自这个未声明的前提")
+            elif not E_PTR.search(_floor_txt):
+                errors.append(
+                    "S2f `method_inputs.equity_floor_zero` 缺 [E:] 证据指针："
+                    "股权下限=0 的触发条件（债务到期结构/刚性现金承诺/交叉违约条款）"
+                    "必须可溯源，否则边界声明退化为一句免责话术")
+            elif not any(k in _floor_txt for k in ("0", "零", "归零", "趋零")):
+                warnings.append(
+                    "S2f `equity_floor_zero` 已登记但未出现「0/归零」的下限表述"
+                    "——请确认该字段声明的是股权价值下限，而非仅描述压力情景")
+
+    # ---- S2c 最差年必须是实证压力年（阶段四，茅台+苹果两案例硬证据）----
+    # `worst_year_margin` 原实现只重算算术、不问 worst_margin 从哪来，于是它
     # 机械地取了序列最小值。对利润率长期上行的公司，序列最早那年必然最低——
     # 但那年低是因为**公司当年还小**，不是因为危机。
     #   茅台：取 2006 年 31.5%（序列首年、公司幼年期）。而真实政策冲击

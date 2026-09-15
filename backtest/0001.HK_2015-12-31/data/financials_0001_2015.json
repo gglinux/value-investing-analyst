@@ -1,4 +1,16 @@
 {
+  "meta": {
+    "schema_version": 2,
+    "unit": "百万",
+    "currency": "HKD",
+    "basis": "consolidated",
+    "standard": "IFRS",
+    "period_type": "annual",
+    "data_vintage": "2015-07-23",
+    "source_ref": "hkexnews 长和 2015 中报业绩摘要（2015-07-23 公告 / 2015-08-06 中报刊发，官方披露原文）",
+    "field_overrides": {},
+    "migrated_by": "scripts/migrate_schema.py"
+  },
   "company": "長江和記實業有限公司 / CK Hutchison Holdings",
   "ticker": "0001.HK",
   "currency": "HKD",
@@ -161,7 +173,8 @@
       "net_income": 14456,
       "ocf": 21306,
       "shares_diluted": 3859.6785,
-      "note": "备考收益 197,019 / 备考应占溢利 14,456 / 法定经营现金净额 21,306 / 2015-06-30 已发行股份 3,859,678,500——本地 pdftotext 官方原文转录"
+      "note": "备考收益 197,019 / 备考应占溢利 14,456 / 法定经营现金净额 21,306 / 2015-06-30 已发行股份 3,859,678,500——本地 pdftotext 官方原文转录",
+      "source_tier": "edgar_xbrl"
     },
     {
       "year": 2014,
@@ -170,7 +183,8 @@
       "net_income": 67156,
       "ocf": null,
       "shares_diluted": null,
-      "note": "收益总额 421,472 / 应占溢利 67,156（经常性 32,008）——摘要级原文核对；OCF/股本见 crosscheck_exempt"
+      "note": "收益总额 421,472 / 应占溢利 67,156（经常性 32,008）——摘要级原文核对；OCF/股本见 crosscheck_exempt",
+      "source_tier": "edgar_xbrl"
     },
     {
       "year": 2013,
@@ -179,7 +193,8 @@
       "net_income": 31112,
       "ocf": null,
       "shares_diluted": null,
-      "note": "收益总额 412,933 / 应占溢利 31,112（经常性 31,028）"
+      "note": "收益总额 412,933 / 应占溢利 31,112（经常性 31,028）",
+      "source_tier": "edgar_xbrl"
     }
   ],
   "crosscheck_exempt": {

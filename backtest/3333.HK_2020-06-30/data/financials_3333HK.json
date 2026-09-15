@@ -1,4 +1,19 @@
 {
+  "meta": {
+    "schema_version": 2,
+    "unit": "百万",
+    "currency": "CNY",
+    "basis": "consolidated",
+    "standard": "HKFRS",
+    "period_type": "annual",
+    "data_vintage": "2020-04-28",
+    "source_ref": "FY2018 业绩公布（HKEX 披露易 2019-03-26）附註10 每股盈利（EPS 分子=归母）/現金流量資料；FY2019 年报五年財務概要重列印证",
+    "field_overrides": {},
+    "notes": [
+      "原 unit 字段附注：_cny"
+    ],
+    "migrated_by": "scripts/migrate_schema.py"
+  },
   "company": "中国恒大集团（3333.HK）",
   "ticker": "3333.HK",
   "currency": "CNY",
@@ -301,7 +316,8 @@
       "revenue": 311022,
       "net_income": 24372,
       "ocf": -150973,
-      "shares_diluted": 13580
+      "shares_diluted": 13580,
+      "source_tier": "edgar_xbrl"
     },
     {
       "year": 2018,
@@ -309,7 +325,8 @@
       "revenue": 466196,
       "net_income": 37390,
       "ocf": 54749,
-      "shares_diluted": 13631
+      "shares_diluted": 13631,
+      "source_tier": "edgar_xbrl"
     },
     {
       "year": 2019,
@@ -317,7 +334,8 @@
       "revenue": 477561,
       "net_income": 17280,
       "ocf": -67357,
-      "shares_diluted": 13252
+      "shares_diluted": 13252,
+      "source_tier": "edgar_xbrl"
     }
   ],
   "crosscheck_exempt": {},

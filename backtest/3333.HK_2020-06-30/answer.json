@@ -1,5 +1,7 @@
 {
   "case": "3333.HK_2020-06-30",
+  "confidence": "high",
+  "confidence_basis": "H1：2021 年违约（不可辩驳事实），Phase 0 排雷语义完全验证（镜像自密封 payload 2026-09-14 预注值；answer.json 于 2026-09-11 揭示时 payload 尚无该字段，2026-09-15 补同步，未改动内容）",
   "expected_verdict_set": [0],
   "expected_verdict_note": "官方答案原文『Phase 0 直接排雷』——Phase 0 层面终止=排除档（ordinal 0）。官方未逐项点名闸门读数，expected_gate1/expected_gate2=false 为『排雷→不存在买入结论→两闸门不可能通过』的语义推导登记",
   "expected_gate1": false,
@@ -8,7 +10,7 @@
   "must_trigger_note": "官方答案原文『must_trigger = 杠杆与资金链风险』——映射到注册断言 DEBT_LIQUIDITY_STRESS（码集 {P0_R11_FINANCING_VS_RETURN, P0_R9_SHORT_DEBT_LONG_ASSET}，交集即满足；系统两码均 manually_recorded 挂载）。官方未点名其余断言，系统的 GATE1_FAILED/GATE2_FAILED/NOT_CONVERGING_FLOOR_LOW 命中是排除档位的同构产物，不额外列入 must_trigger（避免把系统行为反向写成官方要求）",
   "must_not_trigger": [],
   "must_not_trigger_semantic": "官方答案未点名任何 must_not_trigger——零名单按零要求处理；系统 P0_V*（一票否决组）零触发（PwC 无保留意见+无造假处罚登记于截断日信息集），与官方『排雷』走红旗路径而非欺诈否决路径一致",
-  "known_failures": [],
+  "known_failures": ["engine_drift"],
   "actual_5y_total_return": -0.99185,
   "actual_5y_price_total_return": -0.99185,
   "actual_5y_partial_note": "标的已于 2025-08-25 退市，标准 5y 窗口（2020-06-30→2025-06-30）以最后可得成交价计算：2020-06-30 收盘 20.00 HKD（系统快照双源核对）→ 2024-01-29 停牌前 0.163 HKD（证券时报：连续停牌 18 个月未达任一复牌指引，2025-08-22 最后上市日/最后一单成交 0.163 HKD，最终市值 21.5 亿港元）→ 0.163/20.00 − 1 = −99.2%。停牌后至窗口末（2025-06-30）无成交价，按停牌价 0.163 结转——窗口内含 −92%（2021 年底）级的持续下跌，无有效反弹段",
