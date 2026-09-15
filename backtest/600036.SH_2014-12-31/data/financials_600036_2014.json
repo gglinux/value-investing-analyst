@@ -265,7 +265,8 @@
       "net_income": 36129.0,
       "npl_balance": 9173.0,
       "core_tier1_ratio": 0.0822,
-      "source_tier": "edgar_xbrl"
+      "source_tier": "cninfo_pdf",
+      "source_tier_note": "修正：REQ-P0-07 补录时由有缺陷的 source_tier 推断生成（转引描述含「年报」被误判官方源），REQ-P0-09 修复推断函数后重新回填 2026-09-15"
     },
     {
       "year": 2012,
@@ -274,7 +275,8 @@
       "net_income": 45273.0,
       "npl_balance": 11694.0,
       "core_tier1_ratio": 0.0849,
-      "source_tier": "edgar_xbrl"
+      "source_tier": "cninfo_pdf",
+      "source_tier_note": "修正：REQ-P0-07 补录时由有缺陷的 source_tier 推断生成（转引描述含「年报」被误判官方源），REQ-P0-09 修复推断函数后重新回填 2026-09-15"
     },
     {
       "year": 2013,
@@ -283,7 +285,8 @@
       "net_income": 51743.0,
       "npl_balance": 18332.0,
       "core_tier1_ratio": 0.0927,
-      "source_tier": "edgar_xbrl"
+      "source_tier": "cninfo_pdf",
+      "source_tier_note": "修正：REQ-P0-07 补录时由有缺陷的 source_tier 推断生成（转引描述含「年报」被误判官方源），REQ-P0-09 修复推断函数后重新回填 2026-09-15"
     },
     {
       "year": 2014,
@@ -292,7 +295,8 @@
       "net_income": 45804.0,
       "npl_balance": 26923.0,
       "core_tier1_ratio": 0.0948,
-      "source_tier": "edgar_xbrl"
+      "source_tier": "cninfo_pdf",
+      "source_tier_note": "修正：REQ-P0-07 补录时由有缺陷的 source_tier 推断生成（转引描述含「年报」被误判官方源），REQ-P0-09 修复推断函数后重新回填 2026-09-15"
     }
   ]
 }

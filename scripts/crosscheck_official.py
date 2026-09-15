@@ -62,7 +62,8 @@ NON_VALUE_KEYS = {"year", "source", "source_tier", "note", "notes"}
 
 # 源优先级（1=最高）
 SOURCE_PRIORITY = {
-    "edgar_xbrl": 1, "cninfo_pdf": 1, "hkex_pdf": 1,   # 监管官方原文
+    "edgar_xbrl": 1, "cninfo_pdf": 1, "hkex_pdf": 1,   # 监管官方原文（美/A股/港股）
+    "edinet_pdf": 1,                                      # 日股：EDINET 有价证券報告書/決算短信
     "company_ir": 2,                                      # 公司官网原文
     "westock": 3, "ifind": 3,                             # A 级接口
     "research_report": 4, "wind_screenshot": 4,           # B 级二手
@@ -73,7 +74,11 @@ _TIER_HINTS = [
     (1, ("10-k", "10k", "20-f", "20f", "edgar", "xbrl", "companyfacts", "巨潮", "cninfo",
          "披露易", "hkex", "年报", "年度报告", "审计报告", "annual report", "sec ", "决算短信",
          "tanshin", "业绩公告", "季报", "半年报", "主要会计数据", "对比栏", "对照列", "官方原文",
-         "finalpage", "accession", "filed ")),
+         "finalpage", "accession", "filed ",
+         # 报表体裁词（REQ-P0-09 补）：TSM「审计报表」原命中不到任何档、走「推不出记 5」
+         # 兜底，把经审计原文误当兜底源。体裁词只在官方披露文件里出现。
+         "审计报表", "经审核", "合并利润表", "合并资产负债表", "合并现金流量表",
+         "综合损益表", "綜合損益表", "业绩快报", "内含价值", "有价证券报告书")),
     (2, ("官网", "投资者关系", "ir.", "investor", "股东信", "shareholder letter", "公告原文",
          "fuyaogroup", "港版")),
     (3, ("westock", "ifind", "wind", "choice", "东方财富", "接口", "api", "tushare", "行情终端")),
@@ -81,10 +86,44 @@ _TIER_HINTS = [
     (5, ("搜索", "web", "媒体", "新闻", "media", "news", "百度", "google", "新浪", "转引")),
 ]
 
+# ── 转引否决词（REQ-P0-09：源分级的乐观偏置修复）──
+# 原实现从 tier1 起「首次命中即返回」，而「年报/年度报告」这类词在**任何**转引描述里
+# 都必然出现——媒体报道的本来就是年报数据。后果是越低质量的源越容易被判成最高等级：
+#   实测「新浪财经转引年报数据」→ tier 1（命中「年报」），而既有测试用不含官方词的
+#   短串「新浪转引」→ tier 5，恰好绕过了这个缺陷，使其长期不可见。
+# 修法不是删官方词（会误伤「2014年报对比栏官方原文」这类真官方源），而是让**转引结构**
+# 优先于**被转引对象**：出现下列词说明该描述的取数动作经过了第三方之手。
+# 边界（刻意窄，避免假警报）：
+#   ① 只认转引动作词，不认媒体机构名——「hkexnews」含 news 子串却是港交所官方站，
+#      「新浪转引值经查与官方不符，弃用并记录差异」是正确的排除记录而非引用；
+#   ② 描述里若同时出现官方原文指针（[E:] 指向 cninfo/hkexnews/sec 等），说明官方源是
+#      主源、二手仅作交叉验证，不降级——「官方原文为主要源；另有行情终端为第二独立源」
+#      是双源交叉的优良实践，降级它等于惩罚做了额外验证的人。
+_RESTATED_MARKERS = ("转引", "转载", "报道：", "报道:", "报道（", "报道(", "年报报道")
+_OFFICIAL_PTR = ("cninfo.com.cn", "hkexnews", "www1.hkexnews", "sec.gov", "static.cninfo",
+                 "finalpage", "accession")
+# 弃用语义：描述里明说该二手值已被查证否决/未采纳——这是主动排除，不是依赖。
+# 000898 实证：「新浪vFD转引值1,453经查与官方不符，弃用并记录差异」是优良实践，
+# 降级它等于惩罚做了额外验证的人。
+_REJECTED_MARKERS = ("弃用", "不符", "未采纳", "已排除", "剔除", "废弃", "存疑弃")
+# 报表体裁词：说明引用体裁，但不证明取数渠道。孤证出现时不足以判定官方源。
+_REPORT_GENRE = ("审计报表", "经审核", "合并利润表", "合并资产负债表", "合并现金流量表",
+                 "综合损益表", "綜合損益表", "内含价值", "有价证券报告书")
+_REPORT_GENRE_LOW = tuple(g.lower() for g in _REPORT_GENRE)
+
+
+def _has_official_pointer(low: str) -> bool:
+    """描述内是否含指向监管官方原文的 URL/凭证——有则二手词只是交叉验证的补充源。"""
+    return any(p in low for p in _OFFICIAL_PTR)
+
 
 def source_tier(entry_or_text) -> int:
     """crosscheck 条目（或 source 文本）→ 源优先级 tier。显式 `source_tier` 优先，
-    其次按关键词推断；推不出记 5（最低），逼执行者写清出处。"""
+    其次按关键词推断；推不出记 5（最低），逼执行者写清出处。
+
+    转引否决优先于官方词（REQ-P0-09）：描述含转引动作且无官方原文指针时，
+    无论是否提到「年报」，一律按二手源（tier 5）计。
+    """
     if isinstance(entry_or_text, dict):
         st = entry_or_text.get("source_tier")
         if st in SOURCE_PRIORITY:
@@ -95,8 +134,22 @@ def source_tier(entry_or_text) -> int:
     else:
         text = str(entry_or_text or "")
     low = text.lower()
+    # 转引结构否决：先判「怎么拿到的」，再判「拿的是什么」
+    if (any(m in text for m in _RESTATED_MARKERS)
+            and not _has_official_pointer(low)
+            and not any(r in text for r in _REJECTED_MARKERS)):
+        return 5
+    # 报表体裁词（审计报表/合并利润表…）只说明「引用的是什么体裁」，不证明取数经过
+    # 官方渠道。TSM 实证：`[E:filings/tsm_fy2025_consolidated_report.htm] 审计报表`
+    # 指向的 filings/ 目录并不存在，原标注 web_search 才是诚实的。因此体裁词必须
+    # 伴随可核验凭证（监管站点 URL / 公告编号 / 表格号 / 巨潮·披露易等渠道名）才升 tier1。
+    _genre_only = (any(g in text for g in _REPORT_GENRE)
+                   and not any(h in low for h in _TIER_HINTS[0][1] if h not in _REPORT_GENRE_LOW)
+                   and not _has_official_pointer(low))
     for tier, hints in _TIER_HINTS:
         if any(h in low for h in hints):
+            if tier == 1 and _genre_only:
+                continue  # 体裁词孤证：不升官方源，继续找更低档位的证据
             return tier
     return 5
 

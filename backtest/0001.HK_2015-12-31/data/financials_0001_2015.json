@@ -174,7 +174,8 @@
       "ocf": 21306,
       "shares_diluted": 3859.6785,
       "note": "备考收益 197,019 / 备考应占溢利 14,456 / 法定经营现金净额 21,306 / 2015-06-30 已发行股份 3,859,678,500——本地 pdftotext 官方原文转录",
-      "source_tier": "edgar_xbrl"
+      "source_tier": "hkex_pdf",
+      "source_tier_note": "修正：REQ-P0-07 补录时由有缺陷的 source_tier 推断生成（转引描述含「年报」被误判官方源），REQ-P0-09 修复推断函数后重新回填 2026-09-15"
     },
     {
       "year": 2014,
@@ -184,7 +185,8 @@
       "ocf": null,
       "shares_diluted": null,
       "note": "收益总额 421,472 / 应占溢利 67,156（经常性 32,008）——摘要级原文核对；OCF/股本见 crosscheck_exempt",
-      "source_tier": "edgar_xbrl"
+      "source_tier": "hkex_pdf",
+      "source_tier_note": "修正：REQ-P0-07 补录时由有缺陷的 source_tier 推断生成（转引描述含「年报」被误判官方源），REQ-P0-09 修复推断函数后重新回填 2026-09-15"
     },
     {
       "year": 2013,
@@ -194,7 +196,8 @@
       "ocf": null,
       "shares_diluted": null,
       "note": "收益总额 412,933 / 应占溢利 31,112（经常性 31,028）",
-      "source_tier": "edgar_xbrl"
+      "source_tier": "hkex_pdf",
+      "source_tier_note": "修正：REQ-P0-07 补录时由有缺陷的 source_tier 推断生成（转引描述含「年报」被误判官方源），REQ-P0-09 修复推断函数后重新回填 2026-09-15"
     }
   ],
   "crosscheck_exempt": {

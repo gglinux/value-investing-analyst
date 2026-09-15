@@ -274,7 +274,8 @@
       "net_income": 89088,
       "shares_diluted": 18280.24141,
       "value_note": "营收890,882/归母净利89,088/股本18,280,241,410股为年报原文数值；stcn条目为年报原文经证券时报e公司报道双源转述核对",
-      "source_tier": "edgar_xbrl"
+      "source_tier": "cninfo_pdf",
+      "source_tier_note": "修正：REQ-P0-07 补录时由有缺陷的 source_tier 推断生成（转引描述含「年报」被误判官方源），REQ-P0-09 修复推断函数后重新回填 2026-09-15"
     },
     {
       "year": 2017,
@@ -286,7 +287,8 @@
       "net_income": 89088,
       "shares_diluted": 18280.24141,
       "value_note": "营收890,882/归母净利89,088/股本18,280,241,410股为年报原文数值；stcn条目为年报原文经证券时报e公司报道双源转述核对",
-      "source_tier": "edgar_xbrl"
+      "source_tier": "media",
+      "source_tier_note": "修正：REQ-P0-07 补录时由有缺陷的 source_tier 推断生成（转引描述含「年报」被误判官方源），REQ-P0-09 修复推断函数后重新回填 2026-09-15"
     },
     {
       "year": 2015,
@@ -315,7 +317,8 @@
       "revenue": 619990,
       "net_income": 54203,
       "value_note": "2015年报：营收619,990百万/归母净利54,203百万（原文）；本条目主证据为偿二代回溯EV 551,514 vs 偿一代552,853",
-      "source_tier": "edgar_xbrl"
+      "source_tier": "hkex_pdf",
+      "source_tier_note": "修正：REQ-P0-07 补录时由有缺陷的 source_tier 推断生成（转引描述含「年报」被误判官方源），REQ-P0-09 修复推断函数后重新回填 2026-09-15"
     }
   ],
   "spike_notes": {

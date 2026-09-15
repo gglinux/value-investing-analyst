@@ -624,3 +624,22 @@
 - **效力边界**：登记的是「漂移已查明原因」，不是「漂移无害」的价值观背书——GATE2_PASS（平安）等判定正确性已由 fe34717 独立裁决；S2f/S5 新码语义由各自落码记录背书。
 - **as-built**：answer.json 5 案 known_failures 追加 `engine_drift`；assertion_baseline.json 重生成入册 18 案（存量 12 案代号集合零差异复核通过）；伊利 RERUN_PARAMS 补市值传参。
 - **状态**：已实施（2026-09-15）。
+
+## OBS-META-12 ｜ source_tier 分级推断的乐观偏置：二手源被批量标成监管官方源（REQ-P0-09，数据根基类，2026-09-15）
+
+- **现象**：全库 100 条 `crosscheck` 条目的显式 `source_tier` 中，32 条标注错误——9 个非美股案例（港股/A股/日股）被标成 `edgar_xbrl`（美国 SEC 专用），其中 **2 条出处实为媒体报道却取得 tier 1 监管官方源待遇**：601318 平安 2017（证券时报e公司/中国金融新闻网，无官方 PDF 背书）、601088 神华 2014（数值 2,483.6 亿即中证网报道值）。
+- **根因（三层，逐层放大）**：
+  - **① 推断函数乐观偏置**：`source_tier` 从 tier1 起遍历 `_TIER_HINTS` 且**首次命中即返回**，而「年报/年度报告」在**任何**转引描述里都必然出现——媒体报道的本来就是年报数据。后果是越低质量的源越容易被判最高等级。实测「新浪财经转引年报数据」→ tier 1。
+  - **② 缺陷经工具批量放大**：错标条目的 `source_tier_note` 自证来路为「由 `crosscheck_official.source_tier` 关键词推断（REQ-P0-07 存量补录 2026-09-14）」——不是手工笔误，而是用有缺陷的函数批量生成，一次性固化到全库；且显式标签会**短路**推断函数，使错误永久化。
+  - **③ 守卫断言恒真**：`tests/run_tests.py` D 段「显式 source_tier 与推断函数一致」传入的是整个 dict，而函数对带显式 `source_tier` 的 dict 直接返回 `SOURCE_PRIORITY[st]`，左右两边恒等——**该断言从未真正校验过任何东西**。旧测试另用不含官方词的短串「新浪转引」→5 恰好绕过缺陷，使其长期不可见。三个官方源 tier 值同为 1，进一步在数值上掩盖了辖区语义错误。
+- **实质影响**：平安那条媒体源提供 `investment_return` / `net_investment_return` / `investment_assumption` 三个**仅见于媒体报道**的字段，而它们直接驱动保险案的**利差 Alert 线**（`compute_metrics_insurance.py`：`investment_return - investment_assumption` 近 3 年均值 < 0.5%）。未经官方背书的数字以官方源身份进入风险判定。修复后两案核对均正确报出「source tier 5（B/C 级二手源）」告警。
+- **as-built**：
+  - `crosscheck_official.py`：新增**转引结构否决**（`_RESTATED_MARKERS`，转引/转载/报道 优先于被转引对象词）+ 三类防误伤豁免（官方 URL 指针在场 / 主动弃用二手值的排除记录 / 官方主源+终端第二独立源）；新增**报表体裁词孤证不升级**（`_REPORT_GENRE`，体裁词须伴随可核验凭证）；`SOURCE_PRIORITY` 补 `edinet_pdf`（此前日股无合法 tier1 取值，只能错标 `edgar_xbrl`）。
+  - `backfill_source_tier.py`（新增，一次性工具）：按修复后推断 + 辖区确证回填 32 条。辖区判定**只用确证不猜**——文本凭证优先，退回 backtest 案例目录的交易所后缀；`cases/` 下无后缀目录（tencent/pingan_china/cmb/tsm 共 9 条）**原样挂账不动**，因「默认美国」正是本次事故成因。
+  - `tests/run_tests.py`：D 段恒真断言改为传 `source` 文本的真校验；新增 D2 段 12 项回归锁（乐观偏置靶心、5 项防误伤、体裁孤证、日股 key、非美股辖区正确性全库扫描）。
+- **改动边界**：仅改 `source_tier` / `source_tier_note` 两个 meta 字段，**零财务数值变化**（10 份底稿逐条对比 `annual` 与非 meta 字段全等，已机器验证）。978 项测试全绿、`--rerun --baseline` exit 0、`gate2_ab --assert` exit 0，18 案代号集合零差异。
+- **未清挂账（第四批前处理或显式挂账）**：
+  - `cases/` 9 条辖区不明（tencent 3 / pingan_china 3 / cmb 1 / tsm 2）：`source` 只写「年报」未写披露渠道，正确值须查 filings 或原始公告人工确认。腾讯/平安/招行非 SEC 报送主体，现标 `edgar_xbrl` 仍属错误，但不由脚本猜测。
+  - TSM `[E:filings/*.htm]` 指针悬空：`cases/tsm/filings/` 目录不存在，2024/2025 两条原标注 `web_search` 是诚实的（数据实际来自检索）。属独立的**证据指针可核验性**问题，不在本次分级修复范围，不以改标签方式抹平。
+- **元教训**：数据源分级是所有分析的根基，而本次三层根因指向同一模式——**用有缺陷的工具批量生成数据，再用恒真的断言守卫它**。守卫断言必须验证「真实推断路径」而非「存储值自反」；凡「显式值优先」的短路设计，都要单独校验显式值本身的正确性。
+- **状态**：已实施（2026-09-15），挂账两项如上。

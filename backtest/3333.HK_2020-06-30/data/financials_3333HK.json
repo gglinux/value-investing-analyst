@@ -317,7 +317,8 @@
       "net_income": 24372,
       "ocf": -150973,
       "shares_diluted": 13580,
-      "source_tier": "edgar_xbrl"
+      "source_tier": "hkex_pdf",
+      "source_tier_note": "修正：REQ-P0-07 补录时由有缺陷的 source_tier 推断生成（转引描述含「年报」被误判官方源），REQ-P0-09 修复推断函数后重新回填 2026-09-15"
     },
     {
       "year": 2018,
@@ -326,7 +327,8 @@
       "net_income": 37390,
       "ocf": 54749,
       "shares_diluted": 13631,
-      "source_tier": "edgar_xbrl"
+      "source_tier": "hkex_pdf",
+      "source_tier_note": "修正：REQ-P0-07 补录时由有缺陷的 source_tier 推断生成（转引描述含「年报」被误判官方源），REQ-P0-09 修复推断函数后重新回填 2026-09-15"
     },
     {
       "year": 2019,
@@ -335,7 +337,8 @@
       "net_income": 17280,
       "ocf": -67357,
       "shares_diluted": 13252,
-      "source_tier": "edgar_xbrl"
+      "source_tier": "hkex_pdf",
+      "source_tier_note": "修正：REQ-P0-07 补录时由有缺陷的 source_tier 推断生成（转引描述含「年报」被误判官方源），REQ-P0-09 修复推断函数后重新回填 2026-09-15"
     }
   ],
   "crosscheck_exempt": {},

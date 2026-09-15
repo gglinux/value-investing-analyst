@@ -4530,9 +4530,9 @@ check("C NFLX 逐实体对照表（year='FY2012' 字符串）不再触发校验�
       _nflx_peer.returncode == 0 and "FATAL" not in _nflx_peer.stdout,
       (_nflx_peer.stdout + _nflx_peer.stderr)[-200:])
 
-# D. source_tier 存量补录：80 条全覆盖且与推断函数一致（同一事实源）
+# D. source_tier 存量补录：全覆盖且与推断函数一致（同一事实源）
 import crosscheck_official as CCO214  # noqa: E402
-_tier_missing, _tier_conflict = [], 0
+_tier_missing, _tier_conflict, _tier_conflict_rows = [], 0, []
 for _fp in (_glob214.glob(os.path.join(ROOT, "backtest", "*", "data", "financials_*.json"))
             + _glob214.glob(os.path.join(ROOT, "cases", "*", "data", "financials_*.json"))):
     _fd = json.load(open(_fp, encoding="utf-8"))
@@ -4543,12 +4543,69 @@ for _fp in (_glob214.glob(os.path.join(ROOT, "backtest", "*", "data", "financial
         if not _st:
             _tier_missing.append((_fp, _cc.get("year")))
         elif _st in CCO214.SOURCE_PRIORITY:
-            if CCO214.source_tier(_cc) != CCO214.SOURCE_PRIORITY[_st]:
+            # REQ-P0-09：必须拿 **source 文本** 走推断再比对。
+            # 旧写法 `CCO.source_tier(_cc)` 传的是整个 dict，而该函数对带显式
+            # source_tier 的 dict 直接返回 SOURCE_PRIORITY[st]（短路），于是左右
+            # 两边恒等——这条断言曾长期恒真，放过了 30 条错标（港股/A股/日股被标
+            # edgar_xbrl，含 2 条媒体源被当 tier1 官方源）。
+            if (CCO214.source_tier(str(_cc.get("source") or ""))
+                    != CCO214.SOURCE_PRIORITY[_st]):
                 _tier_conflict += 1
-check("D crosscheck 条目 source_tier 零缺失（22 份 80 条补录）",
+                _tier_conflict_rows.append(
+                    (os.path.basename(os.path.dirname(os.path.dirname(_fp))),
+                     _cc.get("year"), _st, str(_cc.get("source") or "")[:60]))
+check("D crosscheck 条目 source_tier 零缺失",
       not _tier_missing, str(_tier_missing[:4]))
-check("D 显式 source_tier 与推断函数一致（补录用同一关键词表）",
-      _tier_conflict == 0, f"conflicts={_tier_conflict}")
+check("D 显式 source_tier 与文本推断 tier 一致（REQ-P0-09：传 source 文本，非 dict）",
+      _tier_conflict == 0, f"conflicts={_tier_conflict} {_tier_conflict_rows[:3]}")
+
+# D2. REQ-P0-09 乐观偏置回归锁：转引结构否决优先于「年报」这类被转引对象词。
+# 原实现从 tier1 起首次命中即返回，「新浪财经转引年报数据」因含「年报」被判 tier1；
+# 而旧测试用不含官方词的短串「新浪转引」→5 恰好绕过，使缺陷长期不可见。
+check("D2 转引否决：『新浪财经转引年报数据』→ tier5（含「年报」也不得升为官方源）",
+      CCO214.source_tier("新浪财经转引年报数据") == 5,
+      f"got={CCO214.source_tier('新浪财经转引年报数据')}")
+check("D2 转引否决：媒体年报报道（无官方指针）→ tier5",
+      CCO214.source_tier("证券时报e公司/中国金融新闻网2018-03-21/22年报报道") == 5)
+check("D2 防误伤：hkexnews 官方站（含 news 子串）仍为 tier1",
+      CCO214.source_tier("hkexnews 长和 2015 中报业绩摘要（官方披露原文）") == 1)
+check("D2 防误伤：官方原文为主源 + 行情终端作第二独立源 → 仍 tier1（不惩罚交叉验证）",
+      CCO214.source_tier(
+          "茅台2014年年度报告摘要官方原文(cninfo 2015-04-21)为主要源；"
+          "营业总收入32,217,213,741.08元另有行情终端数据为第二独立源") == 1)
+check("D2 防误伤：主动弃用二手值的排除记录 → 仍 tier1（优良实践不降级）",
+      CCO214.source_tier(
+          "2014年年度业绩公告（披露易ltn20150331035）；"
+          "新浪vFD转引值1,453经查与官方不符，弃用并记录差异") == 1)
+check("D2 防误伤：官方 URL 指针在场时，附带转载描述不降级",
+      CCO214.source_tier(
+          "中国神华《2013年度报告》原文（巨潮资讯finalpage 2014-03-29）"
+          "及业绩快报（新浪财经转载）") == 1)
+check("D2 体裁词孤证不升官方源：TSM『审计报表』+悬空 filings 指针 → tier5（原标注 web_search 才诚实）",
+      CCO214.source_tier(
+          "[E:filings/tsm_fy2025_consolidated_report.htm] 审计报表") == 5)
+check("D2 体裁词 + 可核验凭证 → tier1（20-F 在场）",
+      CCO214.source_tier("[E:filings/tsm-2024-20f.htm] MD&A") == 1)
+check("D2 体裁词 + 披露日/页码凭证 → tier1（不误伤真官方原文）",
+      CCO214.source_tier("2013年报（2014-03披露）合并利润表（净利息收入98,913）") == 1
+      and CCO214.source_tier(
+          "FY2025 年报内含价值分析（p.74-82）[E:filings/pingan-2025-annual.pdf]") == 1)
+check("D2 日股官方源 key 已注册（edinet_pdf），此前日股无合法 tier1 取值只能错标",
+      CCO214.SOURCE_PRIORITY.get("edinet_pdf") == 1)
+# 辖区正确性：港股/A股/日股条目不得标成美国 SEC 的 edgar_xbrl
+_juris_bad = []
+for _fp in _glob214.glob(os.path.join(ROOT, "backtest", "*", "data", "financials_*.json")):
+    _case = os.path.basename(os.path.dirname(os.path.dirname(_fp)))
+    _exp = ("hkex_pdf" if ".HK" in _case.upper() else
+            "cninfo_pdf" if (".SH" in _case.upper() or ".SZ" in _case.upper()) else
+            "edinet_pdf" if ".T_" in _case.upper() else None)
+    if not _exp:
+        continue
+    for _cc in (json.load(open(_fp, encoding="utf-8")).get("crosscheck") or []):
+        if isinstance(_cc, dict) and _cc.get("source_tier") == "edgar_xbrl":
+            _juris_bad.append((_case, _cc.get("year")))
+check("D2 辖区正确性：非美股 backtest 条目无一标为 edgar_xbrl（美国 SEC 专用）",
+      not _juris_bad, f"{len(_juris_bad)} 条: {_juris_bad[:5]}")
 
 # E. investment_income 补录 → sotp_screen 在真实管道常驻（软银失真检出/腾讯诚实不触发）
 _tx_fin = os.path.join(ROOT, "cases", "tencent", "data", "financials_TENCENT.json")
@@ -4883,6 +4940,7 @@ _EXEMPT = {
     "prepare_case.py": "回放隔离协议资产（答案密封/揭示闸门），由回测会话在 Step 4 调用，非分析主流程",
     "schema_meta.py": "底稿元数据 schema 校验模块（REQ-P0-03），被 validate_data.py import",
     "migrate_schema.py": "存量底稿 meta 块迁移工具（REQ-P0-03 配套），一次性迁移脚本，非分析主流程",
+    "backfill_source_tier.py": "存量 source_tier 标签回填工具（REQ-P0-09 配套），修复推断函数乐观偏置后的一次性回填，非分析主流程",
     "forensic_screen.py": "Phase 0 排雷算术化（REQ-P0-02），在 SKILL.md Phase 0 与 forensic-checklist.md 中引用",
     "gate2_ab.py": "REQ-P0-04 闸门二新旧口径 A/B 回归工具，由 tests/run_tests.py 10.6 调用，非分析主流程",
 }
@@ -5073,8 +5131,13 @@ check("SKILL.md 体积红线 ≤ 45KB（只减不增纪律）",
       f"当前 {_skill_size / 1024:.1f}KB 超线——红线是意识闸：确有价值则按 MAINTENANCE.md 第 1 节压缩等量后上调，过程性叙述则搬批次归档")
 _ref_total = sum(os.path.getsize(p)
                  for p in glob.glob(os.path.join(ROOT, "references", "*.md")))
-check("references/ 总体积红线 ≤ 151KB",
-      _ref_total <= 151 * 1024,
+# 152KB（2026-09-15，REQ-P0-09）：data-sourcing.md 新增源分级纪律（辖区一致性 +
+# 转引否决 + 体裁孤证 + 显式值短路警告），属机器校验规则的文档锚点，有判断价值。
+# 按 MAINTENANCE.md §1 先压缩等量过程性叙述 ~470B（实证标的名清单、PDD/港股/腾讯
+# 逐项读数、股息率归一化实现细节、单位不统一举例表→内联），剩余净增为规则本体，
+# 再压即切纪律内容，故最小上调 1KB。同 OBS-META-10 程序。
+check("references/ 总体积红线 ≤ 152KB",
+      _ref_total <= 152 * 1024,
       f"当前 {_ref_total / 1024:.1f}KB 超线——过程性叙述归宿是 backtest/BATCH*_FINDINGS.md")
 
 # ── 13.6 官方答案置信度与修订流程（REQ-P2-01，2026-09-14）──
