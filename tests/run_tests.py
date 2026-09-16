@@ -5387,8 +5387,8 @@ check("E 密封库 18 案全部预注合法置信度 + 依据 + 日期",
       len(_annot) == 18 and all(c in ("high", "medium", "low") and b and d
                                 for _, c, b, d in _annot), str(_annot[:3]))
 _lv = [c for _, c, _, _ in _annot]
-check("E 预注分布：high 12 / medium 6 / low 0（第三四五批无 L 类争议案）",
-      _lv.count("high") == 12 and _lv.count("medium") == 6 and _lv.count("low") == 0)
+check("E 预注分布：high 10 / medium 8 / low 0（2026-09-16 OBS-META-13 修订：GE/福特 high→medium；第三四五批无 L 类争议案）",
+      _lv.count("high") == 10 and _lv.count("medium") == 8 and _lv.count("low") == 0)
 
 # F. --annotate-confidence 行为（预注 / 已揭示拒绝 / 非法值拒绝 / 重封保留）
 import prepare_case as _PC216  # noqa: E402（与 14.13 的 PC 同一模块缓存）
