@@ -122,6 +122,10 @@ ALERTS = {
     # ---- 定量画像（compute_metrics.py 自动）----
     "M_DILUTION": ("metrics", "稀释：收入总量 CAGR 显著高于每股 CAGR"),
     "M_SHARE_INFLATION": ("metrics", "股本膨胀：期间股本增至 > 1.3 倍"),
+    # P1-5（REQ-P3-06，2026-09-17）：稀释与股本口径机制化
+    "M_SHARES_BASIS_BREAK": ("metrics", "股本口径断裂：shares_basis 跨行不一致或 >1.8 倍无登记跳变（平安实证：H 股口径切总股本，EVPS 腰斩而机器零拦截）"),
+    "M_SBC_DILUTION": ("metrics", "SBC 稀释：sbc/revenue ≥10%（近5年均值 ≥8%）——每股价值高估一个安全边际量级（10-20%）"),
+    "M_CONVERTIBLE_OVERHANG": ("metrics", "可转债悬顶：convertibles/有息负债 ≥50%——潜在转股稀释未入分母"),
     "M_DIVIDEND_ILLUSION": ("metrics", "分红幻觉：股东回报未被累计自由现金流覆盖（<1.0x）"),
     "M_SHAREHOLDER_RETURN_THIN_COVER": ("metrics", "股东回报覆盖偏薄（FCF 覆盖 <1.5x）"),
     "M_FCF_QUALITY": ("metrics", "利润含金量：近 5 年中 ≥3 年 FCF/净利 < 0.6"),

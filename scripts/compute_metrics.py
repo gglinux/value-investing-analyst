@@ -34,6 +34,14 @@ compute_metrics.py — 价值投资分析统一口径指标计算器（Phase 2 �
       "cash": 200.0,                 # 货币资金+现金等价物
       "goodwill": 50.0,              # 商誉（可选）
       "shares_diluted": 100.0,       # 摊薄股本（百万股）
+      "shares_basis": null,          # 股本口径声明（P1-5）：total=总股本/h_a_only=仅H股/
+                                     #   a_only=仅A股/basic=基本股本。跨行口径必须一致，
+                                     #   平安实证：2014-2023 填 H 股 8,890、2024 起改
+                                     #   总股本 18,210，EVPS 从 148.75 腰斩到 78.13——
+                                     #   同底稿内分母换了口径，机器零拦截
+      "sbc": null,                   # 股权激励费用（P1-5，可选；高 SBC 公司每股价值
+                                     #   高估 10-20%，恰是一个安全边际的量级）
+      "convertibles": null,          # 可转债余额（P1-5，可选；转股稀释的潜在分母增量）
       "dividends_paid": 40.0,        # 现金分红（可选）
       "buyback": 0.0,                # 回购金额（可选）
       "equity_raised": 0.0           # 增发募资（可选）
@@ -64,7 +72,8 @@ DEFINITIONS = {
     "OwnerEarnings": "净利润 + 折旧摊销 − 维持性capex − 营运资本增加；维持性capex 缺失时兜底用近5年 D&A 均值近似（warnings 标注）",
     "FCF": "经营现金流净额 − 资本开支",
     "ROE": "归母净利润 ÷ 期初期末平均归母净资产",
-    "每股口径": "全部使用当年摊薄股本；CAGR 用期初/期末值几何年化",
+    "每股口径": "全部使用当年摊薄股本；CAGR 用期初/期末值几何年化。P1-5：底稿须用 shares_basis 声明股本口径（total/h_a_only/a_only/basic），跨年口径断裂会被口径哨兵拦截",
+    "DilutionTrack": "P1-5 稀释追踪：sbc/revenue 与 convertibles/debt 的相对规模 + 底稿 shares_basis 口径一致性。sbc 长期 >10% 收入 = 每股价值高估一个安全边际量级（REQ-P3-06）",
     "NormalizedEarnings": "正常化盈利 = 全期平均利润率 × 最新一期收入。用于消除周期位置对基期的扭曲；"
                           "另给中位数口径（mid-cycle）作交叉验证。周期性判定见 normalization.cyclicality",
     "周期位置": "最新一期利润率 ÷ 全期平均利润率。>1.25 判为周期高位（当期利润不可直接外推），"
@@ -613,6 +622,11 @@ def compute(data, market_cap=None):
         wc, ocf = get(r, "wc_change"), get(r, "ocf")
         eq, debt, cash = get(r, "total_equity"), get(r, "total_debt"), get(r, "cash")
         shares = get(r, "shares_diluted")
+        # P1-5（REQ-P3-06）：稀释三字段进指标序列——sbc/convertibles 不再只躺在
+        # 底稿里，shares_basis 供口径哨兵（见下方 M_SHARES_BASIS_BREAK）。
+        sbc = get(r, "sbc")
+        convertibles = get(r, "convertibles")
+        shares_basis = r.get("shares_basis")
 
         if ebit is not None:
             nopat = ebit * (1 - tax)
@@ -709,6 +723,11 @@ def compute(data, market_cap=None):
             "fcf_to_ni": safe_div(fcf, ni),
             "ocf_to_ni": safe_div(ocf, ni),
             "shares_diluted": shares,
+            "shares_basis": shares_basis,
+            "sbc": sbc,
+            "sbc_to_revenue": safe_div(sbc, rev),
+            "convertibles": convertibles,
+            "convertibles_to_debt": safe_div(convertibles, debt),
             "rev_ps": safe_div(rev, shares),
             "eps": safe_div(ni, shares),
             "oe_ps": safe_div(oe, shares),
@@ -852,6 +871,77 @@ def compute(data, market_cap=None):
     if scc is not None and scc > 1.3:
         alerts.add("M_SHARE_INFLATION", f"股本膨胀警报：期间股本增至 {scc:.2f} 倍")
 
+    # ---- P1-5（REQ-P3-06）：股本口径断裂哨兵 ----
+    # 平安实证（EVPS 148.75 → 78.13 腰斩的根因）：2014-2023 填 H 股 8,890 百万股、
+    # 2024 起改总股本 18,210——同底稿内分母换了口径，所有每股指标跨年不可比，
+    # 而机器零拦截（口径断裂被读作「业务变化」）。三重判定：
+    #   ① 显式声明断裂：shares_basis 跨行不一致（h_a_only → total）；
+    #   ② 隐式断裂嫌疑：股本同比跳变 >80% 且无 spike_notes/split 登记（拆股/增发
+    #     须有解释；A+H 双口径切换的典型特征就是翻倍级跳变）；
+    #   ③ 已登记豁免：spike_notes 含 <year>.shares_basis 键 → 只留痕不告警。
+    _bases = [(s["year"], s.get("shares_basis")) for s in series
+              if s.get("shares_basis")]
+    _distinct_bases = {b for _, b in _bases}
+    _spike_notes_keys = set((data.get("spike_notes") or {}).keys())
+    if len(_distinct_bases) > 1:
+        _switch_y = next(y for y, b in _bases if b != _bases[0][1])
+        _key = f"{_switch_y}.shares_basis"
+        if _key in _spike_notes_keys:
+            warnings.append(
+                f"股本口径切换已登记（{_bases[0][1]} → {_bases[0][1] if False else _bases[-1][1]}"
+                f" @ {_switch_y}）：spike_notes 已解释，跨年每股指标仍不可比，"
+                "报告须分口径段呈现")
+        else:
+            alerts.add(
+                "M_SHARES_BASIS_BREAK",
+                f"股本口径断裂警报：shares_basis 跨行不一致 {_distinct_bases}"
+                f"（{_switch_y} 年起切换）——每股指标分母换了口径，跨年 CAGR/EVPS "
+                "全部不可比。若为 A+H 上市分部口径切换（平安实证：H 股 8,890 → "
+                "总股本 18,210，EVPS 腰斩），须统一口径重建序列或在 spike_notes "
+                f"登记 `{_key}` 并在报告分口径披露")
+    # 隐式断裂嫌疑：未声明口径却有翻倍级跳变（拆股与口径切换的形态区分靠登记）
+    _share_jump = [(s["year"], s["shares_diluted"]) for i, s in enumerate(series)
+                   if i > 0 and s.get("shares_diluted") is not None
+                   and series[i - 1].get("shares_diluted") not in (None, 0)
+                   and (s["shares_diluted"] / series[i - 1]["shares_diluted"]) > 1.8]
+    for _jy, _jv in _share_jump:
+        _jkey = f"{_jy}.shares_diluted"
+        if _jkey not in _spike_notes_keys and not _bases:
+            alerts.add(
+                "M_SHARES_BASIS_BREAK",
+                f"股本口径断裂嫌疑：{_jy} 年股本 {series[[_s['year'] for _s in series].index(_jy) - 1]['shares_diluted']:,.0f}"
+                f" → {_jv:,.0f}（>1.8 倍跳变）且未声明 shares_basis、无 spike_notes 登记——"
+                "典型形态是 A+H 双口径切换或大比例转增；拆股请登记解释，"
+                "口径切换须统一重建（平安实证：EVPS 148.75 → 78.13 腰斩即此形态）")
+
+    # ---- P1-5（REQ-P3-06）：SBC 稀释警报 ----
+    # 高 SBC 公司（多数美股科技股）忽略稀释会让每股价值高估 10-20%——恰好一个
+    # 安全边际的量级，25% MoS 实际可能只剩 5%。这是静默误差：公式全对，分母错。
+    # 触发线：最新年 sbc/revenue ≥10% 或 5 年均值 ≥8%（Netflix/Zoom 量级）。
+    _sbc_latest = next((s["sbc_to_revenue"] for s in reversed(series)
+                        if s.get("sbc_to_revenue") is not None), None)
+    _sbc_hist = [s["sbc_to_revenue"] for s in series[-5:]
+                 if s.get("sbc_to_revenue") is not None]
+    _sbc_avg = (sum(_sbc_hist) / len(_sbc_hist)) if _sbc_hist else None
+    if (_sbc_latest is not None and _sbc_latest >= 0.10) or \
+            (_sbc_avg is not None and _sbc_avg >= 0.08):
+        _lvl = _sbc_latest if _sbc_latest is not None else _sbc_avg
+        alerts.add(
+            "M_SBC_DILUTION",
+            f"SBC 稀释警报：sbc/revenue 最新 {_sbc_latest:.1%}、近5年均值 "
+            f"{(_sbc_avg if _sbc_avg is not None else _lvl):.1%}（≥10%/8% 触发线）——"
+            "股权激励是真实的股东成本：摊薄股本若未含 RSU 期权增量，每股价值"
+            "高估 10-20%（一个安全边际的量级）。估值须用含 SBC 的口径复核"
+            "（OE 减 sbc 或改用摊薄股本），报告须单列披露")
+    _conv_latest = next((s["convertibles_to_debt"] for s in reversed(series)
+                         if s.get("convertibles_to_debt") is not None), None)
+    if _conv_latest is not None and _conv_latest >= 0.5:
+        alerts.add(
+            "M_CONVERTIBLE_OVERHANG",
+            f"可转债悬顶警报：convertibles/有息负债 {_conv_latest:.0%}（≥50%）——"
+            "潜在转股稀释未入分母时，每股价值按「无稀释世界」计算；"
+            "须按转股价测算稀释后股本并纳入估值下行情景")
+
     # 分红幻觉警报（v2.12，所有者视角核心）：股东回报未被自由现金流覆盖
     # 存在性前置：分红幻觉预设分红存在。底稿确认零分红（cum_dividends ≤ 0，
     # 区别于缺失=None）时该告警语义不适用——股东回报未被覆盖的事实仍在
@@ -985,6 +1075,8 @@ def compute(data, market_cap=None):
         "oe_ps": col("oe_ps"),
         "bvps": col("bvps"),
         "shares_diluted": col("shares_diluted"),
+        "sbc": col("sbc"),
+        "convertibles": col("convertibles"),
     }
 
     # ---- 所有者收益率（v2.13）：把"整家买下来划不划算"变成数字 ----

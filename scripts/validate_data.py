@@ -62,11 +62,17 @@ import sys
 from datetime import date, datetime, timedelta
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from schema_meta import layered_acceptance, validate_full  # noqa: E402
+from schema_meta import layered_acceptance, validate_full, has_price_series  # noqa: E402
 # REQ-P0-07 阈值与豁免格式单点定义在 crosscheck_official（生产端），本文件（消费端）只 import，
 # 避免两处 TOL 各自漂移。
-from crosscheck_official import (TOL, TOL_BALANCE_SHEET, TOL_OTHER,  # noqa: E402,F401
-                                 CORE_FIELDS as CROSSCHECK_KEYS, exempt_detail)
+# P1-9（2026-09-17）：消化死导入——TOL_BALANCE_SHEET/TOL_OTHER 自 fable 验收段落地后
+# 一直带着 F401 标记无人使用，双源循环却硬编码 TOL。改为统一走 tol_for() 三级分级
+# （命门 1% block / 资产负债表 3% warn / 其他 5% register），与生产端 crosscheck_official
+# 同一裁决口径。TOL 仍保留 import：三表勾稽是底稿内部一致性检查（非对源比对），
+# 沿用 1% 紧容差。
+from crosscheck_official import (TOL,  # noqa: E402
+                                 CORE_FIELDS as CROSSCHECK_KEYS, exempt_detail,
+                                 tol_for as _tol_for)
 import crosscheck_official as _CC  # noqa: E402
 
 SPIKE_KEYS = ["revenue", "net_income", "ocf", "capex", "total_equity", "shares_diluted"]
@@ -339,6 +345,10 @@ def main():
     # 1.6 信息时效检查：分析日距最新登记的财报发布日超过 100 天时，
     # 极可能存在未消化的新季报/盈利预告（腾讯 AI capex +176% 是季中爆出的教训）。
     # 提示分析师核对最新季报，核对结果写入 manifest 的 latest_quarter_checked。
+    # P1-9（2026-09-17）：基准日接 replay_date——回测场景下 date.today() 是错的：
+    # 回放 2018 年康美时 today 是 2026 年，「距今 2900+ 天」的时效告警全是噪声。
+    # 回放时点（replay_date）已在上文 REQ-P0-06 段解析（参数 > meta.json > 路径名），
+    # 此处直接复用：回测以 replay_date 为"分析日"，实盘才用 date.today()。
     pub_dates = [r.get("publish_date") for r in rows if r.get("publish_date")]
     if pub_dates:
         try:
@@ -349,10 +359,13 @@ def main():
             # 且因裸崩在 report() 之前，表现为「0 错误 0 警告 + 退出码 1」的
             # 静默失败（NVDA 底稿正是此形态）。模块级已 import，直接用。
             latest_pub = max(datetime.strptime(d, "%Y-%m-%d").date() for d in pub_dates)
-            gap = (date.today() - latest_pub).days
+            asof = (datetime.strptime(replay_date, "%Y-%m-%d").date()
+                    if is_backtest else date.today())
+            gap = (asof - latest_pub).days
             if gap > 100:
                 warns.append(
-                    f"信息时效：底稿最新发布日 {latest_pub}（距今 {gap} 天 > 100 天）——"
+                    f"信息时效：底稿最新发布日 {latest_pub}（距分析日 {asof} "
+                    f"{'（回放时点）' if is_backtest else ''}{gap} 天 > 100 天）——"
                     "必须核对期间的季报/盈利预告是否有未消化的剧变，"
                     "核对结果写入 manifest 的 `latest_quarter_checked` 字段")
         except ValueError:
@@ -361,6 +374,25 @@ def main():
         errors.append("annual 为空")
         report(errors, warns, args)
         return
+    # 1.7 fqt 口径哨兵（P1-9，OBS-000895-02 落码）：底稿登记了复权口径为
+    # 等差前复权（qfq_arithmetic）却同时声明用于收益计算——数学上必然算错。
+    # 东财 fqt=1 前复权是等差复权：除权日的减项直接从历史价格上扣，
+    # 序列两点比值 ≠ 区间总回报（差一个分红再投资项）。此前该认识只存在于
+    # schema_meta.py 的文字记录里，机器层面零拦截——「序列比值当总回报」
+    # 静默发生。校验双门：① meta.used_for_return_calc=true 且 adjusted=
+    # qfq_arithmetic → ERROR；② 底稿带 price 序列字段但复权口径缺失 → WARN 逼声明。
+    _adj = str((data.get("meta") or {}).get("adjusted") or "").strip()
+    if _adj == "qfq_arithmetic" and (data.get("meta") or {}).get("used_for_return_calc"):
+        errors.append(
+            "复权口径哨兵（OBS-000895-02）：meta.adjusted=qfq_arithmetic（等差前复权）"
+            "却声明 used_for_return_calc——等差前复权序列的比值 ≠ 区间总回报"
+            "（分红项被直接从历史价上减除），收益计算唯一合法口径为 hfq_ratio。"
+            "改 meta.adjusted 或撤销 used_for_return_calc")
+    if has_price_series(data) and not _adj:
+        warns.append(
+            "复权口径哨兵：底稿含价格序列但 meta.adjusted 未声明——收益计算"
+            "唯一合法口径为 hfq_ratio（等比后复权）；若序列来自东财 fqt=1 "
+            "（等差前复权），直接取比值会系统性低估总回报（OBS-000895-02）")
 
     # === A1 年度覆盖哨兵：过了法定申报死线最新年报年仍落后 →
     # 禁止静默用季度加总/老数据充当年报年报年（GOOG 实证：抽取脚本静默丢年被
@@ -383,7 +415,11 @@ def main():
     else:
         max_year = max(_int_years)
     wait = issuer_wait_days(data)
-    today = date.today()
+    # P1-9（2026-09-17）：A1 死线判定接 replay_date。实盘以 date.today() 为基准；
+    # 回测以回放时点为"今天"——回放 2018-12-31 的康美时，2025 年报死线远未到，
+    # 按 2026 年的 today 判「最新年报年落后」是纯误报（底稿停在 2018 是应该的）。
+    today = (datetime.strptime(replay_date, "%Y-%m-%d").date()
+             if is_backtest else date.today())
     if max_year is not None:
         expected = max_year
         for cand in range(max_year, max_year + 2):
@@ -506,18 +542,29 @@ def main():
             if roe is not None and roe < 0.05:
                 warns.append(f"{y}: ROE {roe:.1%} < 5%——保险经营水准低，请复核利差/承保利润真实性")
         # 保险命门突变检测（独立索引循环，避免嵌套里 index() 错位）
+        # P1-5（2026-09-17）：键补 shares_diluted 与 shares_basis——EVPS 的分母
+        # 就是股本，保险底稿的股本口径断裂（平安实证：H 股 8,890 → 总股本
+        # 18,210，EVPS 148.75 → 78.13）此前不在突变检测键里，腰斩零拦截。
         notes_i = data.get("spike_notes", {}) or {}
         for i in range(1, len(rows)):
             prev, cur = rows[i - 1], rows[i]
             y = cur.get("year")
-            for k in ["embedded_value", "nbv", "dividend_per_share", "solvency_ratio"]:
+            for k in ["embedded_value", "nbv", "dividend_per_share", "solvency_ratio",
+                      "shares_diluted"]:
                 a, b = g(prev, k), g(cur, k)
                 if a is None or b is None or abs(a) < 1e-9:
                     continue
                 chg = (b - a) / abs(a)
                 if abs(chg) > 0.5 and f"{y}.{k}" not in notes_i:
+                    _basis_sw = (str(prev.get("shares_basis") or "") !=
+                                 str(cur.get("shares_basis") or ""))
                     errors.append(f"{y}: 保险命门 `{k}` 同比变动 {chg:+.0%} > ±50%（保险行业正常区间<30%），"
-                                  f"spike_notes 缺少 `{y}.{k}` 的原因标注")
+                                  f"spike_notes 缺少 `{y}.{k}` 的原因标注"
+                                  + ("——**该行 shares_basis 口径与前一年不同"
+                                     f"（{prev.get('shares_basis') or '未声明'} → "
+                                     f"{cur.get('shares_basis') or '未声明'}），"
+                                     "疑为 A+H 双口径切换（平安实证形态），"
+                                     "每股指标跨年不可比，须统一口径重建**" if _basis_sw else ""))
     else:
         # 2 & 3. 勾稽与单位 sanity（逐年）
         for r in rows:
@@ -622,18 +669,21 @@ def main():
                 d = rel_diff(float(ov), float(dv) if dv is not None else None)
                 if d is None:
                     errors.append(f"双源核对 {y}: 底稿缺 `{k}`，无法比对")
-                elif d > TOL:
-                    ok_ex, ex_desc, ex_problems = exempt_detail(data.get("crosscheck_exempt") or {}, k)
-                    if ok_ex:
-                        # 口径裁决豁免（与 crosscheck_official 同语义）：底稿为冻结裁决的派生口径
-                        warns.append(f"双源核对 {y}: `{k}` 底稿({dv}) vs 官方({ov}) 偏差 {d:.1%}，"
-                                     f"已豁免（{ex_desc}）；差异须进报告数据附录")
-                        for p in ex_problems:
-                            warns.append(f"双源核对（REQ-P0-07）: {p}")
-                    else:
-                        errors.append(f"双源核对(REQ-P0-07) {y}: 命门科目 `{k}` 底稿({dv}) vs 官方({ov}) "
-                                      f"偏差 {d:.1%} > {TOL:.0%}——以高优先级源为准修正底稿并在 "
-                                      "crosscheck_conflicts/spike_notes 记录差异原因")
+                else:
+                    # P1-9：按字段类型分级容差（tol_for 单点定义），不再全字段硬编码 TOL。
+                    tol_k, sev_k = _tol_for(k, xkeys)
+                    if d > tol_k:
+                        ok_ex, ex_desc, ex_problems = exempt_detail(data.get("crosscheck_exempt") or {}, k)
+                        if ok_ex:
+                            # 口径裁决豁免（与 crosscheck_official 同语义）：底稿为冻结裁决的派生口径
+                            warns.append(f"双源核对 {y}: `{k}` 底稿({dv}) vs 官方({ov}) 偏差 {d:.1%}"
+                                         f"（阈值 {tol_k:.0%}/{sev_k}），已豁免（{ex_desc}）；差异须进报告数据附录")
+                            for p in ex_problems:
+                                warns.append(f"双源核对（REQ-P0-07）: {p}")
+                        else:
+                            errors.append(f"双源核对(REQ-P0-07) {y}: `{k}` 底稿({dv}) vs 官方({ov}) "
+                                          f"偏差 {d:.1%} > {tol_k:.0%}（{sev_k} 级阈值）——以高优先级源为准修正底稿并在 "
+                                          "crosscheck_conflicts/spike_notes 记录差异原因")
 
     # 5.5 校验覆盖率哨兵（v2.11 新增）——最危险的失效形态：
     # "0 错误"可能意味着"检查全通过"，也可能意味着"因为缺数据，检查根本没跑"。
