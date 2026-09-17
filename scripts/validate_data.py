@@ -681,9 +681,17 @@ def main():
                             for p in ex_problems:
                                 warns.append(f"双源核对（REQ-P0-07）: {p}")
                         else:
-                            errors.append(f"双源核对(REQ-P0-07) {y}: `{k}` 底稿({dv}) vs 官方({ov}) "
-                                          f"偏差 {d:.1%} > {tol_k:.0%}（{sev_k} 级阈值）——以高优先级源为准修正底稿并在 "
-                                          "crosscheck_conflicts/spike_notes 记录差异原因")
+                            # P1-9 复审修正（2026-09-17）：严重度对齐生产端裁决语义——
+                            # warn/register 级超限登记不阻断（errors），只有 block 级
+                            # （命门科目 1%）才阻断。此前消费端把所有超限一律
+                            # append errors，资产负债表 3% 级差异被错误升级为阻断级。
+                            _dst = errors if sev_k == "block" else warns
+                            _msg = (f"双源核对(REQ-P0-07) {y}: `{k}` 底稿({dv}) vs 官方({ov}) "
+                                    f"偏差 {d:.1%} > {tol_k:.0%}（{sev_k} 级阈值）——以高优先级源为准修正底稿并在 "
+                                    "crosscheck_conflicts/spike_notes 记录差异原因")
+                            if sev_k != "block":
+                                _msg += "（warn/register 级：登记留痕，不阻断入口）"
+                            _dst.append(_msg)
 
     # 5.5 校验覆盖率哨兵（v2.11 新增）——最危险的失效形态：
     # "0 错误"可能意味着"检查全通过"，也可能意味着"因为缺数据，检查根本没跑"。

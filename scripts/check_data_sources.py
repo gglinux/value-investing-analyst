@@ -215,19 +215,16 @@ def check_westock(probe: bool = True):
                 "营业", "totaloperatingrevenue", "npbearer"))
             # stale-version（版本落后）与 field-drift（实测未命中）是同一层的
             # 两个信号源，实测优先、版本嫌疑保留为前缀
-            if layers["fields"] == "stale-version":
-                layers["fields"] = ("ok(stale-ver)" if fields_ok
-                                    else "field-drift(stale-ver)")
-            else:
-                layers["fields"] = "ok" if fields_ok else "field-drift"
+            _stale = layers["fields"] == "stale-version"
+            layers["fields"] = ("ok(stale-ver)" if _stale else "ok") if fields_ok \
+                else ("field-drift(stale-ver)" if _stale else "field-drift")
             if not fields_ok:
                 # 限频是「连通但暂不可得」的独立形态：字段层降级为 rate-limited
                 # 而非 field-drift——处置动作完全不同（等待重试 vs 升级排查）。
                 # 实测本机连发 search+finance 即触发 code=1620053006。
                 _rate_limited = ("限频" in _fl or "rate" in _fl or "1620053006" in _fl)
                 if _rate_limited:
-                    layers["fields"] = ("rate-limited" if layers["fields"] != "stale-version"
-                                        else "rate-limited(stale-ver)")
+                    layers["fields"] = "rate-limited" + ("(stale-ver)" if _stale else "")
                     entry["note"] = (entry.get("note", "") +
                                      " 字段探测被服务限频挡住（连通正常）——"
                                      "稍后重跑或减少探测频次")

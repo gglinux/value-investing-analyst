@@ -886,30 +886,35 @@ def compute(data, market_cap=None):
     if len(_distinct_bases) > 1:
         _switch_y = next(y for y, b in _bases if b != _bases[0][1])
         _key = f"{_switch_y}.shares_basis"
+        # 切换点前口径：_bases 首行即首个声明；切换点后口径：switch_y 行的声明
+        _from_b = _bases[0][1]
+        _to_b = next(b for y, b in _bases if y == _switch_y)
         if _key in _spike_notes_keys:
             warnings.append(
-                f"股本口径切换已登记（{_bases[0][1]} → {_bases[0][1] if False else _bases[-1][1]}"
-                f" @ {_switch_y}）：spike_notes 已解释，跨年每股指标仍不可比，"
+                f"股本口径切换已登记（{_from_b} → {_to_b} @ {_switch_y}）："
+                "spike_notes 已解释，跨年每股指标仍不可比，"
                 "报告须分口径段呈现")
         else:
             alerts.add(
                 "M_SHARES_BASIS_BREAK",
                 f"股本口径断裂警报：shares_basis 跨行不一致 {_distinct_bases}"
-                f"（{_switch_y} 年起切换）——每股指标分母换了口径，跨年 CAGR/EVPS "
+                f"（{_from_b} → {_to_b}，{_switch_y} 年起切换）——每股指标分母换了口径，跨年 CAGR/EVPS "
                 "全部不可比。若为 A+H 上市分部口径切换（平安实证：H 股 8,890 → "
                 "总股本 18,210，EVPS 腰斩），须统一口径重建序列或在 spike_notes "
                 f"登记 `{_key}` 并在报告分口径披露")
     # 隐式断裂嫌疑：未声明口径却有翻倍级跳变（拆股与口径切换的形态区分靠登记）
-    _share_jump = [(s["year"], s["shares_diluted"]) for i, s in enumerate(series)
-                   if i > 0 and s.get("shares_diluted") is not None
+    # 前年值随循环直接携带，不做 index() 反查（同名年份重复时会错位）
+    _share_jump = [(s["year"], s["shares_diluted"], series[i - 1]["shares_diluted"])
+                   for i, s in enumerate(series) if i > 0
+                   and s.get("shares_diluted") is not None
                    and series[i - 1].get("shares_diluted") not in (None, 0)
                    and (s["shares_diluted"] / series[i - 1]["shares_diluted"]) > 1.8]
-    for _jy, _jv in _share_jump:
+    for _jy, _jv, _jprev in _share_jump:
         _jkey = f"{_jy}.shares_diluted"
         if _jkey not in _spike_notes_keys and not _bases:
             alerts.add(
                 "M_SHARES_BASIS_BREAK",
-                f"股本口径断裂嫌疑：{_jy} 年股本 {series[[_s['year'] for _s in series].index(_jy) - 1]['shares_diluted']:,.0f}"
+                f"股本口径断裂嫌疑：{_jy} 年股本 {_jprev:,.0f}"
                 f" → {_jv:,.0f}（>1.8 倍跳变）且未声明 shares_basis、无 spike_notes 登记——"
                 "典型形态是 A+H 双口径切换或大比例转增；拆股请登记解释，"
                 "口径切换须统一重建（平安实证：EVPS 148.75 → 78.13 腰斩即此形态）")
@@ -925,11 +930,12 @@ def compute(data, market_cap=None):
     _sbc_avg = (sum(_sbc_hist) / len(_sbc_hist)) if _sbc_hist else None
     if (_sbc_latest is not None and _sbc_latest >= 0.10) or \
             (_sbc_avg is not None and _sbc_avg >= 0.08):
-        _lvl = _sbc_latest if _sbc_latest is not None else _sbc_avg
+        _sbc_latest_s = f"{_sbc_latest:.1%}" if _sbc_latest is not None else "无数据"
+        _sbc_avg_s = f"{_sbc_avg:.1%}" if _sbc_avg is not None else "无数据"
         alerts.add(
             "M_SBC_DILUTION",
-            f"SBC 稀释警报：sbc/revenue 最新 {_sbc_latest:.1%}、近5年均值 "
-            f"{(_sbc_avg if _sbc_avg is not None else _lvl):.1%}（≥10%/8% 触发线）——"
+            f"SBC 稀释警报：sbc/revenue 最新 {_sbc_latest_s}、近5年均值 {_sbc_avg_s}"
+            "（≥10%/8% 触发线）——"
             "股权激励是真实的股东成本：摊薄股本若未含 RSU 期权增量，每股价值"
             "高估 10-20%（一个安全边际的量级）。估值须用含 SBC 的口径复核"
             "（OE 减 sbc 或改用摊薄股本），报告须单列披露")
