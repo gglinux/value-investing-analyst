@@ -652,6 +652,44 @@ with tempfile.TemporaryDirectory() as td:
     check("概念切换年份逐年回退（2025 由 Revenues 补位）", ok,
           (r.stderr or r.stdout)[-200:])
 
+print("== 9.6b EDGAR 统一内核五件套（P0-3：抽取器与核对器同一实现） ==")
+import edgar_facts as EF  # noqa: E402
+import crosscheck_official as CCO96  # noqa: E402
+_restated = {"facts": {"us-gaap": {"Revenues": {"units": {"USD": [
+    {"start": "2024-01-01", "end": "2024-12-31", "val": 100e6, "form": "10-K",
+     "filed": "2025-02-01"},
+    {"start": "2024-01-01", "end": "2024-12-31", "val": 110e6, "form": "10-K/A",
+     "filed": "2025-06-01"}]}}}}}
+check("P0-3 场景A 重述取 latest：10-K/A 修订值 110e6 优先于原始 100e6",
+      EF.annual_series(_restated, "us-gaap", "revenue")[2024][0] == 110e6
+      and EF.annual_series(_restated, "us-gaap", "revenue")[2024][2] == "2025-06-01")
+check("P0-3 场景A prefer='first' 取原始申报值（RESTATED 审计口径）",
+      EF.annual_series(_restated, "us-gaap", "revenue",
+                       prefer="first")[2024][0] == 100e6)
+check("P0-3 场景A 抽取器与核对器同一答案（消除首见即取分裂）",
+      CCO96.edgar_annual(_restated, "us-gaap", "revenue", 1e6)[2024] == (110.0, "Revenues"))
+_jan_fy = {"facts": {"us-gaap": {"Revenues": {"units": {"USD": [
+    {"start": "2025-01-01", "end": "2026-01-31", "val": 50e6, "form": "10-K",
+     "filed": "2026-03-01"}]}}}}}
+check("P0-3 场景B 一月财年末归前年（NVDA 型：end 2026-01-31 → FY2025）",
+      2025 in EF.annual_series(_jan_fy, "us-gaap", "revenue")
+      and 2026 not in EF.annual_series(_jan_fy, "us-gaap", "revenue"))
+_8k = {"facts": {"us-gaap": {"Revenues": {"units": {"USD": [
+    {"start": "2024-01-01", "end": "2024-12-31", "val": 99e6, "form": "8-K",
+     "filed": "2025-01-30"},
+    {"start": "2024-01-01", "end": "2024-12-31", "val": 100e6, "form": "10-K",
+     "filed": "2025-02-01"}]}}}}}
+check("P0-3 场景C 8-K 临时数据被滤（form 白名单只认 10-K/20-F 系）",
+      EF.annual_series(_8k, "us-gaap", "revenue")[2024][0] == 100e6)
+_pure = {"facts": {"us-gaap": {"Revenues": {"units": {"pure": [
+    {"start": "2024-01-01", "end": "2024-12-31", "val": 1.5, "form": "10-K",
+     "filed": "2025-02-01"}]}}}}}
+check("P0-3 场景D pure 比率单位被滤（不混进金额序列）",
+      EF.annual_series(_pure, "us-gaap", "revenue") == {})
+check("P0-3 场景E cutoff 剔除截断日后的重述（REQ-P0-06 回放正确性）",
+      EF.annual_series(_restated, "us-gaap", "revenue",
+                       cutoff="2025-03-01")[2024][0] == 100e6)
+
 print("== 9.7 引擎边界护栏（v2.10：hold_years/非正价值/负估值/口径标记） ==")
 import reverse_dcf as rdx  # noqa: E402
 
@@ -5131,6 +5169,7 @@ _EXEMPT = {
     "backfill_source_tier.py": "存量 source_tier 标签回填工具（REQ-P0-09 配套），修复推断函数乐观偏置后的一次性回填，非分析主流程",
     "forensic_screen.py": "Phase 0 排雷算术化（REQ-P0-02），在 SKILL.md Phase 0 与 forensic-checklist.md 中引用",
     "gate2_ab.py": "REQ-P0-04 闸门二新旧口径 A/B 回归工具，由 tests/run_tests.py 10.6 调用，非分析主流程",
+    "edgar_facts.py": "EDGAR companyfacts 年度抽取统一内核（P0-3/AST-005），被 extract_edgar_annual.py 与 crosscheck_official.py import 的共享模块，不由 agent 直接调用",
 }
 _scripts = sorted(f for f in os.listdir(SCRIPTS)
                   if f.endswith((".py", ".sh")) and not f.startswith("_"))

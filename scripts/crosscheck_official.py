@@ -44,6 +44,9 @@ import json
 import os
 import sys
 
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from edgar_facts import annual_series  # noqa: E402  # P0-3 统一内核
+
 # 命门四科目（银行口径见 validate_data 的 is_bank 分支）
 CORE_FIELDS = ["revenue", "net_income", "ocf", "shares_diluted"]
 BANK_FIELDS = ["operating_income", "net_income"]
@@ -258,51 +261,25 @@ def rel_diff(a, b):
     return 0.0 if denom == 0 else abs(a - b) / denom
 
 
-def edgar_annual(cf: dict, taxonomy: str, field: str, scale: float):
-    """从 companyfacts 抽某科目的年度值。
+def edgar_annual(cf: dict, taxonomy: str, field: str, scale: float,
+                 prefer: str = "latest", cutoff: str | None = None):
+    """从 companyfacts 抽某科目的年度值（P0-3 起转发统一内核 edgar_facts）。
 
-    按 `end` 日期归年（不用 fy 标签——TSM 实证：FPI 的 fy 是申报财年而非
-    期间所属年，按 fy 聚合会整体错位一年）。逐年独立尝试全部候选概念
-    （GOOG 实证：概念标签中途切换，"第一个非空概念用到底"会静默丢年）。
+    筛选五件套（form 白名单/期间 300-400/end 归年/单位剔除/filed 口径）单点
+    定义在 edgar_facts.annual_series——此前本函数「首见即取」与抽取器
+    「最新 filed 优先」五处口径分裂，同一份 companyfacts 两个答案（AST-005：
+    同一源两个算法不等于独立双源）。现两者共用 latest 口径；RESTATED 审计
+    可传 prefer="first" 取原始申报值。
+
+    按 `end` 日期归年（不用 fy 标签——TSM 实证）；逐年独立尝试全部候选概念
+    （GOOG 实证：概念标签中途切换）。单位缩放：金额与股本用同一 scale
+    （百万口径），此前误将 shares 视为无需缩放导致三年全部误报 100% 偏差，
+    反而掩盖真正写错的那一年。
     """
-    facts = (cf.get("facts") or {}).get(taxonomy) or {}
-    out: dict[int, tuple[float, str]] = {}
-    for concept in CONCEPTS.get(field, []):
-        node = facts.get(concept)
-        if not node:
-            continue
-        for unit_key, rows in (node.get("units") or {}).items():
-            for r in rows:
-                # 年报口径：优先 10-K/20-F 的 FY 期间数据
-                if r.get("form") not in ("10-K", "20-F", "10-K/A", "20-F/A"):
-                    continue
-                end, val = r.get("end"), r.get("val")
-                if not end or val is None:
-                    continue
-                # 期间长度过滤（避免季度/半年数据混入年度）
-                start = r.get("start")
-                if start:
-                    try:
-                        from datetime import date
-                        ds = date.fromisoformat(start)
-                        de = date.fromisoformat(end)
-                        if (de - ds).days < 300:
-                            continue
-                    except Exception:  # noqa: BLE001
-                        pass
-                y = int(end[:4])
-                # 财年末在 1-5 月的（如 NVDA 1月、TSM），归前一年
-                if int(end[5:7]) <= 5:
-                    y -= 1
-                # 单位缩放：EDGAR 金额为元、股本为股；底稿统一为「百万」口径
-                # （百万元 / 百万股）。此前误将 shares 视为无需缩放，导致三年
-                # 全部误报 100% 偏差，反而掩盖了真正写错的那一年——单位错误
-                # 会淹没真实信号，故此处金额与股本用同一 scale。
-                if unit_key.lower() in ("pure", "usd/shares", "eur/shares"):
-                    continue  # 比率/每股类单位不参与金额核对
-                if y not in out:
-                    out[y] = (float(val) / scale, concept)
-    return out
+    series = annual_series(cf, taxonomy, field, prefer=prefer, cutoff=cutoff,
+                           concepts=CONCEPTS.get(field, []))
+    return {y: (float(val) / scale, concept)
+            for y, (val, concept, _filed) in series.items()}
 
 
 def main() -> int:
