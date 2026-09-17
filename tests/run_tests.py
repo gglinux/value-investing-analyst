@@ -5809,6 +5809,208 @@ check("negative_tier_issues 入口即对 ordinal>1 短路",
       "if not isinstance(ordn, int) or ordn > 1:\n        return [], []" in _fn15)
 
 
+# ═══════════════════════════════════════════════════════════════════
+print("== 18. P1 批次回归（P1-5/P1-8/P1-9，2026-09-17） ==")
+# 本段防两件事：① P1 改动的行为回归（replay_date 基准/分级容差/fqt 哨兵/
+# 非财务溯源/稀释三告警/保险突变）；② P1-9 编辑事故复发——fqt 哨兵插入时
+# 把 `if not rows:` 块内的早退 report();return 提级到 main 层，导致 A1/
+# A3/银行保险分支/第 5 节全部变成死代码（保险分支公告消失、A1 沉默），
+# 全量测试却仍然绿。教训：凡「函数中部多出一对 report+return」，必须靠
+# 「下游特征消息必须出现」的行为断言兜住，而不是只断言退出码。
+
+import copy as _cp18
+import schema_meta as _sm18  # noqa: F401  (P1-8 行为经 validate_data 子进程覆盖)
+
+
+def _p1_draft(company="测试实业", ctype="manufacturing", annual=None, meta=None,
+              crosscheck=None):
+    """P1 段通用最小底稿：3 年 annual，字段够走完 1.6→1.7→A1→行业分支→第 5 节。"""
+    rows = annual if annual is not None else [
+        {"year": 2022, "revenue": 1000.0, "net_income": 100.0, "ocf": 120.0,
+         "total_assets": 900.0, "total_liabilities": 400.0, "total_equity": 500.0,
+         "shares_diluted": 100.0, "publish_date": "2023-03-31"},
+        {"year": 2023, "revenue": 1100.0, "net_income": 112.0, "ocf": 130.0,
+         "total_assets": 950.0, "total_liabilities": 420.0, "total_equity": 530.0,
+         "shares_diluted": 102.0, "publish_date": "2024-03-31"},
+        {"year": 2024, "revenue": 1200.0, "net_income": 125.0, "ocf": 140.0,
+         "total_assets": 1000.0, "total_liabilities": 440.0, "total_equity": 560.0,
+         "shares_diluted": 103.0, "publish_date": "2025-03-31"},
+    ]
+    d = {"company": company, "currency": "CNY", "unit": "百万",
+         "company_type": ctype, "annual": rows,
+         "meta": {**{"schema_version": 2, "data_vintage": "2026-09-17"}, **(meta or {})}}
+    if crosscheck is not None:
+        d["crosscheck"] = crosscheck
+    return d
+
+
+def _run_vd18(d, extra=None):
+    with tempfile.TemporaryDirectory() as td:
+        p = os.path.join(td, "financials_TEST_2020-12-31.json")
+        json.dump(d, open(p, "w", encoding="utf-8"), ensure_ascii=False)
+        return subprocess.run(
+            [sys.executable, os.path.join(SCRIPTS, "validate_data.py"), p]
+            + (extra or []), capture_output=True, text=True)
+
+
+# ── P1-9a replay_date 基准（1.6 时效 + A1 死线） ─────────────────────
+_r = _run_vd18(_p1_draft())
+check("P1-9 1.6 时效基线（实盘）：距分析日 2026-09-17 的告警出现",
+      "距分析日 2026-09-17" in _r.stdout, _r.stdout[:300])
+check("P1-9 实盘 A1：2025 死线已过 → 年度覆盖哨兵报错（分支未被早退截断）",
+      "年度覆盖哨兵(A1)" in _r.stdout and _r.returncode != 0, _r.stdout[:400])
+_r = _run_vd18(_p1_draft(), extra=["--replay-date", "2025-06-30"])
+check("P1-9 回测 A1：回放 2025-06-30 时 2025 年报死线未到 → A1 不再报错",
+      "年度覆盖哨兵(A1)" not in _r.stdout, _r.stdout[:400])
+check("P1-9 回测基准：replay_date 已成 A1/时点校验的解析基准（回放时点引用出现）",
+      "回放时点 2025-06-30" in _r.stdout, _r.stdout[:400])
+check("P1-9 回测 1.6：date.today() 噪声基准不再出现",
+      "距分析日 2026-09-17" not in _r.stdout, _r.stdout[:400])
+
+# ── P1-9b fqt 口径哨兵（OBS-000895-02） ─────────────────────────────
+_r = _run_vd18(_p1_draft(meta={"adjusted": "qfq_arithmetic",
+                               "used_for_return_calc": True}))
+check("P1-9 fqt 哨兵：qfq_arithmetic + used_for_return_calc → ERROR",
+      "复权口径哨兵" in _r.stdout and _r.returncode != 0
+      and "hfq_ratio" in _r.stdout, _r.stdout[:400])
+_r = _run_vd18(_p1_draft(meta={"adjusted": "qfq_arithmetic"}))
+check("P1-9 fqt 哨兵：qfq_arithmetic 但未声明用于收益计算 → 不报错",
+      "复权口径哨兵" not in _r.stdout, _r.stdout[:400])
+_d = _p1_draft()
+_d["price_series"] = {"2024-12-31": 10.5}
+_r = _run_vd18(_d)
+check("P1-9 fqt 哨兵：有价格序列但 adjusted 缺失 → WARN 逼声明",
+      "复权口径哨兵" in _r.stdout and "hfq_ratio" in _r.stdout, _r.stdout[:400])
+
+# ── P1-9c tol_for 分级容差（消消费端死导入+双源分级） ───────────────
+_cc_rows = [
+    {"year": 2024, "source": "FY2024 年报原文", "revenue": 1200.0,
+     "net_income": 125.0, "ocf": 140.0, "shares_diluted": 103.0,
+     "total_assets": 1000.0, "total_liabilities": 440.0, "total_equity": 560.0},
+]
+_d = _p1_draft(crosscheck=_cc_rows)
+_d["crosscheck"][0]["revenue"] = 1200.0 * 1.02          # 命门 2% > 1% → ERROR
+_d["crosscheck"][0]["total_assets"] = 1000.0 * 1.032    # 资产负债表 3.2% > 3% → ERROR
+_r = _run_vd18(_d)
+check("P1-9 分级容差：命门 revenue 2% > 1% → 阻断级 ERROR（block 级阈值标注）",
+      "双源核对(REQ-P0-07)" in _r.stdout
+      and "偏差 2.0% > 1%（block 级阈值）" in _r.stdout
+      and _r.returncode != 0, _r.stdout[:400])
+# validate_data 的 xkeys 只迭代命门四键，资产负债表 3% warn 路径在
+# crosscheck_official 全字段迭代侧（上方 P0-07 段已端到端覆盖 4% ⚠告警）。
+# 此处断言 tol_for 单点接线：validate_data 消费的就是 crosscheck_official 的分级。
+check("P1-9 分级容差接线：validate_data 消费 crosscheck_official.tol_for 三级定义",
+      callable(_VD07._tol_for)
+      and _VD07._tol_for("total_assets", ["revenue", "net_income", "ocf", "shares_diluted"]) == (0.03, "warn")
+      and _VD07._tol_for("brand_value", ["revenue", "net_income", "ocf", "shares_diluted"]) == (0.05, "register")
+      and _VD07._tol_for("revenue", ["revenue", "net_income", "ocf", "shares_diluted"]) == (0.01, "block"))
+_d["crosscheck"][0]["revenue"] = 1200.0 * 1.005          # 命门 0.5% < 1% → 放行
+_d["crosscheck"][0]["total_assets"] = 1000.0 * 1.025     # 资产负债表 2.5% < 3% → 放行
+_r = _run_vd18(_d)
+check("P1-9 分级容差：命门 0.5% 与资产负债表 2.5% 均在阈内 → 不再报双源阻断",
+      "双源核对(REQ-P0-07)" not in _r.stdout, _r.stdout[:400])
+
+# ── P1-8 非财务溯源 MVP ─────────────────────────────────────────────
+_r = _run_vd18(_p1_draft())
+check("P1-8 非财务溯源：缺 nonfinancial_evidence 区块 → WARN（MVP 三+一字段提示）",
+      "nonfinancial_evidence" in _r.stdout and "retrieved_at" in _r.stdout
+      and "fallback_action" in _r.stdout, _r.stdout[:400])
+_d = _p1_draft()
+_d["nonfinancial_evidence"] = [
+    {"statement": "测试条目缺 url/retrieved_at"}]
+_r = _run_vd18(_d)
+check("P1-8 非财务溯源：条目缺必填字段 → ERROR",
+      "非财务溯源" in _r.stdout and "ERROR" in _r.stdout and _r.returncode != 0,
+      _r.stdout[:400])
+_d["nonfinancial_evidence"] = [
+    {"statement": "市占率全球第一", "url": "https://example.com/report/2024",
+     "retrieved_at": "2026-09-10", "fallback_action": "re-verify"}]
+_r = _run_vd18(_d)
+check("P1-8 非财务溯源：三字段齐全 + 合法降级动作 → 该项不再报缺",
+      "缺少 `nonfinancial_evidence` 区块" not in _r.stdout
+      and "条目缺" not in _r.stdout, _r.stdout[:400])
+
+# ── P1-5 稀释与股本口径（compute_metrics 三告警 + validate 保险突变） ──
+import compute_metrics as _cm18  # noqa: E402
+
+
+def _mk_dil_rows(sbc_latest=0.15, conv_latest=0.6):
+    """稀释三告警夹具：近 5 年 SBC 高企 + 可转债占优有息负债 ≥50% + 股本口径断裂。"""
+    rows = []
+    for i, y in enumerate(range(2018, 2025)):
+        rows.append({
+            "year": y, "revenue": 1000.0 * 1.08 ** i, "net_income": 80.0 * 1.05 ** i,
+            "ocf": 100.0 * 1.05 ** i, "total_equity": 500.0 + 10 * i,
+            "shares_diluted": 100.0, "sbc": (sbc_latest * 1000.0 * 1.08 ** i),
+            "convertibles": conv_latest * 900.0,
+            "total_debt": 900.0, "publish_date": f"{y + 1}-03-31"})
+    return rows
+
+
+def _run_cm18(rows, spike_notes=None):
+    d = {"company": "稀释测试", "currency": "USD", "unit": "百万",
+         "company_type": "manufacturing", "annual": rows}
+    if spike_notes:
+        d["spike_notes"] = spike_notes
+    with tempfile.TemporaryDirectory() as td:
+        p = os.path.join(td, "financials_TEST_2020-12-31.json")
+        json.dump(d, open(p, "w", encoding="utf-8"), ensure_ascii=False)
+        return subprocess.run(
+            [sys.executable, os.path.join(SCRIPTS, "compute_metrics.py"), p],
+            capture_output=True, text=True)
+
+
+_rows = _mk_dil_rows()
+_r = _run_cm18(_rows)
+check("P1-5 SBC 稀释告警：sbc/revenue 最新年 15% ≥10% → 触发",
+      "M_SBC_DILUTION" in _r.stdout, _r.stdout[:400])
+check("P1-5 可转债悬顶告警：convertibles/有息负债 60% ≥50% → 触发",
+      "M_CONVERTIBLE_OVERHANG" in _r.stdout, _r.stdout[:400])
+_r = _run_cm18(_mk_dil_rows(sbc_latest=0.03, conv_latest=0.2))
+check("P1-5 反例：SBC 3% + 可转债 20% → 两告警均不触发",
+      "M_SBC_DILUTION" not in _r.stdout and "M_CONVERTIBLE_OVERHANG" not in _r.stdout,
+      _r.stdout[:400])
+# 口径断裂显式形态：跨行 shares_basis 不一致 → M_SHARES_BASIS_BREAK（spike_notes 豁免降 warning）
+_rows = _mk_dil_rows()
+_rows[-1]["shares_basis"] = "total"
+_rows[-2]["shares_basis"] = "h_a_only"
+_r = _run_cm18(_rows)
+check("P1-5 股本口径断裂显式：跨行 shares_basis 不一致 → M_SHARES_BASIS_BREAK",
+      "M_SHARES_BASIS_BREAK" in _r.stdout, _r.stdout[:400])
+_r = _run_cm18(_rows, spike_notes={"2024.shares_basis": "A+H 口径切换，已重建统一口径"})
+check("P1-5 口径断裂豁免：spike_notes 登记 2024.shares_basis → 降为提示不阻断",
+      _r.returncode == 0, _r.stdout[:400])
+# 口径断裂隐式形态：>1.8 倍股本跳变 + 无声明 → M_SHARES_BASIS_BREAK
+_rows = _mk_dil_rows()
+_rows[-1]["shares_diluted"] = 200.0
+_r = _run_cm18(_rows)
+check("P1-5 股本口径断裂隐式：股本 1 年翻倍无登记 → M_SHARES_BASIS_BREAK",
+      "M_SHARES_BASIS_BREAK" in _r.stdout, _r.stdout[:400])
+
+# 保险突变（P1-5 validate 侧）：平安形态股本腰斩式跳变 + 口径切换提示
+_d = _p1_draft(company="测试保险", ctype="保险", annual=[
+    {"year": 2022, "shares_diluted": 8910.0, "shares_basis": "h_a_only",
+     "publish_date": "2023-03-31", "net_income": 100.0, "revenue": 1000.0},
+    {"year": 2023, "shares_diluted": 8920.0, "shares_basis": "h_a_only",
+     "publish_date": "2024-03-31", "net_income": 105.0, "revenue": 1050.0},
+    {"year": 2024, "shares_diluted": 18210.0, "shares_basis": "total",
+     "publish_date": "2025-03-31", "net_income": 110.0, "revenue": 1100.0},
+])
+_r = _run_vd18(_d)
+check("P1-5 保险突变：股本 8910→18210 (+104%) → 保险命门 ERROR",
+      "保险命门" in _r.stdout and "shares_diluted" in _r.stdout
+      and "+104%" in _r.stdout and _r.returncode != 0, _r.stdout[:400])
+check("P1-5 保险突变：口径切换提示（h_a_only → total，平安实证形态）",
+      "h_a_only → total" in _r.stdout, _r.stdout[:400])
+_d["spike_notes"] = {"2024.shares_diluted": "口径切换：H 股口径改总股本"}
+_r = _run_vd18(_d)
+check("P1-5 保险突变豁免：spike_notes 登记后不再报保险命门错",
+      "保险命门" not in _r.stdout, _r.stdout[:400])
+# 编辑事故防复发：保险分支公告必须出现（早退 return 会把它变成死代码）
+check("P1-5 保险分支公告：已启用保险专属校验 出现（死代码防复发哨兵）",
+      "已启用保险专属校验" in _r.stdout, _r.stdout[:400])
+
+
 print()
 if FAILED:
     print(f"结果：{len(FAILED)} 项失败 → {FAILED}")
