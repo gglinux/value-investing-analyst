@@ -4592,6 +4592,45 @@ check("D2 体裁词 + 披露日/页码凭证 → tier1（不误伤真官方原�
           "FY2025 年报内含价值分析（p.74-82）[E:filings/pingan-2025-annual.pdf]") == 1)
 check("D2 日股官方源 key 已注册（edinet_pdf），此前日股无合法 tier1 取值只能错标",
       CCO214.SOURCE_PRIORITY.get("edinet_pdf") == 1)
+
+# D3. P0-1 判定内核统一回归锁（2026-09-17）：乐观首次命中 → 最保守档。
+# 旧结构实测 13 个转引变体 9 个误判 tier1；新算法须全部判非 tier1，
+# 且渠道词档位精确（ifind 接口→3 / 券商研报→4 / 百度搜索→5）。
+check("D3 转引变体 13 例全部非 tier1（P0-1 修复实证）",
+      all(CCO214.source_tier(s) != 1 for s in (
+          "新浪财经转引年报数据", "财经媒体转载的年报数据", "新闻报道：年报数据口径",
+          "媒体报道(年报口径)", "据媒体报道的2014年年报数据", "新浪财经报道了年报数据",
+          "援引公司年报披露的数据", "引自2014年年报对比栏", "摘自年报公告的数据",
+          "券商研报整理的年报数据", "ifind接口返回的年报数据", "wind截图整理的年报数据",
+          "百度搜索到的年报数据")),
+      str([CCO214.source_tier(s) for s in (
+          "新浪财经转引年报数据", "ifind接口返回的年报数据", "百度搜索到的年报数据")]))
+check("D3 弱官方词遇渠道词让位：ifind 接口→3 / 券商研报→4 / 百度搜索→5 / wind截图→4",
+      CCO214.source_tier("ifind接口返回的年报数据") == 3
+      and CCO214.source_tier("券商研报整理的年报数据") == 4
+      and CCO214.source_tier("百度搜索到的年报数据") == 5
+      and CCO214.source_tier("wind截图整理的年报数据") == 4)
+check("D3 强锚锁 tier1：上交所披露原文不被并存媒体转述降级",
+      CCO214.source_tier(
+          "中国神华《2014年度报告》原文（上交所2015-03-21披露；中证网2015-03-20报道）") == 1)
+check("D3 主源声明豁免：官方原文为主要源 + 行情终端第二独立源 → tier1",
+      CCO214.source_tier(
+          "2014年报对比栏官方原文为主要源；营业总收入310.7亿另有行情终端数据为第二独立源") == 1)
+check("D3 公司 IR 原文：fuyaogroup 港版年报 → tier2（不再误判 tier1）",
+      CCO214.source_tier("2017 年报（fuyaogroup 港版）对比列") == 2)
+check("D3 统一内核 is_official_source：转引否决 + tier<=2 语义",
+      CCO214.is_official_source("新浪财经转引年报数据") is False
+      and CCO214.is_official_source("2017 年报（fuyaogroup 港版）对比列") is True
+      and CCO214.is_official_source("hkexnews 长和 2015 中报业绩摘要") is True
+      and CCO214.is_official_source("四季度加总估算") is False
+      and CCO214.is_official_source("20-F 披露接口值") is True)
+import validate_data as _VD_D3  # noqa: E402
+import verification_strength as _VST_D3  # noqa: E402
+check("D3 三处收编一致：validate_data 与 verification_strength 均转发统一内核",
+      _VD_D3.is_official_source("新浪财经转引年报数据") is False
+      and _VST_D3._is_official("新浪财经转引年报数据") is False
+      and _VD_D3.is_official_source("20-F 披露接口值") is True
+      and _VST_D3._is_official("2017 年报（fuyaogroup 港版）对比列") is True)
 # 辖区正确性：港股/A股/日股条目不得标成美国 SEC 的 edgar_xbrl
 _juris_bad = []
 for _fp in _glob214.glob(os.path.join(ROOT, "backtest", "*", "data", "financials_*.json")):

@@ -47,10 +47,11 @@ import os
 import sys
 from datetime import date
 
-# 与 validate_data.py 共用的官方原文来源特征（保持两处一致，改一处须同步）
-OFFICIAL_SOURCE_HINTS = ["10-K", "10K", "20-F", "20F", "审计", "年报", "annual report",
-                         "Annual Report", "EDGAR", "巨潮", "披露易", "cninfo", "hkexnews",
-                         "XBRL", "官网"]
+# P0-1（2026-09-17）：第三份 OFFICIAL_SOURCE_HINTS 词表副本收编为
+# crosscheck_official 统一内核（tier<=2，带转引否决）。旧本地词表已删。
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from crosscheck_official import is_official_source as _cco_is_official  # noqa: E402
+
 DOWNGRADE_SOURCE_HINTS = ["加总", "接口", "估算", "推算"]
 RECON_KEYS = ("total_assets", "total_liabilities", "total_equity")
 # 银行/保险走专属管道，底稿 schema 不同（无 total_liabilities，负债由资产−权益倒算；
@@ -71,13 +72,10 @@ MIN_YEARS_CYCLE = 15
 
 
 def _is_official(source):
-    s = source or ""
-    # 顺序敏感：官方标识是强证据，命中即认定官方；降级词仅在无官方标识时生效
-    if any(h in s for h in OFFICIAL_SOURCE_HINTS):
-        return True
-    if any(h in s for h in DOWNGRADE_SOURCE_HINTS):
-        return False
-    return False
+    # P0-1：转发 crosscheck_official 统一内核（tier<=2 + 转引否决）。
+    # 语义变化：神华 2014「中证网报道」类条目 V2 原文比对等级将从官方降为非官方
+    # （更诚实）；存量 verification_strength.json 不重跑，徽章比对不受影响。
+    return _cco_is_official(source)
 
 
 def assess(fin, manifest=None, cycle_sensitive=False, today=None):

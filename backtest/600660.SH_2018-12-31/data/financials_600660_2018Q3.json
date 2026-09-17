@@ -417,8 +417,8 @@
       "note": "IFRS 借款 7245/现金 7199/债务净额 0.46 亿核对",
       "shares_diluted": 2509,
       "shares_source": "2017 年报：总股本 2,508,617,532 股（2017 年度分红基数原文）；2015-11 H 股增发后构成 A 2,003,403,132 + H 505,214,400",
-      "source_tier": "cninfo_pdf",
-      "source_tier_note": "修正：REQ-P0-07 补录时由有缺陷的 source_tier 推断生成（转引描述含「年报」被误判官方源），REQ-P0-09 修复推断函数后重新回填 2026-09-15"
+      "source_tier": "company_ir",
+      "source_tier_note": "修正：fuyaogroup 港版年报为公司 IR 原文（tier2），此前由有缺陷的 source_tier 推断误标 cninfo_pdf；P0-1 判定内核统一后按条目「REQ-P0-09 修复后重新回填」约定回填 2026-09-17"
     },
     {
       "year": 2017,

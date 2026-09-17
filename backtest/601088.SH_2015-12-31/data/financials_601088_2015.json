@@ -289,8 +289,8 @@
       "net_income": 36807,
       "ocf": 67511,
       "shares_diluted": 19890,
-      "source_tier": "media",
-      "source_tier_note": "修正：REQ-P0-07 补录时由有缺陷的 source_tier 推断生成（转引描述含「年报」被误判官方源），REQ-P0-09 修复推断函数后重新回填 2026-09-15"
+      "source_tier": "cninfo_pdf",
+      "source_tier_note": "修正：上交所 2015-03-21 披露《2014年度报告》原文为官方监管渠道（tier1），此前被「中证网报道」转引词误伤标 media；P0-1 判定内核统一后按条目「REQ-P0-09 修复后重新回填」约定回填 2026-09-17"
     }
   ],
   "company_type": "资源"

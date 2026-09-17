@@ -70,6 +70,16 @@ SOURCE_PRIORITY = {
     "web_search": 5, "media": 5,                          # C 级兜底
 }
 # 自由文本 source → tier 的关键词推断（crosscheck.source 是人写的描述，没有 tier 字段时用）
+#
+# P0-1（2026-09-17）结构性重写：原实现从 tier1 起「首次命中即返回」，而「年报/
+# 年度报告」在任何二手描述里都必然出现——媒体报道的本来就是年报数据，等于通配符，
+# tier3/4 的 ifind/研报/券商关键词永远抢不到（实测 13 个转引变体 9 个误判 tier1，
+# 「ifind接口返回的年报数据」「券商研报整理的年报数据」「百度搜索到的年报数据」
+# 全被判官方源）。修法（三层判定，配合下方 veto 结构）：
+#   ① 强锚词（监管渠道/申报凭证：10-K/EDGAR/cninfo/上交所…）命中且无 veto → 锁 tier1；
+#   ② 弱官方词（年报/业绩公告/对比栏…仅说明被引对象是官方披露，不证明取数渠道）
+#     与渠道词（官网/接口/研报/搜索…）同时在场 → 取全部命中档位的最保守档（数字最大）；
+#   ③ 无任何命中 → 5（推不出记 5，逼执行者写清出处）。
 _TIER_HINTS = [
     (1, ("10-k", "10k", "20-f", "20f", "edgar", "xbrl", "companyfacts", "巨潮", "cninfo",
          "披露易", "hkex", "年报", "年度报告", "审计报告", "annual report", "sec ", "决算短信",
@@ -85,6 +95,15 @@ _TIER_HINTS = [
     (4, ("研报", "券商", "research", "截图", "screenshot", "wind 截图")),
     (5, ("搜索", "web", "媒体", "新闻", "media", "news", "百度", "google", "新浪", "转引")),
 ]
+# 强锚词：出现即证明取数经过监管渠道/申报凭证（命中且无 veto → 锁 tier1）。
+# 与 _TIER_HINTS[0] 的差别：把「任何二手描述里也必然出现」的弱官方词（年报/业绩公告/
+# 体裁词等）排除出去——它们只说明被引对象，不说明取数渠道。
+_TIER1_ANCHORS = ("10-k", "10k", "20-f", "20f", "edgar", "xbrl", "companyfacts",
+                  "cninfo", "巨潮", "披露易", "hkex", "edinet", "决算短信", "tanshin",
+                  "finalpage", "accession", "sec ", "sec.gov", "filed ",
+                  "上交所", "深交所", "sse.com", "szse.com")
+# 弱官方词 = _TIER_HINTS[0] 去掉强锚与体裁词后的剩余（年报/年度报告/审计报告/
+# annual report/业绩公告/季报/半年报/主要会计数据/对比栏/对照列/官方原文/业绩快报）。
 
 # ── 转引否决词（REQ-P0-09：源分级的乐观偏置修复）──
 # 原实现从 tier1 起「首次命中即返回」，而「年报/年度报告」这类词在**任何**转引描述里
@@ -99,9 +118,14 @@ _TIER_HINTS = [
 #   ② 描述里若同时出现官方原文指针（[E:] 指向 cninfo/hkexnews/sec 等），说明官方源是
 #      主源、二手仅作交叉验证，不降级——「官方原文为主要源；另有行情终端为第二独立源」
 #      是双源交叉的优良实践，降级它等于惩罚做了额外验证的人。
-_RESTATED_MARKERS = ("转引", "转载", "报道：", "报道:", "报道（", "报道(", "年报报道")
+_RESTATED_MARKERS = ("转引", "转载", "援引", "引自", "摘自", "报道：", "报道:",
+                     "报道（", "报道(", "报道了", "报道的", "年报报道")
 _OFFICIAL_PTR = ("cninfo.com.cn", "hkexnews", "www1.hkexnews", "sec.gov", "static.cninfo",
-                 "finalpage", "accession")
+                 "finalpage", "accession",
+                 # P0-1 补：交易所披露渠道名同样是「官方原文在场」的凭证——神华 2014
+                 # 实证「上交所2015-03-21披露」是与「中证网报道」并存的官方主源，
+                 # 旧词表只认监管站点域名漏了它，导致该条目被标 media。
+                 "上交所", "深交所", "sse.com", "szse.com")
 # 弃用语义：描述里明说该二手值已被查证否决/未采纳——这是主动排除，不是依赖。
 # 000898 实证：「新浪vFD转引值1,453经查与官方不符，弃用并记录差异」是优良实践，
 # 降级它等于惩罚做了额外验证的人。
@@ -121,8 +145,12 @@ def source_tier(entry_or_text) -> int:
     """crosscheck 条目（或 source 文本）→ 源优先级 tier。显式 `source_tier` 优先，
     其次按关键词推断；推不出记 5（最低），逼执行者写清出处。
 
-    转引否决优先于官方词（REQ-P0-09）：描述含转引动作且无官方原文指针时，
-    无论是否提到「年报」，一律按二手源（tier 5）计。
+    判定顺序（P0-1 结构重写，2026-09-17）：
+      ① 转引结构否决优先于官方词（REQ-P0-09）：描述含转引动作且无官方原文
+         指针/弃用词时，无论是否提到「年报」，一律按二手源（tier 5）计；
+      ② 强锚词（监管渠道/申报凭证）在场 → 锁 tier1，弱词与渠道词不再争抢；
+      ③ 否则扫描全部档位、命中取**最保守**（数字最大）——弱官方词（年报/业绩公告）
+         只说明被引对象是官方披露，遇到「接口/研报/搜索」等渠道词时让位。
     """
     if isinstance(entry_or_text, dict):
         st = entry_or_text.get("source_tier")
@@ -139,19 +167,44 @@ def source_tier(entry_or_text) -> int:
             and not _has_official_pointer(low)
             and not any(r in text for r in _REJECTED_MARKERS)):
         return 5
-    # 报表体裁词（审计报表/合并利润表…）只说明「引用的是什么体裁」，不证明取数经过
-    # 官方渠道。TSM 实证：`[E:filings/tsm_fy2025_consolidated_report.htm] 审计报表`
-    # 指向的 filings/ 目录并不存在，原标注 web_search 才是诚实的。因此体裁词必须
-    # 伴随可核验凭证（监管站点 URL / 公告编号 / 表格号 / 巨潮·披露易等渠道名）才升 tier1。
-    _genre_only = (any(g in text for g in _REPORT_GENRE)
-                   and not any(h in low for h in _TIER_HINTS[0][1] if h not in _REPORT_GENRE_LOW)
-                   and not _has_official_pointer(low))
+    # 强锚词：监管渠道/申报凭证在场 → 锁 tier1（hkexnews 含 news 子串也在此拦截，
+    # 不会被 tier5 的「新闻」误抢）
+    if any(a in low for a in _TIER1_ANCHORS):
+        return 1
+    # 主源声明豁免：官方词在场 + 「为主要源」的双源交叉结构——官方源是主源、
+    # 二手仅作交叉验证（茅台实证：「官方原文…为主要源；另有行情终端数据为第二
+    # 独立源」是优良实践，降级它等于惩罚做了额外验证的人）。
+    weak_hit = any(h in low for h in _TIER_HINTS[0][1] if h not in _REPORT_GENRE_LOW)
+    if weak_hit and ("为主要源" in text or "主要来源为" in text):
+        return 1
+    # 全档位扫描取最保守：弱官方词只贡献 tier1 候选，渠道词（官网/接口/研报/搜索）
+    # 与体裁词各贡献其档位，最终取数字最大——「ifind接口返回的年报数据」命中
+    # {1弱, 3} → 3；「百度搜索到的年报数据」命中 {1弱, 5} → 5。
+    hits = set()
+    if weak_hit:
+        hits.add(1)
     for tier, hints in _TIER_HINTS:
+        if tier == 1:
+            continue  # tier1 候选已由 weak_hit 贡献（体裁词除外——孤证不升官方）
         if any(h in low for h in hints):
-            if tier == 1 and _genre_only:
-                continue  # 体裁词孤证：不升官方源，继续找更低档位的证据
-            return tier
-    return 5
+            hits.add(tier)
+    return max(hits) if hits else 5
+
+
+def is_official_source(src) -> bool:
+    """source 文本是否指向官方披露原文（统一内核，P0-1）。
+
+    语义 = source_tier(text) <= 2：tier1 监管原文（10-K/巨潮/披露易/上交所…）
+    + tier2 公司 IR 原文（官网/投资者关系）。此前 validate_data /
+    verification_strength 各自携带第三份 OFFICIAL_SOURCE_HINTS 词表副本、
+    无转引否决（「新浪财经转引年报数据」因含「年报」被判官方源，A2 哨兵
+    被媒体转引穿透），本函数是唯一实现，两个模块均 import 此处。
+
+    语义变化声明（vs 旧 validate_data 词表）：体裁词孤证（「合并利润表」无
+    渠道凭证）不再判官方——TSM「审计报表」悬空指针实证那是自欺；转引结构
+    （无官方指针/弃用词）一律非官方。
+    """
+    return source_tier(str(src or "")) <= 2
 
 
 def tol_for(field: str, core_fields) -> tuple[float, str]:
@@ -396,6 +449,21 @@ def main() -> int:
             if not src:
                 print(f"  ❌ {y} 缺 source 出处")
                 errors += 1
+            # 显式 source_tier 独立校验（OBS-META-12：显式值短路必须被独立校验，
+            # 否则写错的标签经短路返回后永远无人复核——30 条错标实证）。
+            # 只在显式值与文本推断**冲突**时报错：推断更保守（数字更大）说明
+            # 标签高估了源等级；推断更乐观不报错（词表覆盖有限，推断偏 1 未必是错）。
+            st_explicit = entry.get("source_tier")
+            tier_text = source_tier(src)
+            if st_explicit in SOURCE_PRIORITY:
+                st_num = SOURCE_PRIORITY[st_explicit]
+                if st_num < tier_text:
+                    print(f"  ❌ {y} 显式 source_tier={st_explicit}（{st_num}）高估了源等级："
+                          f"source 文本推断为 tier {tier_text}——按文本修正标签或改写出处")
+                    errors += 1
+                elif st_num > tier_text:
+                    print(f"  ⚠️  {y} 显式 source_tier={st_explicit}（{st_num}）比文本推断"
+                          f"（tier {tier_text}）更保守，可接受")
             tier = source_tier(entry)
             if tier >= 4:
                 print(f"  ⚠️  {y} source tier {tier}（B/C 级二手源）——命门核对应以监管原文/公司原文为准")

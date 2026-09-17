@@ -67,15 +67,16 @@ from schema_meta import layered_acceptance, validate_full  # noqa: E402
 # 避免两处 TOL 各自漂移。
 from crosscheck_official import (TOL, TOL_BALANCE_SHEET, TOL_OTHER,  # noqa: E402,F401
                                  CORE_FIELDS as CROSSCHECK_KEYS, exempt_detail)
+import crosscheck_official as _CC  # noqa: E402
 
 SPIKE_KEYS = ["revenue", "net_income", "ocf", "capex", "total_equity", "shares_diluted"]
 SPIKE_THRESHOLD = 0.5
 CROSSCHECK_MIN_YEARS = 3
 
 # A1/A2 共用：官方披露原文来源特征（降级来源：季度加总/接口/估算/推算）
-OFFICIAL_SOURCE_HINTS = ["10-K", "10K", "20-F", "20F", "审计", "年报", "annual report",
-                         "Annual Report", "EDGAR", "巨潮", "披露易", "cninfo", "hkexnews",
-                         "XBRL", "官网"]
+# P0-1（2026-09-17）：is_official_source 收编为 crosscheck_official 统一内核
+# （tier<=2：监管原文 + 公司 IR 原文，带转引否决）。旧本地词表已删——
+# 三份平行词表正是「新浪转引判官方源」穿透 A2 哨兵的根因。
 DOWNGRADE_SOURCE_HINTS = ["加总", "接口", "估算", "推算"]
 
 
@@ -105,29 +106,28 @@ def load_manifest(dirname):
 
 
 def is_official_source(src):
-    """判定 crosscheck.source 是否指向官方披露原文。
+    """判定 crosscheck.source 是否指向官方披露原文（P0-1 统一内核）。
 
-    ⚠️ 顺序敏感（v2.11 修正）：旧实现先扫降级词再扫官方词，只要出现
-    "接口/加总/估算"任一字样就直接判降级——导致 “20-F 2025 披露接口值
-    （Q4 业绩公告交叉）” 这类**确实引用了 20-F 原文**、只是措辞里带了
-    "接口" 的来源被误判为降级，PDD 归档底稿因此 A2 报错。
+    ⚠️ 语义历史（v2.11 修正 → P0-1 收编）：
+    - v2.11 之前：先扫降级词再扫官方词，「20-F 披露接口值」被误判降级（PDD 误杀）；
+    - v2.11：官方标识是强证据、一旦命中即官方；
+    - P0-1（2026-09-17）：本函数不再自带词表，转发 crosscheck_official.is_official_source
+      （= source_tier(text) <= 2）。语义变化：转引结构（无官方指针/弃用词）不再因
+      含「年报」判官方——「新浪财经转引年报数据」旧实现 True、现 False（更诚实）；
+      体裁词孤证（合并利润表无渠道凭证）同样不再判官方。强锚词（10-F/20-F/巨潮/
+      披露易/上交所…）与「官网/投资者关系」语义保持。
 
-    正确语义：官方原文标识（10-K/20-F/年报/EDGAR/巨潮…）是**强证据**，
-    一旦命中即认定为官方；降级词只在**没有任何官方标识**时才作为判定依据。
-    否则会出现"越写清楚数据怎么来的、越容易被门禁误杀"的反向激励——
-    这会逼分析师把来源写得含糊，直接摧毁溯源纪律本身。
+    正确语义不变：官方原文标识是强证据，一旦命中即认定为官方；降级词只在
+    没有任何官方标识时才作为判定依据。否则会出现"越写清楚数据怎么来的、
+    越容易被门禁误杀"的反向激励——这会逼分析师把来源写得含糊，摧毁溯源纪律。
     """
-    s = str(src or "")
-    has_official = any(h in s for h in OFFICIAL_SOURCE_HINTS)
-    if has_official:
-        return True
-    return False
+    return _CC.is_official_source(src)
 
 
 def source_wording_note(src):
     """官方来源但措辞混入降级词时，返回提示语（仅警告，不阻断）。"""
     s = str(src or "")
-    if not any(h in s for h in OFFICIAL_SOURCE_HINTS):
+    if not is_official_source(s):
         return None
     hit = [h for h in DOWNGRADE_SOURCE_HINTS if h in s]
     if hit:
