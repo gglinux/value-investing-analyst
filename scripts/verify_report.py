@@ -259,12 +259,62 @@ def main():
                             return True
                 return False
 
+            def _ep_exists(name):
+                """指针文件是否真实存在（P0-2 可达性门禁）：
+                按 data_dir（manifest 所在）、案例根、仓库根三级探测；
+                指针含 * 或明显是拼接串（含空格/斜杠开头的 URL）时判形态不合规。
+                """
+                name = name.strip()
+                if "*" in name or name.startswith("http") or " " in name:
+                    return None  # 形态不合规：glob 模板或拼接串，非字面路径
+                bases = (args.data_dir,
+                         os.path.dirname(os.path.abspath(args.data_dir)),
+                         os.path.dirname(os.path.dirname(os.path.abspath(args.data_dir))))
+                return any(os.path.exists(os.path.join(b, name)) for b in bases)
+
+            # 案例批次（P0-2 分级）：第四批起新案例悬空指针硬失败，
+            # 存量（batch<=3 或无 meta.json）只出咨询清单不阻断。
+            _ep_batch = 0
+            for _cand in (os.path.dirname(os.path.abspath(args.data_dir)),
+                          os.path.dirname(os.path.dirname(os.path.abspath(args.data_dir)))):
+                _mp = os.path.join(_cand, "meta.json")
+                if os.path.exists(_mp):
+                    try:
+                        with open(_mp, encoding="utf-8") as _f:
+                            _b = json.load(_f).get("batch")
+                        _ep_batch = int(_b) if _b is not None else 0
+                    except (OSError, ValueError, TypeError):
+                        _ep_batch = 0
+                    break
+
+            _dangling, _malformed = [], []
             for name in set(epointers):
-                if in_manifest(name):
-                    epointer_checked += 1
-                else:
+                if not in_manifest(name):
                     failed.append(("manifest.json", f"E:{name}",
                                    "证据指针指向的文件未在 manifest 登记", ""))
+                    continue
+                epointer_checked += 1  # 登记校验通过（可达性另计）
+                ok = _ep_exists(name)
+                if ok is None:
+                    _malformed.append(name)
+                elif not ok:
+                    _dangling.append(name)
+            if _dangling or _malformed:
+                _label = ("登记但文件不存在（悬空指针）" if _dangling else ""
+                          + ("；" if _dangling and _malformed else "")
+                          + ("形态不合规（glob 模板/拼接串，须写字面文件名）" if _malformed else ""))
+                if _ep_batch >= 4:
+                    for name in sorted(_dangling) + sorted(_malformed):
+                        failed.append(("manifest.json", f"E:{name}",
+                                       f"P0-2 证据指针不可达：{_label}", ""))
+                else:
+                    print(f"提示（P0-2 咨询，batch {_ep_batch} 存量不阻断）："
+                          f"{len(_dangling)} 项悬空 + {len(_malformed)} 项形态不合规"
+                          "——manifest 登记不等于证据可溯源，详见清单：")
+                    for name in sorted(_dangling):
+                        print(f"    悬空: {name}")
+                    for name in sorted(_malformed):
+                        print(f"    形态: {name}")
         # 五维章节指针密度检查：按标题切分正文，各维 ≥3 条
         plain = re.sub(r"<script.*?</script>", "", html, flags=re.S)
         dims = ["商业模式", "护城河", "增长", "管理层", "财务质量"]

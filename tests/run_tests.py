@@ -337,6 +337,9 @@ with tempfile.TemporaryDirectory() as td:
               open(os.path.join(ddir, "m.json"), "w"))
     json.dump({"files": [{"file": "m.json"}, {"file": "filings/t-*.htm"}]},
               open(os.path.join(ddir, "manifest.json"), "w"))
+    # P0-2：通配登记的实文件必须在磁盘上真实存在（不再只对登记名做文本比对）
+    os.makedirs(os.path.join(ddir, "filings"), exist_ok=True)
+    open(os.path.join(ddir, "filings", "t-2024.htm"), "w").write("<html>t</html>")
     good = ('<span class="vnum" data-src="m.json" data-path="kpi" data-fmt="pct1">12.3%</span>'
             '<!-- vchart src=m.json path=arr -->{data:[1,2,3]}'
             '[E:m.json][E:filings/t-2024.htm]')
@@ -357,6 +360,42 @@ with tempfile.TemporaryDirectory() as td:
     check("幽灵证据指针被逮住", r2.returncode == 1 and "ghost.pdf" in r2.stdout,
           r2.stdout[-200:])
     check("通配登记的指针可通过", "t-2024.htm" not in r2.stdout)
+
+    # P0-2：证据指针可达性门禁——登记但磁盘不存在（悬空）
+    os.makedirs(os.path.join(td, "case4"), exist_ok=True)
+    json.dump({"batch": 4}, open(os.path.join(td, "case4", "meta.json"), "w"))
+    ddir4 = os.path.join(td, "case4", "data"); os.makedirs(ddir4)
+    json.dump({"kpi": 0.123}, open(os.path.join(ddir4, "m.json"), "w"))
+    json.dump({"files": [{"file": "m.json"}, {"file": "filings/dangle.htm"}]},
+              open(os.path.join(ddir4, "manifest.json"), "w"))
+    hang = ('<span class="vnum" data-src="m.json" data-path="kpi" data-fmt="pct1">12.3%</span>'
+            '[E:filings/dangle.htm]')
+    hp = os.path.join(td, "hang4.html")
+    open(hp, "w").write(hang)
+    rh = subprocess.run([sys.executable, os.path.join(SCRIPTS, "verify_report.py"),
+                         hp, "--data-dir", ddir4], capture_output=True, text=True)
+    check("P0-2 batch=4 悬空指针（登记但文件不存在）→ 硬失败",
+          rh.returncode == 1 and "dangle.htm" in rh.stdout and "不可达" in rh.stdout,
+          rh.stdout[-200:])
+    # 同一悬空指针，batch=3 存量 → 咨询提示不阻断
+    json.dump({"batch": 3}, open(os.path.join(td, "case4", "meta.json"), "w"))
+    rh3 = subprocess.run([sys.executable, os.path.join(SCRIPTS, "verify_report.py"),
+                          hp, "--data-dir", ddir4], capture_output=True, text=True)
+    check("P0-2 batch=3 存量悬空指针 → 咨询提示不阻断（边界约束）",
+          rh3.returncode == 0 and "P0-2" in rh3.stdout and "dangle.htm" in rh3.stdout,
+          rh3.stdout[-200:])
+    # 形态不合规（指针写成 glob 模板/拼接串）→ 同样分级
+    json.dump({"batch": 4}, open(os.path.join(td, "case4", "meta.json"), "w"))
+    mal = ('<span class="vnum" data-src="m.json" data-path="kpi" data-fmt="pct1">12.3%</span>'
+           '[E:filings/*.htm]')
+    mp = os.path.join(td, "mal4.html")
+    open(mp, "w").write(mal)
+    json.dump({"files": [{"file": "m.json"}, {"file": "filings/*.htm"}]},
+              open(os.path.join(ddir4, "manifest.json"), "w"))
+    rm = subprocess.run([sys.executable, os.path.join(SCRIPTS, "verify_report.py"),
+                         mp, "--data-dir", ddir4], capture_output=True, text=True)
+    check("P0-2 batch=4 形态不合规指针（glob 模板当字面名）→ 硬失败",
+          rm.returncode == 1 and "形态不合规" in rm.stdout, rm.stdout[-200:])
 
 print("== 8.5 图表完整性与乱码防护（verify_report 新增） ==")
 with tempfile.TemporaryDirectory() as td:
