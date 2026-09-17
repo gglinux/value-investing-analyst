@@ -88,6 +88,129 @@ PERIOD_TYPES = {"annual", "interim", "quarterly", "TTM", "年报", "半年报", 
 ADJUSTED = {"hfq_ratio", "qfq_ratio", "qfq_arithmetic", "none", "raw"}
 ADJUSTED_LEGAL_FOR_RETURN = {"hfq_ratio"}
 
+# ── 非财务证据区块（P1-8 MVP，REQ-P3-05 最小子集）──────────────────
+# 护城河判断的一半证据来自非财务数据（市场份额/行业基率/竞争格局），此前
+# 完全依赖搜索且不留引用——「这部分完全不可复核」是 fable 1.1 节的自陈，
+# 全 scripts/ grep retrieved_at 仅命中注释文案，零结构化承载。
+# MVP 设计（三条铁律）：
+#   1. 字段最小化：statement（断言）+ url（出处）+ retrieved_at（检索日期）
+#      三个必填，fallback_action（降级路径）一个条件必填——多了没人填；
+#   2. 结构即证据：断言与出处同格存放，报告引用 [N:] 指针即可定位，
+#      不依赖执行者记得在文档里补脚注；
+#   3. 降级路径是数据源问题不是文档问题：url 失效后怎么办必须登记
+#      （re-verify 重检 / substitute 替代源 / degrade-and-disclose 降级披露），
+#      这正是 check_data_sources 四层探测在底稿层的镜像。
+# 严重度设计：主底稿（非 is_peer）缺区块 → WARN（MVP 阶段不阻断，逼登记
+# 习惯先建立）；登记了但字段不合规 → ERROR（登记了就不许填错——半吊子
+# 登记比不登记更有害，它制造「已溯源」的假象，与 [E:] 悬空指针同型）。
+NONFIN_EVIDENCE_REQUIRED = ("statement", "url", "retrieved_at")
+NONFIN_FALLBACK_ACTIONS = {"re-verify", "substitute", "degrade-and-disclose"}
+
+
+def _check_url(v):
+    if not isinstance(v, str) or not re.match(r"https?://\S+$", v.strip()):
+        return f"`url` = {v!r} 须为 http(s):// 开头且非空——非财务证据必须给出可核验出处"
+    return None
+
+
+def _check_retrieved_at(v):
+    if not isinstance(v, str) or not re.match(r"^\d{4}-\d{2}-\d{2}$", str(v).strip()):
+        return (f"`retrieved_at` = {v!r} 应为 YYYY-MM-DD（检索日期）——"
+                "无检索日期的引用无法判断证据时效")
+    try:
+        datetime.strptime(str(v).strip(), "%Y-%m-%d")
+    except ValueError:
+        return f"`retrieved_at` = {v!r} 不是合法日期"
+    return None
+
+
+def _check_fallback_action(v):
+    if str(v) not in NONFIN_FALLBACK_ACTIONS:
+        return (f"`fallback_action` = {v!r} 应为 {sorted(NONFIN_FALLBACK_ACTIONS)} 之一"
+                "（url 失效后的处置路径，P1-8 必填）")
+    return None
+
+
+def check_nonfinancial_evidence(data, path=""):
+    """非财务证据区块校验（P1-8 MVP，REQ-P3-05 最小子集）。
+
+    区块格式（底稿顶层可选键）：
+      "nonfinancial_evidence": [
+        {"statement": "中国平安寿险市占率约 14%，行业第二",
+         "url": "https://www.iachina.cn/...",
+         "retrieved_at": "2026-09-01",
+         "fallback_action": "re-verify",
+         "confidence": "medium",          # 可选：high/medium/low
+         "note": "行业协会年度数据"}, ...]
+
+    规则：
+      - 主底稿缺区块 → WARN（MVP 不阻断）；
+      - 有区块但条目缺必填（statement/url/retrieved_at）→ ERROR；
+      - url 为搜索结果页/门户首页（无定位锚）→ WARN 逼深链；
+      - retrieved_at 距今 >400 天 → WARN 证据时效（非财务数据换代快）；
+      - fallback_action 缺失 → ERROR（MVP 的第四字段，url 会死链是常态，
+        「登记了引用却没有失效预案」正是 [E:] 悬空指针的镜像问题）。
+    """
+    errors, warns = [], []
+    tag = f"[{os.path.basename(path)}] " if path else ""
+    ev = data.get("nonfinancial_evidence")
+    is_peer = bool(data.get("is_peer"))
+    if ev is None:
+        if not is_peer:
+            warns.append(
+                tag + "非财务溯源（P1-8）：缺 `nonfinancial_evidence` 区块——护城河/"
+                "竞争格局判断若引用了市场份额/行业基率等非财务数据，须逐条登记 "
+                "{statement, url, retrieved_at, fallback_action}（MVP 三+一字段，"
+                "见 references/data-sourcing.md 第七节）")
+        return errors, warns
+    if not isinstance(ev, list):
+        errors.append(tag + "非财务溯源：`nonfinancial_evidence` 应为数组（逐条证据）")
+        return errors, warns
+    today = datetime.now().strftime("%Y-%m-%d")
+    vague_url_hints = ("google.com/search", "baidu.com/s?", "bing.com/search",
+                       "/search?", "q=")
+    for i, e in enumerate(ev, 1):
+        if not isinstance(e, dict):
+            errors.append(tag + f"非财务溯源：第 {i} 条应为对象")
+            continue
+        for k in NONFIN_EVIDENCE_REQUIRED:
+            if not str(e.get(k) or "").strip():
+                errors.append(tag + f"非财务溯源：第 {i} 条缺 `{k}`"
+                              + {"statement": "（证据断言本身）",
+                                 "url": "（可核验出处——搜索可得不等于可复核）",
+                                 "retrieved_at": "（检索日期，判断时效）"}[k])
+        if e.get("url") and _check_url(e.get("url")):
+            errors.append(tag + f"非财务溯源：第 {i} 条 " + _check_url(e.get("url")))
+        if e.get("retrieved_at"):
+            ra = _check_retrieved_at(e.get("retrieved_at"))
+            if ra:
+                errors.append(tag + f"非财务溯源：第 {i} 条 " + ra)
+            elif str(e.get("retrieved_at")).strip() < "2015-01-01" or \
+                    str(e.get("retrieved_at")).strip() > today:
+                errors.append(tag + f"非财务溯源：第 {i} 条 retrieved_at "
+                                    f"{e.get('retrieved_at')!r} 超出合理区间"
+                                    f"（2015-01-01 ~ {today}）")
+            elif (datetime.now() - datetime.strptime(str(e.get("retrieved_at")).strip(),
+                                                     "%Y-%m-%d")).days > 400:
+                warns.append(tag + f"非财务溯源：第 {i} 条 retrieved_at "
+                                   f"{e.get('retrieved_at')} 距今超 400 天——"
+                                   "非财务数据换代快，建议复核是否仍成立")
+        if not str(e.get("fallback_action") or "").strip():
+            errors.append(tag + f"非财务溯源：第 {i} 条缺 `fallback_action`"
+                          "（url 失效后的处置：re-verify/substitute/degrade-and-disclose）"
+                          "——引用会死链是常态，无预案的引用是 [E:] 悬空指针的镜像")
+        elif _check_fallback_action(e.get("fallback_action")):
+            errors.append(tag + f"非财务溯源：第 {i} 条 "
+                          + _check_fallback_action(e.get("fallback_action")))
+        if isinstance(e.get("url"), str) and any(h in e["url"] for h in vague_url_hints):
+            warns.append(tag + f"非财务溯源：第 {i} 条 url 为搜索结果页而非内容页——"
+                               "请替换为最终出处深链（搜索页会随时间失效且不可核验）")
+        cf = e.get("confidence")
+        if cf is not None and str(cf) not in ("high", "medium", "low"):
+            warns.append(tag + f"非财务溯源：第 {i} 条 confidence={cf!r} "
+                               "应为 high/medium/low（可选字段）")
+    return errors, warns
+
 # ── 字段规格 ────────────────────────────────────────────────────────
 # (字段名, 是否核心, 校验函数, 说明)
 class MetaSpec:
@@ -507,13 +630,16 @@ def unit_sanity_as_errors(data):
 
 
 def validate_full(data, path=""):
-    """validate_meta + 量纲哨兵的组合入口，按档位决定哨兵告警的严重度。"""
+    """validate_meta + 量纲哨兵 + 非财务溯源（P1-8）的组合入口，按档位决定哨兵告警的严重度。"""
     errors, warns = validate_meta(data, path)
     sanity = check_unit_sanity(data, path)
     if unit_sanity_as_errors(data):
         errors += [w + "（strict 档量纲不自洽升级为错误）" for w in sanity]
     else:
         warns += sanity
+    nf_errs, nf_warns = check_nonfinancial_evidence(data, path)
+    errors += nf_errs
+    warns += nf_warns
     return errors, warns
 
 
